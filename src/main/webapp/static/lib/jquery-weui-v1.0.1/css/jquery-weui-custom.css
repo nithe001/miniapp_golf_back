@@ -1,0 +1,93 @@
+/** 
+* 由于本地重新设置了html的font-size，导致jquery weui的rem显示有问题，所以某些css需要重新设置。
+*
+*/
+html{ font-size: 62.5% !important;}
+.toolbar {
+    font-size: 1.7rem;
+}
+.toolbar .toolbar-inner {
+    height: 3.7rem;
+}
+.toolbar .title {
+    font-size: 1.7rem;
+    line-height: 3.7rem;
+}
+.toolbar .picker-button {
+    height: 3.7rem;
+    line-height: 3.7rem;
+    padding: 0 .8rem;
+}
+/* === Columns Picker === */
+.weui-picker-modal {
+    height: 21.6rem;
+}
+.weui-picker-modal.picker-modal-inline {
+    height: 18rem;
+}
+.weui-picker-modal .picker-modal-inner {
+    height: 18rem;
+}
+.weui-picker-modal .picker-columns {
+    height: 21.6rem;
+}
+.weui-picker-modal .picker-columns.picker-modal-inline,
+.popover .weui-picker-modal .picker-columns {
+    height: 16.67rem;
+}
+@media (orientation: landscape) and (max-height: 415px) {
+    .weui-picker-modal .picker-columns:not(.picker-modal-inline) {
+        height: 16.67rem;
+    }
+}
+.weui-picker-modal .popover.popover-picker-columns {
+    width: 23.3rem;
+}
+.weui-picker-modal .picker-items {
+    font-size: 1.67rem;
+}
+.weui-picker-modal .bar + .picker-items {
+    height: 18rem;
+}
+
+.city-picker .picker-items-col {
+    max-width: 11.67rem;
+}
+
+.weui-select-modal .weui-cells {
+    max-height: 26.67rem;
+}
+/* === Calendar === */
+.weui-picker-calendar {
+    height: 25rem;
+}
+.weui-picker-calendar .picker-modal-inner {
+    height: 21.3rem;
+}
+.picker-calendar-week-days {
+    height: 1.8rem;
+}
+.picker-calendar-week-days + .picker-calendar-months {
+    height: 19.8rem;
+}
+
+.picker-calendar-month-picker,
+.picker-calendar-year-picker {
+    line-height: 3.7rem;
+}
+.picker-calendar-month-picker a.icon-only,
+.picker-calendar-year-picker a.icon-only {
+    height: 3.7rem;
+    line-height: 3.3rem;
+}
+.picker-calendar-month-picker .current-month-value,
+.picker-calendar-year-picker .current-month-value,
+.picker-calendar-month-picker .current-year-value,
+.picker-calendar-year-picker .current-year-value {
+    height: 3.7rem;
+}
+i.icon.icon-next,
+i.icon.icon-prev {
+    width: 1.25rem;
+    height: 3.75rem;
+}

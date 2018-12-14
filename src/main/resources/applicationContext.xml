@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<description>Spring公共配置</description>
+
+	<context:property-placeholder location="classpath:spring.properties"
+		system-properties-mode="OVERRIDE" />
+
+    <util:properties id="wxProperties" location="classpath:/wx.properties" />
+
+	<context:component-scan
+		base-package="com.kingyee.golf.config,com.kingyee.golf.handler,com.kingyee.golf.service,com.kingyee.golf.dao,com.kingyee.cm.service,com.kingyee.cm.dao" />
+
+    <!-- Spring 上下文环境工具类 -->
+    <bean id="appContext" class="com.kingyee.common.spring.SpringContext" />
+
+	<!-- 数据源 -->
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+		destroy-method="close">
+		<!-- 数据源信息 -->
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.user}" />
+		<property name="password" value="${jdbc.passwd}" />
+
+		<!-- 连接池信息 -->
+		<property name="maxActive" value="50" />
+		<property name="maxIdle" value="10" />
+		<property name="minIdle" value="0" />
+		<property name="initialSize" value="5" />
+		<property name="defaultAutoCommit" value="false" />
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<property name="minEvictableIdleTimeMillis" value="600000" />
+		<!--一条sql语句，用来验证数据库连接是否正常。这条语句必须是一个查询模式，并至少返回一条数据。
+		  可以为任何可以验证数据库连接是否正常的sql -->
+		<property name="validationQuery" value="select 1" />
+		<!-- 默认值是true，当从连接池取连接时，验证这个连接是否有效 -->
+		<property name="testOnBorrow" value="true" />
+		<!--默认值是flase,当从把该连接放回到连接池的时，验证这个连接是 -->
+		<property name="testOnReturn" value="false" />
+		<!--默认值是false,当连接池中的空闲连接是否有效 -->
+		<property name="testWhileIdle" value="false" />
+	</bean>
+
+    <!-- Hibernate Session Factory -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+          p:dataSource-ref="dataSource"
+          p:packagesToScan="com.kingyee.golf.db,com.kingyee.cm.db">
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <prop key="hibernate.show_sql">${dev.mode}</prop>
+                <prop key="hibernate.format_sql">${dev.mode}</prop>
+               <!-- <prop key="hibernate.connection.url">jdbc:mysql://192.168.8.3:3308/miniapp_golf</prop>
+                <prop key="hibernate.connection.driver_class">com.mysql.jdbc.Driver</prop>-->
+            </props>
+        </property>
+    </bean>
+
+    <!-- 事务管理器 -->
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <!-- BaseDAO -->
+    <bean id="baseDAO" class="com.kingyee.common.db.BaseDAO">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+	<!-- aspectj -->
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+
+    <!-- 事务参数 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="get*" propagation="REQUIRED" read-only="true" rollback-for="Exception" />
+            <tx:method name="list*" propagation="REQUIRED" read-only="true" rollback-for="Exception" />
+            <tx:method name="search*" propagation="REQUIRED" read-only="true" rollback-for="Exception" />
+            <tx:method name="add*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="del*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="save*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="sendSms*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="sendMms*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="copy*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="*" propagation="REQUIRED" />
+        </tx:attributes>
+    </tx:advice>
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice"
+			pointcut="execution(* com.kingyee.common.IBaseService+.*(..))" />
+	</aop:config>
+
+</beans>
