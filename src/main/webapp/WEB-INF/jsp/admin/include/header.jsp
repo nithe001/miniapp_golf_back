@@ -1,6 +1,6 @@
 <%@ page language="java" pageEncoding="UTF-8"%>
-<%@ page import="com.kingyee.golf.common.security.AdminUserUtil" %>
-<%@ page import="com.kingyee.golf.common.security.AdminUserModel" %>
+<%@ page import="com.golf.golf.common.security.AdminUserUtil" %>
+<%@ page import="com.golf.golf.common.security.AdminUserModel" %>
 <%
 	String navId = request.getParameter("navId");
     String navParentId = request.getParameter("navParentId");

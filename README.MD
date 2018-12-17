@@ -10,17 +10,17 @@
            {   
                "type":"view",
                "name":"疾病知识",
-               "url":"http://ssd.kydev.net/menu/disease"
+               "url":"http://www.baidu.com/menu/disease"
            },
            {
                "type":"view",
                "name":"治疗康复",
-               "url":"http://ssd.kydev.net/menu/treatment"
+               "url":"http://www.baidu.com/menu/treatment"
            },
            {
                "type":"view",
                "name":"看护者手册",
-               "url":"http://ssd.kydev.net/menu/caregivers"
+               "url":"http://www.baidu.com/menu/caregivers"
            }]
      },{   
           "name":"支持与分享",
@@ -28,17 +28,17 @@
            {   
                "type":"view",
                "name":"疾病评估",
-               "url":"http://ssd.kydev.net/menu/diseaseAssessment"
+               "url":"http://www.baidu.com/menu/diseaseAssessment"
            },
            {
                "type":"view",
                "name":"常见问题",
-               "url":"http://ssd.kydev.net/menu/commonProblems"
+               "url":"http://www.baidu.com/menu/commonProblems"
            },
            {
                "type":"view",
                "name":"我的故事",
-               "url":"http://ssd.kydev.net/menu/myStory"
+               "url":"http://www.baidu.com/menu/myStory"
            }]
      }]
 }

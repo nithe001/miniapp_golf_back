@@ -1,6 +1,6 @@
  <%-- 分页信息POJOPageInfo --%>
 <%@ page language="java" import="java.util.* " pageEncoding="UTF-8"%>
-<%@ page import="com.kingyee.common.model.POJOPageInfo" %>
+<%@ page import="com.golf.common.model.POJOPageInfo" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%> 
 <script type="text/javascript">
 <!--

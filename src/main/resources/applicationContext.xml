@@ -18,10 +18,10 @@
     <util:properties id="wxProperties" location="classpath:/wx.properties" />
 
 	<context:component-scan
-		base-package="com.kingyee.golf.config,com.kingyee.golf.handler,com.kingyee.golf.service,com.kingyee.golf.dao,com.kingyee.cm.service,com.kingyee.cm.dao" />
+		base-package="com.golf.golf.config,com.golf.golf.handler,com.golf.golf.service,com.golf.golf.dao,com.golf.cm.service,com.golf.cm.dao" />
 
     <!-- Spring 上下文环境工具类 -->
-    <bean id="appContext" class="com.kingyee.common.spring.SpringContext" />
+    <bean id="appContext" class="com.golf.common.spring.SpringContext" />
 
 	<!-- 数据源 -->
 	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
@@ -54,7 +54,7 @@
     <!-- Hibernate Session Factory -->
     <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
           p:dataSource-ref="dataSource"
-          p:packagesToScan="com.kingyee.golf.db,com.kingyee.cm.db">
+          p:packagesToScan="com.golf.golf.db,com.golf.cm.db">
         <property name="hibernateProperties">
             <props>
                 <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
@@ -73,7 +73,7 @@
     </bean>
 
     <!-- BaseDAO -->
-    <bean id="baseDAO" class="com.kingyee.common.db.BaseDAO">
+    <bean id="baseDAO" class="com.golf.common.db.BaseDAO">
         <property name="sessionFactory" ref="sessionFactory" />
     </bean>
 
@@ -98,7 +98,7 @@
     </tx:advice>
 	<aop:config>
 		<aop:advisor advice-ref="txAdvice"
-			pointcut="execution(* com.kingyee.common.IBaseService+.*(..))" />
+			pointcut="execution(* com.golf.common.IBaseService+.*(..))" />
 	</aop:config>
 
 </beans>

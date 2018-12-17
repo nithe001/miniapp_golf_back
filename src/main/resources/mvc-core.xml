@@ -12,8 +12,8 @@
 
 	<!-- 扫描 Controller -->
 	<context:component-scan use-default-filters="false"
-		name-generator="com.kingyee.common.spring.mvc.ControllerBeanNameGenerator"
-		base-package="com.kingyee.golf.web,com.kingyee.cm.web">
+		name-generator="com.golf.common.spring.mvc.ControllerBeanNameGenerator"
+		base-package="com.golf.golf.web,com.golf.cm.web">
 		<context:include-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
@@ -53,7 +53,7 @@
 		class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
 		<property name="converters">
 			<set>
-				<bean class="com.kingyee.common.spring.mvc.StringToJsonConverter"></bean>
+				<bean class="com.golf.common.spring.mvc.StringToJsonConverter"></bean>
 			</set>
 		</property>
 	</bean>
@@ -77,7 +77,7 @@
 
 	<!-- <mvc:view-controller path="/" view-name="index" /> -->
 
-    <bean id="exceptionResolver" class="com.kingyee.common.spring.mvc.CommonExceptionHandler"/>
+    <bean id="exceptionResolver" class="com.golf.common.spring.mvc.CommonExceptionHandler"/>
 
     <bean
 		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
@@ -102,21 +102,19 @@
 
 	<!-- 拦截器配置 -->
 	<mvc:interceptors>
-		<!-- <mvc:interceptor> <mvc:mapping path="/front/**" /> <bean class="com.kingyee.eytan.common.security.LoginInterceptor">
-			</bean> </mvc:interceptor> -->
         <mvc:interceptor>
             <mvc:mapping path="/admin/**" />
             <mvc:exclude-mapping path="/index" />
             <mvc:exclude-mapping path="/admin/login" />
             <mvc:exclude-mapping path="/admin/logout" />
-            <bean class="com.kingyee.golf.common.security.AdminLoginInterceptor"/>
+            <bean class="com.golf.golf.common.security.AdminLoginInterceptor"/>
         </mvc:interceptor>
 
         <!--<mvc:interceptor>-->
             <!--<mvc:mapping path="/teamManage/**" />-->
             <!--<mvc:mapping path="/matchManage/**" />-->
             <!--&lt;!&ndash;<mvc:mapping path="/user/updateWui" />&ndash;&gt;-->
-            <!--<bean class="com.kingyee.golf.common.security.UserInfoInterceptor"/>-->
+            <!--<bean class="com.golf.golf.common.security.UserInfoInterceptor"/>-->
         <!--</mvc:interceptor>-->
 	</mvc:interceptors>
 

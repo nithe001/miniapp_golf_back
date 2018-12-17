@@ -4,24 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.kingyee</groupId>
+    <groupId>com.golf</groupId>
     <artifactId>miniapp_golf</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>miniapp_golf</name>
     <description>高尔夫赛事管理平台</description>
-    <url>http://wthp.kydev.net</url>
-    <inceptionYear>2016-2017</inceptionYear>
+    <url>http://www.baidu.com</url>
+    <inceptionYear>2018-2019</inceptionYear>
     <organization>
-        <name>kingyee</name>
-        <url>http://www.medlive.cn</url>
+        <name>golf</name>
+        <url>http://www.baidu.com</url>
     </organization>
 
     <developers>
         <developer>
-            <id>peihong</id>
-            <name>pei hong</name>
-            <email>ph at kingyee.com.cn</email>
+            <id>nmy</id>
+            <name>nmy</name>
+            <email>nmy at golf.com.cn</email>
             <roles>
                 <role>Project leader</role>
             </roles>
@@ -30,9 +30,9 @@
     </developers>
 
     <scm>
-        <url>http://192.168.8.3:7990/projects/XXSD/repos/wc_xinxinsudi/browse</url>
-        <connection>scm:git:ssh://git@192.168.8.3:7999/xxsd/wc_xinxinsudi.git</connection>
-        <developerConnection>scm:git:ssh://git@192.168.8.3:7999/xxsd/wc_xinxinsudi.git</developerConnection>
+        <url>https://github.com/paradisesunny/miniapp_golf</url>
+        <connection>scm:git@github.com:paradisesunny/miniapp_golf.git</connection>
+        <developerConnection>scm:git@github.com:paradisesunny/miniapp_golf.git</developerConnection>
     </scm>
 
     <properties>
