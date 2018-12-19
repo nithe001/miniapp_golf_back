@@ -53,14 +53,4 @@ public class AdminMatchService implements IBaseService {
 		dao.update(db);
 	}
 
-	//删除赛事活动
-	public void delMatch(Long id) {
-		MatchInfo db = dao.get(MatchInfo.class,id);
-		if(db.getIsDel() == null || db.getIsDel() == 0){
-			db.setIsDel(1);
-		}else if(db.getIsDel() == 1){
-			db.setIsDel(0);
-		}
-		dao.update(db);
-	}
 }

@@ -47,7 +47,8 @@ public abstract class AbstractWechatUserInfo implements java.io.Serializable {
 			String nickName, String sex, String city, String country,
 			String province, String language, String headimgurl,
 			Long subscribeTime, String unionid, String remark, String headimg,
-			Integer isValid, Long createTime, Long updateTime, String watermarkAppid, String watermarkTimestamp) {
+			Integer isValid, Long createTime, Long updateTime,
+			String watermarkAppid, String watermarkTimestamp) {
 		this.UId = UId;
 		this.subscribe = subscribe;
 		this.openid = openid;
@@ -236,7 +237,7 @@ public abstract class AbstractWechatUserInfo implements java.io.Serializable {
 
 	@Column(name = "watermark_appid", length = 128)
 	public String getWatermarkAppid() {
-		return watermarkAppid;
+		return this.watermarkAppid;
 	}
 
 	public void setWatermarkAppid(String watermarkAppid) {
@@ -245,10 +246,11 @@ public abstract class AbstractWechatUserInfo implements java.io.Serializable {
 
 	@Column(name = "watermark_timestamp", length = 128)
 	public String getWatermarkTimestamp() {
-		return watermarkTimestamp;
+		return this.watermarkTimestamp;
 	}
 
 	public void setWatermarkTimestamp(String watermarkTimestamp) {
 		this.watermarkTimestamp = watermarkTimestamp;
 	}
+
 }

@@ -137,20 +137,4 @@ public class AdminMatchController {
         }
         return "redirect:calendarList";
     }
-
-	/**
-	 * 删除赛事活动-逻辑删除
-	 * @return
-	 */
-	@RequestMapping("delMatch")
-	public String delMatch(Long matchId){
-		try{
-			adminMatchService.delMatch(matchId);
-		}catch(Exception e){
-			e.printStackTrace();
-			logger.error("删除赛事活动时出错。"+ e );
-			return "admin/error";
-		}
-		return "redirect:calendarList";
-	}
 }

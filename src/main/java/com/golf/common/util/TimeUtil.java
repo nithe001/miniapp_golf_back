@@ -24,6 +24,8 @@ public class TimeUtil {
     public static String FORMAT_DATE = "yyyy-MM-dd";
     /** 日期格式 yyyy-MM-dd HH:mm:ss 2013-06-16 09:54:02 */
     public static String FORMAT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+	/** 日期格式 yyyy-MM-dd HH:mm:ss 2013-06-16 09:54:02 */
+	public static String FORMAT_DATETIME_HH_MM = "yyyy-MM-dd HH:mm";
     /** 日期格式 MM-dd 06-16 */
     public static String FORMAT_DATE_ONLY_DAY = "MM-dd";
     /** 日期格式 HH:mm 09:54 */
@@ -391,6 +393,7 @@ public class TimeUtil {
 	
 	
 	public static void main(String[] args) {
-		System.out.println(TimeUtil.dateToString(new Date(), "yyyyMMdd-HHmmss"));
+		System.out.println(TimeUtil.stringToLong("2018-12-18",FORMAT_DATE));
+		System.out.println(TimeUtil.longToString(1542245400000L,FORMAT_DATETIME_HH_MM));
 	}
 }

@@ -33,9 +33,9 @@ public abstract class AbstractUserInfo implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public AbstractUserInfo(Integer type, String realName, Integer age, String telNo, String email,
-							Long club, Integer isValid, Long createTime,
-			Long updateTime) {
+	public AbstractUserInfo(Integer type, String realName, Integer age,
+			String telNo, String email, Long club, Integer isValid,
+			Long createTime, Long updateTime) {
 		this.type = type;
 		this.realName = realName;
 		this.age = age;
@@ -139,4 +139,5 @@ public abstract class AbstractUserInfo implements java.io.Serializable {
 	public void setUpdateTime(Long updateTime) {
 		this.updateTime = updateTime;
 	}
+
 }

@@ -22,10 +22,12 @@ public class WechatUserInfo extends AbstractWechatUserInfo implements
 			String nickName, String sex, String city, String country,
 			String province, String language, String headimgurl,
 			Long subscribeTime, String unionid, String remark, String headimg,
-			Integer isValid, Long createTime, Long updateTime, String watermarkAppid, String watermarkTimestamp) {
+			Integer isValid, Long createTime, Long updateTime,
+			String watermarkAppid, String watermarkTimestamp) {
 		super(UId, subscribe, openid, nickName, sex, city, country, province,
 				language, headimgurl, subscribeTime, unionid, remark, headimg,
-				isValid, createTime, updateTime, watermarkAppid, watermarkTimestamp);
+				isValid, createTime, updateTime, watermarkAppid,
+				watermarkTimestamp);
 	}
 
 }

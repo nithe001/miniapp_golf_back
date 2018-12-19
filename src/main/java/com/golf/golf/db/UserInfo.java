@@ -17,9 +17,11 @@ public class UserInfo extends AbstractUserInfo implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public UserInfo(Integer type, String realName, Integer age, String telNo, String email,
-					Long club, Integer isValid, Long createTime, Long updateTime) {
-		super(type, realName, age, telNo, email, club,isValid, createTime, updateTime);
+	public UserInfo(Integer type, String realName, Integer age, String telNo,
+			String email, Long club, Integer isValid, Long createTime,
+			Long updateTime) {
+		super(type, realName, age, telNo, email, club, isValid, createTime,
+				updateTime);
 	}
 
 }

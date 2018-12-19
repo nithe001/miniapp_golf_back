@@ -7,8 +7,8 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 /**
- * AbstractMatch entity provides the base persistence definition of the Match
- * entity. @author MyEclipse Persistence Tools
+ * AbstractMatchInfo entity provides the base persistence definition of the
+ * MatchInfo entity. @author MyEclipse Persistence Tools
  */
 @MappedSuperclass
 public abstract class AbstractMatchInfo implements java.io.Serializable {
@@ -22,15 +22,15 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 	private String thumb;
 	private String content;
 	private String address;
-	private Integer isDel;
 	private Integer isOpen;
-	private Integer state;
 	private Integer hit;
+	private Long applyEndTime;
 	private String createUserName;
 	private Long createUserId;
 	private Long createTime;
-	private Long applyStartTime;
-	private Long applyEndTime;
+	private String updateUserName;
+	private Long updateUserId;
+	private Long updateTime;
 
 	// Constructors
 
@@ -40,25 +40,25 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 
 	/** full constructor */
 	public AbstractMatchInfo(Long matchTime, String title, String digest,
-							 String thumb, String content, String address, Integer isDel,
-							 Integer isOpen, Integer state, Integer hit, String createUserName,
-							 Long createUserId, Long createTime, Long applyStartTime,
-							 Long applyEndTime) {
+			String thumb, String content, String address, Integer isOpen,
+			Integer hit, Long applyEndTime, String createUserName,
+			Long createUserId, Long createTime, String updateUserName,
+			Long updateUserId, Long updateTime) {
 		this.matchTime = matchTime;
 		this.title = title;
 		this.digest = digest;
 		this.thumb = thumb;
 		this.content = content;
 		this.address = address;
-		this.isDel = isDel;
 		this.isOpen = isOpen;
-		this.state = state;
 		this.hit = hit;
+		this.applyEndTime = applyEndTime;
 		this.createUserName = createUserName;
 		this.createUserId = createUserId;
 		this.createTime = createTime;
-		this.applyStartTime = applyStartTime;
-		this.applyEndTime = applyEndTime;
+		this.updateUserName = updateUserName;
+		this.updateUserId = updateUserId;
+		this.updateTime = updateTime;
 	}
 
 	// Property accessors
@@ -127,15 +127,6 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 		this.address = address;
 	}
 
-	@Column(name = "is_del")
-	public Integer getIsDel() {
-		return this.isDel;
-	}
-
-	public void setIsDel(Integer isDel) {
-		this.isDel = isDel;
-	}
-
 	@Column(name = "is_open")
 	public Integer getIsOpen() {
 		return this.isOpen;
@@ -145,15 +136,6 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 		this.isOpen = isOpen;
 	}
 
-	@Column(name = "state")
-	public Integer getState() {
-		return this.state;
-	}
-
-	public void setState(Integer state) {
-		this.state = state;
-	}
-
 	@Column(name = "hit")
 	public Integer getHit() {
 		return this.hit;
@@ -161,6 +143,15 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 
 	public void setHit(Integer hit) {
 		this.hit = hit;
+	}
+
+	@Column(name = "apply_end_time")
+	public Long getApplyEndTime() {
+		return this.applyEndTime;
+	}
+
+	public void setApplyEndTime(Long applyEndTime) {
+		this.applyEndTime = applyEndTime;
 	}
 
 	@Column(name = "create_user_name", length = 128)
@@ -190,22 +181,31 @@ public abstract class AbstractMatchInfo implements java.io.Serializable {
 		this.createTime = createTime;
 	}
 
-	@Column(name = "apply_start_time")
-	public Long getApplyStartTime() {
-		return this.applyStartTime;
+	@Column(name = "update_user_name", length = 128)
+	public String getUpdateUserName() {
+		return this.updateUserName;
 	}
 
-	public void setApplyStartTime(Long applyStartTime) {
-		this.applyStartTime = applyStartTime;
+	public void setUpdateUserName(String updateUserName) {
+		this.updateUserName = updateUserName;
 	}
 
-	@Column(name = "apply_end_time")
-	public Long getApplyEndTime() {
-		return this.applyEndTime;
+	@Column(name = "update_user_id")
+	public Long getUpdateUserId() {
+		return this.updateUserId;
 	}
 
-	public void setApplyEndTime(Long applyEndTime) {
-		this.applyEndTime = applyEndTime;
+	public void setUpdateUserId(Long updateUserId) {
+		this.updateUserId = updateUserId;
+	}
+
+	@Column(name = "update_time")
+	public Long getUpdateTime() {
+		return this.updateTime;
+	}
+
+	public void setUpdateTime(Long updateTime) {
+		this.updateTime = updateTime;
 	}
 
 }

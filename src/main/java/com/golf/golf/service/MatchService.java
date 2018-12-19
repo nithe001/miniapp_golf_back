@@ -9,6 +9,8 @@ import com.golf.golf.db.TeamInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * 学术活动
  * Created by nmy on 2017/7/1.
@@ -20,7 +22,10 @@ public class MatchService implements IBaseService {
     private MatchDao dao;
 
 	public MatchInfo getMatchInfoById(Long wcId) {
-		return dao.get(MatchInfo.class,wcId);
+		MatchInfo matchInfo = dao.get(MatchInfo.class,wcId);
+		matchInfo.setHit(matchInfo.getHit()==null?1:matchInfo.getHit()+1);
+		dao.update(matchInfo);
+		return matchInfo;
 	}
 
 	/**
@@ -28,7 +33,15 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return dao.getMatchList(searchBean,pageInfo);
+		pageInfo = dao.getMatchList(searchBean,pageInfo);
+		if(pageInfo.getCount() >0){
+			for(MatchInfo matchInfo : (List<MatchInfo>)pageInfo.getItems()){
+				matchInfo.setStateStr();
+				matchInfo.setCreateTimeStr(matchInfo.getCreateTime());
+				matchInfo.setMatchTimeStr(matchInfo.getMatchTime());
+			}
+		}
+		return pageInfo;
 	}
 
 
@@ -48,10 +61,20 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
+	 * 获取本赛事的队伍
+	 * @return
+	 */
+	public List<Object[]> getMatchGroupList(Long matchId) {
+		return dao.getMatchGroupList(matchId);
+	}
+
+	/**
 	 * 创建比赛
 	 * @return
 	 */
 	public TeamInfo getTeamInfoById(String teamId) {
 		return dao.get(TeamInfo.class,Long.parseLong(teamId));
 	}
+
+
 }

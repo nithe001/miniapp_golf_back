@@ -128,12 +128,11 @@ public class UserController {
 	 *
 	 * @return
 	 */
-	@RequestMapping("userDetail")
-	public String userDetail(ModelMap mm) {
+	@RequestMapping("getUserInfoById")
+	public String getUserInfoById(Long wechatId) {
 		try {
 			UserModel userModel = UserUtil.getLoginUser();
 			UserInfo user = service.getUserById(userModel.getUser().getId());
-			mm.addAttribute("user", user);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("获取基本信息时出错。", e);
