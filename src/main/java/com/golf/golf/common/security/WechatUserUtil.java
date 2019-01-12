@@ -105,7 +105,7 @@ public class WechatUserUtil {
     public static Long getUserId() {
         if (hasLogin()) {
 //            return getLoginUser().getWechatUser().getCwuId();
-			return getLoginUser().getUser().getId();
+			return getLoginUser().getUser().getUiId();
         }
         return null;
     }
@@ -117,7 +117,7 @@ public class WechatUserUtil {
 	 */
 	public static String getOpenId() {
 		if (hasLogin()) {
-			return getLoginUser().getWechatUser().getOpenid();
+			return getLoginUser().getWechatUser().getWuiOpenid();
 		}
 		return null;
 	}
@@ -129,14 +129,14 @@ public class WechatUserUtil {
 	 */
 	public static String getOpenIdBySessionId(String sessionId) {
 		if (hasLoginBySessionId(sessionId)) {
-			return getLoginUserBySessionId(sessionId).getWechatUser().getOpenid();
+			return getLoginUserBySessionId(sessionId).getWechatUser().getWuiOpenid();
 		}
 		return null;
 	}
 
 
     public static String getShowName(){
-        return getLoginUser().getWechatUser().getNickName();
+        return getLoginUser().getWechatUser().getWuiNickName();
     }
 
 	/**

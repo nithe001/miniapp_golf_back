@@ -2,7 +2,6 @@ package com.golf.golf.handler;
 
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
-import com.golf.golf.enums.UserTypeEnum;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -45,21 +44,8 @@ public class ScanSubscribeHandler extends AbstractHandler {
 
 		// 是否已经是医生
 		WechatUserInfo wechatUser = userService.getWechatUserByOpenid(wxMpUser.getOpenId());
-		if (wechatUser != null && wechatUser.getUId() != null) {
-			UserInfo user = userService.getUserById(wechatUser.getUId());
-			if(user.getType().equals(UserTypeEnum.DOMESTIC.text())){
-				message = WxMpXmlOutMessage.TEXT()
-						.content("您已经关联医生!")
-						.fromUser(wxMessage.getToUser())
-						.toUser(wxMessage.getFromUser())
-						.build();
-			}else{
-				message = WxMpXmlOutMessage.TEXT()
-						.content("由于您是认证医生，所以不能再关联医生!")
-						.fromUser(wxMessage.getToUser())
-						.toUser(wxMessage.getFromUser())
-						.build();
-			}
+		if (wechatUser != null && wechatUser.getWuiUId() != null) {
+			UserInfo user = userService.getUserById(wechatUser.getWuiUId());
 		}else{
 			message = WxMpXmlOutMessage.TEXT()
 					.content("您已经关联医生!")

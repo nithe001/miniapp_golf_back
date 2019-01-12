@@ -18,7 +18,7 @@
     <util:properties id="wxProperties" location="classpath:/wx.properties" />
 
 	<context:component-scan
-		base-package="com.golf.golf.config,com.golf.golf.handler,com.golf.golf.service,com.golf.golf.dao,com.golf.cm.service,com.golf.cm.dao" />
+		base-package="com.golf.golf.config,com.golf.golf.handler,com.golf.golf.service,com.golf.golf.dao" />
 
     <!-- Spring 上下文环境工具类 -->
     <bean id="appContext" class="com.golf.common.spring.SpringContext" />

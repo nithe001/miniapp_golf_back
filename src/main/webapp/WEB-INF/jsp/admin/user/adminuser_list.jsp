@@ -23,7 +23,6 @@
 		          <div class="box">
            			<div class="box-body">
 		            <div class="box-header">
-                        <div style="float:left;margin-right:10px"><a class="btn btn-success" href="admin/user/userAddUI">导入用户</a></div>
 		              <div style="float:left;margin-right:10px"><a class="btn btn-success" href="admin/user/userAddUI">新增</a></div>
 		              <form class="form-inline" name="searchForm" id="searchForm" style="margin-bottom: 15px;">
 							<input type="hidden" id="page" name="page" value="${page }"/>
@@ -49,6 +48,8 @@
 							<th>真实姓名</th>
 							<th>创建时间</th>
 							<th>创建人</th>
+							<th>更新时间</th>
+							<th>更新人</th>
 							<th>状态</th>
 							<th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
 		                </tr>
@@ -59,8 +60,10 @@
      						<td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
 							<td>${u.auUserName }</td>
 							<td>${u.auShowName }</td>
-							<td>${u.auCreateDateStr }</td>
+							<td>${u.createTimeStr }</td>
 							<td>${u.auCreateUserName }</td>
+							<td>${u.updateTimeStr }</td>
+							<td>${u.auUpdateUserName }</td>
 							<td>
 								<c:if test="${u.auIsValid == 1 }">
 								正常

@@ -4,6 +4,7 @@ import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.EncryptUtil;
+import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminUserDao;
 import com.golf.golf.db.AdminUser;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,10 +47,23 @@ public class AdminUserService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getWechatUserList(SearchBean searchBean, POJOPageInfo pageInfo){
-		return dao.getWechatUserList(searchBean,pageInfo);
+		pageInfo = dao.getWechatUserList(searchBean,pageInfo);
+		if(pageInfo.getCount() >0){
+			updatePageInfo(pageInfo);
+		}
+		return pageInfo;
 	}
 
-    /**
+	private void updatePageInfo(POJOPageInfo pageInfo) {
+		for(Object[] obj:(List<Object[]>)pageInfo.getItems()){
+//			select wu.wui_nick_name,wu.wui_openid,u.ui_real_name,wu.wui_sex,wu.wui_province,wu.wui_city,wu.create_time
+			if(obj[7] != null){
+				obj[7] = TimeUtil.longToString(Long.parseLong(obj[6].toString()), TimeUtil.FORMAT_DATETIME_HH_MM);
+			}
+		}
+	}
+
+	/**
      * 保存用户
      * @param user
      * @return
@@ -122,9 +137,8 @@ public class AdminUserService implements IBaseService {
 
 	//编辑-保存
 	public void editWechatUser(UserInfo user) {
-		UserInfo db = dao.get(UserInfo.class,user.getId());
-		db.setType(user.getType());
-		db.setClub(user.getClub());
+		UserInfo db = dao.get(UserInfo.class,user.getUiId());
+		db.setUiType(user.getUiType());
 		dao.update(db);
 	}
 

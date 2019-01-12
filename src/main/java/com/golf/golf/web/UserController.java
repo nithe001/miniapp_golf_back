@@ -59,7 +59,7 @@ public class UserController {
 	 * @return
 	 */
 	@RequestMapping("register")
-	public String register(UserInfo user,String captcha) {
+	public String register(UserInfo user, String captcha) {
 		try {
 			service.saveUser(user,captcha);
 		} catch (Exception e) {
@@ -79,7 +79,7 @@ public class UserController {
 	public String userManage(ModelMap mm,String edit) {
 		try {
 			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getId());
+			UserInfo user = service.getUserById(userModel.getUser().getUiId());
 			mm.addAttribute("user", user);
 			mm.addAttribute("edit", edit);
 		} catch (Exception e) {
@@ -132,7 +132,7 @@ public class UserController {
 	public String getUserInfoById(Long wechatId) {
 		try {
 			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getId());
+			UserInfo user = service.getUserById(userModel.getUser().getUiId());
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("获取基本信息时出错。", e);
@@ -150,8 +150,8 @@ public class UserController {
 	public String myClub(ModelMap mm) {
 		try {
 			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getId());
-			List<MatchInfo> calendarList = service.getCalendarListByUserId(user.getClub());
+			UserInfo user = service.getUserById(userModel.getUser().getUiId());
+			List<MatchInfo> calendarList = service.getCalendarListByUserId(null);
 			mm.addAttribute("calendarList", calendarList);
 			mm.addAttribute("user", user);
 		} catch (Exception e) {

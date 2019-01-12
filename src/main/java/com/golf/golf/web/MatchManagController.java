@@ -1,13 +1,13 @@
 package com.golf.golf.web;
 
+import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.UserInfo;
 import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.TeamMatchInfoBean;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamInfo;
-import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +43,17 @@ public class MatchManagController {
 			TeamInfo teamInfo = matchService.getTeamInfoById(teamId);
 			teamMatchInfoBean.setTeamInfo(teamInfo);
 			MatchInfo matchInfo = new MatchInfo();
-			matchInfo.setTitle(matchTitle);
-			matchInfo.setAddress(address);
-			matchInfo.setIsOpen(Integer.parseInt(isOpen));
-			matchInfo.setMatchTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,matchTime));
-			matchInfo.setApplyEndTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,applyEndTime));
-			matchInfo.setDigest(digest);
-			matchInfo.setCreateTime(System.currentTimeMillis());
+			matchInfo.setMiTitle(matchTitle);
+			matchInfo.setMiParkId(null);
+			matchInfo.setMiParkName(address);
+			matchInfo.setMiMatchOpenType(Integer.parseInt(isOpen));
+			matchInfo.setMiJoinOpenType(Integer.parseInt(isOpen));
+			matchInfo.setMiMatchTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,matchTime));
+			matchInfo.setMiApplyEndTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,applyEndTime));
+			matchInfo.setMiDigest(digest);
+			matchInfo.setMiCreateTime(System.currentTimeMillis());
+			matchInfo.setMiCreateUserId(UserUtil.getUserId());
+			matchInfo.setMiCreateUserName(UserUtil.getShowName());
 			UserInfo userInfo = UserUtil.getLoginUser().getUser();
 		} catch (Exception e) {
 			e.printStackTrace();

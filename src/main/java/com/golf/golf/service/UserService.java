@@ -86,19 +86,19 @@ public class UserService implements IBaseService {
 			HttpUtil.downloadPicture(wxMaUserInfo.getAvatarUrl(), path,openid + ".png");
 		}
 		WechatUserInfo wechatUserInfo = new WechatUserInfo();
-		wechatUserInfo.setOpenid(wxMaUserInfo.getOpenId());
-		wechatUserInfo.setNickName(wxMaUserInfo.getNickName());
-		wechatUserInfo.setSex(wxMaUserInfo.getGender());
-		wechatUserInfo.setLanguage(wxMaUserInfo.getLanguage());
-		wechatUserInfo.setCity(wxMaUserInfo.getCity());
-		wechatUserInfo.setProvince(wxMaUserInfo.getProvince());
-		wechatUserInfo.setCountry(wxMaUserInfo.getCountry());
-		wechatUserInfo.setHeadimgurl(wxMaUserInfo.getAvatarUrl());
-		wechatUserInfo.setHeadimg(headImgPath);
-		wechatUserInfo.setUnionid(wxMaUserInfo.getUnionId());
+		wechatUserInfo.setWuiOpenid(wxMaUserInfo.getOpenId());
+		wechatUserInfo.setWuiNickName(wxMaUserInfo.getNickName());
+		wechatUserInfo.setWuiSex(wxMaUserInfo.getGender());
+		wechatUserInfo.setWuiLanguage(wxMaUserInfo.getLanguage());
+		wechatUserInfo.setWuiCity(wxMaUserInfo.getCity());
+		wechatUserInfo.setWuiProvince(wxMaUserInfo.getProvince());
+		wechatUserInfo.setWuiCountry(wxMaUserInfo.getCountry());
+		wechatUserInfo.setWuiHeadimgurl(wxMaUserInfo.getAvatarUrl());
+		wechatUserInfo.setWuiHeadimg(headImgPath);
+		wechatUserInfo.setWuiUnionid(wxMaUserInfo.getUnionId());
 		wechatUserInfo.setWatermarkAppid(wxMaUserInfo.getWatermark().getAppid());
 		wechatUserInfo.setWatermarkTimestamp(wxMaUserInfo.getWatermark().getTimestamp());
-		wechatUserInfo.setIsValid(1);
+		wechatUserInfo.setWuiIsValid(1);
 		wechatUserInfo.setCreateTime(System.currentTimeMillis());
 		dao.save(wechatUserInfo);
 		return wechatUserInfo;
@@ -114,19 +114,19 @@ public class UserService implements IBaseService {
 		if(StringUtils.isNotEmpty(wxMaUserInfo.getAvatarUrl())){
 			HttpUtil.downloadPicture(wxMaUserInfo.getAvatarUrl(), path,openid + ".png");
 		}
-		dbWechatUserInfo.setOpenid(wxMaUserInfo.getOpenId());
-		dbWechatUserInfo.setNickName(wxMaUserInfo.getNickName());
-		dbWechatUserInfo.setSex(wxMaUserInfo.getGender());
-		dbWechatUserInfo.setLanguage(wxMaUserInfo.getLanguage());
-		dbWechatUserInfo.setCity(wxMaUserInfo.getCity());
-		dbWechatUserInfo.setProvince(wxMaUserInfo.getProvince());
-		dbWechatUserInfo.setCountry(wxMaUserInfo.getCountry());
-		dbWechatUserInfo.setHeadimgurl(wxMaUserInfo.getAvatarUrl());
-		dbWechatUserInfo.setHeadimg(headImgPath);
-		dbWechatUserInfo.setUnionid(wxMaUserInfo.getUnionId());
+		dbWechatUserInfo.setWuiOpenid(wxMaUserInfo.getOpenId());
+		dbWechatUserInfo.setWuiNickName(wxMaUserInfo.getNickName());
+		dbWechatUserInfo.setWuiSex(wxMaUserInfo.getGender());
+		dbWechatUserInfo.setWuiLanguage(wxMaUserInfo.getLanguage());
+		dbWechatUserInfo.setWuiCity(wxMaUserInfo.getCity());
+		dbWechatUserInfo.setWuiProvince(wxMaUserInfo.getProvince());
+		dbWechatUserInfo.setWuiCountry(wxMaUserInfo.getCountry());
+		dbWechatUserInfo.setWuiHeadimgurl(wxMaUserInfo.getAvatarUrl());
+		dbWechatUserInfo.setWuiHeadimg(headImgPath);
+		dbWechatUserInfo.setWuiUnionid(wxMaUserInfo.getUnionId());
 		dbWechatUserInfo.setWatermarkAppid(wxMaUserInfo.getWatermark().getAppid());
 		dbWechatUserInfo.setWatermarkTimestamp(wxMaUserInfo.getWatermark().getTimestamp());
-		dbWechatUserInfo.setIsValid(1);
+		dbWechatUserInfo.setWuiIsValid(1);
 		dbWechatUserInfo.setCreateTime(System.currentTimeMillis());
         dao.update(dbWechatUserInfo);
     }
@@ -137,9 +137,9 @@ public class UserService implements IBaseService {
      * @param user
      */
     public Long saveUser(UserInfo user,String captcha) throws UnsupportedEncodingException, WxErrorException {
-        user.setType(Integer.parseInt(UserTypeEnum.DOMESTIC.text()));//普通用户
-        user.setIsValid(1);
-        user.setCreateTime(System.currentTimeMillis());
+        user.setUiType(Integer.parseInt(UserTypeEnum.DOMESTIC.text()));//普通用户
+        user.setUiIsValid(1);
+        user.setUiCreateTime(System.currentTimeMillis());
         Long uid = dao.save(user);
 		UserModel userModel = new UserModel();
 		userModel.setUser(user);
@@ -153,9 +153,9 @@ public class UserService implements IBaseService {
      * @param user
      */
     public void updateUser(UserInfo user) throws Exception {
-    	UserInfo db = dao.get(UserInfo.class,user.getId());
-		db.setEmail(user.getEmail());
-		db.setUpdateTime(System.currentTimeMillis());
+    	UserInfo db = dao.get(UserInfo.class,user.getUiId());
+		db.setUiEmail(user.getUiEmail());
+		db.setUiUpdateTime(System.currentTimeMillis());
         dao.update(db);
     }
 
@@ -181,8 +181,8 @@ public class UserService implements IBaseService {
 		if(dbUser != null){
 			user = new UserModel();
 			user.setWechatUser(dbUser);
-			if(dbUser.getId() != null){
-				UserInfo UserInfo = dao.get(UserInfo.class,dbUser.getId());
+			if(dbUser.getWuiId() != null){
+				UserInfo UserInfo = dao.get(UserInfo.class,dbUser.getWuiId());
 				user.setUser(UserInfo);
 			}
 		}
@@ -198,18 +198,18 @@ public class UserService implements IBaseService {
 	}
 
 	public void updateWUser(WechatUserInfo userInfo, String nickName, String avatarUrl, String gender, String province, String city, String country) throws IOException {
-		userInfo.setNickName(nickName);
-		String openid = userInfo.getOpenid();
+		userInfo.setWuiNickName(nickName);
+		String openid = userInfo.getWuiOpenid();
 		String headImgPath = PropertyConst.HEADIMG_PATH + File.separator +openid + ".png";
 		String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
 		if(StringUtils.isNotEmpty(avatarUrl)){
 			HttpUtil.downloadPicture(avatarUrl, path,openid + ".png");
 		}
-		userInfo.setSex(gender);
-		userInfo.setHeadimg(headImgPath);
-		userInfo.setProvince(province);
-		userInfo.setCity(city);
-		userInfo.setCountry(country);
+		userInfo.setWuiSex(gender);
+		userInfo.setWuiHeadimg(headImgPath);
+		userInfo.setWuiProvince(province);
+		userInfo.setWuiCity(city);
+		userInfo.setWuiCountry(country);
 		dao.update(userInfo);
 	}
 }

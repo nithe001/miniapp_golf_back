@@ -4,12 +4,12 @@
 <html>
 <head>
 	<jsp:include page="include/commonInclude.jsp"></jsp:include>
-	<title>心信速递管理后台</title>
+	<title>高尔夫小程序管理后台</title>
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href=""><b>心信速递管理后台</b></a>
+    <a href=""><b>高尔夫小程序管理后台</b></a>
   </div>
   <div class="login-box-body">
     <form action="admin/login" method="post">

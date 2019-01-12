@@ -5,6 +5,7 @@
 <head>
 	<title>编辑管理员用户信息</title>
 	<jsp:include page="../include/commonInclude.jsp"></jsp:include>
+	<script src="static/js/admin/park.js"></script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
@@ -31,7 +32,7 @@
 			            <!-- /.box-header -->
 		            <!-- form start -->
 		            <form class="form-horizontal" role="form" id="userInfoForm" name="userInfoForm" action="admin/user/userEdit" method="post">
-		            	<jsp:include page="adminuser_form.jsp"></jsp:include>
+		            	<jsp:include page="park_form.jsp"></jsp:include>
 		            </form>
           			</div>
           		 </div>

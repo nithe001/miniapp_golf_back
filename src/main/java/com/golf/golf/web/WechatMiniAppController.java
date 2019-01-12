@@ -3,13 +3,13 @@ package com.golf.golf.web;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
+import com.golf.golf.db.UserInfo;
+import com.golf.golf.db.WechatUserInfo;
 import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.golf.common.GenericController;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.WechatUserUtil;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import me.chanjar.weixin.mp.api.WxMpConfigStorage;
@@ -62,8 +62,8 @@ public class WechatMiniAppController extends GenericController {
 					}
 					UserModel model = new UserModel();
 					model.setWechatUser(wechatUserLocal);
-					if(wechatUserLocal.getUId()!= null){
-						UserInfo u = userService.getUserById(wechatUserLocal.getUId());
+					if(wechatUserLocal.getWuiUId()!= null){
+						UserInfo u = userService.getUserById(wechatUserLocal.getWuiUId());
 						model.setUser(u);
 					}
 					//存session

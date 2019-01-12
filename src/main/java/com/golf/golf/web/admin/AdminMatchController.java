@@ -90,8 +90,8 @@ public class AdminMatchController {
 	@RequestMapping("addMatch")
 	public String addMatch(MatchInfo calendar){
 		try{
-			String a = calendar.getContent().replace("\"", "\'");
-			calendar.setContent(a);
+			String a = calendar.getMiContent().replace("\"", "\'");
+			calendar.setMiContent(a);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("新增赛事活动时出错。"+ e );
@@ -127,8 +127,8 @@ public class AdminMatchController {
     @RequestMapping("calendarEdit")
     public String calendarEdit(MatchInfo actiivity){
         try{
-			String a = actiivity.getContent().replace("\"", "\'");
-			actiivity.setContent(a);
+			String a = actiivity.getMiContent().replace("\"", "\'");
+			actiivity.setMiContent(a);
             adminMatchService.editMatch(actiivity);
         }catch(Exception e){
             e.printStackTrace();

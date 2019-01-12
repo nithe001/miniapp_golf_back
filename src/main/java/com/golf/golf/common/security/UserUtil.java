@@ -78,7 +78,7 @@ public class UserUtil {
     public static Long getUserId() {
         if (hasLogin()) {
 //            return getLoginUser().getWechatUser().getCwuId();
-			return getLoginUser().getUser().getId();
+			return getLoginUser().getUser().getUiId();
         }
         return null;
     }
@@ -90,14 +90,14 @@ public class UserUtil {
 	 */
 	public static String getOpenId() {
 		if (hasLogin()) {
-			return getLoginUser().getWechatUser().getOpenid();
+			return getLoginUser().getWechatUser().getWuiOpenid();
 		}
 		return null;
 	}
 
 
     public static String getShowName(){
-        return getLoginUser().getWechatUser().getNickName();
+        return getLoginUser().getWechatUser().getWuiNickName();
     }
 
 	/**

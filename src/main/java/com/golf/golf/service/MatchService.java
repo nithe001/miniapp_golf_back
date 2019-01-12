@@ -23,7 +23,7 @@ public class MatchService implements IBaseService {
 
 	public MatchInfo getMatchInfoById(Long wcId) {
 		MatchInfo matchInfo = dao.get(MatchInfo.class,wcId);
-		matchInfo.setHit(matchInfo.getHit()==null?1:matchInfo.getHit()+1);
+		matchInfo.setMiHit(matchInfo.getMiHit()==null?1:matchInfo.getMiHit()+1);
 		dao.update(matchInfo);
 		return matchInfo;
 	}
@@ -36,9 +36,8 @@ public class MatchService implements IBaseService {
 		pageInfo = dao.getMatchList(searchBean,pageInfo);
 		if(pageInfo.getCount() >0){
 			for(MatchInfo matchInfo : (List<MatchInfo>)pageInfo.getItems()){
-				matchInfo.setStateStr();
-				matchInfo.setCreateTimeStr(matchInfo.getCreateTime());
-				matchInfo.setMatchTimeStr(matchInfo.getMatchTime());
+				matchInfo.setCreateTimeStr(matchInfo.getMiCreateTime());
+				matchInfo.setMatchTimeStr(matchInfo.getMiMatchTime());
 			}
 		}
 		return pageInfo;
@@ -51,10 +50,10 @@ public class MatchService implements IBaseService {
 	 */
 	public MatchInfo addHit(Long matchId){
 		MatchInfo db = dao.get(MatchInfo.class,matchId);
-		if(db.getHit() == null || db.getHit() == 0){
-			db.setHit(1);
+		if(db.getMiHit() == null || db.getMiHit() == 0){
+			db.setMiHit(1);
 		}else{
-			db.setHit(db.getHit() + 1);
+			db.setMiHit(db.getMiHit() + 1);
 		}
 		dao.update(db);
 		return db;

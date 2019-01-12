@@ -3,6 +3,7 @@ package com.golf.golf.service.admin;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminMatchDao;
 import com.golf.golf.db.MatchInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,18 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void editMatch(MatchInfo matchInfo) {
-		MatchInfo db = dao.get(MatchInfo.class,matchInfo.getId());
-		db.setTitle(matchInfo.getTitle());
-		db.setMatchTime(matchInfo.getMatchTime());
-		db.setDigest(matchInfo.getDigest());
-		db.setContent(matchInfo.getContent());
-		db.setAddress(matchInfo.getAddress());
-		db.setIsOpen(matchInfo.getIsOpen());
+		MatchInfo db = dao.get(MatchInfo.class,matchInfo.getMiId());
+		db.setMiTitle(matchInfo.getMiTitle());
+		db.setMiMatchTime(matchInfo.getMiMatchTime());
+		db.setMiDigest(matchInfo.getMiDigest());
+		db.setMiContent(matchInfo.getMiContent());
+		db.setMiParkId(matchInfo.getMiParkId());
+		db.setMiParkName(matchInfo.getMiParkName());
+		db.setMiJoinOpenType(matchInfo.getMiJoinOpenType());
+		db.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
+		db.setMiUpdateTime(System.currentTimeMillis());
+		db.setMiUpdateUserId(AdminUserUtil.getUserId());
+		db.setMiUpdateUserName(AdminUserUtil.getShowName());
 		dao.update(db);
 	}
 

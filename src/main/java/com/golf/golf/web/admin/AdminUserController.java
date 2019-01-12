@@ -1,13 +1,13 @@
 package com.golf.golf.web.admin;
 
+import com.golf.golf.db.AdminUser;
+import com.golf.golf.db.UserInfo;
 import com.google.gson.JsonElement;
 import com.golf.common.Const;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
-import com.golf.golf.db.AdminUser;
-import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.admin.AdminUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -240,7 +240,7 @@ public class AdminUserController {
 	@RequestMapping("wechatUserUpdateOrAdd")
 	public String wechatUserUpdateOrAdd(UserInfo user){
 		try{
-			if(user.getId() != null){
+			if(user.getUiId() != null){
 				logic.editWechatUser(user);
 			}else{
 				logic.saveWechatUser(user);

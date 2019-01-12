@@ -9,14 +9,15 @@
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
 		<jsp:include page="../include/header.jsp">
-			<jsp:param value="nav_user" name="navId"></jsp:param>
+			<jsp:param value="nav_adminUser" name="navId"></jsp:param>
+			<jsp:param value="user" name="navParentId"/>
 		</jsp:include>
 		
 		<div class="content-wrapper">
 			<section class="content-header">
 				<h1>新增用户</h1>
 		        <ol class="breadcrumb">
-		           <li><a href="admin/user/userList"><i class="fa fa-dashboard"></i>用户列表</a></li>
+		           <li><a href="admin/user/adminUserList"><i class="fa fa-dashboard"></i>用户列表</a></li>
 		           <li class="active">新增用户</li>
 		        </ol>
 		    </section>

@@ -61,20 +61,16 @@ public class AdminUserDao extends CommonDao {
 	public POJOPageInfo getWechatUserList(SearchBean searchBean, POJOPageInfo pageInfo) {
 		Map<String, Object> parp = searchBean.getParps();
 		StringBuffer hql = new StringBuffer();
-		hql.append(" from cm_wechat_user as wu left join cm_user as u ");
-		hql.append(" on wu.cwu_cu_id = u.cu_id where 1=1 ");
+		hql.append(" from wechat_user_info as wu left join user_info as u on wu.wui_u_id = u.ui_id ");
+		hql.append(" where 1=1 ");
 		if(parp.get("keyword") != null){
-			hql.append("and (wu.cwu_nickname like :keyword or u.cu_user_name like :keyword) ");
-		}
-		//关注状态（0：未关注；1：关注）
-		if(parp.get("state") != null){
-			hql.append("and wu.cwu_subscribe = :state ");
+			hql.append("and (wu.wui_nick_name like :keyword or u.wui_nick_name like :keyword) ");
 		}
 		if(parp.get("startDate") != null){
-			hql.append(" and wu.cwu_create_time >=:startDate ");
+			hql.append(" and wu.create_time >=:startDate ");
 		}
 		if(parp.get("endDate") != null){
-			hql.append(" and wu.cwu_create_time <=:endDate ");
+			hql.append(" and wu.create_time <=:endDate ");
 		}
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
@@ -82,13 +78,11 @@ public class AdminUserDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		String order = "order by wu.cwu_create_time desc";
-		String select = "select wu.cwu_id,wu.cwu_cu_id,wu.cwu_openid,wu.cwu_nickname,u.cu_user_name," +
-				"wu.cwu_sex,wu.cwu_province,wu.cwu_city,wu.cwu_subscribe,wu.cwu_subscribe_time ";
-		List<Object[]> list = dao.createSQLQuery(select+hql.toString()+order, parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		String select ="select wu.wui_u_id,wu.wui_nick_name,wu.wui_openid,u.ui_real_name,wu.wui_sex,wu.wui_province,wu.wui_city,wu.create_time ";
+		String group ="group by wu.wui_id order by wu.create_time";
+		List<Object[]> list = dao.createSQLQuery(select+hql.toString()+group, parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
-
 		return pageInfo;
 	}
 

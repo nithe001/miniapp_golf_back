@@ -1,4 +1,4 @@
-<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@ page language="java" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>  
 <input type="hidden" name="auId" id="id" value="${user.auId }"/>
 <div class="box-body">
@@ -30,12 +30,6 @@
 	<input type="text" class="form-control" id="auShowName" name="auShowName" value="${user.auShowName }" placeholder="姓名">
   </div>
 </div>
-  <div class="form-group">
-	  <label for="auEmail" class="col-sm-2 control-label">邮箱</label>
-	  <div class="col-sm-5">
-		  <input type="text" class="form-control" id="auEmail" name="auEmail" value="${user.auEmail }" placeholder="邮箱">
-	  </div>
-  </div>
 </div>
 <!-- /.box-body -->
 

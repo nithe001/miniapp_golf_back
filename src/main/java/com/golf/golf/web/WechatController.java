@@ -1,13 +1,13 @@
 package com.golf.golf.web;
 
+import com.golf.golf.db.UserInfo;
+import com.golf.golf.db.WechatUserInfo;
 import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.util.RandomUtil;
 import com.golf.golf.common.GenericController;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -292,8 +292,8 @@ public class WechatController extends GenericController {
             }
 
             UserInfo user = null;
-            if(wechatUser.getUId() != null){
-                user = userService.getUserById(wechatUser.getUId());
+            if(wechatUser.getWuiId() != null){
+                user = userService.getUserById(wechatUser.getWuiUId());
             }
 
             UserModel userModel = new UserModel();

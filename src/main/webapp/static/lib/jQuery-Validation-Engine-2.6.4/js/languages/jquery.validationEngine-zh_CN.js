@@ -137,7 +137,7 @@
                 },
                 "ajaxNameCall": {
                     // remote json service location
-                    "url": "admin/user/exsitUser.do",
+                    "url": "admin/user/exsitName.do",
                     // error
                     "alertText": "* 此名称已被其他人使用",
                     // if you provide an "alertTextOk", it will show as a green prompt when the field validates
