@@ -1,21 +1,17 @@
 <%@ page language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <style>
-    .formcontrol{
-        display: inline;
-        width: 15%;
-        height: 34px;
-        padding: 6px 12px;
-        font-size: 14px;
-        line-height: 1.42857143;
-        color: #555;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-
     .divBorder{
         border: 1px solid #00acd6;
+    }
+    .width100{
+        width:100%;
+    }
+    .width20{
+        width:20%;
+    }
+    .width10{
+        width:10%;
     }
 </style>
 <input type="hidden" name="piId" id="piId" value="${park.piId }"/>
@@ -68,29 +64,6 @@
     </div>
     <div class="col-xs-push-4 col-xs-2">
         <button type="submit" class="btn btn-info pull-right">保存</button>
-    </div>
-</div>
-
-
-<!-- Modal -->
-<div class="modal fade" id="fenquModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">分区名称</h4>
-            </div>
-            <div class="modal-body">
-                <input type="text" class="form-control" placeholder="请输入分区名称" id="fqName"/>
-            </div>
-            <input id="parkId" value="" type="hidden"/>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
-            </div>
-        </div>
     </div>
 </div>
 

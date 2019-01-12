@@ -5,7 +5,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "park_partition")
 public class ParkPartition {
-    private long ppId;
+    private Long ppId;
     private Long ppPId;
     private String ppName;
     private Integer ppHoleNum;
@@ -18,11 +18,11 @@ public class ParkPartition {
 
     @Id
     @Column(name = "pp_id")
-    public long getPpId() {
+    public Long getPpId() {
         return ppId;
     }
 
-    public void setPpId(long ppId) {
+    public void setPpId(Long ppId) {
         this.ppId = ppId;
     }
 
