@@ -11,7 +11,7 @@
  Target Server Version : 80012
  File Encoding         : 65001
 
- Date: 12/01/2019 23:44:10
+ Date: 13/01/2019 23:10:32
 */
 
 SET NAMES utf8mb4;
@@ -39,7 +39,7 @@ CREATE TABLE `admin_user`  (
   `au_update_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '更新人名称',
   `au_update_date` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`au_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '后台用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_user
@@ -47,31 +47,6 @@ CREATE TABLE `admin_user`  (
 INSERT INTO `admin_user` VALUES (1, 'peihong', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', '张三', 1, 20, NULL, '', 1, 1, 1, 1, '1', NULL, NULL, NULL);
 INSERT INTO `admin_user` VALUES (2, 'admin', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', '123', NULL, NULL, NULL, '', NULL, 1, 1494236192458, 1, 'peihong', NULL, NULL, NULL);
 INSERT INTO `admin_user` VALUES (3, 'nmy', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'nmy', NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL);
-
--- ----------------------------
--- Table structure for match_group_info
--- ----------------------------
-DROP TABLE IF EXISTS `match_group_info`;
-CREATE TABLE `match_group_info`  (
-  `mgi_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '比赛分组表主键',
-  `mgi_match_id` bigint(20) DEFAULT NULL COMMENT '赛事id',
-  `mgi_group_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组名称',
-  `mgi_user_id` bigint(20) DEFAULT NULL COMMENT '球友用户id',
-  `mgi_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '球友用户名',
-  `mgi_create_user_id` bigint(20) DEFAULT NULL COMMENT '分组创建人id',
-  `mgi_create_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组创建人姓名',
-  `mgi_create_time` bigint(20) DEFAULT NULL COMMENT '分组创建时间',
-  `mgi_update_user_id` bigint(11) DEFAULT NULL COMMENT '分组更新人id',
-  `mgi_update_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组更新人姓名',
-  `mgi_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
-  PRIMARY KEY (`mgi_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '比赛分组记录表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of match_group_info
--- ----------------------------
-INSERT INTO `match_group_info` VALUES (1, 1, '第一组', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL);
-INSERT INTO `match_group_info` VALUES (2, 1, '第二组', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for match_info
@@ -96,15 +71,34 @@ CREATE TABLE `match_info`  (
   `mi_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `mi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mi_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '赛事活动表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '赛事活动表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of match_info
 -- ----------------------------
 INSERT INTO `match_info` VALUES (1, '芒街个人挑战赛', NULL, '（18洞）Mong Cai Golf Club(越南)A场/B场', NULL, 1542245400000, '芒街高尔夫个人挑战赛', NULL, NULL, 0, 1543828610234, '张三', 1, 1543828610234, NULL, NULL, NULL);
-INSERT INTO `match_info` VALUES (2, '北京公开赛2018封场杯', NULL, '北京北湖国际高尔夫球俱乐部', NULL, 1546219800000, '内容内容', NULL, NULL, 0, 1546099200000, '李四', NULL, 1546099200000, NULL, NULL, NULL);
-INSERT INTO `match_info` VALUES (3, '龙城队比赛', NULL, '北京华彬国际高尔夫尼克劳斯球场', '', 1545183000000, '龙城队比赛龙城队比赛龙城队比赛', NULL, NULL, 0, 1545183000000, '张三', 1, 1543828610234, NULL, NULL, NULL);
-INSERT INTO `match_info` VALUES (4, '纪念金庸先生比赛', NULL, '北京东方明珠高尔夫球俱乐部', '', 1545096600000, '纪念金庸先生比赛纪念金庸先生比赛纪念金庸先生比赛', NULL, NULL, 0, 1545062400000, '张三', 1, 1543828610234, NULL, NULL, NULL);
+INSERT INTO `match_info` VALUES (2, '北京公开赛2018封场杯', NULL, '北京北湖国际高尔夫球俱乐部', NULL, 1546219800000, '内容内容', NULL, NULL, 0, 1546099200000, '李四', 2, 1546099200000, NULL, NULL, NULL);
+INSERT INTO `match_info` VALUES (3, '龙城队比赛', NULL, '北京华彬国际高尔夫尼克劳斯球场', '', 1545183000000, '龙城队比赛龙城队比赛龙城队比赛', NULL, NULL, 0, 1545183000000, '张三', 3, 1543828610234, NULL, NULL, NULL);
+INSERT INTO `match_info` VALUES (4, '纪念金庸先生比赛', NULL, '北京东方明珠高尔夫球俱乐部', '', 1545096600000, '纪念金庸先生比赛纪念金庸先生比赛纪念金庸先生比赛', NULL, NULL, 0, 1545062400000, '张三', 4, 1543828610234, NULL, NULL, NULL);
+
+-- ----------------------------
+-- Table structure for match_join_watch_info
+-- ----------------------------
+DROP TABLE IF EXISTS `match_join_watch_info`;
+CREATE TABLE `match_join_watch_info`  (
+  `mjwi_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '报名表主键',
+  `mjwi_type` int(11) DEFAULT NULL COMMENT '类型：0：观战 1：报名',
+  `mjwi_match_id` bigint(20) DEFAULT NULL COMMENT '比赛表主键',
+  `mjwi_user_id` bigint(20) DEFAULT NULL COMMENT '用户主键',
+  `mjwi_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`mjwi_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '比赛报名表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of match_join_watch_info
+-- ----------------------------
+INSERT INTO `match_join_watch_info` VALUES (1, 1, 1, 1, NULL);
+INSERT INTO `match_join_watch_info` VALUES (2, 0, 2, 2, NULL);
 
 -- ----------------------------
 -- Table structure for match_score
@@ -132,6 +126,51 @@ CREATE TABLE `match_score`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '比赛成绩表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for match_score_user_mapping
+-- ----------------------------
+DROP TABLE IF EXISTS `match_score_user_mapping`;
+CREATE TABLE `match_score_user_mapping`  (
+  `msum_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户记分mapping表主键',
+  `msum_match_id` bigint(20) DEFAULT NULL COMMENT '比赛id',
+  `msum_group_id` bigint(20) DEFAULT NULL COMMENT '邀请人所在分组id',
+  `msum_create_user_id` bigint(20) DEFAULT NULL COMMENT '邀请人id',
+  `msum_scorer_id` bigint(20) DEFAULT NULL COMMENT '记分人id',
+  `msum_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`msum_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户记分mapping表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of match_score_user_mapping
+-- ----------------------------
+INSERT INTO `match_score_user_mapping` VALUES (1, 1, 2, 3, 1, NULL);
+
+-- ----------------------------
+-- Table structure for match_user_group_mapping
+-- ----------------------------
+DROP TABLE IF EXISTS `match_user_group_mapping`;
+CREATE TABLE `match_user_group_mapping`  (
+  `mugm_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '比赛分组表主键',
+  `mugm_match_id` bigint(20) DEFAULT NULL COMMENT '赛事id',
+  `mugm_is_captain` int(11) DEFAULT NULL COMMENT '是否为赛长：1是  0否',
+  `mugm_group_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组名称',
+  `mugm_user_id` bigint(20) DEFAULT NULL COMMENT '球友用户id',
+  `mugm_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '球友用户名',
+  `mugm_create_user_id` bigint(20) DEFAULT NULL COMMENT '分组创建人id',
+  `mugm_create_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组创建人姓名',
+  `mugm_create_time` bigint(20) DEFAULT NULL COMMENT '分组创建时间',
+  `mugm_update_user_id` bigint(11) DEFAULT NULL COMMENT '分组更新人id',
+  `mugm_update_user_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '分组更新人姓名',
+  `mugm_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
+  PRIMARY KEY (`mugm_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '比赛分组记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of match_user_group_mapping
+-- ----------------------------
+INSERT INTO `match_user_group_mapping` VALUES (1, 1, NULL, '第一组', 1, 'nmy', 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `match_user_group_mapping` VALUES (2, 1, NULL, '第二组', 2, 'zs', 1, NULL, NULL, NULL, NULL, NULL);
+
+-- ----------------------------
 -- Table structure for park_info
 -- ----------------------------
 DROP TABLE IF EXISTS `park_info`;
@@ -141,7 +180,9 @@ CREATE TABLE `park_info`  (
   `pi_logo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '球场logo',
   `pi_address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '球场地理位置（用经纬度标识）',
   `pi_is_valid` int(11) DEFAULT NULL COMMENT '是否可用(1:是  0：否)',
-  `pi_create_time` bigint(20) DEFAULT NULL COMMENT ' 创建时间',
+  `pi_longitude` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '地理位置：经度',
+  `pi_latitude` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '地理位置：纬度',
+  `pi_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   `pi_create_user_id` bigint(20) DEFAULT NULL COMMENT '创建人id',
   `pi_create_user_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '创建人姓名',
   `pi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
@@ -191,6 +232,8 @@ DROP TABLE IF EXISTS `user_info`;
 CREATE TABLE `user_info`  (
   `ui_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户表主键',
   `ui_type` int(11) DEFAULT NULL COMMENT '用户类型(1:理事会，2:委员会，3：普通用户)',
+  `ui_longitude` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '地理位置：经度',
+  `ui_latitude` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '地理位置：纬度',
   `ui_real_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '真实姓名',
   `ui_age` int(11) DEFAULT NULL COMMENT '年龄',
   `ui_tel_no` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '联系电话',
@@ -210,6 +253,11 @@ CREATE TABLE `user_info`  (
   `ui_update_user_id` bigint(11) DEFAULT NULL COMMENT '更新人用户id',
   PRIMARY KEY (`ui_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '用户详细资料表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user_info
+-- ----------------------------
+INSERT INTO `user_info` VALUES (1, 1, NULL, NULL, 'nmy', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for wechat_user_info
@@ -239,7 +287,7 @@ CREATE TABLE `wechat_user_info`  (
   `watermark_appid` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `watermark_timestamp` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   PRIMARY KEY (`wui_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '微信用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '微信用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of wechat_user_info
