@@ -7,6 +7,8 @@ import javax.persistence.*;
 public class UserInfo {
     private Long uiId;
     private Integer uiType;
+    private String uiLongitude;
+    private String uiLatitude;
     private String uiRealName;
     private Integer uiAge;
     private String uiTelNo;
@@ -33,6 +35,26 @@ public class UserInfo {
 
     public void setUiId(Long uiId) {
         this.uiId = uiId;
+    }
+
+    @Basic
+    @Column(name = "ui_longitude")
+    public String getUiLongitude() {
+        return uiLongitude;
+    }
+
+    public void setUiLongitude(String uiLongitude) {
+        this.uiLongitude = uiLongitude;
+    }
+
+    @Basic
+    @Column(name = "ui_latitude")
+    public String getUiLatitude() {
+        return uiLatitude;
+    }
+
+    public void setUiLatitude(String uiLatitude) {
+        this.uiLatitude = uiLatitude;
     }
 
     @Basic

@@ -212,4 +212,14 @@ public class UserService implements IBaseService {
 		userInfo.setWuiCountry(country);
 		dao.update(userInfo);
 	}
+
+    /**
+     * 根据用户id获取用户信息
+     * @return
+     */
+    public UserInfo getUserInfoById(Long userId) {
+        return dao.get(UserInfo.class, userId);
+    }
+
+
 }

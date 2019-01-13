@@ -10,6 +10,8 @@ public class ParkInfo {
     private String piLogo;
     private String piAddress;
     private Integer piIsValid;
+    private String piLongitude;
+    private String piLatitude;
     private Long piCreateTime;
     private Long piCreateUserId;
     private String piCreateUserName;
@@ -65,6 +67,26 @@ public class ParkInfo {
     }
     public void setPiIsValid(Integer piIsValid) {
         this.piIsValid = piIsValid;
+    }
+
+    @Basic
+    @Column(name = "pi_Longitude")
+    public String getPiLongitude() {
+        return piLongitude;
+    }
+
+    public void setPiLongitude(String piLongitude) {
+        this.piLongitude = piLongitude;
+    }
+
+    @Basic
+    @Column(name = "pi_latitude")
+    public String getPiLatitude() {
+        return piLatitude;
+    }
+
+    public void setPiLatitude(String piLatitude) {
+        this.piLatitude = piLatitude;
     }
 
     @Basic
