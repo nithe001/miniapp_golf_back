@@ -7,6 +7,7 @@ import javax.persistence.*;
 public class UserInfo {
     private Long uiId;
     private Integer uiType;
+    private String uiHeadimg;
     private String uiLongitude;
     private String uiLatitude;
     private String uiRealName;
@@ -65,6 +66,17 @@ public class UserInfo {
 
     public void setUiType(Integer uiType) {
         this.uiType = uiType;
+    }
+
+
+    @Basic
+    @Column(name = "ui_headimg")
+    public String getUiHeadimg() {
+        return uiHeadimg;
+    }
+
+    public void setUiHeadimg(String uiHeadimg) {
+        this.uiHeadimg = uiHeadimg;
     }
 
     @Basic

@@ -8,15 +8,13 @@ public class MatchUserGroupMapping {
     private Long mugmId;
     private Long mugmMatchId;
     private Integer mugmIsCaptain;
+    private Long mugmGroupId;
     private String mugmGroupName;
     private Long mugmUserId;
     private String mugmUserName;
     private Long mugmCreateUserId;
     private String mugmCreateUserName;
     private Long mugmCreateTime;
-    private Long mugmUpdateUserId;
-    private String mugmUpdateUserName;
-    private Long mugmUpdateTime;
 
     @Id
     @Column(name = "mugm_id")
@@ -46,6 +44,17 @@ public class MatchUserGroupMapping {
 
     public void setMugmIsCaptain(Integer mugmIsCaptain) {
         this.mugmIsCaptain = mugmIsCaptain;
+    }
+
+
+    @Basic
+    @Column(name = "mugm_group_id")
+    public Long getMugmGroupId() {
+        return mugmGroupId;
+    }
+
+    public void setMugmGroupId(Long mugmGroupId) {
+        this.mugmGroupId = mugmGroupId;
     }
 
     @Basic
@@ -106,36 +115,6 @@ public class MatchUserGroupMapping {
 
     public void setMugmCreateTime(Long mgiCreateTime) {
         this.mugmCreateTime = mgiCreateTime;
-    }
-
-    @Basic
-    @Column(name = "mugm_update_user_id")
-    public Long getMugmUpdateUserId() {
-        return mugmUpdateUserId;
-    }
-
-    public void setMugmUpdateUserId(Long mgiUpdateUserId) {
-        this.mugmUpdateUserId = mgiUpdateUserId;
-    }
-
-    @Basic
-    @Column(name = "mugm_update_user_name")
-    public String getMugmUpdateUserName() {
-        return mugmUpdateUserName;
-    }
-
-    public void setMugmUpdateUserName(String mgiUpdateUserName) {
-        this.mugmUpdateUserName = mgiUpdateUserName;
-    }
-
-    @Basic
-    @Column(name = "mugm_update_time")
-    public Long getMugmUpdateTime() {
-        return mugmUpdateTime;
-    }
-
-    public void setMugmUpdateTime(Long mgiUpdateTime) {
-        this.mugmUpdateTime = mgiUpdateTime;
     }
 
 }

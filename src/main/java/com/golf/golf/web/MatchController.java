@@ -57,12 +57,12 @@ public class MatchController {
 			if(StringUtils.isNotEmpty(keyword)){
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
-			if(type != null){
-				searchBean.addParpField("userId", UserUtil.getUserId());
-				pageInfo = matchService.getMyMatchList(searchBean, pageInfo);
-			}else{
-				pageInfo = matchService.getMatchList(searchBean, pageInfo);
-			}
+			if(type == null){
+                pageInfo = matchService.getMatchList(searchBean, pageInfo);
+			}else if(type == 0){
+                searchBean.addParpField("userId", UserUtil.getUserId());
+                pageInfo = matchService.getMyMatchList(searchBean, pageInfo);
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取比赛列表出错。";
@@ -89,6 +89,7 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
 
     /**
      * 点击围观用户头像 获取详细信息

@@ -4,6 +4,7 @@ import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.MatchUserGroupMapping;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -28,6 +29,12 @@ public class MatchDao extends CommonDao {
 		if(parp.get("keyword") != null){
 			hql.append("AND m.miTitle LIKE :keyword ");
 		}
+
+		//获取可以报名的比赛
+        if(parp.get("joinEndTime") != null){
+            hql.append("AND m.miMatchTime < :joinEndTime ");
+        }
+
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
 			pageInfo.setItems(new ArrayList<MatchInfo>());
@@ -132,4 +139,38 @@ public class MatchDao extends CommonDao {
         hql.append("AND m.msumScorerId = :scorerId ");
         return dao.createCountQuery("SELECT COUNT(*) "+hql.toString(),parp);
     }
+
+    /**
+     * 报名——获取比赛赛长和分组
+     * @return
+     */
+    public List<MatchUserGroupMapping> getMatchGroupMappingList(Long matchId) {
+        /*SELECT
+        m.mugm_id,
+                m.mugm_group_id,
+                m.mugm_group_name,
+                m.mugm_is_captain,
+                m.mugm_user_id,
+                m.mugm_user_name from match_user_group_mapping AS m
+	, match_group AS g
+        where m.mugm_group_id = g.mg_id
+        and m.mugm_match_id = 1
+        GROUP BY
+        m.mugm_is_captain,m.mugm_group_name,m.mugm_user_id
+        ORDER BY m.mugm_is_captain desc*/
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT m.mugmId,m.mugmGroupId,m.mugmGroupName,m.mugmIsCaptain,m.mugmUserId,m.mugmUserName  ");
+        hql.append("FROM MatchScoreUserMapping AS m , MatchGroup AS g WHERE 1=1 ");
+        hql.append("AND m.mugmGroupId = g.mgId ");
+        hql.append("AND m.mugmMatchId = " +matchId);
+        hql.append(" GROUP BY ");
+        hql.append("m.mugmIsCaptain,m.mugmGroupName,m.mugmUserId ");
+        hql.append("ORDER BY m.mugmIsCaptain desc ");
+        Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString());
+        if(count == 0){
+            return null;
+        }
+        return dao.createQuery(hql.toString());
+    }
+
 }
