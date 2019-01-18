@@ -16,6 +16,7 @@ public class MatchInfo {
     private String miContent;
     private Integer miMatchOpenType;
     private Integer miJoinOpenType;
+    private Integer miReportScoreType;
     private Integer miHit;
     private Long miApplyEndTime;
     private String miCreateUserName;
@@ -115,7 +116,17 @@ public class MatchInfo {
         this.miJoinOpenType = miJoinOpenType;
     }
 
-    @Basic
+	@Basic
+	@Column(name = "mi_report_score_type")
+	public Integer getMiReportScoreType() {
+		return miReportScoreType;
+	}
+
+	public void setMiReportScoreType(Integer miReportScoreType) {
+		this.miReportScoreType = miReportScoreType;
+	}
+
+	@Basic
     @Column(name = "mi_hit")
     public Integer getMiHit() {
         return miHit;

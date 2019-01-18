@@ -11,7 +11,7 @@ import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
-import com.golf.golf.enums.UserTypeEnum;
+import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
@@ -137,7 +137,7 @@ public class UserService implements IBaseService {
      * @param user
      */
     public Long saveUser(UserInfo user,String captcha) throws UnsupportedEncodingException, WxErrorException {
-        user.setUiType(Integer.parseInt(UserTypeEnum.DOMESTIC.text()));//普通用户
+        user.setUiType(Integer.parseInt(MatchGroupUserMappingTypeEnum.ORDINARY.text()));//普通用户
         user.setUiIsValid(1);
         user.setUiCreateTime(System.currentTimeMillis());
         Long uid = dao.save(user);

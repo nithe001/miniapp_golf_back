@@ -5,7 +5,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "match_group")
 public class MatchGroup {
-    private long mgId;
+    private Long mgId;
     private Long mgMatchId;
     private String mgGroupName;
     private Long mgCreateUserId;
@@ -17,11 +17,11 @@ public class MatchGroup {
 
     @Id
     @Column(name = "mg_id")
-    public long getMgId() {
+    public Long getMgId() {
         return mgId;
     }
 
-    public void setMgId(long mgId) {
+    public void setMgId(Long mgId) {
         this.mgId = mgId;
     }
 
@@ -103,43 +103,5 @@ public class MatchGroup {
 
     public void setMgUpdateTime(Long mgUpdateTime) {
         this.mgUpdateTime = mgUpdateTime;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        MatchGroup that = (MatchGroup) o;
-
-        if (mgId != that.mgId) return false;
-        if (mgMatchId != null ? !mgMatchId.equals(that.mgMatchId) : that.mgMatchId != null) return false;
-        if (mgGroupName != null ? !mgGroupName.equals(that.mgGroupName) : that.mgGroupName != null) return false;
-        if (mgCreateUserId != null ? !mgCreateUserId.equals(that.mgCreateUserId) : that.mgCreateUserId != null)
-            return false;
-        if (mgCreateUserName != null ? !mgCreateUserName.equals(that.mgCreateUserName) : that.mgCreateUserName != null)
-            return false;
-        if (mgCreateTime != null ? !mgCreateTime.equals(that.mgCreateTime) : that.mgCreateTime != null) return false;
-        if (mgUpdateUserId != null ? !mgUpdateUserId.equals(that.mgUpdateUserId) : that.mgUpdateUserId != null)
-            return false;
-        if (mgUpdateUserName != null ? !mgUpdateUserName.equals(that.mgUpdateUserName) : that.mgUpdateUserName != null)
-            return false;
-        if (mgUpdateTime != null ? !mgUpdateTime.equals(that.mgUpdateTime) : that.mgUpdateTime != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (mgId ^ (mgId >>> 32));
-        result = 31 * result + (mgMatchId != null ? mgMatchId.hashCode() : 0);
-        result = 31 * result + (mgGroupName != null ? mgGroupName.hashCode() : 0);
-        result = 31 * result + (mgCreateUserId != null ? mgCreateUserId.hashCode() : 0);
-        result = 31 * result + (mgCreateUserName != null ? mgCreateUserName.hashCode() : 0);
-        result = 31 * result + (mgCreateTime != null ? mgCreateTime.hashCode() : 0);
-        result = 31 * result + (mgUpdateUserId != null ? mgUpdateUserId.hashCode() : 0);
-        result = 31 * result + (mgUpdateUserName != null ? mgUpdateUserName.hashCode() : 0);
-        result = 31 * result + (mgUpdateTime != null ? mgUpdateTime.hashCode() : 0);
-        return result;
     }
 }

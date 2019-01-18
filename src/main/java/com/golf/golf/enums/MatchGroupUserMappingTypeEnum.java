@@ -8,15 +8,17 @@ import java.util.List;
  * @author nmy
  * @CreateTime 2017-4-5
  */
-public enum MatchCaptainTypeEnum implements IEnum {
-	/** 否 0*/
-	YES("0"),
-    /** 是 1*/
-	NO("1");
+public enum MatchGroupUserMappingTypeEnum implements IEnum {
+	/** 临时分组 0*/
+	TEMPORARY("0"),
+    /** 赛长 1*/
+	CAPTION("1"),
+	/** 普通球友 1*/
+	ORDINARY("2");
 
 	private String text;
 
-    MatchCaptainTypeEnum(String text) {
+    MatchGroupUserMappingTypeEnum(String text) {
 		this.text = text;
 	}
 
@@ -41,7 +43,7 @@ public enum MatchCaptainTypeEnum implements IEnum {
 	 * @return
 	 */
 	public static String getTextByOrdinal(String ordinal) {
-		for(MatchCaptainTypeEnum model : MatchCaptainTypeEnum.values()) {
+		for(MatchGroupUserMappingTypeEnum model : MatchGroupUserMappingTypeEnum.values()) {
 			if(model.value().equals(ordinal)) {
 				return model.text();
 			}
@@ -55,7 +57,7 @@ public enum MatchCaptainTypeEnum implements IEnum {
      */
     public static List<String> textList() {
         List<String> list = new ArrayList<String>();
-        for(MatchCaptainTypeEnum model : MatchCaptainTypeEnum.values()) {
+        for(MatchGroupUserMappingTypeEnum model : MatchGroupUserMappingTypeEnum.values()) {
             list.add(model.text());
         }
         return list;

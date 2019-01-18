@@ -1,15 +1,11 @@
 package com.golf.golf.web;
 
-import com.golf.common.Const;
 import com.golf.common.gson.JsonWrapper;
-import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.UserInfo;
+import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.service.MatchService;
-import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -34,8 +30,6 @@ public class MatchCaptionController {
 
     @Autowired
     private MatchService matchService;
-    @Autowired
-    private UserService userService;
 
     /**
      * 添加比赛分组初始化  弹框？新页面
@@ -65,138 +59,83 @@ public class MatchCaptionController {
         }
     }
 
-    /**
-     * 报名-加入本组
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("joinMatchGroup")
-    public JsonElement joinMatchGroup(Long matchId, Long groupId, String userIds) {
-        try {
-            matchService.updateMatchGroup(matchId, groupId, userIds);
-            return JsonWrapper.newSuccessInstance();
-        } catch (Exception e) {
-            errmsg = "前台-获取比赛活动分组详情出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
 
     /**
-     * 点击围观用户头像 获取详细信息
+     * 获取临时分组中的球友
+	 * @param matchId 比赛id
+	 * @param groupId 比赛分组id
      * @return
      */
     @ResponseBody
-    @RequestMapping("getUserInfoById")
-    public JsonElement getUserInfoById(Long userId) {
+    @RequestMapping("getUserByTemporary")
+    public JsonElement getUserByTemporary(Long matchId, Long groupId) {
         try {
-            UserInfo userInfo = userService.getUserInfoById(userId);
+            List<MatchUserGroupMapping> userInfo = matchService.getUserByTemporary(matchId, groupId);
             return JsonWrapper.newDataInstance(userInfo);
         } catch (Exception e) {
-            errmsg = "前台-根据用户id获取用户信息时出错。userId="+userId;
+            errmsg = "前台-赛长获取临时分组中的球友时出错。";
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
 
-    /**
-     * 点击“邀请记分”
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("saveUserScoreMapping")
-    public JsonElement saveUserScoreMapping(Long matchId, Long groupId, Long scorerId) {
-        try {
-            matchService.saveUserScoreMapping(matchId, groupId, scorerId);
-            return JsonWrapper.newSuccessInstance();
-        } catch (Exception e) {
-            errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
+	/**
+	 * 赛长添加多个球友 -加入本组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("joinMatchGroup")
+	public JsonElement joinMatchGroup(Long matchId, Long groupId, String userIds) {
+		try {
+			//TODO 权限校验
+			matchService.updateMatchGroupByCaption(matchId, groupId, userIds);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-赛长添加多个球友加入本组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
-    /**
-     * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
-     * @param matchId 比赛id
-     * @param groupId 本赛分组id
-     * @param matchUserId 被记分人id
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("addScoreInit")
-    public JsonElement addScoreInit(Long matchId, Long groupId, Long matchUserId) {
-        try {
-            SearchBean searchBean = new SearchBean();
-            searchBean.addParpField("keyword", matchId);
-            searchBean.addParpField("groupId", groupId);
-            searchBean.addParpField("matchUserId", matchUserId);
-            searchBean.addParpField("scorerId", UserUtil.getUserId());
-            return JsonWrapper.newDataInstance(matchService.getScoreType(searchBean));
-        } catch (Exception e) {
-            errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
+	/**
+	 * 赛长删除某组的多个球友到临时组 - 退出本组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("quitMatchGroup")
+	public JsonElement quitMatchGroup(Long matchId, Long groupId, String userIds) {
+		try {
+			//TODO 赛长权限校验
+			matchService.quitMatchGroup(matchId, groupId, UserUtil.getUserId(), userIds);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-报名-赛长删除某组的多个球友到临时组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
-    /**
-     * 获取比赛详情
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getMatchDetail")
-    public JsonElement getMatchDetail(Long matchId) {
-        try {
-            MatchInfo matchInfo = matchService.getMatchInfoById(matchId);
-            return JsonWrapper.newDataInstance(matchInfo);
-        } catch (Exception e) {
-            errmsg = "前台-获取比赛活动详情出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-    /**
-     * 获取本组比赛结果详情
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getMatchScoreByGroupId")
-    public JsonElement getMatchScoreByGroupId(Long groupId) {
-        try {
-            MatchInfo matchInfo = matchService.getMatchInfoById(groupId);
-            return JsonWrapper.newDataInstance(matchInfo);
-        } catch (Exception e) {
-            errmsg = "前台-获取本组比赛结果详情出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-    /**
-     * 获取整组比赛结果详情
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getMatchScoreByMatchId")
-    public JsonElement getMatchScoreByMatchId(Long matchId) {
-        try {
-            MatchInfo matchInfo = matchService.getMatchInfoById(matchId);
-            return JsonWrapper.newDataInstance(matchInfo);
-        } catch (Exception e) {
-            errmsg = "前台-获取整组比赛结果详情出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
+	/**
+	 * 创建比赛-保存-自动成为赛长
+	 * 小程序向后台传json
+	 * https://www.cnblogs.com/winv758241/p/7838907.html
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("saveMatchInfo")
+	public JsonElement saveMatchInfo(String matchJson) {
+		try {
+			matchService.saveMatchInfo(matchJson);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-创建比赛-保存时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 }

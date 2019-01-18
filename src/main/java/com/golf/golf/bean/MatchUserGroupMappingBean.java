@@ -11,7 +11,7 @@ import java.util.List;
 public class MatchUserGroupMappingBean {
     private Long groupId;
     private String groupName;
-    private Integer isCaption;
+    private Integer userType;
     private List<UserInfo> userList;
 
     public Long getGroupId() {
@@ -30,15 +30,15 @@ public class MatchUserGroupMappingBean {
         this.groupName = groupName;
     }
 
-    public Integer getIsCaption() {
-        return isCaption;
-    }
+	public Integer getUserType() {
+		return userType;
+	}
 
-    public void setIsCaption(Integer isCaption) {
-        this.isCaption = isCaption;
-    }
+	public void setUserType(Integer userType) {
+		this.userType = userType;
+	}
 
-    public List<UserInfo> getUserList() {
+	public List<UserInfo> getUserList() {
         return userList;
     }
 

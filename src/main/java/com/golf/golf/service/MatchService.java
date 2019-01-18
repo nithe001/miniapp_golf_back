@@ -7,8 +7,10 @@ import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
-import com.golf.golf.enums.MatchCaptainTypeEnum;
+import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
+import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -152,7 +154,6 @@ public class MatchService implements IBaseService {
         Long userId = UserUtil.getUserId();
         String userName = UserUtil.getShowName();
         MatchUserGroupMapping groupMapping = new MatchUserGroupMapping();
-        groupMapping.setMugmIsCaptain(MatchCaptainTypeEnum.NO.ordinal());
         groupMapping.setMugmMatchId(matchId);
         groupMapping.setMugmGroupName(groupName);
         groupMapping.setMugmUserId(userId);
@@ -164,25 +165,44 @@ public class MatchService implements IBaseService {
     }
 
     /**
-     * 报名-加入本组(本人加入本组 或 赛长选中一些球友加入本组)
+     * 报名-加入本组本人加入本组
      * @return
      */
-    public void updateMatchGroup(Long matchId, Long groupId, String userIds) {
-        if(StringUtils.isEmpty(userIds)){
-            Long userId = UserUtil.getUserId();
-            String userName = UserUtil.getShowName();
-            MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
-            MatchUserGroupMapping groupMapping = new MatchUserGroupMapping();
-            groupMapping.setMugmMatchId(matchId);
-            groupMapping.setMugmGroupId(groupId);
-            groupMapping.setMugmGroupName(matchGroup.getMgGroupName());
-            groupMapping.setMugmIsCaptain(MatchCaptainTypeEnum.NO.ordinal());
-            groupMapping.setMugmUserId(userId);
-            groupMapping.setMugmUserName(userName);
-            matchDao.save(groupMapping);
-        }
-
+    public void updateMatchGroup(Long matchId, Long groupId, Long userId) {
+		String userName = UserUtil.getShowName();
+		MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
+		MatchUserGroupMapping groupMapping = new MatchUserGroupMapping();
+		groupMapping.setMugmMatchId(matchId);
+		groupMapping.setMugmGroupId(groupId);
+		groupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+		groupMapping.setMugmUserId(userId);
+		groupMapping.setMugmUserName(userName);
+		groupMapping.setCreate();
+		matchDao.save(groupMapping);
     }
+	/**
+	 * 报名-加入本组-赛长选中一些球友加入本组
+	 * @return
+	 */
+	public void updateMatchGroupByCaption(Long matchId, Long groupId, String userIds) {
+		if(StringUtils.isEmpty(userIds)){
+			String[] ids = userIds.split(",");
+			for(String userId : ids){
+				String userName = UserUtil.getShowName();
+				MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
+				MatchUserGroupMapping groupMapping = new MatchUserGroupMapping();
+				groupMapping.setMugmMatchId(matchId);
+				groupMapping.setMugmGroupId(groupId);
+				//普通球友
+				groupMapping.setMugmUserType(MatchGroupUserMappingTypeEnum.ORDINARY.ordinal());
+				groupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+				groupMapping.setMugmUserId(Long.parseLong(userId));
+				groupMapping.setMugmUserName(userName);
+				groupMapping.setCreate();
+				matchDao.save(groupMapping);
+			}
+		}
+	}
 
 
     /**
@@ -197,7 +217,7 @@ public class MatchService implements IBaseService {
             for(MatchUserGroupMapping mapping:mappingList){
                 bean.setGroupId(mapping.getMugmGroupId());
                 bean.setGroupName(mapping.getMugmGroupName());
-                bean.setIsCaption(mapping.getMugmIsCaptain());
+                bean.setUserType(mapping.getMugmUserType());
 
                 UserInfo userInfo = matchDao.get(UserInfo.class,mapping.getMugmUserId());
                 userInfo.setUiId(userInfo.getUiId());
@@ -206,11 +226,58 @@ public class MatchService implements IBaseService {
                 bean.getUserList().add(userInfo);
 
                 //是否队长不一样，分组名称不一样
-                if(bean.getIsCaption() != mapping.getMugmIsCaptain() || bean.getGroupId() != mapping.getMugmGroupId()){
+                if(!bean.getUserType().equals(mapping.getMugmUserType()) ||
+						!bean.getGroupId().equals(mapping.getMugmGroupId())){
                     list.add(bean);
                 }
             }
         }
         return list;
     }
+
+
+	/**
+	 * 取消报名，退出分组 到临时分组    赛长将多个球友退出分组
+	 * @return
+	 */
+	public void quitMatchGroup(Long matchId, Long groupId, Long userId, String userIds) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId", matchId);
+		parp.put("groupId", groupId);
+		if(StringUtils.isNotEmpty(userIds)){
+			String[] ids = userIds.split(",");
+			List<Long> userIdList = new ArrayList<Long>();
+			for(String id :ids){
+				if(StringUtils.isNotEmpty(id)){
+					userIdList.add(Long.parseLong(id));
+				}
+
+			}
+			parp.put("userIdList", userIdList);
+		}else if(userId != null){
+			parp.put("userId", userId);
+		}
+		matchDao.updateMyMatchGroupMapping(parp);
+	}
+
+	/**
+	 * 获取临时分组中的球友
+	 * @param matchId 比赛id
+	 * @param groupId 比赛分组id
+	 * @return
+	 */
+	public List<MatchUserGroupMapping> getUserByTemporary(Long matchId, Long groupId) {
+		return matchDao.getUserByTemporary(matchId, groupId);
+	}
+
+	/**
+	 * 创建比赛-保存-自动成为赛长
+	 * @return
+	 */
+	public void saveMatchInfo(String matchJson) {
+	}
+
+	public static void main(String[] args) {
+		String str = "{'id':1,'name':zhangsan}";
+	}
 }

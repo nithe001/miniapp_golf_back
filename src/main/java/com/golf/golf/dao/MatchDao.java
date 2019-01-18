@@ -159,13 +159,13 @@ public class MatchDao extends CommonDao {
         m.mugm_is_captain,m.mugm_group_name,m.mugm_user_id
         ORDER BY m.mugm_is_captain desc*/
         StringBuilder hql = new StringBuilder();
-        hql.append("SELECT m.mugmId,m.mugmGroupId,m.mugmGroupName,m.mugmIsCaptain,m.mugmUserId,m.mugmUserName  ");
+        hql.append("SELECT m.mugmId,m.mugmGroupId,m.mugmGroupName,m.mugmUserType,m.mugmUserId,m.mugmUserName  ");
         hql.append("FROM MatchScoreUserMapping AS m , MatchGroup AS g WHERE 1=1 ");
         hql.append("AND m.mugmGroupId = g.mgId ");
         hql.append("AND m.mugmMatchId = " +matchId);
         hql.append(" GROUP BY ");
-        hql.append("m.mugmIsCaptain,m.mugmGroupName,m.mugmUserId ");
-        hql.append("ORDER BY m.mugmIsCaptain desc ");
+        hql.append("m.mugmUserType,m.mugmGroupName,m.mugmUserId ");
+        hql.append("ORDER BY m.mugmUserType desc ");
         Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString());
         if(count == 0){
             return null;
@@ -173,4 +173,35 @@ public class MatchDao extends CommonDao {
         return dao.createQuery(hql.toString());
     }
 
+	/**
+	 * 取消报名，退出分组 到临时分组     赛长将多个球友退出分组
+	 * @return
+	 */
+	public void updateMyMatchGroupMapping(Map<String, Object> parp) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE MatchUserGroupMapping AS m SET m.mugmUserType = 0 ");
+		sql.append(" WHERE m.mugmMatchId = :matchId ");
+		sql.append(" AND m.mugmGroupId = :groupId ");
+		if(parp.get("userIdList") != null){
+			sql.append(" AND m.mugmUserId in (:userIdList) ");
+		}else if(parp.get("userId") != null){
+			sql.append(" AND m.mugmUserId = :userId ");
+		}
+		dao.executeHql(sql.toString(), parp);
+	}
+
+	/**
+	 * 获取临时分组中的球友
+	 * @param matchId 比赛id
+	 * @param groupId 比赛分组id
+	 * @return
+	 */
+	public List<MatchUserGroupMapping> getUserByTemporary(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append(" FROM MatchUserGroupMapping AS m WHERE 1=1 ");
+		sql.append(" AND m.mugmMatchId = "+matchId);
+		sql.append(" AND m.mugmGroupId = "+groupId);
+		sql.append(" AND m.mugmUserType = 0");
+		return dao.createQuery(sql.toString());
+	}
 }

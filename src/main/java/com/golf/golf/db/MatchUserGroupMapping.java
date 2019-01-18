@@ -1,5 +1,7 @@
 package com.golf.golf.db;
 
+import com.golf.golf.common.security.UserUtil;
+
 import javax.persistence.*;
 
 @Entity
@@ -7,7 +9,7 @@ import javax.persistence.*;
 public class MatchUserGroupMapping {
     private Long mugmId;
     private Long mugmMatchId;
-    private Integer mugmIsCaptain;
+    private Integer mugmUserType;
     private Long mugmGroupId;
     private String mugmGroupName;
     private Long mugmUserId;
@@ -36,15 +38,17 @@ public class MatchUserGroupMapping {
         this.mugmMatchId = mgiMatchId;
     }
 
-    @Basic
-    @Column(name = "mugm_is_captain")
-    public Integer getMugmIsCaptain() {
-        return mugmIsCaptain;
-    }
 
-    public void setMugmIsCaptain(Integer mugmIsCaptain) {
-        this.mugmIsCaptain = mugmIsCaptain;
-    }
+	@Basic
+	@Column(name = "mugm_user_type")
+	public Integer getMugmUserType() {
+		return mugmUserType;
+	}
+
+	public void setMugmUserType(Integer mugmUserType) {
+		this.mugmUserType = mugmUserType;
+	}
+
 
 
     @Basic
@@ -117,4 +121,10 @@ public class MatchUserGroupMapping {
         this.mugmCreateTime = mgiCreateTime;
     }
 
+    @Transient
+	public void setCreate() {
+		this.setMugmCreateTime(System.currentTimeMillis());
+		this.setMugmCreateUserId(UserUtil.getUserId());
+		this.setMugmCreateUserName(UserUtil.getShowName());
+	}
 }
