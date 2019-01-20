@@ -8,6 +8,7 @@ public class UserInfo {
     private Long uiId;
     private Integer uiType;
     private String uiHeadimg;
+    private String uiPersonalizedSignature;
     private String uiLongitude;
     private String uiLatitude;
     private String uiRealName;
@@ -68,6 +69,15 @@ public class UserInfo {
         this.uiType = uiType;
     }
 
+    @Basic
+    @Column(name = "ui_personalized_signature")
+    public String getUiPersonalizedSignature() {
+        return uiPersonalizedSignature;
+    }
+
+    public void setUiPersonalizedSignature(String uiPersonalizedSignature) {
+        this.uiPersonalizedSignature = uiPersonalizedSignature;
+    }
 
     @Basic
     @Column(name = "ui_headimg")

@@ -6,8 +6,10 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.TeamService;
 import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +38,8 @@ public class MatchController {
 	private MatchService matchService;
 	@Autowired
     private UserService userService;
+	@Autowired
+    private TeamService teamService;
 
 
 	/**
@@ -205,6 +210,38 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+
+
+    /**
+     * 创建比赛—选择参赛范围——查询球队列表
+     * 参赛范围处不选球队为公开赛
+     * 选多个球队为队际赛
+     * 弹出页面从所有球队中选择，可以搜索
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getTeamList")
+    public JsonElement getTeamList(Integer page, String keyword) {
+        Integer nowPage = 1;
+        if (page > 0) {
+            nowPage = page;
+        }
+        try {
+            SearchBean searchBean = new SearchBean();
+            if(StringUtils.isNotEmpty(keyword)){
+                searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+            }
+            POJOPageInfo pageInfo = new POJOPageInfo<Object[]>(Const.ROWSPERPAGE , nowPage);
+            pageInfo = teamService.getTeamList(searchBean, pageInfo);
+            return JsonWrapper.newDataInstance(pageInfo);
+        } catch (Exception e) {
+            errmsg = "前台-创建比赛—选择参赛范围——查询球队列表时出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 
 
 }
