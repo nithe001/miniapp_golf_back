@@ -12,6 +12,10 @@ import com.golf.golf.service.admin.AdminParkService;
 import com.golf.golf.service.admin.AdminUserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +24,11 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -176,4 +184,56 @@ public class AdminParkController {
         }
         return "redirect:list";
     }
+
+
+	/**
+	 * 通过excel批量导入球场数据
+	 *
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = {"importPark"})
+	public JsonElement importPark(MultipartFile file) throws IOException {
+		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
+		XSSFSheet sheet = xwb.getSheetAt(0);
+		XSSFRow row;
+		List<ParkInfo> parkList = new ArrayList<>();
+		ParkInfo parkInfo = null;
+		for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+			row = sheet.getRow(i);
+			/*String name = row.getCell(0).toString();
+			String tel = null;
+			if(row.getCell(1).getCellType() == Cell.CELL_TYPE_NUMERIC){
+				tel = row.getCell(1).getRawValue();
+			}else if(row.getCell(1).getCellType() == Cell.CELL_TYPE_STRING){
+				tel = row.getCell(1).toString();
+			}
+			String email = row.getCell(2).toString();
+			String nickName = row.getCell(4).toString();
+			String roleName = row.getCell(5).toString();*/
+
+			parkInfo = new ParkInfo();
+			String city = row.getCell(0).toString();
+			String parkName =  row.getCell(1).toString();
+			parkInfo.setPiAddress(city);
+			parkInfo.setPiName(parkName);
+
+			String zone =  row.getCell(2).toString();
+			String hole_1 =  row.getCell(3).toString();
+			String hole_2 =  row.getCell(4).toString();
+			String hole_3 =  row.getCell(5).toString();
+			String hole_4 =  row.getCell(6).toString();
+			String hole_5 =  row.getCell(7).toString();
+			String hole_6 =  row.getCell(8).toString();
+			String hole_7 =  row.getCell(9).toString();
+			String hole_8 =  row.getCell(10).toString();
+			String hole_9 =  row.getCell(11).toString();
+			String totalHole =  row.getCell(12).toString();
+
+			parkList.add(parkInfo);
+		}
+		// 保存
+		return null;
+	}
+
 }

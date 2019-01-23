@@ -13,6 +13,7 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.IntegerType;
 
 import com.golf.common.model.ISearchBean.Sort;
@@ -711,4 +712,42 @@ public class BaseDAO {
 		this.sessionFactory = sessionFactory;
 	}
 
+
+
+	public <E> List<E> createSQLQuery(final String query, final Map parp, ResultTransformer transformers) {
+		Query q = getCurrentSession().createSQLQuery(query);
+		q.setResultTransformer(transformers);
+		q = addParameter(q, parp);
+		return q.list();
+
+		// return (List<E>) getHibernateTemplate().execute(new
+		// HibernateCallback() {
+		// public Object doInHibernate(Session session) throws
+		// HibernateException,
+		// java.sql.SQLException {
+		// Query q = session.createSQLQuery(query);
+		// q = addParameter(q, parp);
+		// return q.list();
+		// };
+		// });
+	}
+
+	public <E> List<E> createSQLQuery(final String query, ResultTransformer transformers) {
+		Query q = getCurrentSession().createSQLQuery(query);
+		q.setResultTransformer(transformers);
+		return q.list();
+	}
+
+	public <E> List<E> createQuery(final String query, final Map parp, ResultTransformer transformers) {
+		Query q = getCurrentSession().createQuery(query);
+		q.setResultTransformer(transformers);
+		q = addParameter(q, parp);
+		return q.list();
+	}
+
+	public <E> List<E> createQuery(final String query, ResultTransformer transformers) {
+		Query q = getCurrentSession().createQuery(query);
+		q.setResultTransformer(transformers);
+		return q.list();
+	}
 }

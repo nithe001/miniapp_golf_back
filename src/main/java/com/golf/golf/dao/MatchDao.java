@@ -5,6 +5,8 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchUserGroupMapping;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -203,5 +205,53 @@ public class MatchDao extends CommonDao {
 		sql.append(" AND m.mugmGroupId = "+groupId);
 		sql.append(" AND m.mugmUserType = 0");
 		return dao.createQuery(sql.toString());
+	}
+
+
+	/**
+	 * 省份总评(例子)
+	 * @return
+	 */
+	public List<Map<String, Object>> getProvinceList(SearchBean searchBean) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT cup.province as name,  ");
+		sql.append(" FROM ( ");
+		sql.append(" 	SELECT u.cu_id AS cu_id,h.ch_province AS province ");
+		sql.append(" 	FROM cm_user AS u, wbc_user_hospital_mapping AS hm, cm_hospital AS h  ");
+		sql.append(" 	WHERE u.cu_id = hm.wuhm_user_id and hm.wuhm_hospital_id = h.ch_id ");
+		//地区经理id
+		if(parp.get("dsmUserId") != null) {
+			sql.append(" AND u.cu_dsm_user_id = :dsmUserId ");
+		}else if(parp.get("regionIdList") != null){
+			//大区经理、市场部、boss 所属大区id
+			sql.append(" and u.cu_region_id in (:regionIdList) ");
+		}
+		sql.append(" GROUP BY u.cu_id, h.ch_province ");
+
+		sql.append(" ) AS cup");
+		sql.append(" LEFT JOIN wbc_month_goal_and_daily_summary AS w ");
+		sql.append(" ON (cup.cu_id = w.wmg_record_belong_user_id ");
+		sql.append(" and w.wmg_product_type = :productType ");
+		sql.append(" and w.wmg_type = :type ");
+		if((Integer.parseInt(parp.get("type").toString())) == 0){
+			if(StringUtils.isNotEmpty(parp.get("month").toString())){
+				sql.append(" AND w.wmg_month = :month ");
+			}
+		}else if((Integer.parseInt(parp.get("type").toString())) == 1){
+			if(StringUtils.isNotEmpty((String)parp.get("startDate"))){
+				sql.append(" AND w.wmg_date >= :startDate ");
+			}
+			if(StringUtils.isNotEmpty((String)parp.get("endDate"))){
+				sql.append(" AND w.wmg_date <= :endDate ");
+			}
+		}
+		sql.append(" ) ");
+
+		sql.append(" WHERE 1=1 ");
+		sql.append(" GROUP BY province ORDER BY convert(province using 'GBK') ");
+
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
 	}
 }
