@@ -8,10 +8,10 @@ public class ParkInfo {
     private Long piId;
     private String piName;
     private String piLogo;
-    private String piAddress;
+    private String piCity;
     private Integer piIsValid;
-    private String piLongitude;
-    private String piLatitude;
+    private String piLng;
+    private String piLat;
     private Long piCreateTime;
     private Long piCreateUserId;
     private String piCreateUserName;
@@ -50,13 +50,13 @@ public class ParkInfo {
     }
 
     @Basic
-    @Column(name = "pi_address")
-    public String getPiAddress() {
-        return piAddress;
+    @Column(name = "pi_city")
+    public String getPiCity() {
+        return piCity;
     }
 
-    public void setPiAddress(String piAddress) {
-        this.piAddress = piAddress;
+    public void setPiCity(String piCity) {
+        this.piCity = piCity;
     }
 
 
@@ -70,23 +70,23 @@ public class ParkInfo {
     }
 
     @Basic
-    @Column(name = "pi_Longitude")
-    public String getPiLongitude() {
-        return piLongitude;
+    @Column(name = "pi_lng")
+    public String getPiLng() {
+        return piLng;
     }
 
-    public void setPiLongitude(String piLongitude) {
-        this.piLongitude = piLongitude;
+    public void setPiLng(String piLng) {
+        this.piLng = piLng;
     }
 
     @Basic
-    @Column(name = "pi_latitude")
-    public String getPiLatitude() {
-        return piLatitude;
+    @Column(name = "pi_lat")
+    public String getPiLat() {
+        return piLat;
     }
 
-    public void setPiLatitude(String piLatitude) {
-        this.piLatitude = piLatitude;
+    public void setPiLat(String piLat) {
+        this.piLat = piLat;
     }
 
     @Basic

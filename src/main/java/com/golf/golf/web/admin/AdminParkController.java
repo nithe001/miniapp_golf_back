@@ -215,7 +215,7 @@ public class AdminParkController {
 			parkInfo = new ParkInfo();
 			String city = row.getCell(0).toString();
 			String parkName =  row.getCell(1).toString();
-			parkInfo.setPiAddress(city);
+			parkInfo.setPiCity(city);
 			parkInfo.setPiName(parkName);
 
 			String zone =  row.getCell(2).toString();

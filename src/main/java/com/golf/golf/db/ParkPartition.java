@@ -10,11 +10,6 @@ public class ParkPartition {
     private String ppName;
     private Integer ppHoleNum;
     private Integer ppHoleStandardRod;
-    private Integer ppHoleTBlackDistance;
-    private Integer ppHoleTGoldDistance;
-    private Integer ppHoleTBlueDistance;
-    private Integer ppHoleTWhiteDistance;
-    private Integer ppHoleTRedDistance;
 
     @Id
     @Column(name = "pp_id")
@@ -64,56 +59,6 @@ public class ParkPartition {
 
     public void setPpHoleStandardRod(Integer ppHoleStandardRod) {
         this.ppHoleStandardRod = ppHoleStandardRod;
-    }
-
-    @Basic
-    @Column(name = "pp_hole_t_black_distance")
-    public Integer getPpHoleTBlackDistance() {
-        return ppHoleTBlackDistance;
-    }
-
-    public void setPpHoleTBlackDistance(Integer ppHoleTBlackDistance) {
-        this.ppHoleTBlackDistance = ppHoleTBlackDistance;
-    }
-
-    @Basic
-    @Column(name = "pp_hole_t_gold_distance")
-    public Integer getPpHoleTGoldDistance() {
-        return ppHoleTGoldDistance;
-    }
-
-    public void setPpHoleTGoldDistance(Integer ppHoleTGoldDistance) {
-        this.ppHoleTGoldDistance = ppHoleTGoldDistance;
-    }
-
-    @Basic
-    @Column(name = "pp_hole_t_blue_distance")
-    public Integer getPpHoleTBlueDistance() {
-        return ppHoleTBlueDistance;
-    }
-
-    public void setPpHoleTBlueDistance(Integer ppHoleTBlueDistance) {
-        this.ppHoleTBlueDistance = ppHoleTBlueDistance;
-    }
-
-    @Basic
-    @Column(name = "pp_hole_t_white_distance")
-    public Integer getPpHoleTWhiteDistance() {
-        return ppHoleTWhiteDistance;
-    }
-
-    public void setPpHoleTWhiteDistance(Integer ppHoleTWhiteDistance) {
-        this.ppHoleTWhiteDistance = ppHoleTWhiteDistance;
-    }
-
-    @Basic
-    @Column(name = "pp_hole_t_red_distance")
-    public Integer getPpHoleTRedDistance() {
-        return ppHoleTRedDistance;
-    }
-
-    public void setPpHoleTRedDistance(Integer ppHoleTRedDistance) {
-        this.ppHoleTRedDistance = ppHoleTRedDistance;
     }
 
 }

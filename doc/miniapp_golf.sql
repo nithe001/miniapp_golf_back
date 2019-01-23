@@ -206,10 +206,10 @@ CREATE TABLE `park_info`  (
   `pi_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '球场id',
   `pi_name` varchar(255)  COMMENT '球场名称',
   `pi_logo` varchar(255)  COMMENT '球场logo',
-  `pi_address` varchar(255)  COMMENT '球场地理位置（用经纬度标识）',
+  `pi_city` varchar(255)  COMMENT '球场所在城市',
   `pi_is_valid` int(11)  COMMENT '是否可用(1:是  0：否)',
-  `pi_longitude` varchar(128)  COMMENT '地理位置：经度',
-  `pi_latitude` varchar(128)  COMMENT '地理位置：纬度',
+  `pi_lng` varchar(128)  COMMENT '地理位置：纬度',
+  `pi_lat` varchar(128)  COMMENT '地理位置：经度',
   `pi_create_time` bigint(20)  COMMENT '创建时间',
   `pi_create_user_id` bigint(20)  COMMENT '创建人id',
   `pi_create_user_name` varchar(128)  COMMENT '创建人姓名',
@@ -229,11 +229,6 @@ CREATE TABLE `park_partition`  (
   `pp_name` varchar(128)  COMMENT '分区名称',
   `pp_hole_num` int(11)  COMMENT '球洞序号(数字 1-9)',
   `pp_hole_standard_rod` int(11)  COMMENT '球洞标准杆(数字 1-7)',
-  `pp_hole_t_black_distance` int(11)  COMMENT '黑球T距离',
-  `pp_hole_t_gold_distance` int(11)  COMMENT '金球T距离',
-  `pp_hole_t_blue_distance` int(11)  COMMENT '蓝球T距离',
-  `pp_hole_t_white_distance` int(11)  COMMENT '白球T距离',
-  `pp_hole_t_red_distance` int(11)  COMMENT '红球T距离',
   PRIMARY KEY (`pp_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4  COMMENT = '高尔夫场地分区表' ROW_FORMAT = Dynamic;
 

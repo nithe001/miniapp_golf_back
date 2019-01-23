@@ -69,7 +69,7 @@ public class AdminParkService implements IBaseService {
     public void edit(ParkInfo parkInfo){
 		ParkInfo db = getById(parkInfo.getPiId());
 		db.setPiLogo(parkInfo.getPiLogo());
-		db.setPiAddress(parkInfo.getPiAddress());
+		db.setPiCity(parkInfo.getPiCity());
 		db.setPiIsValid(parkInfo.getPiIsValid());
 		db.setPiUpdateTime(System.currentTimeMillis());
 		db.setPiUpdateUserId(AdminUserUtil.getUserId());
