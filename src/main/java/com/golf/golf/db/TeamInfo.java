@@ -17,6 +17,7 @@ public class TeamInfo {
     private Integer tiJoinOpenType;
     private Integer tiInfoOpenType;
     private Integer tiMatchResultAuditType;
+    private Integer tiUserInfoType;
     private Long tiCreateTime;
     private Long tiCreateUserId;
     private String tiCreateUserName;
@@ -122,6 +123,16 @@ public class TeamInfo {
 
     public void setTiMatchResultAuditType(Integer tiMatchResultAuditType) {
         this.tiMatchResultAuditType = tiMatchResultAuditType;
+    }
+
+    @Basic
+    @Column(name = "ti_user_info_type")
+    public Integer getTiUserInfoType() {
+        return tiUserInfoType;
+    }
+
+    public void setTiUserInfoType(Integer tiUserInfoType) {
+        this.tiUserInfoType = tiUserInfoType;
     }
 
     @Basic

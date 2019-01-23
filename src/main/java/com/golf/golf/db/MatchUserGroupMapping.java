@@ -34,8 +34,8 @@ public class MatchUserGroupMapping {
         return mugmMatchId;
     }
 
-    public void setMugmMatchId(Long mgiMatchId) {
-        this.mugmMatchId = mgiMatchId;
+    public void setMugmMatchId(Long mugmMatchId) {
+        this.mugmMatchId = mugmMatchId;
     }
 
 

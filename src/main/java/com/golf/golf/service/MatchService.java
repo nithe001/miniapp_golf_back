@@ -41,7 +41,13 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return matchDao.getMatchList(searchBean,pageInfo);
+        pageInfo = matchDao.getMatchList(searchBean,pageInfo);
+	    if(pageInfo.getCount() >0 && pageInfo.getItems().size()>0){
+            for(MatchInfo matchInfo: (List<MatchInfo>)pageInfo.getItems()){
+                matchInfo.setMatchTimeStr(matchInfo.getMiMatchTime());
+            }
+        }
+		return pageInfo;
 	}
 
 	/**

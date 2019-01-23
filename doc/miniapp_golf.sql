@@ -87,7 +87,7 @@ CREATE TABLE `match_info`  (
   `mi_content` text CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT '比赛内容',
   `mi_match_open_type` int(11)  COMMENT '观战范围：（1、公开 球友均可见；2、队内公开：参赛者的队友可见；3、封闭：参赛队员可见）',
   `mi_join_open_type` int(255)  COMMENT '参赛范围(1、公开 球友均可报名；2、队内：某几个球队队员可报名；)',
-  `mi_report_score_type` int(11)  COMMENT '成绩上报类型：0：上报给球队，1：上报给比赛',
+  `mi_report_score_type` int(11)  COMMENT '成绩上报球队id',
   `mi_hit` int(11)  COMMENT '点击量',
   `mi_apply_end_time` bigint(20)  COMMENT '报名截止时间',
   `mi_create_user_name` varchar(128)  COMMENT '比赛发起人',

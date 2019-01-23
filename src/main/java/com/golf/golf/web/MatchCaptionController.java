@@ -1,13 +1,10 @@
 package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
-import com.golf.common.model.SearchBean;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.service.MatchService;
 import com.google.gson.JsonElement;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

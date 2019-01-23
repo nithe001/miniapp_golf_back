@@ -43,4 +43,20 @@ public class TeamService implements IBaseService {
     public POJOPageInfo getMyTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
         return teamDao.getMyTeamList(searchBean,pageInfo);
     }
+
+    /**
+     * 查询球场列表
+     * @return
+     */
+    public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
+        return teamDao.getParkList(searchBean,pageInfo);
+    }
+
+    /**
+     * 创建比赛—点击球场-获取分区和洞
+     * @return
+     */
+    public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+        return teamDao.getParkZoneAndHole(parkId);
+    }
 }

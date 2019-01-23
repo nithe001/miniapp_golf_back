@@ -5,7 +5,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "match_score")
 public class MatchScore {
-    private Long msId;
+    private long msId;
+    private Long msTeamId;
     private Long msMatchId;
     private String msMatchTitle;
     private Long msGroupId;
@@ -25,12 +26,22 @@ public class MatchScore {
 
     @Id
     @Column(name = "ms_id")
-    public Long getMsId() {
+    public long getMsId() {
         return msId;
     }
 
-    public void setMsId(Long msId) {
+    public void setMsId(long msId) {
         this.msId = msId;
+    }
+
+    @Basic
+    @Column(name = "ms_team_id")
+    public Long getMsTeamId() {
+        return msTeamId;
+    }
+
+    public void setMsTeamId(Long msTeamId) {
+        this.msTeamId = msTeamId;
     }
 
     @Basic

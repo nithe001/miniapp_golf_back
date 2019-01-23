@@ -43,7 +43,7 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		String order ="ORDER BY t.matchTime DESC,t.applyEndTime ASC";
+		String order ="ORDER BY m.miMatchTime DESC";
 		List<MatchInfo> list = dao.createQuery(hql.toString()+order, parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
@@ -104,12 +104,12 @@ public class MatchDao extends CommonDao {
         parp.put("matchId",matchId);
         StringBuilder hql = new StringBuilder();
         hql.append("FROM MatchUserGroupMapping AS g,UserInfo as u WHERE 1=1 ");
-        hql.append("AND g.mgiMatchId = :matchId AND g.mgiUserId = u.uiId ");
+        hql.append("AND g.mugmMatchId = :matchId AND g.mugmUserId = u.uiId ");
         Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(),parp);
         if(count == 0){
             return null;
         }
-        hql.append("ORDER BY g.mgiCreateTime DESC ");
+        hql.append("ORDER BY g.mugmCreateTime DESC ");
         return dao.createQuery(hql.toString(),parp);
     }
 

@@ -3,7 +3,8 @@ package com.golf.golf.dao;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.ParkInfo;
+import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.TeamInfo;
 import org.springframework.stereotype.Repository;
 
@@ -72,5 +73,42 @@ public class TeamDao extends CommonDao {
         pageInfo.setCount(count.intValue());
         pageInfo.setItems(list);
         return pageInfo;
+    }
+
+    /**
+     * 查询球场列表
+     * @return
+     */
+    public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
+        Map<String, Object> parp = searchBean.getParps();
+        StringBuilder hql = new StringBuilder();
+        hql.append("FROM ParkInfo AS p WHERE 1=1 ");
+        if(parp.get("keyword") != null){
+            hql.append("AND p.piName LIKE :keyword  ");
+        }
+
+        Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+        if (count == null || count.intValue() == 0) {
+            pageInfo.setItems(new ArrayList<ParkInfo>());
+            pageInfo.setCount(0);
+            return pageInfo;
+        }
+        hql.append("GROUP BY p.piCreateTime ");
+        List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+        pageInfo.setCount(count.intValue());
+        pageInfo.setItems(list);
+        return pageInfo;
+    }
+
+    /**
+     * 创建比赛—点击球场-获取分区和洞
+     * @return
+     */
+    public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT p.ppName FROM ParkPartition AS p WHERE 1=1 ");
+        hql.append("AND p.ppPId = " +parkId);
+        hql.append("GROUP BY p.ppName ");
+        return dao.createQuery(hql.toString());
     }
 }

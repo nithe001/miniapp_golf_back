@@ -6,7 +6,8 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.ParkInfo;
+import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.TeamService;
@@ -243,5 +244,71 @@ public class MatchController {
         }
     }
 
+    /**
+     * 创建比赛—获取球场列表
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getParkList")
+    public JsonElement getParkList(Integer page, String keyword) {
+        Integer nowPage = 1;
+        if (page > 0) {
+            nowPage = page;
+        }
+        try {
+            SearchBean searchBean = new SearchBean();
+            if(StringUtils.isNotEmpty(keyword)){
+                searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+            }
+            POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>(Const.ROWSPERPAGE , nowPage);
+            pageInfo = teamService.getParkList(searchBean, pageInfo);
+            return JsonWrapper.newDataInstance(pageInfo);
+        } catch (Exception e) {
+            errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+    /**
+     * 创建比赛—点击球场-获取分区
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getParkZoneAndHole")
+    public JsonElement getParkZoneAndHole(Long parkId) {
+        try {
+            List<ParkPartition> parkPartitionList = teamService.getParkZoneAndHole(parkId);
+            return JsonWrapper.newDataInstance(parkPartitionList);
+        } catch (Exception e) {
+            errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+
+
+
+
+
+    /**
+     * 创建比赛—单练
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("saveMyMatch")
+    public JsonElement saveMyMatch() {
+        try {
+            return JsonWrapper.newDataInstance(null);
+        } catch (Exception e) {
+            errmsg = "前台-创建比赛—创建单练时出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 
 }

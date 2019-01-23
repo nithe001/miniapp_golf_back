@@ -19,8 +19,11 @@ public class UserInfo {
     private String uiCraduateDepartment;
     private Long uiCraduateTime;
     private String uiMajor;
+    private String uiStudentId;
     private String uiWorkUnit;
+    private String uiPost;
     private String uiAddress;
+    private String uiHomeCourt;
     private Integer uiIsValid;
     private Long uiCreateTime;
     private String uiCreateUserName;
@@ -170,6 +173,16 @@ public class UserInfo {
     }
 
     @Basic
+    @Column(name = "ui_student_id")
+    public String getUiStudentId() {
+        return uiStudentId;
+    }
+
+    public void setUiStudentId(String uiStudentId) {
+        this.uiStudentId = uiStudentId;
+    }
+
+    @Basic
     @Column(name = "ui_work_unit")
     public String getUiWorkUnit() {
         return uiWorkUnit;
@@ -177,6 +190,17 @@ public class UserInfo {
 
     public void setUiWorkUnit(String uiWorkUnit) {
         this.uiWorkUnit = uiWorkUnit;
+    }
+
+
+    @Basic
+    @Column(name = "ui_post")
+    public String getUiPost() {
+        return uiPost;
+    }
+
+    public void setUiPost(String uiPost) {
+        this.uiPost = uiPost;
     }
 
     @Basic
@@ -187,6 +211,16 @@ public class UserInfo {
 
     public void setUiAddress(String uiAddress) {
         this.uiAddress = uiAddress;
+    }
+
+    @Basic
+    @Column(name = "ui_home_court")
+    public String getUiHomeCourt() {
+        return uiHomeCourt;
+    }
+
+    public void setUiHomeCourt(String uiHomeCourt) {
+        this.uiHomeCourt = uiHomeCourt;
     }
 
     @Basic

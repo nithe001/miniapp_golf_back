@@ -2,14 +2,11 @@ package com.golf.golf.web;
 
 import com.golf.common.Const;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.TeamService;
 import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.service.MatchService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

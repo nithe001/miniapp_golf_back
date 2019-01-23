@@ -8,15 +8,19 @@ import javax.persistence.*;
 @Table(name = "match_info")
 public class MatchInfo {
     private Long miId;
+    private Integer miType;
+    private Integer miPeopleNum;
     private String miTitle;
     private Integer miParkId;
     private String miParkName;
+    private String miZoneBeforeNine;
+    private String miZoneAfterNine;
     private String miDigest;
     private Long miMatchTime;
     private String miContent;
     private Integer miMatchOpenType;
     private Integer miJoinOpenType;
-    private Integer miReportScoreType;
+    private String miReportScoreType;
     private Integer miHit;
     private Long miApplyEndTime;
     private String miCreateUserName;
@@ -34,6 +38,26 @@ public class MatchInfo {
 
     public void setMiId(Long miId) {
         this.miId = miId;
+    }
+
+    @Basic
+    @Column(name = "mi_type")
+    public Integer getMiType() {
+        return miType;
+    }
+
+    public void setMiType(Integer miType) {
+        this.miType = miType;
+    }
+
+    @Basic
+    @Column(name = "mi_people_num")
+    public Integer getMiPeopleNum() {
+        return miPeopleNum;
+    }
+
+    public void setMiPeopleNum(Integer miPeopleNum) {
+        this.miPeopleNum = miPeopleNum;
     }
 
     @Basic
@@ -64,6 +88,26 @@ public class MatchInfo {
 
     public void setMiParkName(String miParkName) {
         this.miParkName = miParkName;
+    }
+
+    @Basic
+    @Column(name = "mi_zone_before_nine")
+    public String getMiZoneBeforeNine() {
+        return miZoneBeforeNine;
+    }
+
+    public void setMiZoneBeforeNine(String miZoneBeforeNine) {
+        this.miZoneBeforeNine = miZoneBeforeNine;
+    }
+
+    @Basic
+    @Column(name = "mi_zone_after_nine")
+    public String getMiZoneAfterNine() {
+        return miZoneAfterNine;
+    }
+
+    public void setMiZoneAfterNine(String miZoneAfterNine) {
+        this.miZoneAfterNine = miZoneAfterNine;
     }
 
     @Basic
@@ -116,17 +160,17 @@ public class MatchInfo {
         this.miJoinOpenType = miJoinOpenType;
     }
 
-	@Basic
-	@Column(name = "mi_report_score_type")
-	public Integer getMiReportScoreType() {
-		return miReportScoreType;
-	}
+    @Basic
+    @Column(name = "mi_report_score_type")
+    public String getMiReportScoreType() {
+        return miReportScoreType;
+    }
 
-	public void setMiReportScoreType(Integer miReportScoreType) {
-		this.miReportScoreType = miReportScoreType;
-	}
+    public void setMiReportScoreType(String miReportScoreType) {
+        this.miReportScoreType = miReportScoreType;
+    }
 
-	@Basic
+    @Basic
     @Column(name = "mi_hit")
     public Integer getMiHit() {
         return miHit;
@@ -207,41 +251,51 @@ public class MatchInfo {
     }
 
 
-    private String createTimeStr;
-    private String updateTimeStr;
-    private String applyTimeStr;
     private String matchTimeStr;
-
-    @Transient
-    public String getCreateTimeStr() {
-        return createTimeStr;
-    }
-
-    public void setCreateTimeStr(Long createTimeStr) {
-        this.createTimeStr = TimeUtil.longToString(createTimeStr,TimeUtil.FORMAT_DATETIME_HH_MM);
-    }
-    @Transient
-    public String getUpdateTimeStr() {
-        return updateTimeStr;
-    }
-
-    public void setUpdateTimeStr(String updateTimeStr) {
-        this.updateTimeStr = updateTimeStr;
-    }
-    @Transient
-    public String getApplyTimeStr() {
-        return applyTimeStr;
-    }
-
-    public void setApplyTimeStr(String applyTimeStr) {
-        this.applyTimeStr = applyTimeStr;
-    }
     @Transient
     public String getMatchTimeStr() {
+        createTimeStr = TimeUtil.longToString(this.getMiMatchTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
         return matchTimeStr;
     }
 
-    public void setMatchTimeStr(Long matchTimeStr) {
-        this.matchTimeStr = TimeUtil.longToString(matchTimeStr,TimeUtil.FORMAT_DATETIME_HH_MM);
+    public void setMatchTimeStr(Long matchTime) {
+        this.matchTimeStr = TimeUtil.longToString(matchTime,TimeUtil.FORMAT_DATETIME_HH_MM);
+    }
+
+
+    private String createTimeStr;
+    @Transient
+    public String getCreateTimeStr() {
+        createTimeStr = TimeUtil.longToString(this.getMiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
+        return createTimeStr;
+    }
+
+    public void setCreateTimeStr(Long createTime) {
+        this.createTimeStr = TimeUtil.longToString(createTime,TimeUtil.FORMAT_DATETIME_HH_MM);
+    }
+
+    private String stateStr;
+    @Transient
+
+    public String getStateStr() {
+        return stateStr;
+    }
+
+    public void setStateStr() {
+        Long nowTime = System.currentTimeMillis();
+        //比赛当天的开始时间
+        Long matchStartTime = TimeUtil.stringToLong(TimeUtil.longToString(this.getMiMatchTime(),TimeUtil.FORMAT_DATE),TimeUtil.FORMAT_DATE);
+        Long matchEndTime = matchStartTime +(24 * 60 * 60 * 1000);
+        if(this.getMiMatchTime() == null && nowTime < matchStartTime - (24 * 60 * 60 * 1000)){
+            this.stateStr = "报名中";
+        }else{
+            if(nowTime < this.getMiMatchTime()){
+                this.stateStr = "报名中";
+            }else if(nowTime > this.getMiMatchTime() && nowTime < matchEndTime){
+                this.stateStr = "进行中";
+            }else if(nowTime > matchEndTime){
+                this.stateStr = "已结束";
+            }
+        }
     }
 }

@@ -17,9 +17,7 @@ import java.util.List;
 
 /**
  * 用户
- *
- * @author peihong
- *         2017年05月10日
+ * @author nmy
  */
 @Controller
 @RequestMapping(value = "/user")
