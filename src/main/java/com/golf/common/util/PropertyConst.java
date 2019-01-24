@@ -32,4 +32,10 @@ public class PropertyConst {
 
 	/** 音频文件上传路径*/
 	public static String AUDIO_PATH = PropertyUtil.getPropertyValue("audio.path");
+
+    /** 小程序 appid*/
+    public static String MINI_APPID = PropertyUtil.getPropertyValue("mini_appid");
+    /** 小程序 appsecret*/
+    public static String MINI_APPSECRET = PropertyUtil.getPropertyValue("mini_appsecret");
+
 }

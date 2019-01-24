@@ -1,8 +1,11 @@
 package com.golf.golf.web;
 
+import cn.binarywang.wx.miniapp.api.WxMaJsapiService;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
+import cn.binarywang.wx.miniapp.config.WxMaInMemoryConfig;
+import com.golf.common.util.PropertyConst;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import com.google.gson.JsonElement;
@@ -13,6 +16,9 @@ import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import me.chanjar.weixin.mp.api.WxMpConfigStorage;
+import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.result.WxMpOAuth2AccessToken;
+import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,7 +33,7 @@ import javax.servlet.http.HttpServletRequest;
  * Email:liumingbo2008@gmail.com
  */
 @Controller
-@RequestMapping(value = "/user/")
+@RequestMapping(value = "/")
 public class WechatMiniAppController extends GenericController {
 
     @Autowired
@@ -35,25 +41,29 @@ public class WechatMiniAppController extends GenericController {
 	@Autowired
 	protected WxMaService wxMaService;
     @Autowired
+    protected WxMpService wxMpService;
+    @Autowired
     protected WechatService wechatService;
     @Autowired
     protected UserService userService;
 
     /**
      * 获取用户微信信息
+     * https://blog.csdn.net/fanfan4569/article/details/80903450
      * @throws Exception
      */
 	@ResponseBody
-    @RequestMapping(value = "miniappLogin", method = RequestMethod.POST)
-    public JsonElement wechatCore(HttpServletRequest request, String sessionId, String encryptedData, String iv, String code){
+    @RequestMapping(value = "onLogin")
+    public JsonElement wechatCore(HttpServletRequest request, String sessionId, String encryptedData,
+                                  String iv, String code){
         String errMsg = "";
 		try{
         	if(StringUtils.isNotEmpty(code)){
-				//获取登录后的session信息.
 				WxMaJscode2SessionResult jsCode2SessionInfo = this.wxMaService.jsCode2SessionInfo(code);
 				if (StringUtils.isNotEmpty(jsCode2SessionInfo.getOpenid()) && StringUtils.isNotEmpty(jsCode2SessionInfo.getSessionKey())) {
 					// 成功 自定义生成3rd_session与openid&session_key绑定并返回3rd_session
-					WxMaUserInfo wechatUserInfo = wxMaService.getUserService().getUserInfo(jsCode2SessionInfo.getSessionKey(), encryptedData, iv);
+                    WxMpUser wxMpUser = this.wxMpService.getUserService().userInfo(jsCode2SessionInfo.getOpenid(), "ZH-CN");
+                    WxMaUserInfo wechatUserInfo = wxMaService.getUserService().getUserInfo(jsCode2SessionInfo.getSessionKey(), encryptedData, iv);
 					WechatUserInfo wechatUserLocal = userService.getWechatUserByOpenid(jsCode2SessionInfo.getOpenid());
 					if(wechatUserLocal != null){
 						userService.updateWechatUser(wechatUserInfo,wechatUserLocal);

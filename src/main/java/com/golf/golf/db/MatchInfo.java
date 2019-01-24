@@ -20,7 +20,7 @@ public class MatchInfo {
     private String miContent;
     private Integer miMatchOpenType;
     private Integer miJoinOpenType;
-    private String miReportScoreType;
+    private String miReportScoreTeamId;
     private Integer miHit;
     private Long miApplyEndTime;
     private String miCreateUserName;
@@ -161,13 +161,13 @@ public class MatchInfo {
     }
 
     @Basic
-    @Column(name = "mi_report_score_type")
-    public String getMiReportScoreType() {
-        return miReportScoreType;
+    @Column(name = "mi_report_score_team_id")
+    public String getMiReportScoreTeamId() {
+        return miReportScoreTeamId;
     }
 
-    public void setMiReportScoreType(String miReportScoreType) {
-        this.miReportScoreType = miReportScoreType;
+    public void setMiReportScoreTeamId(String miReportScoreTeamId) {
+        this.miReportScoreTeamId = miReportScoreTeamId;
     }
 
     @Basic
