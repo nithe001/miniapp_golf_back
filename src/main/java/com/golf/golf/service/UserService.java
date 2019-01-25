@@ -221,5 +221,11 @@ public class UserService implements IBaseService {
         return dao.get(UserInfo.class, userId);
     }
 
-
+	/**
+	 * 根据OPENID获取用户信息
+	 * @return
+	 */
+	public UserInfo getUserByOpenid(String openId) {
+		return dao.getUserByOpenid(openId);
+	}
 }

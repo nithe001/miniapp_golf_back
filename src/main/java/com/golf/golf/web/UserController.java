@@ -1,18 +1,24 @@
 package com.golf.golf.web;
 
+import com.golf.common.gson.JsonWrapper;
+import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.UserService;
+import com.google.gson.JsonElement;
 import me.chanjar.weixin.mp.api.WxMpService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
 /**
@@ -69,23 +75,28 @@ public class UserController {
 	}
 
 	/**
-	 * 会员管理
-	 *
+	 * 获取我的信息
 	 * @return
 	 */
-	@RequestMapping("userManage")
-	public String userManage(ModelMap mm,String edit) {
+	@ResponseBody
+	@RequestMapping("getUserInfo")
+	public JsonElement userManage(String loginSessionKey) {
 		try {
-			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getUiId());
-			mm.addAttribute("user", user);
-			mm.addAttribute("edit", edit);
+			if(StringUtils.isNotEmpty(loginSessionKey)){
+				HttpSession session = WebUtil.getSession();
+				if (session.getAttribute(loginSessionKey) != null) {
+					String value = session.getAttribute(loginSessionKey).toString();
+					String openId = value.split(",")[0];
+					UserInfo user = service.getUserByOpenid(openId);
+					return JsonWrapper.newDataInstance(user);
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取会员管理时出错。", e);
-			return "error";
+			logger.error("获取用户微信信息失败。", e);
+			return JsonWrapper.newErrorInstance("获取用户微信信息失败");
 		}
-		return "user/userManage";
+		return JsonWrapper.newErrorInstance("用户未登录");
 	}
 
 	/**

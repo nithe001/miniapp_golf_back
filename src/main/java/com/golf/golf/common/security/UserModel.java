@@ -10,6 +10,7 @@ public class UserModel implements Serializable{
 	private WechatUserInfo wechatUser;
 	private UserInfo user;
 	private String sessionId;
+	private String openId;
 
     public WechatUserInfo getWechatUser() {
         return wechatUser;
@@ -33,5 +34,13 @@ public class UserModel implements Serializable{
 
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
+	}
+
+	public String getOpenId() {
+		return openId;
+	}
+
+	public void setOpenId(String openId) {
+		this.openId = openId;
 	}
 }
