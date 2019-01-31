@@ -55,7 +55,7 @@ public class WechatMiniAppController extends GenericController {
      */
 	@ResponseBody
     @RequestMapping(value = "onLogin")
-    public JsonElement wechatCore(String code){
+    public JsonElement wechatCore(String code, String userInfo){
         String errMsg = "";
 		try{
         	if(StringUtils.isNotEmpty(code)){
