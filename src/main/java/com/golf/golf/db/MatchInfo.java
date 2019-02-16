@@ -11,7 +11,7 @@ public class MatchInfo {
     private Integer miType;
     private Integer miPeopleNum;
     private String miTitle;
-    private Integer miParkId;
+    private Long miParkId;
     private String miParkName;
     private String miZoneBeforeNine;
     private String miZoneAfterNine;
@@ -20,6 +20,7 @@ public class MatchInfo {
     private String miContent;
     private Integer miMatchOpenType;
     private Integer miJoinOpenType;
+    private String miJoinTeamIds;
     private String miReportScoreTeamId;
     private Integer miHit;
     private Long miApplyEndTime;
@@ -72,11 +73,11 @@ public class MatchInfo {
 
     @Basic
     @Column(name = "mi_park_id")
-    public Integer getMiParkId() {
+    public Long getMiParkId() {
         return miParkId;
     }
 
-    public void setMiParkId(Integer miParkId) {
+    public void setMiParkId(Long miParkId) {
         this.miParkId = miParkId;
     }
 
@@ -158,6 +159,16 @@ public class MatchInfo {
 
     public void setMiJoinOpenType(Integer miJoinOpenType) {
         this.miJoinOpenType = miJoinOpenType;
+    }
+
+    @Basic
+    @Column(name = "mi_join_team_ids")
+    public String getMiJoinTeamIds() {
+        return miJoinTeamIds;
+    }
+
+    public void setMiJoinTeamIds(String miJoinTeamIds) {
+        this.miJoinTeamIds = miJoinTeamIds;
     }
 
     @Basic

@@ -3,8 +3,7 @@ package com.golf.golf.dao;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.MatchUserGroupMapping;
+import com.golf.golf.db.*;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
@@ -78,21 +77,21 @@ public class MatchDao extends CommonDao {
 
 
     /**
-     * 获取本比赛的围观用户列表
-     * 类型：0：观战 1：报名
+     * 获取本比赛的围观用户 或者 报名用户 列表
+     * 类型：0：围观 1：报名
      * @return
      */
-    public List<Object[]> getWatchUserListByMatchId(Long matchId) {
+    public List<UserInfo> getUserListByMatchId(Long matchId, Integer type) {
         StringBuilder hql = new StringBuilder();
         hql.append(" FROM MatchJoinWatchInfo AS j,UserInfo AS u WHERE 1=1 ");
-        hql.append(" and j.mjwiUserId = u.uiId and j.mjwiType = 1 ");
+        hql.append(" and j.mjwiUserId = u.uiId and j.mjwiType = " +type);
         hql.append(" and j.mjwiMatchId = "+matchId);
         Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString());
         if (count == null || count.intValue() == 0) {
             return null;
         }
         String order =" ORDER BY j.mjwiCreateTime DESC ";
-        return dao.createQuery(hql.toString()+order);
+        return dao.createQuery("SELECT u.* "+hql.toString()+order);
     }
 
     /**
@@ -254,4 +253,16 @@ public class MatchDao extends CommonDao {
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
+
+
+    /**
+     * 获取参赛球队
+     * @return
+     */
+    public List<TeamInfo> getTeamListByIds(String miJoinTeamIds) {
+        StringBuilder sql = new StringBuilder();
+        sql.append(" FROM TeamInfo AS t WHERE 1=1 ");
+        sql.append(" AND t.tiId in ( "+miJoinTeamIds +")");
+        return dao.createQuery(sql.toString());
+    }
 }

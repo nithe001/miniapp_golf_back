@@ -9,6 +9,7 @@ import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
@@ -228,4 +229,21 @@ public class UserService implements IBaseService {
 	public UserInfo getUserByOpenid(String openId) {
 		return dao.getUserByOpenid(openId);
 	}
+
+
+    /**
+     * 详细资料 只有是队友且该球队要求 详细资料时才可见
+     * @return
+     */
+    public boolean userInfoIsOpen(Long userId) {
+        //是否是我的队友
+        Long teamId = dao.getIsMyTeammate(1L,userId);
+        if(teamId != null){
+            TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
+            if(teamInfo != null && teamInfo.getTiInfoOpenType() == 1){
+                return true;
+            }
+        }
+        return false;
+    }
 }

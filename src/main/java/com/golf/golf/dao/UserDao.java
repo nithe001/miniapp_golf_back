@@ -2,6 +2,7 @@ package com.golf.golf.dao;
 
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import org.springframework.stereotype.Repository;
@@ -122,4 +123,26 @@ public class UserDao extends CommonDao {
 		hql.append("FROM UserInfo as u WHERE u.uiOpenId = " +openId);
 		return dao.findOne(hql.toString(), null);
 	}
+
+    /**
+     * 是否是我的队友
+     * @return
+     */
+    public Long getIsMyTeammate(Long myUserId, Long otherUserId) {
+        Map<String, Object> parp = new HashMap<String, Object>();
+        parp.put("myUserId", myUserId);
+        parp.put("otherUserId", otherUserId);
+        StringBuffer hql = new StringBuffer();
+
+        hql.append("FROM TeamUserMapping as m WHERE m.tumUserId = :otherUserId ");
+        hql.append("AND m.tumTeamId IN ( ");
+        hql.append("select m1.tumTeamId from TeamUserMapping as m1 where m1.tumUserId = :myUserId ");
+        hql.append(") ");
+        Long count = dao.createCountQuery("SELECT COUNT(*) "+ hql.toString(), parp);
+        if(count == 0){
+            return null;
+        }
+        List<Long> list = dao.createQuery("SELECT m.tumTeamId "+ hql.toString(), parp);
+        return list.get(0);
+    }
 }

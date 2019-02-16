@@ -126,16 +126,6 @@ public class TeamInfo {
     }
 
     @Basic
-    @Column(name = "ti_user_info_type")
-    public Integer getTiUserInfoType() {
-        return tiUserInfoType;
-    }
-
-    public void setTiUserInfoType(Integer tiUserInfoType) {
-        this.tiUserInfoType = tiUserInfoType;
-    }
-
-    @Basic
     @Column(name = "ti_create_time")
     public Long getTiCreateTime() {
         return tiCreateTime;

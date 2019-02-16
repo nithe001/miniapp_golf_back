@@ -3,6 +3,7 @@ package com.golf.golf.service;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
@@ -28,13 +29,6 @@ public class MatchService implements IBaseService {
 
     @Autowired
     private MatchDao matchDao;
-
-	public MatchInfo getMatchInfoById(Long wcId) {
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class,wcId);
-		matchInfo.setMiHit(matchInfo.getMiHit()==null?1:matchInfo.getMiHit()+1);
-		matchDao.update(matchInfo);
-		return matchInfo;
-	}
 
 	/**
 	 * 获取全部比赛列表 或 获取我参加的比赛列表
@@ -78,17 +72,17 @@ public class MatchService implements IBaseService {
 	 * 获取本比赛的围观用户列表和比赛分组
 	 * @return
 	 */
-	public Map<String, Object> getMatchGroupList(Long matchId) {
+	public Map<String, Object> getMatchInfo(Long matchId) {
         Map<String, Object> result = new HashMap<String, Object>();
 	    //围观
-	    List<Object[]> watchList = matchDao.getWatchUserListByMatchId(matchId);
-        List<UserInfo> newWatchList = buildNewWatchList(watchList);
+	    List<UserInfo> watchList = matchDao.getUserListByMatchId(matchId, 0);
+//        List<UserInfo> newWatchList = buildNewWatchList(watchList);
 
 	    //分组
         List<Object[]> groupList = matchDao.getMatchGroupList(matchId);
         List<UserInfo> newGroupList = buildNewGroupList(groupList);
 
-        result.put("watchList", newWatchList);
+        result.put("watchList", watchList);
         result.put("groupList", newGroupList);
 		return result;
 	}
@@ -111,6 +105,27 @@ public class MatchService implements IBaseService {
             }
         }
         return watchList;
+    }
+
+
+    /**
+     * 报名-获取本场比赛详情 参赛球队、比赛信息、上报球队
+     * @return
+     */
+    public Map<String, Object> getMatchInfoById(Long wcId) {
+        Map<String, Object> result = new HashMap<>();
+        //比赛信息
+        MatchInfo matchInfo = matchDao.get(MatchInfo.class,wcId);
+        matchInfo.setMiHit(matchInfo.getMiHit()==null?1:matchInfo.getMiHit()+1);
+        matchDao.update(matchInfo);
+        result.put("matchInfo", matchInfo);
+        //参赛球队
+        List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(matchInfo.getMiJoinTeamIds());
+        result.put("teamInfoList", teamInfoList);
+        //成绩上报球队
+        List<TeamInfo> scoreReportTeamInfoList = matchDao.getTeamListByIds(matchInfo.getMiReportScoreTeamId());
+        result.put("scoreReportTeamInfoList", scoreReportTeamInfoList);
+        return result;
     }
 
     /**
@@ -287,4 +302,40 @@ public class MatchService implements IBaseService {
 		String str = "{'id':1,'name':zhangsan}";
 	}
 
+    /**
+     * 赛长——获取报名用户列表
+     * @return
+     */
+    public List<UserInfo> getUserListByMatchId(Long matchId) {
+       return matchDao.getUserListByMatchId(matchId,1);
+    }
+
+    /**
+     * 创建比赛—单练
+     * @param parkId 所在球场Id
+     * @param parkName 球场名称
+     * @param zoneBeforeNine 前9洞区域
+     * @param zoneAfterNine 后9洞区域
+     * @param parkName 球场名称
+     * @param playTime 打球时间
+     * @param groupPeopleNum 同组人数
+     * @param digest 备注
+     * @return
+     */
+    public void saveMyOnlyMatch(Long parkId, String parkName, String zoneBeforeNine, String zoneAfterNine, String playTime, Integer groupPeopleNum, String digest) {
+        MatchInfo matchInfo = new MatchInfo();
+        matchInfo.setMiType(0);
+        matchInfo.setMiPeopleNum(groupPeopleNum);
+        matchInfo.setMiParkId(parkId);
+        matchInfo.setMiParkName(parkName);
+        matchInfo.setMiZoneBeforeNine(zoneBeforeNine);
+        matchInfo.setMiZoneAfterNine(zoneAfterNine);
+        matchInfo.setMiDigest(digest);
+        matchInfo.setMiMatchTime(TimeUtil.stringToLong(playTime, TimeUtil.FORMAT_DATETIME_HH_MM));
+        matchInfo.setMiMatchOpenType(3);
+        matchInfo.setMiCreateTime(System.currentTimeMillis());
+        matchInfo.setMiCreateUserId(UserUtil.getUserId());
+        matchInfo.setMiCreateUserName(UserUtil.getShowName());
+        matchDao.save(matchInfo);
+    }
 }

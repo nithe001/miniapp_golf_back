@@ -65,7 +65,7 @@ public class MatchController {
 			}
 			if(type == null){
                 pageInfo = matchService.getMatchList(searchBean, pageInfo);
-			}else if(type == 0){
+			}else{
                 searchBean.addParpField("userId", UserUtil.getUserId());
                 pageInfo = matchService.getMyMatchList(searchBean, pageInfo);
             }
@@ -79,17 +79,17 @@ public class MatchController {
 	}
 
 	/**
-	 * 获取比赛分组
+	 * 点击进入比赛详情——获取围观用户列表和比赛分组
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("getMatchGroupList")
-	public JsonElement getMatchGroupList(Long matchId) {
+	@RequestMapping("getMatchInfo")
+	public JsonElement getMatchInfo(Long matchId) {
 		try {
-			Map<String, Object> matchMap = matchService.getMatchGroupList(matchId);
+			Map<String, Object> matchMap = matchService.getMatchInfo(matchId);
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
-			errmsg = "前台-获取比赛活动分组详情出错。";
+			errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -99,14 +99,19 @@ public class MatchController {
 
     /**
      * 点击围观用户头像 获取详细信息
+     * 详细资料 只有是队友且该球队要求 详细资料时才可见
      * @return
      */
     @ResponseBody
     @RequestMapping("getUserInfoById")
     public JsonElement getUserInfoById(Long userId) {
         try {
-            UserInfo userInfo = userService.getUserInfoById(userId);
-            return JsonWrapper.newDataInstance(userInfo);
+            //是否可见
+            if(userService.userInfoIsOpen(userId)){
+                UserInfo userInfo = userService.getUserInfoById(userId);
+                return JsonWrapper.newDataInstance(userInfo);
+            }
+            return JsonWrapper.newErrorInstance("抱歉，您无权查看该用户信息。");
         } catch (Exception e) {
             errmsg = "前台-根据用户id获取用户信息时出错。userId="+userId;
             e.printStackTrace();
@@ -116,7 +121,7 @@ public class MatchController {
     }
 
     /**
-     * 点击“邀请记分”
+     * 点击“邀请记分”——生成二维码，并显示，对方扫码进入记分页面
      * @return
      */
     @ResponseBody
@@ -158,23 +163,6 @@ public class MatchController {
         }
     }
 
-	/**
-	 * 获取比赛详情
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getMatchDetail")
-	public JsonElement getMatchDetail(Long matchId) {
-		try {
-			MatchInfo matchInfo = matchService.getMatchInfoById(matchId);
-			return JsonWrapper.newDataInstance(matchInfo);
-		} catch (Exception e) {
-			errmsg = "前台-获取比赛活动详情出错。";
-			e.printStackTrace();
-			logger.error(errmsg + e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
 
 	/**
 	 * 获取本组比赛结果详情
@@ -184,7 +172,7 @@ public class MatchController {
 	@RequestMapping("getMatchScoreByGroupId")
 	public JsonElement getMatchScoreByGroupId(Long groupId) {
 		try {
-			MatchInfo matchInfo = matchService.getMatchInfoById(groupId);
+            Map<String, Object> matchInfo = matchService.getMatchInfoById(groupId);
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
 			errmsg = "前台-获取本组比赛结果详情出错。";
@@ -202,7 +190,7 @@ public class MatchController {
 	@RequestMapping("getMatchScoreByMatchId")
 	public JsonElement getMatchScoreByMatchId(Long matchId) {
 		try {
-			MatchInfo matchInfo = matchService.getMatchInfoById(matchId);
+            Map<String, Object> matchInfo = matchService.getMatchInfoById(matchId);
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
 			errmsg = "前台-获取整组比赛结果详情出错。";
@@ -211,6 +199,16 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -246,11 +244,15 @@ public class MatchController {
 
     /**
      * 创建比赛—获取球场列表
+     * @param page 翻页
+     * @param keyword 搜索关键字
+     * @param type 0:附近 1：区域
+     * @param regionName 区域名称
      * @return
      */
     @ResponseBody
     @RequestMapping("getParkList")
-    public JsonElement getParkList(Integer page, String keyword) {
+    public JsonElement getParkList(Integer page, String keyword, Integer type, String regionName) {
         Integer nowPage = 1;
         if (page > 0) {
             nowPage = page;
@@ -261,7 +263,22 @@ public class MatchController {
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
             POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>(Const.ROWSPERPAGE , nowPage);
-            pageInfo = teamService.getParkList(searchBean, pageInfo);
+            if(type == null){
+                //全部
+                pageInfo = teamService.getParkList(searchBean, pageInfo);
+            }else if(type == 0){
+                //附近
+                pageInfo = teamService.getParkListNearby(searchBean, pageInfo);
+            }else if(type == 1){
+                //区域
+                pageInfo.setRowsPerPage(0);
+                pageInfo.setNowPage(1);
+                pageInfo = teamService.getParkListByRegion(searchBean, pageInfo);
+            }else if(StringUtils.isNotEmpty(regionName)){
+                //该区域下的所有球场
+                searchBean.addParpField("regionName", regionName);
+                pageInfo = teamService.getParkListByRegionName(searchBean, pageInfo);
+            }
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
             errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
@@ -272,12 +289,30 @@ public class MatchController {
     }
 
     /**
-     * 创建比赛—点击球场-获取分区
+     * 创建比赛—点击球场-获取分区（前九洞 后九洞）
      * @return
      */
     @ResponseBody
     @RequestMapping("getParkZoneAndHole")
     public JsonElement getParkZoneAndHole(Long parkId) {
+        try {
+            List<ParkPartition> parkPartitionList = teamService.getParkZoneAndHole(parkId);
+            return JsonWrapper.newDataInstance(parkPartitionList);
+        } catch (Exception e) {
+            errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+    /**
+     * 创建比赛—确定
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("createMatch")
+    public JsonElement createMatch(Long parkId) {
         try {
             List<ParkPartition> parkPartitionList = teamService.getParkZoneAndHole(parkId);
             return JsonWrapper.newDataInstance(parkPartitionList);
@@ -296,12 +331,23 @@ public class MatchController {
 
     /**
      * 创建比赛—单练
+     * @param parkId 所在球场Id
+     * @param parkName 球场名称
+     * @param zoneBeforeNine 前9洞区域
+     * @param zoneAfterNine 后9洞区域
+     * @param parkName 球场名称
+     * @param playTime 打球时间
+     * @param groupPeopleNum 同组人数
+     * @param digest 备注
      * @return
      */
     @ResponseBody
-    @RequestMapping("saveMyMatch")
-    public JsonElement saveMyMatch() {
+    @RequestMapping("saveMyOnlyMatch")
+    public JsonElement saveMyOnlyMatch(Long parkId, String parkName, String zoneBeforeNine,
+                                       String zoneAfterNine,
+                                       String playTime, Integer groupPeopleNum, String digest) {
         try {
+            matchService.saveMyOnlyMatch(parkId, parkName, zoneBeforeNine, zoneAfterNine, playTime, groupPeopleNum, digest);
             return JsonWrapper.newDataInstance(null);
         } catch (Exception e) {
             errmsg = "前台-创建比赛—创建单练时出错。";

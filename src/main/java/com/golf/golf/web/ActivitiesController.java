@@ -12,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Map;
+
 /**
  * 赛事活动
  * @author nmy
@@ -53,7 +55,7 @@ public class ActivitiesController {
 	@RequestMapping("getMatchDetail")
 	public String getMatchDetail(ModelMap mm, Long matchId) {
 		try {
-			MatchInfo match = matchService.getMatchInfoById(matchId);
+            Map<String, Object> match = matchService.getMatchInfoById(matchId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("前台-获取赛事活动详情出错。" + e);

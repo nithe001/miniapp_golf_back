@@ -6,7 +6,6 @@ import javax.persistence.*;
 @Table(name = "user_info")
 public class UserInfo {
     private Long uiId;
-	private String uiOpenId;
     private Integer uiType;
     private String uiHeadimg;
     private String uiPersonalizedSignature;
@@ -43,15 +42,6 @@ public class UserInfo {
         this.uiId = uiId;
     }
 
-	@Basic
-	@Column(name = "ui_open_id")
-	public String getUiOpenId() {
-		return uiOpenId;
-	}
-
-	public void setUiOpenId(String uiOpenId) {
-		this.uiOpenId = uiOpenId;
-	}
 
 	@Basic
     @Column(name = "ui_longitude")

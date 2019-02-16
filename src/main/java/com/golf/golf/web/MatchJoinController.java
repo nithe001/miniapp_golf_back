@@ -7,8 +7,8 @@ import com.golf.common.model.SearchBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
-import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 比赛报名Controller
@@ -33,8 +34,6 @@ public class MatchJoinController {
 
     @Autowired
     private MatchService matchService;
-    @Autowired
-    private UserService userService;
 
 
     /**
@@ -149,7 +148,60 @@ public class MatchJoinController {
 		}
 	}
 
+    /**
+     * 赛长——获取报名用户列表
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getJoinUserList")
+    public JsonElement getJoinUserList(Long matchId) {
+        try {
+            List<UserInfo> userInfoList = matchService.getUserListByMatchId(matchId);
+            return JsonWrapper.newDataInstance(userInfoList);
+        } catch (Exception e) {
+            errmsg = "前台-报名-赛长获取报名用户列表时出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 
+    /**
+     * 赛长——审核报名用户，将用户加入该组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("auditUser")
+    public JsonElement auditUser(Long matchId, Long groupId) {
+        try {
+            matchService.quitMatchGroup(matchId, groupId, UserUtil.getUserId(), null);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            errmsg = "前台-报名-赛长审核报名用户，将用户加入该组时出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+
+    /**
+     * 报名——获取参赛球队 和 比赛详情
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getMatchDetail")
+    public JsonElement getMatchDetail(Long matchId) {
+        try {
+            Map<String, Object> matchInfo = matchService.getMatchInfoById(matchId);
+            return JsonWrapper.newDataInstance(matchInfo);
+        } catch (Exception e) {
+            errmsg = "前台-获取比赛活动详情出错。";
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 
 
 }
