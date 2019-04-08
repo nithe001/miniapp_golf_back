@@ -30,7 +30,6 @@ public class UserDao extends CommonDao {
         StringBuilder hql = new StringBuilder();
         hql.append("FROM WechatUserInfo WHERE wuiOpenid = :openid");
         return dao.findOne(hql.toString(), parp);
-
     }
 
 
@@ -141,5 +140,15 @@ public class UserDao extends CommonDao {
         }
         List<Long> list = dao.createQuery("SELECT m.tumTeamId "+ hql.toString(), parp);
         return list.get(0);
+    }
+
+    /**
+     * 通过用户id获取用户微信信息
+     * @return
+     */
+    public WechatUserInfo getWechatUserByUserId(Long userId) {
+        StringBuffer hql = new StringBuffer();
+        hql.append("FROM WechatUserInfo as w WHERE w.wuiUId = " +userId);
+        return (WechatUserInfo)dao.createQuery(hql.toString());
     }
 }

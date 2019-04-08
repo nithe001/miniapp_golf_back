@@ -1,10 +1,19 @@
 package com.golf.golf.web.admin;
 
+import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
+import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.golf.common.Const;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.PropertyConst;
+import com.golf.common.util.QRCodeUtil;
+import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.service.admin.AdminMatchService;
+import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.io.File;
 
 /**
  * 赛事活动
@@ -25,6 +36,10 @@ public class AdminMatchController {
 
     @Autowired
     private AdminMatchService adminMatchService;
+    @Autowired
+    protected WxMpService wxMpService;
+    @Autowired
+    protected WxMaService wxMaService;
 
 	/**
 	 * 赛事活动列表
@@ -136,5 +151,44 @@ public class AdminMatchController {
             return "admin/error";
         }
         return "redirect:calendarList";
+    }
+
+    /**
+     * 生成二维码
+     * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
+     * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index, 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
+     * @return
+     */
+    @RequestMapping("createEwm")
+    public String createEwm() {
+        try {
+            String oldFileName = UserUtil.getOpenId() + ".png";//文件名称
+            String QRCodePath = WebUtil.getRealPath("/") + "upload/QRCode";
+//            oldFileName = WebUtil.getRealPath(PropertyConst.prcodeWithPic + "/" + oldFileName);
+            oldFileName = QRCodePath + "/" + oldFileName;
+
+            File oldFile = new File(oldFileName);
+            if (oldFile.exists()) {
+                oldFile.delete();
+            }
+            //生成二维码
+            Long docId= 1L;
+            //		https://mp.weixin.qq.com/wiki?id=mp1443433542&highline=%E4%BA%8C%E7%BB%B4%E7%A0%81
+            WxMpQrCodeTicket qrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateLastTicket(docId + "");
+
+//           String scene, String page, int width, boolean autoColor, WxMaCodeLineColor lineColor, boolean isHyaline
+            File file = new File(QRCodePath,oldFileName);
+//            file = wxMaService.getQrcodeService().createWxaCodeUnlimit();
+            String qrcodeUrl = qrCodeTicket.getUrl();//二维码内容
+            String imagePath = QRCodePath + "/";//二维码保存绝对物理路径
+            String fileName = UserUtil.getOpenId() + ".png";//文件名称
+//            String logoPaht = WebUtil.getRealPath(PropertyConst.userPhoto) + "/"; //用户微信头像保存路径
+//            logoPaht += fileName;
+//            QRCodeUtil.createQRImageWithLogo(qrcodeUrl, logoPaht, imagePath, fileName);//生成带头像的微信二维码
+            QRCodeUtil.createQRImage(qrcodeUrl, imagePath, fileName);//生成不带头像的微信二维码
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "admin/match/add";
     }
 }
