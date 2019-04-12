@@ -8,6 +8,8 @@ public class PropertyConst {
 	public static String ENVIRONMENT = PropertyUtil.getPropertyValue("environment");
     /** 图片上传路径*/
     public static String PIC_PATH = PropertyUtil.getPropertyValue("pic.path");
+	/** 球队LOGO图片路径*/
+	public static String TEAM_LOGO_PATH = PropertyUtil.getPropertyValue("team.logo.path");
     /** 微信头像路径*/
     public static String HEADIMG_PATH = PropertyUtil.getPropertyValue("headimg.path");
     /** 二维码路径*/

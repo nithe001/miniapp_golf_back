@@ -3,10 +3,7 @@ package com.golf.golf.dao.admin;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.db.AdminUser;
-import com.golf.golf.db.ParkInfo;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.db.WechatUserInfo;
+import com.golf.golf.db.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
@@ -44,8 +41,8 @@ public class AdminParkDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		String order = "ORDER BY p.piCreateTime DESC";
-		List<ParkInfo> list = dao.createQuery(hql.toString()+order, parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+//		hql.append(" ORDER BY convert(p.piCity ,'GBK'), convert(p.piName ,'GBK') ");
+		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
 
@@ -57,16 +54,42 @@ public class AdminParkDao extends CommonDao {
 	 * @param name
 	 * @return
 	 */
-	public boolean checkName(String name) {
+	public boolean checkName(String city, String name) {
 		Map<String, Object> parp = new HashMap<String,Object>();
 		parp.put("parkName", name);
-		String sql = "SELECT COUNT(*) FROM ParkInfo AS p WHERE p.piName = :auUserName";
-		Long count = dao.createCountQuery(sql,parp);
+		parp.put("city", city);
+		StringBuilder hql = new StringBuilder();
+		hql.append(" SELECT COUNT(*) FROM ParkInfo AS p WHERE p.piName = :parkName and p.piCity = :city ");
+		Long count = dao.createCountQuery(hql.toString(), parp);
 		if(count == null || count.intValue() == 0){
 			return false;
 		}else{
 			//已存在
 			return true;
 		}
+	}
+
+	/**
+	 * 根据城市和球场名称获取球场信息
+	 * @return
+	 */
+	public ParkInfo getByCityAndName(String city, String parkName) {
+		Map<String, Object> parp = new HashMap<String,Object>();
+		parp.put("parkName", parkName);
+		parp.put("city", city);
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM ParkInfo AS p WHERE p.piName = :parkName and p.piCity = :city ");
+		return (ParkInfo)dao.findOne(hql.toString(), parp);
+	}
+
+	/**
+	 * 根据id获取球场和球区信息
+	 * @param id
+	 * @return
+	 */
+	public  List<ParkPartition> getParkZoneById(Long id) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM ParkPartition as p WHERE p.ppPId = "+id);
+		return dao.createQuery(hql.toString());
 	}
 }

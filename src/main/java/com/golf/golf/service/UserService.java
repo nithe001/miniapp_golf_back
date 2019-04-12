@@ -154,8 +154,18 @@ public class UserService implements IBaseService {
      * @param user
      */
     public void updateUser(UserInfo user) throws Exception {
-    	UserInfo db = dao.get(UserInfo.class,user.getUiId());
+    	UserInfo db = dao.get(UserInfo.class,4L);
+    	db.setUiTelNo(user.getUiTelNo());
 		db.setUiEmail(user.getUiEmail());
+		db.setUiCraduateSchool(user.getUiCraduateSchool());
+		db.setUiCraduateDepartment(user.getUiCraduateDepartment());
+		db.setUiMajor(user.getUiMajor());
+		db.setUiCraduateTime(user.getUiCraduateTime());
+		db.setUiStudentId(user.getUiStudentId());
+		db.setUiWorkUnit(user.getUiWorkUnit());
+		db.setUiPost(user.getUiPost());
+		db.setUiAddress(user.getUiAddress());
+		db.setUiHomeCourt(user.getUiHomeCourt());
 		db.setUiUpdateTime(System.currentTimeMillis());
         dao.update(db);
     }
@@ -236,6 +246,7 @@ public class UserService implements IBaseService {
      * @return
      */
     public boolean userInfoIsOpen(Long userId) {
+		Long myId = UserUtil.getUserId();
         //是否是我的队友
         Long teamId = dao.getIsMyTeammate(1L,userId);
         if(teamId != null){

@@ -1,64 +1,78 @@
 package com.golf.golf.db;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "park_partition")
 public class ParkPartition {
-    private Long ppId;
-    private Long ppPId;
-    private String ppName;
-    private Integer ppHoleNum;
-    private Integer ppHoleStandardRod;
+	private Long ppId;
+	private Long ppPId;
+	private String ppZoneName;
+	private Integer ppHoleNum;
+	private Integer ppHoleStandardRod;
 
-    @Id
-    @Column(name = "pp_id")
-    public Long getPpId() {
-        return ppId;
-    }
+	// Constructors
 
-    public void setPpId(Long ppId) {
-        this.ppId = ppId;
-    }
+	/** default constructor */
+	public ParkPartition() {
+	}
 
-    @Basic
-    @Column(name = "pp_p_id")
-    public Long getPpPId() {
-        return ppPId;
-    }
+	/** full constructor */
+	public ParkPartition(Long ppPId, String ppZoneName, Integer ppHoleNum,
+						 Integer ppHoleStandardRod) {
+		this.ppPId = ppPId;
+		this.ppZoneName = ppZoneName;
+		this.ppHoleNum = ppHoleNum;
+		this.ppHoleStandardRod = ppHoleStandardRod;
+	}
 
-    public void setPpPId(Long ppPId) {
-        this.ppPId = ppPId;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "pp_id", unique = true, nullable = false)
+	public Long getPpId() {
+		return this.ppId;
+	}
 
-    @Basic
-    @Column(name = "pp_name")
-    public String getPpName() {
-        return ppName;
-    }
+	public void setPpId(Long ppId) {
+		this.ppId = ppId;
+	}
 
-    public void setPpName(String ppName) {
-        this.ppName = ppName;
-    }
+	@Column(name = "pp_p_id")
+	public Long getPpPId() {
+		return this.ppPId;
+	}
 
-    @Basic
-    @Column(name = "pp_hole_num")
-    public Integer getPpHoleNum() {
-        return ppHoleNum;
-    }
+	public void setPpPId(Long ppPId) {
+		this.ppPId = ppPId;
+	}
 
-    public void setPpHoleNum(Integer ppHoleNum) {
-        this.ppHoleNum = ppHoleNum;
-    }
+	@Column(name = "pp_zone_name", length = 128)
+	public String getPpZoneName() {
+		return this.ppZoneName;
+	}
 
-    @Basic
-    @Column(name = "pp_hole_standard_rod")
-    public Integer getPpHoleStandardRod() {
-        return ppHoleStandardRod;
-    }
+	public void setPpZoneName(String ppZoneName) {
+		this.ppZoneName = ppZoneName;
+	}
 
-    public void setPpHoleStandardRod(Integer ppHoleStandardRod) {
-        this.ppHoleStandardRod = ppHoleStandardRod;
-    }
+	@Column(name = "pp_hole_num")
+	public Integer getPpHoleNum() {
+		return this.ppHoleNum;
+	}
+
+	public void setPpHoleNum(Integer ppHoleNum) {
+		this.ppHoleNum = ppHoleNum;
+	}
+
+	@Column(name = "pp_hole_standard_rod")
+	public Integer getPpHoleStandardRod() {
+		return this.ppHoleStandardRod;
+	}
+
+	public void setPpHoleStandardRod(Integer ppHoleStandardRod) {
+		this.ppHoleStandardRod = ppHoleStandardRod;
+	}
 
 }

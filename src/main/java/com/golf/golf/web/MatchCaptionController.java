@@ -115,24 +115,4 @@ public class MatchCaptionController {
 		}
 	}
 
-	/**
-	 * 创建比赛-保存-自动成为赛长
-	 * 小程序向后台传json
-	 * https://www.cnblogs.com/winv758241/p/7838907.html
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("saveMatchInfo")
-	public JsonElement saveMatchInfo(String matchJson) {
-		try {
-			matchService.saveMatchInfo(matchJson);
-			return JsonWrapper.newSuccessInstance();
-		} catch (Exception e) {
-			errmsg = "前台-创建比赛-保存时出错。";
-			e.printStackTrace();
-			logger.error(errmsg + e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
-
 }

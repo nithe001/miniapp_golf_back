@@ -48,7 +48,7 @@ public class MatchManagController {
 			matchInfo.setMiParkName(address);
 			matchInfo.setMiMatchOpenType(Integer.parseInt(isOpen));
 			matchInfo.setMiJoinOpenType(Integer.parseInt(isOpen));
-			matchInfo.setMiMatchTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,matchTime));
+			matchInfo.setMiMatchTime(matchTime);
 			matchInfo.setMiApplyEndTime(TimeUtil.stringToLong(TimeUtil.FORMAT_DATETIME,applyEndTime));
 			matchInfo.setMiDigest(digest);
 			matchInfo.setMiCreateTime(System.currentTimeMillis());

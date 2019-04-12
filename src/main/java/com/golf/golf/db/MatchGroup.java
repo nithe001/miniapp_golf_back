@@ -2,106 +2,125 @@ package com.golf.golf.db;
 
 import javax.persistence.*;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Entity
 @Table(name = "match_group")
 public class MatchGroup {
-    private Long mgId;
-    private Long mgMatchId;
-    private String mgGroupName;
-    private Long mgCreateUserId;
-    private String mgCreateUserName;
-    private Long mgCreateTime;
-    private Long mgUpdateUserId;
-    private String mgUpdateUserName;
-    private Long mgUpdateTime;
 
-    @Id
-    @Column(name = "mg_id")
-    public Long getMgId() {
-        return mgId;
-    }
+	// Fields
 
-    public void setMgId(Long mgId) {
-        this.mgId = mgId;
-    }
+	private Long mgId;
+	private Long mgMatchId;
+	private String mgGroupName;
+	private Long mgCreateUserId;
+	private String mgCreateUserName;
+	private Long mgCreateTime;
+	private Long mgUpdateUserId;
+	private String mgUpdateUserName;
+	private Long mgUpdateTime;
 
-    @Basic
-    @Column(name = "mg_match_id")
-    public Long getMgMatchId() {
-        return mgMatchId;
-    }
+	// Constructors
 
-    public void setMgMatchId(Long mgMatchId) {
-        this.mgMatchId = mgMatchId;
-    }
+	/** default constructor */
+	public MatchGroup() {
+	}
 
-    @Basic
-    @Column(name = "mg_group_name")
-    public String getMgGroupName() {
-        return mgGroupName;
-    }
+	/** full constructor */
+	public MatchGroup(Long mgMatchId, String mgGroupName, Long mgCreateUserId,
+					  String mgCreateUserName, Long mgCreateTime, Long mgUpdateUserId,
+					  String mgUpdateUserName, Long mgUpdateTime) {
+		this.mgMatchId = mgMatchId;
+		this.mgGroupName = mgGroupName;
+		this.mgCreateUserId = mgCreateUserId;
+		this.mgCreateUserName = mgCreateUserName;
+		this.mgCreateTime = mgCreateTime;
+		this.mgUpdateUserId = mgUpdateUserId;
+		this.mgUpdateUserName = mgUpdateUserName;
+		this.mgUpdateTime = mgUpdateTime;
+	}
 
-    public void setMgGroupName(String mgGroupName) {
-        this.mgGroupName = mgGroupName;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "mg_id", unique = true, nullable = false)
+	public Long getMgId() {
+		return this.mgId;
+	}
 
-    @Basic
-    @Column(name = "mg_create_user_id")
-    public Long getMgCreateUserId() {
-        return mgCreateUserId;
-    }
+	public void setMgId(Long mgId) {
+		this.mgId = mgId;
+	}
 
-    public void setMgCreateUserId(Long mgCreateUserId) {
-        this.mgCreateUserId = mgCreateUserId;
-    }
+	@Column(name = "mg_match_id")
+	public Long getMgMatchId() {
+		return this.mgMatchId;
+	}
 
-    @Basic
-    @Column(name = "mg_create_user_name")
-    public String getMgCreateUserName() {
-        return mgCreateUserName;
-    }
+	public void setMgMatchId(Long mgMatchId) {
+		this.mgMatchId = mgMatchId;
+	}
 
-    public void setMgCreateUserName(String mgCreateUserName) {
-        this.mgCreateUserName = mgCreateUserName;
-    }
+	@Column(name = "mg_group_name", length = 128)
+	public String getMgGroupName() {
+		return this.mgGroupName;
+	}
 
-    @Basic
-    @Column(name = "mg_create_time")
-    public Long getMgCreateTime() {
-        return mgCreateTime;
-    }
+	public void setMgGroupName(String mgGroupName) {
+		this.mgGroupName = mgGroupName;
+	}
 
-    public void setMgCreateTime(Long mgCreateTime) {
-        this.mgCreateTime = mgCreateTime;
-    }
+	@Column(name = "mg_create_user_id")
+	public Long getMgCreateUserId() {
+		return this.mgCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "mg_update_user_id")
-    public Long getMgUpdateUserId() {
-        return mgUpdateUserId;
-    }
+	public void setMgCreateUserId(Long mgCreateUserId) {
+		this.mgCreateUserId = mgCreateUserId;
+	}
 
-    public void setMgUpdateUserId(Long mgUpdateUserId) {
-        this.mgUpdateUserId = mgUpdateUserId;
-    }
+	@Column(name = "mg_create_user_name", length = 128)
+	public String getMgCreateUserName() {
+		return this.mgCreateUserName;
+	}
 
-    @Basic
-    @Column(name = "mg_update_user_name")
-    public String getMgUpdateUserName() {
-        return mgUpdateUserName;
-    }
+	public void setMgCreateUserName(String mgCreateUserName) {
+		this.mgCreateUserName = mgCreateUserName;
+	}
 
-    public void setMgUpdateUserName(String mgUpdateUserName) {
-        this.mgUpdateUserName = mgUpdateUserName;
-    }
+	@Column(name = "mg_create_time")
+	public Long getMgCreateTime() {
+		return this.mgCreateTime;
+	}
 
-    @Basic
-    @Column(name = "mg_update_time")
-    public Long getMgUpdateTime() {
-        return mgUpdateTime;
-    }
+	public void setMgCreateTime(Long mgCreateTime) {
+		this.mgCreateTime = mgCreateTime;
+	}
 
-    public void setMgUpdateTime(Long mgUpdateTime) {
-        this.mgUpdateTime = mgUpdateTime;
-    }
+	@Column(name = "mg_update_user_id")
+	public Long getMgUpdateUserId() {
+		return this.mgUpdateUserId;
+	}
+
+	public void setMgUpdateUserId(Long mgUpdateUserId) {
+		this.mgUpdateUserId = mgUpdateUserId;
+	}
+
+	@Column(name = "mg_update_user_name", length = 128)
+	public String getMgUpdateUserName() {
+		return this.mgUpdateUserName;
+	}
+
+	public void setMgUpdateUserName(String mgUpdateUserName) {
+		this.mgUpdateUserName = mgUpdateUserName;
+	}
+
+	@Column(name = "mg_update_time")
+	public Long getMgUpdateTime() {
+		return this.mgUpdateTime;
+	}
+
+	public void setMgUpdateTime(Long mgUpdateTime) {
+		this.mgUpdateTime = mgUpdateTime;
+	}
 }

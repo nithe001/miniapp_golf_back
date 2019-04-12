@@ -1,63 +1,79 @@
 package com.golf.golf.db;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_join_watch_info")
 public class MatchJoinWatchInfo {
-    private long mjwiId;
-    private Integer mjwiType;
-    private Long mjwiMatchId;
-    private Long mjwiUserId;
-    private Long mjwiCreateTime;
+	// Fields
 
-    @Id
-    @Column(name = "mjwi_id")
-    public long getMjwiId() {
-        return mjwiId;
-    }
+	private Long mjwiId;
+	private Integer mjwiType;
+	private Long mjwiMatchId;
+	private Long mjwiUserId;
+	private Long mjwiCreateTime;
 
-    public void setMjwiId(long mjwiId) {
-        this.mjwiId = mjwiId;
-    }
+	// Constructors
 
-    @Basic
-    @Column(name = "mjwi_type")
-    public Integer getMjwiType() {
-        return mjwiType;
-    }
+	/** default constructor */
+	public MatchJoinWatchInfo() {
+	}
 
-    public void setMjwiType(Integer mjwiType) {
-        this.mjwiType = mjwiType;
-    }
+	/** full constructor */
+	public MatchJoinWatchInfo(Integer mjwiType, Long mjwiMatchId,
+							  Long mjwiUserId, Long mjwiCreateTime) {
+		this.mjwiType = mjwiType;
+		this.mjwiMatchId = mjwiMatchId;
+		this.mjwiUserId = mjwiUserId;
+		this.mjwiCreateTime = mjwiCreateTime;
+	}
 
-    @Basic
-    @Column(name = "mjwi_match_id")
-    public Long getMjwiMatchId() {
-        return mjwiMatchId;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "mjwi_id", unique = true, nullable = false)
+	public Long getMjwiId() {
+		return this.mjwiId;
+	}
 
-    public void setMjwiMatchId(Long mjwiMatchId) {
-        this.mjwiMatchId = mjwiMatchId;
-    }
+	public void setMjwiId(Long mjwiId) {
+		this.mjwiId = mjwiId;
+	}
 
-    @Basic
-    @Column(name = "mjwi_user_id")
-    public Long getMjwiUserId() {
-        return mjwiUserId;
-    }
+	@Column(name = "mjwi_type")
+	public Integer getMjwiType() {
+		return this.mjwiType;
+	}
 
-    public void setMjwiUserId(Long mjwiUserId) {
-        this.mjwiUserId = mjwiUserId;
-    }
+	public void setMjwiType(Integer mjwiType) {
+		this.mjwiType = mjwiType;
+	}
 
-    @Basic
-    @Column(name = "mjwi_create_time")
-    public Long getMjwiCreateTime() {
-        return mjwiCreateTime;
-    }
+	@Column(name = "mjwi_match_id")
+	public Long getMjwiMatchId() {
+		return this.mjwiMatchId;
+	}
 
-    public void setMjwiCreateTime(Long mjwiCreateTime) {
-        this.mjwiCreateTime = mjwiCreateTime;
-    }
+	public void setMjwiMatchId(Long mjwiMatchId) {
+		this.mjwiMatchId = mjwiMatchId;
+	}
+
+	@Column(name = "mjwi_user_id")
+	public Long getMjwiUserId() {
+		return this.mjwiUserId;
+	}
+
+	public void setMjwiUserId(Long mjwiUserId) {
+		this.mjwiUserId = mjwiUserId;
+	}
+
+	@Column(name = "mjwi_create_time")
+	public Long getMjwiCreateTime() {
+		return this.mjwiCreateTime;
+	}
+
+	public void setMjwiCreateTime(Long mjwiCreateTime) {
+		this.mjwiCreateTime = mjwiCreateTime;
+	}
 }

@@ -1,75 +1,91 @@
 package com.golf.golf.db;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_score_user_mapping")
 public class MatchScoreUserMapping {
-    private long msumId;
-    private Long msumMatchId;
-    private Long msumGroupId;
-    private Long msumCreateUserId;
-    private Long msumScorerId;
-    private Long msumCreateTime;
+	// Fields
 
-    @Id
-    @Column(name = "msum_id")
-    public long getMsumId() {
-        return msumId;
-    }
+	private Long msumId;
+	private Long msumMatchId;
+	private Long msumGroupId;
+	private Long msumCreateUserId;
+	private Long msumScorerId;
+	private Long msumCreateTime;
 
-    public void setMsumId(long msumId) {
-        this.msumId = msumId;
-    }
+	// Constructors
 
-    @Basic
-    @Column(name = "msum_match_id")
-    public Long getMsumMatchId() {
-        return msumMatchId;
-    }
+	/** default constructor */
+	public MatchScoreUserMapping() {
+	}
 
-    public void setMsumMatchId(Long msumMatchId) {
-        this.msumMatchId = msumMatchId;
-    }
+	/** full constructor */
+	public MatchScoreUserMapping(Long msumMatchId, Long msumGroupId,
+								 Long msumCreateUserId, Long msumScorerId, Long msumCreateTime) {
+		this.msumMatchId = msumMatchId;
+		this.msumGroupId = msumGroupId;
+		this.msumCreateUserId = msumCreateUserId;
+		this.msumScorerId = msumScorerId;
+		this.msumCreateTime = msumCreateTime;
+	}
 
-    @Basic
-    @Column(name = "msum_group_id")
-    public Long getMsumGroupId() {
-        return msumGroupId;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "msum_id", unique = true, nullable = false)
+	public Long getMsumId() {
+		return this.msumId;
+	}
 
-    public void setMsumGroupId(Long msumGroupId) {
-        this.msumGroupId = msumGroupId;
-    }
+	public void setMsumId(Long msumId) {
+		this.msumId = msumId;
+	}
 
-    @Basic
-    @Column(name = "msum_create_user_id")
-    public Long getMsumCreateUserId() {
-        return msumCreateUserId;
-    }
+	@Column(name = "msum_match_id")
+	public Long getMsumMatchId() {
+		return this.msumMatchId;
+	}
 
-    public void setMsumCreateUserId(Long msumCreateUserId) {
-        this.msumCreateUserId = msumCreateUserId;
-    }
+	public void setMsumMatchId(Long msumMatchId) {
+		this.msumMatchId = msumMatchId;
+	}
 
-    @Basic
-    @Column(name = "msum_scorer_id")
-    public Long getMsumScorerId() {
-        return msumScorerId;
-    }
+	@Column(name = "msum_group_id")
+	public Long getMsumGroupId() {
+		return this.msumGroupId;
+	}
 
-    public void setMsumScorerId(Long msumScorerId) {
-        this.msumScorerId = msumScorerId;
-    }
+	public void setMsumGroupId(Long msumGroupId) {
+		this.msumGroupId = msumGroupId;
+	}
 
-    @Basic
-    @Column(name = "msum_create_time")
-    public Long getMsumCreateTime() {
-        return msumCreateTime;
-    }
+	@Column(name = "msum_create_user_id")
+	public Long getMsumCreateUserId() {
+		return this.msumCreateUserId;
+	}
 
-    public void setMsumCreateTime(Long msumCreateTime) {
-        this.msumCreateTime = msumCreateTime;
-    }
+	public void setMsumCreateUserId(Long msumCreateUserId) {
+		this.msumCreateUserId = msumCreateUserId;
+	}
+
+	@Column(name = "msum_scorer_id")
+	public Long getMsumScorerId() {
+		return this.msumScorerId;
+	}
+
+	public void setMsumScorerId(Long msumScorerId) {
+		this.msumScorerId = msumScorerId;
+	}
+
+	@Column(name = "msum_create_time")
+	public Long getMsumCreateTime() {
+		return this.msumCreateTime;
+	}
+
+	public void setMsumCreateTime(Long msumCreateTime) {
+		this.msumCreateTime = msumCreateTime;
+	}
 
 }

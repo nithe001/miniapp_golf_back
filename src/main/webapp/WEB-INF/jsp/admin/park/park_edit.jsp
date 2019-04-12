@@ -9,31 +9,31 @@
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
-		<jsp:include page="../include/header.jsp">
-			<jsp:param value="nav_adminUser" name="navId"></jsp:param>
-			<jsp:param value="user" name="navParentId"/>
-		</jsp:include>
-		
+        <jsp:include page="../include/header.jsp">
+            <jsp:param value="nav_park" name="navId"></jsp:param>
+        </jsp:include>
+
 		<div class="content-wrapper">
-			<section class="content-header">
-				<h1>编辑用户</h1>
-		        <ol class="breadcrumb">
-		           <li><a href="admin/user/adminUserList"><i class="fa fa-dashboard"></i>用户列表</a></li>
-		           <li class="active">编辑用户</li>
-		        </ol>
-		    </section>
+            <section class="content-header">
+                <h1>新增球场</h1>
+                <ol class="breadcrumb">
+                    <li><a href="admin/park/list"><i class="fa fa-dashboard"></i>球场列表</a></li>
+                    <li class="active">新增球场</li>
+                </ol>
+            </section>
 		    <section class="content">
 				<div class="row">
 				  <div class="col-md-12">
 		            <div class="box box-info">
 			            <div class="box-header with-border">
-			              <h3 class="box-title">用户信息</h3>
+			              <h3 class="box-title">球场信息</h3>
 			            </div>
 			            <!-- /.box-header -->
 		            <!-- form start -->
-		            <form class="form-horizontal" role="form" id="userInfoForm" name="userInfoForm" action="admin/user/userEdit" method="post">
-		            	<jsp:include page="park_form.jsp"></jsp:include>
-		            </form>
+                        <form class="form-horizontal" role="form" id="parkForm_add" name="parkForm_add"
+                              action="/admin/park/parkEdit" method="post">
+                            <jsp:include page="park_form.jsp"></jsp:include>
+                        </form>
           			</div>
           		 </div>
           		</div>

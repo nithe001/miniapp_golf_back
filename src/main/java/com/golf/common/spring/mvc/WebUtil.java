@@ -137,6 +137,7 @@ public class WebUtil {
 		try {
 			p = WebUtils.getRealPath(getRequest().getServletContext(), path);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 		return p;
 	}

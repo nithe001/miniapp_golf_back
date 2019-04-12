@@ -1,7 +1,6 @@
 package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
-import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
@@ -18,8 +17,9 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户
@@ -80,74 +80,58 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement userManage(String loginSessionKey) {
+	public JsonElement getUserInfo() {
 		try {
-			if(StringUtils.isNotEmpty(loginSessionKey)){
-				HttpSession session = WebUtil.getSession();
-				if (session.getAttribute(loginSessionKey) != null) {
-					String value = session.getAttribute(loginSessionKey).toString();
-					String openId = value.split(",")[0];
-					UserInfo user = service.getUserByOpenid(openId);
-					return JsonWrapper.newDataInstance(user);
-				}
-			}
+			UserInfo userInfo = service.getUserById(4L);
+			return JsonWrapper.newDataInstance(userInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取用户微信信息失败。", e);
-			return JsonWrapper.newErrorInstance("获取用户微信信息失败");
+			logger.error("获取用户信息失败。", e);
+			return JsonWrapper.newErrorInstance("获取用户信息失败");
 		}
-		return JsonWrapper.newErrorInstance("用户未登录");
-	}
-
-	/**
-	 * 修改个人信息init
-	 * @return
-	 */
-	@RequestMapping("editUserInfoUI")
-	public String editUserInfoUI(ModelMap mm) {
-		try {
-			UserInfo user = service.getUserById(UserUtil.getUserId());
-			mm.addAttribute("user", user);
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("获取个人信息时出错。", e);
-			return "error";
-		}
-		return "user/userDetailEdit";
 	}
 
 	/**
 	 * 修改个人信息
 	 * @return
 	 */
-	@RequestMapping("updateUser")
-	public String updateUser(UserInfo user) {
+	@ResponseBody
+	@RequestMapping("updateUserInfo")
+	public JsonElement updateUserInfo(String userInfo) {
 		try {
-			service.updateUser(user);
+			if(StringUtils.isNotEmpty(userInfo)){
+				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
+				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
+				service.updateUser(userInfoBean);
+			}
+			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("修改个人信息-保存时出错。", e);
-			return "error";
+			logger.error("更新用户信息时失败。", e);
+			return JsonWrapper.newErrorInstance("更新用户信息时失败");
 		}
-		return "redirect:userManage?edit=1";
 	}
 
 	/**
 	 * 基本信息
-	 *
+	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
 	 * @return
 	 */
+	@ResponseBody
 	@RequestMapping("getUserInfoById")
-	public String getUserInfoById(Long wechatId) {
+	public JsonElement getUserInfoById(Long userId) {
 		try {
-			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getUiId());
+			Map<String, Object> result = new HashMap<>();
+			UserInfo userInfo = service.getUserById(userId);
+			result.put("userInfo",userInfo);
+			boolean isOpen = service.userInfoIsOpen(userId);
+			result.put("isOpen",true);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取基本信息时出错。", e);
-			return "error";
+			logger.error("前台-根据用户id获取用户信息失败。" + e);
+			return JsonWrapper.newErrorInstance("根据用户id获取用户信息失败。");
 		}
-		return "user/userDetail";
 	}
 
 	/**

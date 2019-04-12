@@ -5,8 +5,10 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
+import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.ParkInfo;
+import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.admin.AdminParkService;
 import com.golf.golf.service.admin.AdminUserService;
@@ -67,7 +69,9 @@ public class AdminParkController {
             if (StringUtils.isNotEmpty(keyword)) {
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
-            searchBean.addParpField("state", state);
+			if (state != null) {
+				searchBean.addParpField("state", state);
+			}
             pageInfo = adminParkService.getParkList(searchBean, pageInfo);
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,7 +104,7 @@ public class AdminParkController {
     @RequestMapping("parkAdd")
     public String parkAdd(ParkInfo parkInfo){
         try{
-            adminParkService.save(parkInfo);
+            adminParkService.saveParkInfo(parkInfo);
         }catch(Exception e){
             e.printStackTrace();
             logger.error("保存球场时出错。"+ e );
@@ -118,8 +122,10 @@ public class AdminParkController {
     @RequestMapping("parkEditUI")
     public String editUI(ModelMap mm, Long parkId){
         try{
-            ParkInfo parkInfo = adminParkService.getById(parkId);
-            mm.addAttribute("parkInfo",parkInfo);
+			ParkInfo park = adminParkService.getParkInfoById(parkId);
+            List<ParkPartition> parkZoneList = adminParkService.getParkZoneById(parkId);
+            mm.addAttribute("park",park);
+			mm.addAttribute("parkZoneList",parkZoneList);
         }catch(Exception e){
             e.printStackTrace();
             logger.error("获取球场信息时出错。"+ e );
@@ -149,7 +155,7 @@ public class AdminParkController {
      * 查看球场名是否已经存在
      * @return
      */
-    @ResponseBody
+    /*@ResponseBody
     @RequestMapping(value = { "exsitName" }, method = RequestMethod.GET)
     public JsonElement checkName(String fieldValue, String fieldId){
         Object[] array = new Object[2];
@@ -166,7 +172,7 @@ public class AdminParkController {
             return JsonWrapper.newJson(array_);
         }
         return JsonWrapper.newJson(array);
-    }
+    }*/
 
     /**
      * 注销
@@ -192,48 +198,80 @@ public class AdminParkController {
 	 * @return
 	 */
 	@ResponseBody
+	@RequestMapping(value = {"importPark1"})
+	public JsonElement importPark1(MultipartFile file) throws IOException {
+		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
+		XSSFSheet sheet = xwb.getSheetAt(0);
+		XSSFRow row;
+//		sheet.getPhysicalNumberOfRows()
+		for (int i = 1201; i < 1379; i++) {
+			row = sheet.getRow(i);
+
+			String city = row.getCell(0).toString();
+			String parkName =  row.getCell(1).toString();
+			Integer sumRol =  Integer.parseInt(row.getCell(13).toString().replace(".0",""));
+
+			ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
+			System.out.println(parkInfoDb.getPiId());
+			parkInfoDb.setPiSumRod(parkInfoDb.getPiSumRod()+sumRol);
+			adminParkService.updateParkInfo(parkInfoDb);
+		}
+		return null;
+	}
+
+	@ResponseBody
 	@RequestMapping(value = {"importPark"})
 	public JsonElement importPark(MultipartFile file) throws IOException {
 		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
 		XSSFSheet sheet = xwb.getSheetAt(0);
 		XSSFRow row;
-		List<ParkInfo> parkList = new ArrayList<>();
 		ParkInfo parkInfo = null;
-		for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+//		sheet.getPhysicalNumberOfRows()
+		for (int i = 870; i < 920; i++) {
 			row = sheet.getRow(i);
-			/*String name = row.getCell(0).toString();
-			String tel = null;
-			if(row.getCell(1).getCellType() == Cell.CELL_TYPE_NUMERIC){
-				tel = row.getCell(1).getRawValue();
-			}else if(row.getCell(1).getCellType() == Cell.CELL_TYPE_STRING){
-				tel = row.getCell(1).toString();
-			}
-			String email = row.getCell(2).toString();
-			String nickName = row.getCell(4).toString();
-			String roleName = row.getCell(5).toString();*/
 
-			parkInfo = new ParkInfo();
 			String city = row.getCell(0).toString();
 			String parkName =  row.getCell(1).toString();
+
+			Integer sumRol =  Integer.parseInt(row.getCell(13).toString().replace(".0",""));
+
+			parkInfo = new ParkInfo();
 			parkInfo.setPiCity(city);
 			parkInfo.setPiName(parkName);
+			ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
+			Long parkId = parkInfoDb.getPiId();
+			parkInfoDb.setPiSumRod(parkInfoDb.getPiSumRod()+sumRol);
+			adminParkService.updateParkInfo(parkInfoDb);
 
 			String zone =  row.getCell(2).toString();
-			String hole_1 =  row.getCell(3).toString();
-			String hole_2 =  row.getCell(4).toString();
-			String hole_3 =  row.getCell(5).toString();
-			String hole_4 =  row.getCell(6).toString();
-			String hole_5 =  row.getCell(7).toString();
-			String hole_6 =  row.getCell(8).toString();
-			String hole_7 =  row.getCell(9).toString();
-			String hole_8 =  row.getCell(10).toString();
-			String hole_9 =  row.getCell(11).toString();
-			String totalHole =  row.getCell(12).toString();
-
-			parkList.add(parkInfo);
+			for(int j = 3;j<=11;j++){
+				Integer hole =  Integer.parseInt(row.getCell(j).toString().replace(".0",""));
+				ParkPartition parkPartition = new ParkPartition();
+				parkPartition.setPpPId(parkId);
+				parkPartition.setPpZoneName(zone);
+				parkPartition.setPpHoleNum(j-2);
+				parkPartition.setPpHoleStandardRod(hole);
+				adminParkService.saveParkPartition(parkPartition);
+			}
+//			Integer totalHole =  Integer.parseInt(row.getCell(12).toString());
 		}
 		// 保存
 		return null;
 	}
+
+	/**
+	 * 获取球场经纬度
+	 * @return
+	 */
+	@RequestMapping("getJwd")
+	public void getJwd(){
+		try{
+			adminParkService.updateParkInfoWithJwd();
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("获取球场经纬度时出错。"+ e );
+		}
+	}
+
 
 }

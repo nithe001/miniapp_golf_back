@@ -4,17 +4,18 @@ import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
+import com.golf.golf.bean.MatchGroupBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
 import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
-import com.google.gson.JsonElement;
+import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,21 +36,29 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-        pageInfo = matchDao.getMatchList(searchBean,pageInfo);
-	    if(pageInfo.getCount() >0 && pageInfo.getItems().size()>0){
-            for(MatchInfo matchInfo: (List<MatchInfo>)pageInfo.getItems()){
-                matchInfo.setMatchTimeStr(matchInfo.getMiMatchTime());
-            }
-        }
+		POJOPageInfo pageInfo_ = matchDao.getMatchList(searchBean,pageInfo);
+		if(pageInfo_.getCount() >0 && pageInfo_.getItems().size()>0){
+			List<MatchInfo> matchInfoList = new ArrayList<>();
+			for(Map<String, Object> result: (List<Map<String, Object>>)pageInfo_.getItems()){
+				MatchInfo matchInfo = new MatchInfo();
+//				String select = "m.mi_id AS mi_id," +
+//				"m.mi_title AS mi_title," +
+//				"m.mi_park_name AS mi_park_name," +
+//				"m.mi_match_time AS mi_match_time," +
+//				"m.mi_apply_end_time as mi_apply_end_time," +
+//				"m.mi_is_end AS mi_is_end,count(mj.mjwi_user_id) as userCount ";
+				matchInfo.setMiId(getLongValue(result,"mi_id"));
+				matchInfo.setMiTitle(getName(result, "mi_title"));
+				matchInfo.setMiParkName(getName(result, "mi_park_name"));
+				matchInfo.setMiMatchTime(getName(result,"mi_match_time"));
+				matchInfo.setStateStr();
+				matchInfo.setMiHit(getIntegerValue(result,"userCount"));
+				matchInfoList.add(matchInfo);
+			}
+			pageInfo.setItems(matchInfoList);
+			pageInfo.setCount(pageInfo_.getCount());
+		}
 		return pageInfo;
-	}
-
-	/**
-	 * 获取我参加的比赛列表
-	 * @return
-	 */
-	public POJOPageInfo getMyMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return matchDao.getMyMatchList(searchBean,pageInfo);
 	}
 
 
@@ -70,45 +79,137 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 获取本比赛的围观用户列表和比赛分组
+	 * @param count 获取围观显示的个数
 	 * @return
 	 */
-	public Map<String, Object> getMatchInfo(Long matchId) {
+	public Map<String, Object> getMatchInfo(Long matchId, Integer count) {
         Map<String, Object> result = new HashMap<String, Object>();
+        if(count == null){
+        	count = 0;
+		}
+        POJOPageInfo pageInfo = new POJOPageInfo(count, 1);
 	    //围观
-	    List<UserInfo> watchList = matchDao.getUserListByMatchId(matchId, 0);
-//        List<UserInfo> newWatchList = buildNewWatchList(watchList);
+		List<Map<String, Object>> watchList = matchDao.getUserListByMatchId(matchId, 0, pageInfo);
 
-	    //分组
-        List<Object[]> groupList = matchDao.getMatchGroupList(matchId);
-        List<UserInfo> newGroupList = buildNewGroupList(groupList);
+		//赛长
+		List<Map<String, Object>> captainList = matchDao.getCaptainListByMatchId(matchId, pageInfo);
+
+		//分组
+		List<MatchGroup> groupList_ = matchDao.getMatchGroupList_(matchId);
+		List<MatchGroupBean> groupList = new ArrayList<>();
+		if(groupList_ != null && groupList_.size() >0){
+			for(MatchGroup matchGroup : groupList_){
+				MatchGroupBean matchGroupBean = new MatchGroupBean();
+				matchGroupBean.setMatchGroup(matchGroup);
+				List<Map<String, Object>> groupUserList = matchDao.getMatchGroupListByGroupId(matchGroup.getMgId());
+				matchGroupBean.setUserInfoList(groupUserList);
+				groupList.add(matchGroupBean);
+			}
+		}
+
+		//是否是赛长
+		SearchBean searchBean = new SearchBean();
+		searchBean.addParpField("matchId", matchId);
+		searchBean.addParpField("userId", 4L);
+		Long captainCount = matchDao.getIsCaptain(searchBean);
+		Boolean isCaptain = false;
+		if(captainCount > 0){
+			isCaptain = true;
+		}
 
         result.put("watchList", watchList);
-        result.put("groupList", newGroupList);
+		result.put("captainList", captainList);
+        result.put("groupList", groupList);
+		result.put("isCaptain", isCaptain);
 		return result;
 	}
 
-    private List<UserInfo> buildNewWatchList(List<Object[]> list) {
-        List<UserInfo> watchList = new ArrayList<UserInfo>();
-	    if(list != null && list.size()>0){
-            for(Object[] obj:list){
-                watchList.add((UserInfo)(obj[1]));
-            }
-        }
-        return watchList;
-    }
+	/**
+	 * 获取值
+	 * @param map
+	 * @param key
+	 */
+	private String getName(Map<String, Object> map, String key){
+		if(map == null || map.get(key) == null){
+			return null;
+		}else{
+			return map.get(key).toString();
+		}
+	}
 
-    private List<UserInfo> buildNewGroupList(List<Object[]> list) {
-        List<UserInfo> watchList = new ArrayList<UserInfo>();
-        if(list != null && list.size()>0){
-            for(Object[] obj:list){
-                watchList.add((UserInfo)(obj[1]));
-            }
-        }
-        return watchList;
-    }
+	/**
+	 * 获取long
+	 * @param map
+	 * @param key
+	 */
+	private Long getLongValue(Map<String, Object> map, String key){
+		if(map == null || map.get(key) == null){
+			return null;
+		}else{
+			return Long.parseLong(map.get(key).toString());
+		}
+	}
+
+	/**
+	 * Integer
+	 * @param map
+	 * @param key
+	 */
+	private Integer getIntegerValue(Map<String, Object> map, String key){
+		if(map == null || map.get(key) == null){
+			return 0;
+		}else{
+			return Integer.parseInt(map.get(key).toString());
+		}
+	}
+
+	/**
+	 * 获取全部围观列表
+	 * @return
+	 */
+	public List<Map<String, Object>> getMoreWatchUserList(Long matchId) {
+		POJOPageInfo pageInfo = new POJOPageInfo(0, 1);
+		List<Map<String, Object>> watchList = matchDao.getUserListByMatchId(matchId, 0, pageInfo);
+		return watchList;
+	}
+
+	/**
+	 * 点击进入比赛详情——获取参赛球队信息和比赛详情
+	 * @return
+	 */
+	public Map<String, Object> getMatchDetailInfo(Long matchId) {
+		Map<String, Object> result = new HashMap<>();
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		result.put("matchInfo", matchInfo);
+		//获取比赛球队信息
+		String teamIds = matchInfo.getMiJoinTeamIds();
+		if(StringUtils.isNotEmpty(teamIds)){
+			List<Long> teamIdList = getLongTeamIdList(teamIds);
+			List<TeamInfo> teamList = matchDao.getTeamListByIds(teamIdList);
+			result.put("teamList", teamList);
+		}
+		//获取成绩上报球队信息
+		if(StringUtils.isNotEmpty(matchInfo.getMiReportScoreTeamId())){
+			List<Long> reportScoreTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
+			List<TeamInfo> reportScoreTeamList = matchDao.getTeamListByIds(reportScoreTeamIdList);
+			result.put("reportScoreTeamList", reportScoreTeamList);
+		}
+		return result;
+	}
+
+	private List<Long> getLongTeamIdList(String teamIds) {
+		List<Long> teamIdList = new ArrayList<>();
+		String[] ids = teamIds.split(",");
+		for(String id:ids){
+			if(StringUtils.isNotEmpty(id)){
+				teamIdList.add(Long.parseLong(id));
+			}
+		}
+		return teamIdList;
+	}
 
 
-    /**
+	/**
      * 报名-获取本场比赛详情 参赛球队、比赛信息、上报球队
      * @return
      */
@@ -120,10 +221,12 @@ public class MatchService implements IBaseService {
         matchDao.update(matchInfo);
         result.put("matchInfo", matchInfo);
         //参赛球队
-        List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(matchInfo.getMiJoinTeamIds());
+		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+        List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(teamIdList);
         result.put("teamInfoList", teamInfoList);
         //成绩上报球队
-        List<TeamInfo> scoreReportTeamInfoList = matchDao.getTeamListByIds(matchInfo.getMiReportScoreTeamId());
+		List<Long> reportScoreTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
+        List<TeamInfo> scoreReportTeamInfoList = matchDao.getTeamListByIds(reportScoreTeamIdList);
         result.put("scoreReportTeamInfoList", scoreReportTeamInfoList);
         return result;
     }
@@ -295,11 +398,17 @@ public class MatchService implements IBaseService {
 	 * 创建比赛-保存-自动成为赛长
 	 * @return
 	 */
-	public void saveMatchInfo(String matchJson) {
-	}
-
-	public static void main(String[] args) {
-		String str = "{'id':1,'name':zhangsan}";
+	public void saveMatchInfo(MatchInfo matchInfo) {
+		ParkInfo parkInfo = matchDao.getParkIdByName(matchInfo.getMiParkName());
+		if(parkInfo != null){
+			matchInfo.setMiParkId(parkInfo.getPiId());
+		}
+		matchInfo.setMiParkName(matchInfo.getMiParkName());
+		matchInfo.setMiType(1);
+		matchInfo.setMiCreateTime(System.currentTimeMillis());
+		matchInfo.setMiCreateUserId(UserUtil.getUserId());
+		matchInfo.setMiCreateUserName(UserUtil.getShowName());
+//		matchDao.save(matchInfo);
 	}
 
     /**
@@ -307,7 +416,8 @@ public class MatchService implements IBaseService {
      * @return
      */
     public List<UserInfo> getUserListByMatchId(Long matchId) {
-       return matchDao.getUserListByMatchId(matchId,1);
+    	return null;
+//       return matchDao.getUserListByMatchId(matchId,1);
     }
 
     /**
@@ -331,11 +441,123 @@ public class MatchService implements IBaseService {
         matchInfo.setMiZoneBeforeNine(zoneBeforeNine);
         matchInfo.setMiZoneAfterNine(zoneAfterNine);
         matchInfo.setMiDigest(digest);
-        matchInfo.setMiMatchTime(TimeUtil.stringToLong(playTime, TimeUtil.FORMAT_DATETIME_HH_MM));
+        matchInfo.setMiMatchTime(playTime);
         matchInfo.setMiMatchOpenType(3);
         matchInfo.setMiCreateTime(System.currentTimeMillis());
         matchInfo.setMiCreateUserId(UserUtil.getUserId());
         matchInfo.setMiCreateUserName(UserUtil.getShowName());
         matchDao.save(matchInfo);
     }
+
+
+	/**
+	 * 单练——选择器——获取球场
+	 * @return
+	 */
+	public Map<String, Object> getParkInfoList(String city) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		List<String> cityList = matchDao.getParkInfoCityList();
+		if(StringUtils.isEmpty(city)){
+			city = cityList.get(0);
+		}
+		List<String> parkList = matchDao.getParkInfoList(city);
+		result.put("cityList", cityList);
+		result.put("parkList", parkList);
+		return result;
+	}
+
+
+	/**
+	 * 单练——开始记分——保存数据
+	 * @return
+	 */
+	public void saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
+		MatchInfo matchInfo = new MatchInfo();
+		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
+		if(parkInfo != null){
+			matchInfo.setMiParkId(parkInfo.getPiId());
+		}
+		matchInfo.setMiParkName(parkName);
+		matchInfo.setMiType(0);
+		matchInfo.setMiMatchTime(playTime);
+		matchInfo.setMiPeopleNum(peopleNum);
+		matchInfo.setMiDigest(digest);
+		matchInfo.setMiJoinOpenType(3);
+		matchInfo.setCreateTimeStr(System.currentTimeMillis());
+//		matchInfo.setMiCreateUserId(UserUtil.getUserId());
+//		matchInfo.setMiCreateUserName(UserUtil.getShowName());
+		matchDao.save(matchInfo);
+	}
+
+	/**
+	 * 单练——查询是否有我正在进行的单练
+	 * @return
+	 */
+	public MatchInfo getMySinglePlay() {
+		Long userId = 4L;
+		return matchDao.getMySinglePlay(userId);
+	}
+
+	/**
+	 * 比赛详情——添加组
+	 * @return
+	 */
+	public void addGroupByTeamId(Long matchId) {
+		//获取最大组
+		MatchGroup maxGroup = matchDao.getMaxGroupByMatchId(matchId);
+		String groupName = maxGroup.getMgGroupName();
+		Integer max = Integer.parseInt(groupName.substring(1,groupName.length()-1));
+		max++;
+		MatchGroup group = new MatchGroup();
+		group.setMgMatchId(matchId);
+		group.setMgGroupName("第"+max+"组");
+		group.setMgCreateUserId(4L);
+		group.setMgCreateUserName("wangwu");
+		group.setMgCreateTime(System.currentTimeMillis());
+		matchDao.save(group);
+	}
+
+	/**
+	 * 比赛详情——赛长获取已经报名的用户
+	 * @return
+	 */
+	public List<Map<String, Object>> getApplyUserByMatchId(Long matchId) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		if(StringUtils.isEmpty(matchInfo.getMiJoinTeamIds())){
+			//比赛没选球队，就从临时报名的用户中选
+			return matchDao.getApplyUserByMatchId(matchId);
+		}
+		//比赛选了球队，从球队中选 去除已经参赛的用户
+		//参赛球队
+		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+		return matchDao.getApplyUserListByMatchId(matchId,teamIdList);
+	}
+
+	/**
+	 * 比赛详情——保存——将用户加入该分组
+	 * @return
+	 */
+	public void addUserToGroupByMatchId(Long matchId, Long groupId, String userIds) {
+		if(StringUtils.isNotEmpty(userIds)){
+			userIds = userIds.replace("[","");
+			userIds = userIds.replace("]","");
+			userIds = userIds.replace("\"","");
+			String[] uIds = userIds.split(",");
+			MatchGroup matchGroup = matchDao.get(MatchGroup.class,groupId);
+			for(String userId :uIds){
+				if(StringUtils.isNotEmpty(userId)){
+					MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+					matchUserGroupMapping.setMugmMatchId(matchId);
+					matchUserGroupMapping.setMugmGroupId(groupId);
+					matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+					matchUserGroupMapping.setMugmUserType(0);
+					matchUserGroupMapping.setMugmUserId(Long.parseLong(userId));
+					matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+					matchUserGroupMapping.setMugmCreateUserId(4L);
+					matchUserGroupMapping.setMugmCreateUserName("wangwu");
+					matchDao.save(matchUserGroupMapping);
+				}
+			}
+		}
+	}
 }

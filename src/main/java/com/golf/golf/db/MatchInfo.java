@@ -4,309 +4,366 @@ import com.golf.common.util.TimeUtil;
 
 import javax.persistence.*;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Entity
 @Table(name = "match_info")
 public class MatchInfo {
-    private Long miId;
-    private Integer miType;
-    private Integer miPeopleNum;
-    private String miTitle;
-    private Long miParkId;
-    private String miParkName;
-    private String miZoneBeforeNine;
-    private String miZoneAfterNine;
-    private String miDigest;
-    private Long miMatchTime;
-    private String miContent;
-    private Integer miMatchOpenType;
-    private Integer miJoinOpenType;
-    private String miJoinTeamIds;
-    private String miReportScoreTeamId;
-    private Integer miHit;
-    private Long miApplyEndTime;
-    private String miCreateUserName;
-    private Long miCreateUserId;
-    private Long miCreateTime;
-    private String miUpdateUserName;
-    private Long miUpdateUserId;
-    private Long miUpdateTime;
 
-    @Id
-    @Column(name = "mi_id")
-    public Long getMiId() {
-        return miId;
-    }
+	// Fields
 
-    public void setMiId(Long miId) {
-        this.miId = miId;
-    }
+	private Long miId;
+	private Integer miType;
+	private Integer miPeopleNum;
+	private String miTitle;
+	private String miLogo;
+	private Long miParkId;
+	private String miParkName;
+	private String miZoneBeforeNine;
+	private String miZoneAfterNine;
+	private String miDigest;
+	private String miMatchTime;
+	private String miContent;
+	private Integer miMatchOpenType;
+	private Integer miJoinOpenType;
+	private Integer miMatchFormat1;
+	private Integer miMatchFormat2;
+	private String miJoinTeamIds;
+	private String miReportScoreTeamId;
+	private Integer miHit;
+	private Long miApplyEndTime;
+	private Integer miIsEnd;
+	private String miCreateUserName;
+	private Long miCreateUserId;
+	private Long miCreateTime;
+	private String miUpdateUserName;
+	private Long miUpdateUserId;
+	private Long miUpdateTime;
 
-    @Basic
-    @Column(name = "mi_type")
-    public Integer getMiType() {
-        return miType;
-    }
+	// Constructors
 
-    public void setMiType(Integer miType) {
-        this.miType = miType;
-    }
+	/** default constructor */
+	public MatchInfo() {
+	}
 
-    @Basic
-    @Column(name = "mi_people_num")
-    public Integer getMiPeopleNum() {
-        return miPeopleNum;
-    }
+	/** full constructor */
+	public MatchInfo(Integer miType, Integer miPeopleNum, String miTitle, String miLogo,
+					 Long miParkId, String miParkName, String miZoneBeforeNine,
+					 String miZoneAfterNine, String miDigest, String miMatchTime,
+					 String miContent, Integer miMatchOpenType, Integer miJoinOpenType,
+					 Integer miMatchFormat1, Integer miMatchFormat2, String miJoinTeamIds,
+					 String miReportScoreTeamId, Integer miHit, Long miApplyEndTime, Integer miIsEnd,
+					 String miCreateUserName, Long miCreateUserId, Long miCreateTime,
+					 String miUpdateUserName, Long miUpdateUserId, Long miUpdateTime) {
+		this.miType = miType;
+		this.miPeopleNum = miPeopleNum;
+		this.miTitle = miTitle;
+		this.miLogo = miLogo;
+		this.miParkId = miParkId;
+		this.miParkName = miParkName;
+		this.miZoneBeforeNine = miZoneBeforeNine;
+		this.miZoneAfterNine = miZoneAfterNine;
+		this.miDigest = miDigest;
+		this.miMatchTime = miMatchTime;
+		this.miContent = miContent;
+		this.miMatchOpenType = miMatchOpenType;
+		this.miJoinOpenType = miJoinOpenType;
+		this.miMatchFormat1 = miMatchFormat1;
+		this.miMatchFormat2 = miMatchFormat2;
+		this.miJoinTeamIds = miJoinTeamIds;
+		this.miReportScoreTeamId = miReportScoreTeamId;
+		this.miHit = miHit;
+		this.miApplyEndTime = miApplyEndTime;
+		this.miIsEnd = miIsEnd;
+		this.miCreateUserName = miCreateUserName;
+		this.miCreateUserId = miCreateUserId;
+		this.miCreateTime = miCreateTime;
+		this.miUpdateUserName = miUpdateUserName;
+		this.miUpdateUserId = miUpdateUserId;
+		this.miUpdateTime = miUpdateTime;
+	}
 
-    public void setMiPeopleNum(Integer miPeopleNum) {
-        this.miPeopleNum = miPeopleNum;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "mi_id", unique = true, nullable = false)
+	public Long getMiId() {
+		return this.miId;
+	}
 
-    @Basic
-    @Column(name = "mi_title")
-    public String getMiTitle() {
-        return miTitle;
-    }
+	public void setMiId(Long miId) {
+		this.miId = miId;
+	}
 
-    public void setMiTitle(String miTitle) {
-        this.miTitle = miTitle;
-    }
+	@Column(name = "mi_type")
+	public Integer getMiType() {
+		return this.miType;
+	}
 
-    @Basic
-    @Column(name = "mi_park_id")
-    public Long getMiParkId() {
-        return miParkId;
-    }
+	public void setMiType(Integer miType) {
+		this.miType = miType;
+	}
 
-    public void setMiParkId(Long miParkId) {
-        this.miParkId = miParkId;
-    }
+	@Column(name = "mi_people_num")
+	public Integer getMiPeopleNum() {
+		return this.miPeopleNum;
+	}
 
-    @Basic
-    @Column(name = "mi_park_name")
-    public String getMiParkName() {
-        return miParkName;
-    }
+	public void setMiPeopleNum(Integer miPeopleNum) {
+		this.miPeopleNum = miPeopleNum;
+	}
 
-    public void setMiParkName(String miParkName) {
-        this.miParkName = miParkName;
-    }
+	@Column(name = "mi_title", length = 128)
+	public String getMiTitle() {
+		return this.miTitle;
+	}
 
-    @Basic
-    @Column(name = "mi_zone_before_nine")
-    public String getMiZoneBeforeNine() {
-        return miZoneBeforeNine;
-    }
+	public void setMiTitle(String miTitle) {
+		this.miTitle = miTitle;
+	}
 
-    public void setMiZoneBeforeNine(String miZoneBeforeNine) {
-        this.miZoneBeforeNine = miZoneBeforeNine;
-    }
+	@Column(name = "mi_logo", length = 255)
+	public String getMiLogo() {
+		return miLogo;
+	}
 
-    @Basic
-    @Column(name = "mi_zone_after_nine")
-    public String getMiZoneAfterNine() {
-        return miZoneAfterNine;
-    }
+	public void setMiLogo(String miLogo) {
+		this.miLogo = miLogo;
+	}
 
-    public void setMiZoneAfterNine(String miZoneAfterNine) {
-        this.miZoneAfterNine = miZoneAfterNine;
-    }
+	@Column(name = "mi_park_id")
+	public Long getMiParkId() {
+		return this.miParkId;
+	}
 
-    @Basic
-    @Column(name = "mi_digest")
-    public String getMiDigest() {
-        return miDigest;
-    }
+	public void setMiParkId(Long miParkId) {
+		this.miParkId = miParkId;
+	}
 
-    public void setMiDigest(String miDigest) {
-        this.miDigest = miDigest;
-    }
+	@Column(name = "mi_park_name", length = 128)
+	public String getMiParkName() {
+		return this.miParkName;
+	}
 
-    @Basic
-    @Column(name = "mi_match_time")
-    public Long getMiMatchTime() {
-        return miMatchTime;
-    }
+	public void setMiParkName(String miParkName) {
+		this.miParkName = miParkName;
+	}
 
-    public void setMiMatchTime(Long miMatchTime) {
-        this.miMatchTime = miMatchTime;
-    }
+	@Column(name = "mi_zone_before_nine")
+	public String getMiZoneBeforeNine() {
+		return this.miZoneBeforeNine;
+	}
 
-    @Basic
-    @Column(name = "mi_content")
-    public String getMiContent() {
-        return miContent;
-    }
+	public void setMiZoneBeforeNine(String miZoneBeforeNine) {
+		this.miZoneBeforeNine = miZoneBeforeNine;
+	}
 
-    public void setMiContent(String miContent) {
-        this.miContent = miContent;
-    }
+	@Column(name = "mi_zone_after_nine")
+	public String getMiZoneAfterNine() {
+		return this.miZoneAfterNine;
+	}
 
-    @Basic
-    @Column(name = "mi_match_open_type")
-    public Integer getMiMatchOpenType() {
-        return miMatchOpenType;
-    }
+	public void setMiZoneAfterNine(String miZoneAfterNine) {
+		this.miZoneAfterNine = miZoneAfterNine;
+	}
 
-    public void setMiMatchOpenType(Integer miMatchOpenType) {
-        this.miMatchOpenType = miMatchOpenType;
-    }
+	@Column(name = "mi_digest", length = 512)
+	public String getMiDigest() {
+		return this.miDigest;
+	}
 
-    @Basic
-    @Column(name = "mi_join_open_type")
-    public Integer getMiJoinOpenType() {
-        return miJoinOpenType;
-    }
+	public void setMiDigest(String miDigest) {
+		this.miDigest = miDigest;
+	}
 
-    public void setMiJoinOpenType(Integer miJoinOpenType) {
-        this.miJoinOpenType = miJoinOpenType;
-    }
+	@Column(name = "mi_match_time", length = 128)
+	public String getMiMatchTime() {
+		return this.miMatchTime;
+	}
 
-    @Basic
-    @Column(name = "mi_join_team_ids")
-    public String getMiJoinTeamIds() {
-        return miJoinTeamIds;
-    }
+	public void setMiMatchTime(String miMatchTime) {
+		this.miMatchTime = miMatchTime;
+	}
 
-    public void setMiJoinTeamIds(String miJoinTeamIds) {
-        this.miJoinTeamIds = miJoinTeamIds;
-    }
+	@Column(name = "mi_content", length = 65535)
+	public String getMiContent() {
+		return this.miContent;
+	}
 
-    @Basic
-    @Column(name = "mi_report_score_team_id")
-    public String getMiReportScoreTeamId() {
-        return miReportScoreTeamId;
-    }
+	public void setMiContent(String miContent) {
+		this.miContent = miContent;
+	}
 
-    public void setMiReportScoreTeamId(String miReportScoreTeamId) {
-        this.miReportScoreTeamId = miReportScoreTeamId;
-    }
+	@Column(name = "mi_match_open_type")
+	public Integer getMiMatchOpenType() {
+		return this.miMatchOpenType;
+	}
 
-    @Basic
-    @Column(name = "mi_hit")
-    public Integer getMiHit() {
-        return miHit;
-    }
+	public void setMiMatchOpenType(Integer miMatchOpenType) {
+		this.miMatchOpenType = miMatchOpenType;
+	}
 
-    public void setMiHit(Integer miHit) {
-        this.miHit = miHit;
-    }
+	@Column(name = "mi_join_open_type")
+	public Integer getMiJoinOpenType() {
+		return this.miJoinOpenType;
+	}
 
-    @Basic
-    @Column(name = "mi_apply_end_time")
-    public Long getMiApplyEndTime() {
-        return miApplyEndTime;
-    }
+	public void setMiJoinOpenType(Integer miJoinOpenType) {
+		this.miJoinOpenType = miJoinOpenType;
+	}
 
-    public void setMiApplyEndTime(Long miApplyEndTime) {
-        this.miApplyEndTime = miApplyEndTime;
-    }
+	@Column(name = "mi_match_format_1")
+	public Integer getMiMatchFormat1() {
+		return miMatchFormat1;
+	}
 
-    @Basic
-    @Column(name = "mi_create_user_name")
-    public String getMiCreateUserName() {
-        return miCreateUserName;
-    }
+	public void setMiMatchFormat1(Integer miMatchFormat1) {
+		this.miMatchFormat1 = miMatchFormat1;
+	}
 
-    public void setMiCreateUserName(String miCreateUserName) {
-        this.miCreateUserName = miCreateUserName;
-    }
+	@Column(name = "mi_match_format_2")
+	public Integer getMiMatchFormat2() {
+		return miMatchFormat2;
+	}
 
-    @Basic
-    @Column(name = "mi_create_user_id")
-    public Long getMiCreateUserId() {
-        return miCreateUserId;
-    }
+	public void setMiMatchFormat2(Integer miMatchFormat2) {
+		this.miMatchFormat2 = miMatchFormat2;
+	}
 
-    public void setMiCreateUserId(Long miCreateUserId) {
-        this.miCreateUserId = miCreateUserId;
-    }
+	@Column(name = "mi_join_team_ids", length = 255)
+	public String getMiJoinTeamIds() {
+		return miJoinTeamIds;
+	}
 
-    @Basic
-    @Column(name = "mi_create_time")
-    public Long getMiCreateTime() {
-        return miCreateTime;
-    }
+	public void setMiJoinTeamIds(String miJoinTeamIds) {
+		this.miJoinTeamIds = miJoinTeamIds;
+	}
 
-    public void setMiCreateTime(Long miCreateTime) {
-        this.miCreateTime = miCreateTime;
-    }
+	@Column(name = "mi_report_score_team_id")
+	public String getMiReportScoreTeamId() {
+		return this.miReportScoreTeamId;
+	}
 
-    @Basic
-    @Column(name = "mi_update_user_name")
-    public String getMiUpdateUserName() {
-        return miUpdateUserName;
-    }
+	public void setMiReportScoreTeamId(String miReportScoreTeamId) {
+		this.miReportScoreTeamId = miReportScoreTeamId;
+	}
 
-    public void setMiUpdateUserName(String miUpdateUserName) {
-        this.miUpdateUserName = miUpdateUserName;
-    }
+	@Column(name = "mi_hit")
+	public Integer getMiHit() {
+		return this.miHit;
+	}
 
-    @Basic
-    @Column(name = "mi_update_user_id")
-    public Long getMiUpdateUserId() {
-        return miUpdateUserId;
-    }
+	public void setMiHit(Integer miHit) {
+		this.miHit = miHit;
+	}
 
-    public void setMiUpdateUserId(Long miUpdateUserId) {
-        this.miUpdateUserId = miUpdateUserId;
-    }
+	@Column(name = "mi_apply_end_time")
+	public Long getMiApplyEndTime() {
+		return this.miApplyEndTime;
+	}
 
-    @Basic
-    @Column(name = "mi_update_time")
-    public Long getMiUpdateTime() {
-        return miUpdateTime;
-    }
-
-    public void setMiUpdateTime(Long miUpdateTime) {
-        this.miUpdateTime = miUpdateTime;
-    }
-
-
-    private String matchTimeStr;
-    @Transient
-    public String getMatchTimeStr() {
-        createTimeStr = TimeUtil.longToString(this.getMiMatchTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
-        return matchTimeStr;
-    }
-
-    public void setMatchTimeStr(Long matchTime) {
-        this.matchTimeStr = TimeUtil.longToString(matchTime,TimeUtil.FORMAT_DATETIME_HH_MM);
-    }
+	public void setMiApplyEndTime(Long miApplyEndTime) {
+		this.miApplyEndTime = miApplyEndTime;
+	}
 
 
-    private String createTimeStr;
-    @Transient
-    public String getCreateTimeStr() {
-        createTimeStr = TimeUtil.longToString(this.getMiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
-        return createTimeStr;
-    }
+	@Column(name = "mi_is_end")
+	public Integer getMiIsEnd() {
+		return miIsEnd;
+	}
 
-    public void setCreateTimeStr(Long createTime) {
-        this.createTimeStr = TimeUtil.longToString(createTime,TimeUtil.FORMAT_DATETIME_HH_MM);
-    }
+	public void setMiIsEnd(Integer miIsEnd) {
+		this.miIsEnd = miIsEnd;
+	}
 
-    private String stateStr;
-    @Transient
+	@Column(name = "mi_create_user_name", length = 128)
+	public String getMiCreateUserName() {
+		return this.miCreateUserName;
+	}
 
-    public String getStateStr() {
-        return stateStr;
-    }
+	public void setMiCreateUserName(String miCreateUserName) {
+		this.miCreateUserName = miCreateUserName;
+	}
 
-    public void setStateStr() {
-        Long nowTime = System.currentTimeMillis();
-        //比赛当天的开始时间
-        Long matchStartTime = TimeUtil.stringToLong(TimeUtil.longToString(this.getMiMatchTime(),TimeUtil.FORMAT_DATE),TimeUtil.FORMAT_DATE);
-        Long matchEndTime = matchStartTime +(24 * 60 * 60 * 1000);
-        if(this.getMiMatchTime() == null && nowTime < matchStartTime - (24 * 60 * 60 * 1000)){
-            this.stateStr = "报名中";
-        }else{
-            if(nowTime < this.getMiMatchTime()){
-                this.stateStr = "报名中";
-            }else if(nowTime > this.getMiMatchTime() && nowTime < matchEndTime){
-                this.stateStr = "进行中";
-            }else if(nowTime > matchEndTime){
-                this.stateStr = "已结束";
-            }
-        }
-    }
+	@Column(name = "mi_create_user_id")
+	public Long getMiCreateUserId() {
+		return this.miCreateUserId;
+	}
+
+	public void setMiCreateUserId(Long miCreateUserId) {
+		this.miCreateUserId = miCreateUserId;
+	}
+
+	@Column(name = "mi_create_time")
+	public Long getMiCreateTime() {
+		return this.miCreateTime;
+	}
+
+	public void setMiCreateTime(Long miCreateTime) {
+		this.miCreateTime = miCreateTime;
+	}
+
+	@Column(name = "mi_update_user_name", length = 128)
+	public String getMiUpdateUserName() {
+		return this.miUpdateUserName;
+	}
+
+	public void setMiUpdateUserName(String miUpdateUserName) {
+		this.miUpdateUserName = miUpdateUserName;
+	}
+
+	@Column(name = "mi_update_user_id")
+	public Long getMiUpdateUserId() {
+		return this.miUpdateUserId;
+	}
+
+	public void setMiUpdateUserId(Long miUpdateUserId) {
+		this.miUpdateUserId = miUpdateUserId;
+	}
+
+	@Column(name = "mi_update_time")
+	public Long getMiUpdateTime() {
+		return this.miUpdateTime;
+	}
+
+	public void setMiUpdateTime(Long miUpdateTime) {
+		this.miUpdateTime = miUpdateTime;
+	}
+
+
+	private String createTimeStr;
+	@Transient
+	public String getCreateTimeStr() {
+		createTimeStr = TimeUtil.longToString(this.getMiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
+		return createTimeStr;
+	}
+
+	public void setCreateTimeStr(Long createTime) {
+		this.createTimeStr = TimeUtil.longToString(createTime,TimeUtil.FORMAT_DATETIME_HH_MM);
+	}
+
+	private String stateStr;
+	@Transient
+
+	public String getStateStr() {
+		return stateStr;
+	}
+
+	public void setStateStr() {
+		Long nowTime = System.currentTimeMillis();
+		//比赛当天的开始时间
+		Long matchStartTime = TimeUtil.stringToLong(this.getMiMatchTime(),TimeUtil.FORMAT_DATE);
+		Long matchEndTime = matchStartTime +(24 * 60 * 60 * 1000);
+		if(this.getMiMatchTime() == null && nowTime < matchStartTime - (24 * 60 * 60 * 1000)){
+			this.stateStr = "报名中";
+		}else{
+			if(nowTime < matchStartTime){
+				this.stateStr = "报名中";
+			}else if(nowTime > matchStartTime && nowTime < matchEndTime){
+				this.stateStr = "进行中";
+			}else if(nowTime > matchEndTime){
+				this.stateStr = "已结束";
+			}
+		}
+	}
 }

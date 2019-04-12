@@ -33,11 +33,60 @@ public class TeamService implements IBaseService {
      * @return
      */
     public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
-        return teamDao.getTeamList(searchBean,pageInfo);
+		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
+		getCaptain(pageInfo);
+        return pageInfo;
     }
 
-    /**
-     * 获取我加入的球队列表
+    //队长
+	private void getCaptain(POJOPageInfo pageInfo) {
+		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
+			for(Map<String,Object> result : (List<Map<String,Object>>)pageInfo.getItems()){
+				Integer count = getIntegerValue(result, "userCount");
+				if(count == 0){
+					result.put("userCount", 0);
+				}
+				Long teamId = getLongValue(result, "ti_id");
+				if(teamId != null){
+					List<String> captainList = teamDao.getCaptainByTeamId(teamId);
+					if(captainList == null || captainList.size() ==0){
+						result.put("captain", "未知");
+					}else{
+						result.put("captain", captainList.get(0));
+					}
+				}
+			}
+		}
+    }
+
+	/**
+	 * 获取long
+	 * @param map
+	 * @param key
+	 */
+	private Long getLongValue(Map<String, Object> map, String key){
+		if(map == null || map.get(key) == null){
+			return null;
+		}else{
+			return Long.parseLong(map.get(key).toString());
+		}
+	}
+
+	/**
+	 * Integer
+	 * @param map
+	 * @param key
+	 */
+	private Integer getIntegerValue(Map<String, Object> map, String key){
+		if(map == null || map.get(key) == null){
+			return 0;
+		}else{
+			return Integer.parseInt(map.get(key).toString());
+		}
+	}
+
+	/**
+     * 获取  我加入的球队列表 或者  可以加入的球队
      * @return
      */
     public POJOPageInfo getMyTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -116,6 +165,53 @@ public class TeamService implements IBaseService {
         return teamDao.getParkZoneAndHole(parkId);
     }
 
+	/**
+	 * 获取我创建的球队列表
+	 * @return
+	 */
+	public POJOPageInfo getMyCreateTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		pageInfo = teamDao.getMyCreateTeamList(searchBean,pageInfo);
+		getCaptain(pageInfo);
+		return pageInfo;
+	}
 
+	/**
+	 * 创建更新球队
+	 * @return
+	 */
+	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean) {
+		if(teamInfoBean.getTiId() == null){
+			teamInfoBean.setTiCreateTime(System.currentTimeMillis());
+			teamInfoBean.setTiCreateUserId(4L);
+			teamInfoBean.setTiCreateUserName("wangwu");
+			Long teamId = teamDao.save(teamInfoBean);
+			//向球队用户表新增一条记录
+			TeamUserMapping teamUserMapping = new TeamUserMapping();
+			teamUserMapping.setTumTeamId(teamId);
+			teamUserMapping.setTumUserId(4L);
+			teamUserMapping.setTumUserType(1);
+			teamUserMapping.setTumType(1);
+			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+			teamUserMapping.setTumCreateUserId(4L);
+			teamUserMapping.setTumCreateUserName("wangwu");
+			teamDao.save(teamUserMapping);
+		}else{
+			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
+			db.setTiName(teamInfoBean.getTiName());
+			db.setTiCreateTime(System.currentTimeMillis());
+			db.setTiAddress(teamInfoBean.getTiAddress());
+			db.setTiDigest(teamInfoBean.getTiDigest());
+			db.setTiSignature(teamInfoBean.getTiSignature());
+			db.setTiSlogan(teamInfoBean.getTiSlogan());
+			db.setTiJoinOpenType(teamInfoBean.getTiJoinOpenType());
+			db.setTiInfoOpenType(teamInfoBean.getTiInfoOpenType());
+			db.setTiUserInfoType(teamInfoBean.getTiUserInfoType());
+			db.setTiMatchResultAuditType(teamInfoBean.getTiMatchResultAuditType());
+			db.setTiUpdateTime(System.currentTimeMillis());
+//			db.setTiUpdateUserId(UserUtil.getUserId());
+//			db.setTiUpdateUserName(UserUtil.getShowName());
+//			teamDao.update(db);
+		}
 
+	}
 }

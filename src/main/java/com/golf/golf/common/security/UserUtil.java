@@ -3,6 +3,12 @@ package com.golf.golf.common.security;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.CookieUtil;
 import com.golf.common.util.RC4Util;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.params.HttpClientParams;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.params.CoreConnectionPNames;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +29,9 @@ public class UserUtil {
 	public static String USER_SESSION_NAME = "USER_LOGIN_SESSION";
 	public static String COOKIE_AUTOLOGIN = "USER_LOGIN_COOKIE";
 	public static int COOKIE_TIME = 365 * 24 * 60 * 60;
+
+	/** httpclient超时时间10秒 */
+	private static int HTTPCLIENT_TIMEOUT = 10000;
 
 	/** 用户权限分隔符 */
 	public static final String USER_RIGHT_SPLITER = ",";
@@ -171,5 +180,20 @@ public class UserUtil {
 	 */
 	public static void clearSession(String sessionName) {
 		getSession().removeAttribute(sessionName);
+	}
+
+
+	public static HttpClient getHttpClient() throws Exception {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		// 设置超时
+		httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, HTTPCLIENT_TIMEOUT);
+		httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, HTTPCLIENT_TIMEOUT);
+		// 为避免时间过长，不retry
+		DefaultHttpRequestRetryHandler retryhandler = new DefaultHttpRequestRetryHandler(0, false);
+		httpClient.setHttpRequestRetryHandler(retryhandler);
+
+		HttpClientParams.setCookiePolicy(httpClient.getParams(), CookiePolicy.BROWSER_COMPATIBILITY);
+
+		return httpClient;
 	}
 }

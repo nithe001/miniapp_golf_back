@@ -1,17 +1,20 @@
 <%@ page language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <style>
-    .divBorder{
+    .divBorder {
         border: 1px solid #00acd6;
     }
-    .width100{
-        width:100%;
+
+    .width100 {
+        width: 100%;
     }
-    .width20{
-        width:20%;
+
+    .width20 {
+        width: 20%;
     }
-    .width10{
-        width:10%;
+
+    .width10 {
+        width: 10%;
     }
 </style>
 <input type="hidden" name="piId" id="piId" value="${park.piId }"/>
@@ -34,29 +37,51 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="piAddress" class="col-sm-2 control-label">球场地理位置</label>
+        <label for="piLat" class="col-sm-2 control-label">球场经度</label>
         <div class="col-sm-5">
-            <input type="text" class="form-control" id="piAddress" name="piAddress" value="${park.piAddress}"
-                   placeholder="球场地理位置">
+            <input type="text" class="form-control" id="piLat" name="piLat" value="${park.piLat}"
+                   placeholder="球场经度">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="piLng" class="col-sm-2 control-label">球场纬度</label>
+        <div class="col-sm-5">
+            <input type="text" class="form-control" id="piLng" name="piLng" value="${park.piLng}"
+                   placeholder="球场纬度">
         </div>
     </div>
 
-    "每个球场分多个区（A-Z）
-    每个区有9个球洞（序号1-9），
-    每个球洞有标准杆数（数字1-7）
-    每个球洞有五个球T，
-    每个球T对应一个距离"
-
     <div class="form-group">
-        <label for="piAddress" class="col-sm-2 control-label">球场分区</label>
-        <div class="col-sm-7">
+        <label for="zone" class="col-sm-2 control-label">球场分区</label>
+        <div class="col-sm-7" id="zone">
             <input type="button" class="btn btn-success" value="添加分区" id="addFenqu"/><br/><br/>
             <div id="fenquDiv">
-
+                <c:if test="${parkZoneList != null && parkZoneList.size() > 0 }">
+                    <table id="example2" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>分区名称</th>
+                            <th>球洞号</th>
+                            <th>球洞标准杆</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach items="${parkZoneList}" var="zone" varStatus="s">
+                            <tr>
+                                <td>${zone.ppZoneName }</td>
+                                <td>${zone.ppHoleNum }</td>
+                                <td>${zone.ppHoleStandardRod }</td>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
+                    <div style="margin-left:55%;">总计：</div>
+                </c:if>
             </div>
         </div>
     </div>
 </div>
+<%--
 
 <div class="box-footer">
     <div class="col-xs-push-2 col-xs-2">
@@ -85,4 +110,4 @@
             </div>
         </div>
     </div>
-</div>
+</div>--%>

@@ -4,123 +4,138 @@ import com.golf.golf.common.security.UserUtil;
 
 import javax.persistence.*;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Entity
 @Table(name = "match_user_group_mapping")
 public class MatchUserGroupMapping {
-    private Long mugmId;
-    private Long mugmMatchId;
-    private Integer mugmUserType;
-    private Long mugmGroupId;
-    private String mugmGroupName;
-    private Long mugmUserId;
-    private String mugmUserName;
-    private Long mugmCreateUserId;
-    private String mugmCreateUserName;
-    private Long mugmCreateTime;
+	// Fields
 
-    @Id
-    @Column(name = "mugm_id")
-    public Long getMugmId() {
-        return mugmId;
-    }
+	private Long mugmId;
+	private Long mugmMatchId;
+	private Integer mugmUserType;
+	private Long mugmGroupId;
+	private String mugmGroupName;
+	private Long mugmUserId;
+	private String mugmUserName;
+	private Long mugmCreateUserId;
+	private String mugmCreateUserName;
+	private Long mugmCreateTime;
 
-    public void setMugmId(Long mgiId) {
-        this.mugmId = mgiId;
-    }
+	// Constructors
 
-    @Basic
-    @Column(name = "mugm_match_id")
-    public Long getMugmMatchId() {
-        return mugmMatchId;
-    }
+	/** default constructor */
+	public MatchUserGroupMapping() {
+	}
 
-    public void setMugmMatchId(Long mugmMatchId) {
-        this.mugmMatchId = mugmMatchId;
-    }
+	/** full constructor */
+	public MatchUserGroupMapping(Long mugmMatchId, Integer mugmUserType,
+								 Long mugmGroupId, String mugmGroupName, Long mugmUserId,
+								 String mugmUserName, Long mugmCreateUserId,
+								 String mugmCreateUserName, Long mugmCreateTime) {
+		this.mugmMatchId = mugmMatchId;
+		this.mugmUserType = mugmUserType;
+		this.mugmGroupId = mugmGroupId;
+		this.mugmGroupName = mugmGroupName;
+		this.mugmUserId = mugmUserId;
+		this.mugmUserName = mugmUserName;
+		this.mugmCreateUserId = mugmCreateUserId;
+		this.mugmCreateUserName = mugmCreateUserName;
+		this.mugmCreateTime = mugmCreateTime;
+	}
 
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "mugm_id", unique = true, nullable = false)
+	public Long getMugmId() {
+		return this.mugmId;
+	}
 
-	@Basic
+	public void setMugmId(Long mugmId) {
+		this.mugmId = mugmId;
+	}
+
+	@Column(name = "mugm_match_id")
+	public Long getMugmMatchId() {
+		return this.mugmMatchId;
+	}
+
+	public void setMugmMatchId(Long mugmMatchId) {
+		this.mugmMatchId = mugmMatchId;
+	}
+
 	@Column(name = "mugm_user_type")
 	public Integer getMugmUserType() {
-		return mugmUserType;
+		return this.mugmUserType;
 	}
 
 	public void setMugmUserType(Integer mugmUserType) {
 		this.mugmUserType = mugmUserType;
 	}
 
+	@Column(name = "mugm_group_id")
+	public Long getMugmGroupId() {
+		return this.mugmGroupId;
+	}
 
+	public void setMugmGroupId(Long mugmGroupId) {
+		this.mugmGroupId = mugmGroupId;
+	}
 
-    @Basic
-    @Column(name = "mugm_group_id")
-    public Long getMugmGroupId() {
-        return mugmGroupId;
-    }
+	@Column(name = "mugm_group_name", length = 128)
+	public String getMugmGroupName() {
+		return this.mugmGroupName;
+	}
 
-    public void setMugmGroupId(Long mugmGroupId) {
-        this.mugmGroupId = mugmGroupId;
-    }
+	public void setMugmGroupName(String mugmGroupName) {
+		this.mugmGroupName = mugmGroupName;
+	}
 
-    @Basic
-    @Column(name = "mugm_group_name")
-    public String getMugmGroupName() {
-        return mugmGroupName;
-    }
+	@Column(name = "mugm_user_id")
+	public Long getMugmUserId() {
+		return this.mugmUserId;
+	}
 
-    public void setMugmGroupName(String mgiGroupName) {
-        this.mugmGroupName = mgiGroupName;
-    }
+	public void setMugmUserId(Long mugmUserId) {
+		this.mugmUserId = mugmUserId;
+	}
 
-    @Basic
-    @Column(name = "mugm_user_id")
-    public Long getMugmUserId() {
-        return mugmUserId;
-    }
+	@Column(name = "mugm_user_name", length = 128)
+	public String getMugmUserName() {
+		return this.mugmUserName;
+	}
 
-    public void setMugmUserId(Long mgiUserId) {
-        this.mugmUserId = mgiUserId;
-    }
+	public void setMugmUserName(String mugmUserName) {
+		this.mugmUserName = mugmUserName;
+	}
 
-    @Basic
-    @Column(name = "mugm_user_name")
-    public String getMugmUserName() {
-        return mugmUserName;
-    }
+	@Column(name = "mugm_create_user_id")
+	public Long getMugmCreateUserId() {
+		return this.mugmCreateUserId;
+	}
 
-    public void setMugmUserName(String mgiUserName) {
-        this.mugmUserName = mgiUserName;
-    }
+	public void setMugmCreateUserId(Long mugmCreateUserId) {
+		this.mugmCreateUserId = mugmCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "mugm_create_user_id")
-    public Long getMugmCreateUserId() {
-        return mugmCreateUserId;
-    }
+	@Column(name = "mugm_create_user_name", length = 128)
+	public String getMugmCreateUserName() {
+		return this.mugmCreateUserName;
+	}
 
-    public void setMugmCreateUserId(Long mgiCreateUserId) {
-        this.mugmCreateUserId = mgiCreateUserId;
-    }
+	public void setMugmCreateUserName(String mugmCreateUserName) {
+		this.mugmCreateUserName = mugmCreateUserName;
+	}
 
-    @Basic
-    @Column(name = "mugm_create_user_name")
-    public String getMugmCreateUserName() {
-        return mugmCreateUserName;
-    }
+	@Column(name = "mugm_create_time")
+	public Long getMugmCreateTime() {
+		return this.mugmCreateTime;
+	}
 
-    public void setMugmCreateUserName(String mgiCreateUserName) {
-        this.mugmCreateUserName = mgiCreateUserName;
-    }
-
-    @Basic
-    @Column(name = "mugm_create_time")
-    public Long getMugmCreateTime() {
-        return mugmCreateTime;
-    }
-
-    public void setMugmCreateTime(Long mgiCreateTime) {
-        this.mugmCreateTime = mgiCreateTime;
-    }
-
+	public void setMugmCreateTime(Long mugmCreateTime) {
+		this.mugmCreateTime = mugmCreateTime;
+	}
     @Transient
 	public void setCreate() {
 		this.setMugmCreateTime(System.currentTimeMillis());

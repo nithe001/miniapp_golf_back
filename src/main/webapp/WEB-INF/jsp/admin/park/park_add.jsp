@@ -9,9 +9,9 @@
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
-		<jsp:include page="../include/header.jsp">
-			<jsp:param value="nav_park" name="navId"></jsp:param>
-		</jsp:include>
+        <jsp:include page="../include/header.jsp">
+            <jsp:param value="nav_park" name="navId"></jsp:param>
+        </jsp:include>
 		
 		<div class="content-wrapper">
 			<section class="content-header">

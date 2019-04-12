@@ -3,196 +3,227 @@ package com.golf.golf.db;
 import com.golf.common.util.TimeUtil;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "team_info")
 public class TeamInfo {
-    private long tiId;
-    private String tiLogo;
-    private String tiName;
-    private String tiSignature;
-    private String tiDigest;
-    private String tiAddress;
-    private String tiSlogan;
-    private Integer tiJoinOpenType;
-    private Integer tiInfoOpenType;
-    private Integer tiMatchResultAuditType;
-    private Integer tiUserInfoType;
-    private Long tiCreateTime;
-    private Long tiCreateUserId;
-    private String tiCreateUserName;
-    private Long tiUpdateTime;
-    private Long tiUpdateUserId;
-    private String tiUpdateUserName;
 
-    @Id
-    @Column(name = "ti_id")
-    public long getTiId() {
-        return tiId;
-    }
+	// Fields
 
-    public void setTiId(long tiId) {
-        this.tiId = tiId;
-    }
+	private Long tiId;
+	private String tiLogo;
+	private String tiName;
+	private String tiSignature;
+	private String tiDigest;
+	private String tiAddress;
+	private String tiSlogan;
+	private Integer tiJoinOpenType;
+	private Integer tiInfoOpenType;
+	private Integer tiUserInfoType;
+	private Integer tiMatchResultAuditType;
+	private Long tiCreateTime;
+	private Long tiCreateUserId;
+	private String tiCreateUserName;
+	private Long tiUpdateTime;
+	private Long tiUpdateUserId;
+	private String tiUpdateUserName;
 
-    @Basic
-    @Column(name = "ti_logo")
-    public String getTiLogo() {
-        return tiLogo;
-    }
+	// Constructors
 
-    public void setTiLogo(String tiLogo) {
-        this.tiLogo = tiLogo;
-    }
+	/** default constructor */
+	public TeamInfo() {
+	}
 
-    @Basic
-    @Column(name = "ti_name")
-    public String getTiName() {
-        return tiName;
-    }
+	/** full constructor */
+	public TeamInfo(String tiLogo, String tiName, String tiSignature,
+					String tiDigest, String tiAddress, String tiSlogan,
+					Integer tiJoinOpenType, Integer tiInfoOpenType, Integer tiUserInfoType,
+					Integer tiMatchResultAuditType, Long tiCreateTime,
+					Long tiCreateUserId, String tiCreateUserName, Long tiUpdateTime,
+					Long tiUpdateUserId, String tiUpdateUserName) {
+		this.tiLogo = tiLogo;
+		this.tiName = tiName;
+		this.tiSignature = tiSignature;
+		this.tiDigest = tiDigest;
+		this.tiAddress = tiAddress;
+		this.tiSlogan = tiSlogan;
+		this.tiJoinOpenType = tiJoinOpenType;
+		this.tiInfoOpenType = tiInfoOpenType;
+		this.tiUserInfoType = tiUserInfoType;
+		this.tiMatchResultAuditType = tiMatchResultAuditType;
+		this.tiCreateTime = tiCreateTime;
+		this.tiCreateUserId = tiCreateUserId;
+		this.tiCreateUserName = tiCreateUserName;
+		this.tiUpdateTime = tiUpdateTime;
+		this.tiUpdateUserId = tiUpdateUserId;
+		this.tiUpdateUserName = tiUpdateUserName;
+	}
 
-    public void setTiName(String tiName) {
-        this.tiName = tiName;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "ti_id", unique = true, nullable = false)
+	public Long getTiId() {
+		return this.tiId;
+	}
 
-    @Basic
-    @Column(name = "ti_signature")
-    public String getTiSignature() {
-        return tiSignature;
-    }
+	public void setTiId(Long tiId) {
+		this.tiId = tiId;
+	}
 
-    public void setTiSignature(String tiSignature) {
-        this.tiSignature = tiSignature;
-    }
+	@Column(name = "ti_logo")
+	public String getTiLogo() {
+		return this.tiLogo;
+	}
 
-    @Basic
-    @Column(name = "ti_digest")
-    public String getTiDigest() {
-        return tiDigest;
-    }
+	public void setTiLogo(String tiLogo) {
+		this.tiLogo = tiLogo;
+	}
 
-    public void setTiDigest(String tiDigest) {
-        this.tiDigest = tiDigest;
-    }
+	@Column(name = "ti_name")
+	public String getTiName() {
+		return this.tiName;
+	}
 
-    @Basic
-    @Column(name = "ti_address")
-    public String getTiAddress() {
-        return tiAddress;
-    }
+	public void setTiName(String tiName) {
+		this.tiName = tiName;
+	}
 
-    public void setTiAddress(String tiAddress) {
-        this.tiAddress = tiAddress;
-    }
+	@Column(name = "ti_signature", length = 512)
+	public String getTiSignature() {
+		return this.tiSignature;
+	}
 
-    @Basic
-    @Column(name = "ti_slogan")
-    public String getTiSlogan() {
-        return tiSlogan;
-    }
+	public void setTiSignature(String tiSignature) {
+		this.tiSignature = tiSignature;
+	}
 
-    public void setTiSlogan(String tiSlogan) {
-        this.tiSlogan = tiSlogan;
-    }
+	@Column(name = "ti_digest", length = 512)
+	public String getTiDigest() {
+		return this.tiDigest;
+	}
 
-    @Basic
-    @Column(name = "ti_join_open_type")
-    public Integer getTiJoinOpenType() {
-        return tiJoinOpenType;
-    }
+	public void setTiDigest(String tiDigest) {
+		this.tiDigest = tiDigest;
+	}
 
-    public void setTiJoinOpenType(Integer tiJoinOpenType) {
-        this.tiJoinOpenType = tiJoinOpenType;
-    }
+	@Column(name = "ti_address")
+	public String getTiAddress() {
+		return this.tiAddress;
+	}
 
-    @Basic
-    @Column(name = "ti_info_open_type")
-    public Integer getTiInfoOpenType() {
-        return tiInfoOpenType;
-    }
+	public void setTiAddress(String tiAddress) {
+		this.tiAddress = tiAddress;
+	}
 
-    public void setTiInfoOpenType(Integer tiInfoOpenType) {
-        this.tiInfoOpenType = tiInfoOpenType;
-    }
+	@Column(name = "ti_slogan")
+	public String getTiSlogan() {
+		return this.tiSlogan;
+	}
 
-    @Basic
-    @Column(name = "ti_match_result_audit_type")
-    public Integer getTiMatchResultAuditType() {
-        return tiMatchResultAuditType;
-    }
+	public void setTiSlogan(String tiSlogan) {
+		this.tiSlogan = tiSlogan;
+	}
 
-    public void setTiMatchResultAuditType(Integer tiMatchResultAuditType) {
-        this.tiMatchResultAuditType = tiMatchResultAuditType;
-    }
+	@Column(name = "ti_join_open_type")
+	public Integer getTiJoinOpenType() {
+		return this.tiJoinOpenType;
+	}
 
-    @Basic
-    @Column(name = "ti_create_time")
-    public Long getTiCreateTime() {
-        return tiCreateTime;
-    }
+	public void setTiJoinOpenType(Integer tiJoinOpenType) {
+		this.tiJoinOpenType = tiJoinOpenType;
+	}
 
-    public void setTiCreateTime(Long tiCreateTime) {
-        this.tiCreateTime = tiCreateTime;
-    }
+	@Column(name = "ti_info_open_type")
+	public Integer getTiInfoOpenType() {
+		return this.tiInfoOpenType;
+	}
 
-    @Basic
-    @Column(name = "ti_create_user_id")
-    public Long getTiCreateUserId() {
-        return tiCreateUserId;
-    }
+	public void setTiInfoOpenType(Integer tiInfoOpenType) {
+		this.tiInfoOpenType = tiInfoOpenType;
+	}
 
-    public void setTiCreateUserId(Long tiCreateUserId) {
-        this.tiCreateUserId = tiCreateUserId;
-    }
+	@Column(name = "ti_user_info_type")
+	public Integer getTiUserInfoType() {
+		return tiUserInfoType;
+	}
 
-    @Basic
-    @Column(name = "ti_create_user_name")
-    public String getTiCreateUserName() {
-        return tiCreateUserName;
-    }
+	public void setTiUserInfoType(Integer tiUserInfoType) {
+		this.tiUserInfoType = tiUserInfoType;
+	}
 
-    public void setTiCreateUserName(String tiCreateUserName) {
-        this.tiCreateUserName = tiCreateUserName;
-    }
+	@Column(name = "ti_match_result_audit_type")
+	public Integer getTiMatchResultAuditType() {
+		return this.tiMatchResultAuditType;
+	}
 
-    @Basic
-    @Column(name = "ti_update_time")
-    public Long getTiUpdateTime() {
-        return tiUpdateTime;
-    }
+	public void setTiMatchResultAuditType(Integer tiMatchResultAuditType) {
+		this.tiMatchResultAuditType = tiMatchResultAuditType;
+	}
 
-    public void setTiUpdateTime(Long tiUpdateTime) {
-        this.tiUpdateTime = tiUpdateTime;
-    }
+	@Column(name = "ti_create_time")
+	public Long getTiCreateTime() {
+		return this.tiCreateTime;
+	}
 
-    @Basic
-    @Column(name = "ti_update_user_id")
-    public Long getTiUpdateUserId() {
-        return tiUpdateUserId;
-    }
+	public void setTiCreateTime(Long tiCreateTime) {
+		this.tiCreateTime = tiCreateTime;
+	}
 
-    public void setTiUpdateUserId(Long tiUpdateUserId) {
-        this.tiUpdateUserId = tiUpdateUserId;
-    }
+	@Column(name = "ti_create_user_id")
+	public Long getTiCreateUserId() {
+		return this.tiCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "ti_update_user_name")
-    public String getTiUpdateUserName() {
-        return tiUpdateUserName;
-    }
+	public void setTiCreateUserId(Long tiCreateUserId) {
+		this.tiCreateUserId = tiCreateUserId;
+	}
 
-    public void setTiUpdateUserName(String tiUpdateUserName) {
-        this.tiUpdateUserName = tiUpdateUserName;
-    }
+	@Column(name = "ti_create_user_name", length = 128)
+	public String getTiCreateUserName() {
+		return this.tiCreateUserName;
+	}
 
-    private String createTimeStr;
-    @Transient
-    public String getCreateTimeStr() {
-        createTimeStr = TimeUtil.longToString(this.getTiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
-        return createTimeStr;
-    }
+	public void setTiCreateUserName(String tiCreateUserName) {
+		this.tiCreateUserName = tiCreateUserName;
+	}
 
-    public void setCreateTimeStr(String createTimeStr) {
-        this.createTimeStr = createTimeStr;
-    }
+	@Column(name = "ti_update_time")
+	public Long getTiUpdateTime() {
+		return this.tiUpdateTime;
+	}
+
+	public void setTiUpdateTime(Long tiUpdateTime) {
+		this.tiUpdateTime = tiUpdateTime;
+	}
+
+	@Column(name = "ti_update_user_id")
+	public Long getTiUpdateUserId() {
+		return this.tiUpdateUserId;
+	}
+
+	public void setTiUpdateUserId(Long tiUpdateUserId) {
+		this.tiUpdateUserId = tiUpdateUserId;
+	}
+
+	@Column(name = "ti_update_user_name", length = 128)
+	public String getTiUpdateUserName() {
+		return this.tiUpdateUserName;
+	}
+
+	public void setTiUpdateUserName(String tiUpdateUserName) {
+		this.tiUpdateUserName = tiUpdateUserName;
+	}
+
+	private String createTimeStr;
+	@Transient
+	public String getCreateTimeStr() {
+		createTimeStr = TimeUtil.longToString(this.getTiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
+		return createTimeStr;
+	}
+
+	public void setCreateTimeStr(String createTimeStr) {
+		this.createTimeStr = createTimeStr;
+	}
 }

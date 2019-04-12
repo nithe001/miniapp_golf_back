@@ -1,207 +1,226 @@
 package com.golf.golf.db;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_score")
 public class MatchScore {
-    private long msId;
-    private Long msTeamId;
-    private Long msMatchId;
-    private String msMatchTitle;
-    private Long msGroupId;
-    private String msGroupName;
-    private Long msUserId;
-    private String msUserName;
-    private Integer msScore;
-    private Integer msHoleNum;
-    private Integer msHoleTotalRodNum;
-    private Integer msPushRodNum;
-    private Integer msIsUp;
-    private Integer msMatchTotalRodNum;
-    private Long msCreateUserId;
-    private Long msCreateTime;
-    private Long msUpdateUserId;
-    private Long msUpdateTime;
+	// Fields
 
-    @Id
-    @Column(name = "ms_id")
-    public long getMsId() {
-        return msId;
-    }
+	private Long msId;
+	private Long msTeamId;
+	private Long msMatchId;
+	private String msMatchTitle;
+	private Long msGroupId;
+	private String msGroupName;
+	private Long msUserId;
+	private String msUserName;
+	private Integer msScore;
+	private Integer msHoleNum;
+	private Integer msHoleTotalRodNum;
+	private Integer msPushRodNum;
+	private Integer msIsUp;
+	private Integer msMatchTotalRodNum;
+	private Long msCreateUserId;
+	private Long msCreateTime;
+	private Long msUpdateUserId;
+	private Long msUpdateTime;
 
-    public void setMsId(long msId) {
-        this.msId = msId;
-    }
+	// Constructors
 
-    @Basic
-    @Column(name = "ms_team_id")
-    public Long getMsTeamId() {
-        return msTeamId;
-    }
+	/** default constructor */
+	public MatchScore() {
+	}
 
-    public void setMsTeamId(Long msTeamId) {
-        this.msTeamId = msTeamId;
-    }
+	/** full constructor */
+	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
+					  Long msGroupId, String msGroupName, Long msUserId,
+					  String msUserName, Integer msScore, Integer msHoleNum,
+					  Integer msHoleTotalRodNum, Integer msPushRodNum, Integer msIsUp,
+					  Integer msMatchTotalRodNum, Long msCreateUserId, Long msCreateTime,
+					  Long msUpdateUserId, Long msUpdateTime) {
+		this.msTeamId = msTeamId;
+		this.msMatchId = msMatchId;
+		this.msMatchTitle = msMatchTitle;
+		this.msGroupId = msGroupId;
+		this.msGroupName = msGroupName;
+		this.msUserId = msUserId;
+		this.msUserName = msUserName;
+		this.msScore = msScore;
+		this.msHoleNum = msHoleNum;
+		this.msHoleTotalRodNum = msHoleTotalRodNum;
+		this.msPushRodNum = msPushRodNum;
+		this.msIsUp = msIsUp;
+		this.msMatchTotalRodNum = msMatchTotalRodNum;
+		this.msCreateUserId = msCreateUserId;
+		this.msCreateTime = msCreateTime;
+		this.msUpdateUserId = msUpdateUserId;
+		this.msUpdateTime = msUpdateTime;
+	}
 
-    @Basic
-    @Column(name = "ms_match_id")
-    public Long getMsMatchId() {
-        return msMatchId;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "ms_id", unique = true, nullable = false)
+	public Long getMsId() {
+		return this.msId;
+	}
 
-    public void setMsMatchId(Long msMatchId) {
-        this.msMatchId = msMatchId;
-    }
+	public void setMsId(Long msId) {
+		this.msId = msId;
+	}
 
-    @Basic
-    @Column(name = "ms_match_title")
-    public String getMsMatchTitle() {
-        return msMatchTitle;
-    }
+	@Column(name = "ms_team_id")
+	public Long getMsTeamId() {
+		return this.msTeamId;
+	}
 
-    public void setMsMatchTitle(String msMatchTitle) {
-        this.msMatchTitle = msMatchTitle;
-    }
+	public void setMsTeamId(Long msTeamId) {
+		this.msTeamId = msTeamId;
+	}
 
-    @Basic
-    @Column(name = "ms_group_id")
-    public Long getMsGroupId() {
-        return msGroupId;
-    }
+	@Column(name = "ms_match_id")
+	public Long getMsMatchId() {
+		return this.msMatchId;
+	}
 
-    public void setMsGroupId(Long msGroupId) {
-        this.msGroupId = msGroupId;
-    }
+	public void setMsMatchId(Long msMatchId) {
+		this.msMatchId = msMatchId;
+	}
 
-    @Basic
-    @Column(name = "ms_group_name")
-    public String getMsGroupName() {
-        return msGroupName;
-    }
+	@Column(name = "ms_match_title")
+	public String getMsMatchTitle() {
+		return this.msMatchTitle;
+	}
 
-    public void setMsGroupName(String msGroupName) {
-        this.msGroupName = msGroupName;
-    }
+	public void setMsMatchTitle(String msMatchTitle) {
+		this.msMatchTitle = msMatchTitle;
+	}
 
-    @Basic
-    @Column(name = "ms_user_id")
-    public Long getMsUserId() {
-        return msUserId;
-    }
+	@Column(name = "ms_group_id")
+	public Long getMsGroupId() {
+		return this.msGroupId;
+	}
 
-    public void setMsUserId(Long msUserId) {
-        this.msUserId = msUserId;
-    }
+	public void setMsGroupId(Long msGroupId) {
+		this.msGroupId = msGroupId;
+	}
 
-    @Basic
-    @Column(name = "ms_user_name")
-    public String getMsUserName() {
-        return msUserName;
-    }
+	@Column(name = "ms_group_name")
+	public String getMsGroupName() {
+		return this.msGroupName;
+	}
 
-    public void setMsUserName(String msUserName) {
-        this.msUserName = msUserName;
-    }
+	public void setMsGroupName(String msGroupName) {
+		this.msGroupName = msGroupName;
+	}
 
-    @Basic
-    @Column(name = "ms_score")
-    public Integer getMsScore() {
-        return msScore;
-    }
+	@Column(name = "ms_user_id")
+	public Long getMsUserId() {
+		return this.msUserId;
+	}
 
-    public void setMsScore(Integer msScore) {
-        this.msScore = msScore;
-    }
+	public void setMsUserId(Long msUserId) {
+		this.msUserId = msUserId;
+	}
 
-    @Basic
-    @Column(name = "ms_hole_num")
-    public Integer getMsHoleNum() {
-        return msHoleNum;
-    }
+	@Column(name = "ms_user_name", length = 128)
+	public String getMsUserName() {
+		return this.msUserName;
+	}
 
-    public void setMsHoleNum(Integer msHoleNum) {
-        this.msHoleNum = msHoleNum;
-    }
+	public void setMsUserName(String msUserName) {
+		this.msUserName = msUserName;
+	}
 
-    @Basic
-    @Column(name = "ms_hole_total_rod_num")
-    public Integer getMsHoleTotalRodNum() {
-        return msHoleTotalRodNum;
-    }
+	@Column(name = "ms_score")
+	public Integer getMsScore() {
+		return this.msScore;
+	}
 
-    public void setMsHoleTotalRodNum(Integer msHoleTotalRodNum) {
-        this.msHoleTotalRodNum = msHoleTotalRodNum;
-    }
+	public void setMsScore(Integer msScore) {
+		this.msScore = msScore;
+	}
 
-    @Basic
-    @Column(name = "ms_push_rod_num")
-    public Integer getMsPushRodNum() {
-        return msPushRodNum;
-    }
+	@Column(name = "ms_hole_num")
+	public Integer getMsHoleNum() {
+		return this.msHoleNum;
+	}
 
-    public void setMsPushRodNum(Integer msPushRodNum) {
-        this.msPushRodNum = msPushRodNum;
-    }
+	public void setMsHoleNum(Integer msHoleNum) {
+		this.msHoleNum = msHoleNum;
+	}
 
-    @Basic
-    @Column(name = "ms_is_up")
-    public Integer getMsIsUp() {
-        return msIsUp;
-    }
+	@Column(name = "ms_hole_total_rod_num")
+	public Integer getMsHoleTotalRodNum() {
+		return this.msHoleTotalRodNum;
+	}
 
-    public void setMsIsUp(Integer msIsUp) {
-        this.msIsUp = msIsUp;
-    }
+	public void setMsHoleTotalRodNum(Integer msHoleTotalRodNum) {
+		this.msHoleTotalRodNum = msHoleTotalRodNum;
+	}
 
-    @Basic
-    @Column(name = "ms_match_total_rod_num")
-    public Integer getMsMatchTotalRodNum() {
-        return msMatchTotalRodNum;
-    }
+	@Column(name = "ms_push_rod_num")
+	public Integer getMsPushRodNum() {
+		return this.msPushRodNum;
+	}
 
-    public void setMsMatchTotalRodNum(Integer msMatchTotalRodNum) {
-        this.msMatchTotalRodNum = msMatchTotalRodNum;
-    }
+	public void setMsPushRodNum(Integer msPushRodNum) {
+		this.msPushRodNum = msPushRodNum;
+	}
 
-    @Basic
-    @Column(name = "ms_create_user_id")
-    public Long getMsCreateUserId() {
-        return msCreateUserId;
-    }
+	@Column(name = "ms_is_up")
+	public Integer getMsIsUp() {
+		return this.msIsUp;
+	}
 
-    public void setMsCreateUserId(Long msCreateUserId) {
-        this.msCreateUserId = msCreateUserId;
-    }
+	public void setMsIsUp(Integer msIsUp) {
+		this.msIsUp = msIsUp;
+	}
 
-    @Basic
-    @Column(name = "ms_create_time")
-    public Long getMsCreateTime() {
-        return msCreateTime;
-    }
+	@Column(name = "ms_match_total_rod_num")
+	public Integer getMsMatchTotalRodNum() {
+		return this.msMatchTotalRodNum;
+	}
 
-    public void setMsCreateTime(Long msCreateTime) {
-        this.msCreateTime = msCreateTime;
-    }
+	public void setMsMatchTotalRodNum(Integer msMatchTotalRodNum) {
+		this.msMatchTotalRodNum = msMatchTotalRodNum;
+	}
 
-    @Basic
-    @Column(name = "ms_update_user_id")
-    public Long getMsUpdateUserId() {
-        return msUpdateUserId;
-    }
+	@Column(name = "ms_create_user_id")
+	public Long getMsCreateUserId() {
+		return this.msCreateUserId;
+	}
 
-    public void setMsUpdateUserId(Long msUpdateUserId) {
-        this.msUpdateUserId = msUpdateUserId;
-    }
+	public void setMsCreateUserId(Long msCreateUserId) {
+		this.msCreateUserId = msCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "ms_update_time")
-    public Long getMsUpdateTime() {
-        return msUpdateTime;
-    }
+	@Column(name = "ms_create_time")
+	public Long getMsCreateTime() {
+		return this.msCreateTime;
+	}
 
-    public void setMsUpdateTime(Long msUpdateTime) {
-        this.msUpdateTime = msUpdateTime;
-    }
+	public void setMsCreateTime(Long msCreateTime) {
+		this.msCreateTime = msCreateTime;
+	}
 
+	@Column(name = "ms_update_user_id")
+	public Long getMsUpdateUserId() {
+		return this.msUpdateUserId;
+	}
+
+	public void setMsUpdateUserId(Long msUpdateUserId) {
+		this.msUpdateUserId = msUpdateUserId;
+	}
+
+	@Column(name = "ms_update_time")
+	public Long getMsUpdateTime() {
+		return this.msUpdateTime;
+	}
+
+	public void setMsUpdateTime(Long msUpdateTime) {
+		this.msUpdateTime = msUpdateTime;
+	}
 }

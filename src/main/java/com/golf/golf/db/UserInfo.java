@@ -1,297 +1,350 @@
 package com.golf.golf.db;
 
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "user_info")
 public class UserInfo {
-    private Long uiId;
-    private Integer uiType;
-    private String uiHeadimg;
-    private String uiPersonalizedSignature;
-    private String uiLongitude;
-    private String uiLatitude;
-    private String uiRealName;
-    private Integer uiAge;
-    private String uiTelNo;
-    private String uiEmail;
-    private String uiCraduateSchool;
-    private String uiCraduateDepartment;
-    private Long uiCraduateTime;
-    private String uiMajor;
-    private String uiStudentId;
-    private String uiWorkUnit;
-    private String uiPost;
-    private String uiAddress;
-    private String uiHomeCourt;
-    private Integer uiIsValid;
-    private Long uiCreateTime;
-    private String uiCreateUserName;
-    private Long uiCreateUserId;
-    private Long uiUpdateTime;
-    private String uiUpdateUserName;
-    private Long uiUpdateUserId;
 
-    @Id
-    @Column(name = "ui_id")
-    public Long getUiId() {
-        return uiId;
-    }
+	// Fields
 
-    public void setUiId(Long uiId) {
-        this.uiId = uiId;
-    }
+	private Long uiId;
+	private String uiOpenId;
+	private Integer uiType;
+	private String uiHeadimg;
+	private String uiPersonalizedSignature;
+	private String uiLongitude;
+	private String uiLatitude;
+	private String uiRealName;
+	private String uiNickName;
+	private String uiSex;
+	private Integer uiAge;
+	private String uiTelNo;
+	private String uiEmail;
+	private String uiCraduateSchool;
+	private String uiCraduateDepartment;
+	private String uiCraduateTime;
+	private String uiMajor;
+	private String uiStudentId;
+	private String uiWorkUnit;
+	private String uiPost;
+	private String uiAddress;
+	private String uiHomeCourt;
+	private Integer uiIsValid;
+	private Long uiCreateTime;
+	private String uiCreateUserName;
+	private Long uiCreateUserId;
+	private Long uiUpdateTime;
+	private String uiUpdateUserName;
+	private Long uiUpdateUserId;
 
+	// Constructors
 
-	@Basic
-    @Column(name = "ui_longitude")
-    public String getUiLongitude() {
-        return uiLongitude;
-    }
+	/** default constructor */
+	public UserInfo() {
+	}
 
-    public void setUiLongitude(String uiLongitude) {
-        this.uiLongitude = uiLongitude;
-    }
+	/** full constructor */
+	public UserInfo(String uiOpenId, Integer uiType, String uiHeadimg,
+					String uiPersonalizedSignature, String uiLongitude,
+					String uiLatitude, String uiRealName, String uiNickName, String uiSex, Integer uiAge,
+					String uiTelNo, String uiEmail, String uiCraduateSchool,
+					String uiCraduateDepartment, String uiCraduateTime, String uiMajor,String uiStudentId,
+					String uiWorkUnit, String uiPost, String uiAddress, String uiHomeCourt, Integer uiIsValid,
+					Long uiCreateTime, String uiCreateUserName, Long uiCreateUserId,
+					Long uiUpdateTime, String uiUpdateUserName, Long uiUpdateUserId) {
+		this.uiOpenId = uiOpenId;
+		this.uiType = uiType;
+		this.uiHeadimg = uiHeadimg;
+		this.uiPersonalizedSignature = uiPersonalizedSignature;
+		this.uiLongitude = uiLongitude;
+		this.uiLatitude = uiLatitude;
+		this.uiRealName = uiRealName;
+		this.uiNickName = uiNickName;
+		this.uiSex = uiSex;
+		this.uiAge = uiAge;
+		this.uiTelNo = uiTelNo;
+		this.uiEmail = uiEmail;
+		this.uiCraduateSchool = uiCraduateSchool;
+		this.uiCraduateDepartment = uiCraduateDepartment;
+		this.uiCraduateTime = uiCraduateTime;
+		this.uiMajor = uiMajor;
+		this.uiStudentId = uiStudentId;
+		this.uiWorkUnit = uiWorkUnit;
+		this.uiPost = uiPost;
+		this.uiAddress = uiAddress;
+		this.uiHomeCourt = uiHomeCourt;
+		this.uiIsValid = uiIsValid;
+		this.uiCreateTime = uiCreateTime;
+		this.uiCreateUserName = uiCreateUserName;
+		this.uiCreateUserId = uiCreateUserId;
+		this.uiUpdateTime = uiUpdateTime;
+		this.uiUpdateUserName = uiUpdateUserName;
+		this.uiUpdateUserId = uiUpdateUserId;
+	}
 
-    @Basic
-    @Column(name = "ui_latitude")
-    public String getUiLatitude() {
-        return uiLatitude;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "ui_id", unique = true, nullable = false)
+	public Long getUiId() {
+		return this.uiId;
+	}
 
-    public void setUiLatitude(String uiLatitude) {
-        this.uiLatitude = uiLatitude;
-    }
+	public void setUiId(Long uiId) {
+		this.uiId = uiId;
+	}
 
-    @Basic
-    @Column(name = "ui_type")
-    public Integer getUiType() {
-        return uiType;
-    }
+	@Column(name = "ui_open_id", length = 128)
+	public String getUiOpenId() {
+		return this.uiOpenId;
+	}
 
-    public void setUiType(Integer uiType) {
-        this.uiType = uiType;
-    }
+	public void setUiOpenId(String uiOpenId) {
+		this.uiOpenId = uiOpenId;
+	}
 
-    @Basic
-    @Column(name = "ui_personalized_signature")
-    public String getUiPersonalizedSignature() {
-        return uiPersonalizedSignature;
-    }
+	@Column(name = "ui_type")
+	public Integer getUiType() {
+		return this.uiType;
+	}
 
-    public void setUiPersonalizedSignature(String uiPersonalizedSignature) {
-        this.uiPersonalizedSignature = uiPersonalizedSignature;
-    }
+	public void setUiType(Integer uiType) {
+		this.uiType = uiType;
+	}
 
-    @Basic
-    @Column(name = "ui_headimg")
-    public String getUiHeadimg() {
-        return uiHeadimg;
-    }
+	@Column(name = "ui_headimg")
+	public String getUiHeadimg() {
+		return this.uiHeadimg;
+	}
 
-    public void setUiHeadimg(String uiHeadimg) {
-        this.uiHeadimg = uiHeadimg;
-    }
+	public void setUiHeadimg(String uiHeadimg) {
+		this.uiHeadimg = uiHeadimg;
+	}
 
-    @Basic
-    @Column(name = "ui_real_name")
-    public String getUiRealName() {
-        return uiRealName;
-    }
+	@Column(name = "ui_personalized_signature", length = 512)
+	public String getUiPersonalizedSignature() {
+		return this.uiPersonalizedSignature;
+	}
 
-    public void setUiRealName(String uiRealName) {
-        this.uiRealName = uiRealName;
-    }
+	public void setUiPersonalizedSignature(String uiPersonalizedSignature) {
+		this.uiPersonalizedSignature = uiPersonalizedSignature;
+	}
 
-    @Basic
-    @Column(name = "ui_age")
-    public Integer getUiAge() {
-        return uiAge;
-    }
+	@Column(name = "ui_longitude", length = 128)
+	public String getUiLongitude() {
+		return this.uiLongitude;
+	}
 
-    public void setUiAge(Integer uiAge) {
-        this.uiAge = uiAge;
-    }
+	public void setUiLongitude(String uiLongitude) {
+		this.uiLongitude = uiLongitude;
+	}
 
-    @Basic
-    @Column(name = "ui_tel_no")
-    public String getUiTelNo() {
-        return uiTelNo;
-    }
+	@Column(name = "ui_latitude", length = 128)
+	public String getUiLatitude() {
+		return this.uiLatitude;
+	}
 
-    public void setUiTelNo(String uiTelNo) {
-        this.uiTelNo = uiTelNo;
-    }
+	public void setUiLatitude(String uiLatitude) {
+		this.uiLatitude = uiLatitude;
+	}
 
-    @Basic
-    @Column(name = "ui_email")
-    public String getUiEmail() {
-        return uiEmail;
-    }
+	@Column(name = "ui_real_name", length = 128)
+	public String getUiRealName() {
+		return this.uiRealName;
+	}
 
-    public void setUiEmail(String uiEmail) {
-        this.uiEmail = uiEmail;
-    }
+	public void setUiRealName(String uiRealName) {
+		this.uiRealName = uiRealName;
+	}
 
-    @Basic
-    @Column(name = "ui_craduate_school")
-    public String getUiCraduateSchool() {
-        return uiCraduateSchool;
-    }
+	@Column(name = "ui_nick_name", length = 128)
+	public String getUiNickName() {
+		return uiNickName;
+	}
 
-    public void setUiCraduateSchool(String uiCraduateSchool) {
-        this.uiCraduateSchool = uiCraduateSchool;
-    }
+	public void setUiNickName(String uiNickName) {
+		this.uiNickName = uiNickName;
+	}
 
-    @Basic
-    @Column(name = "ui_craduate_department")
-    public String getUiCraduateDepartment() {
-        return uiCraduateDepartment;
-    }
+	@Column(name = "ui_sex", length = 64)
+	public String getUiSex() {
+		return uiSex;
+	}
 
-    public void setUiCraduateDepartment(String uiCraduateDepartment) {
-        this.uiCraduateDepartment = uiCraduateDepartment;
-    }
+	public void setUiSex(String uiSex) {
+		this.uiSex = uiSex;
+	}
 
-    @Basic
-    @Column(name = "ui_craduate_time")
-    public Long getUiCraduateTime() {
-        return uiCraduateTime;
-    }
+	@Column(name = "ui_age")
+	public Integer getUiAge() {
+		return this.uiAge;
+	}
 
-    public void setUiCraduateTime(Long uiCraduateTime) {
-        this.uiCraduateTime = uiCraduateTime;
-    }
+	public void setUiAge(Integer uiAge) {
+		this.uiAge = uiAge;
+	}
 
-    @Basic
-    @Column(name = "ui_major")
-    public String getUiMajor() {
-        return uiMajor;
-    }
+	@Column(name = "ui_tel_no", length = 128)
+	public String getUiTelNo() {
+		return this.uiTelNo;
+	}
 
-    public void setUiMajor(String uiMajor) {
-        this.uiMajor = uiMajor;
-    }
+	public void setUiTelNo(String uiTelNo) {
+		this.uiTelNo = uiTelNo;
+	}
 
-    @Basic
-    @Column(name = "ui_student_id")
-    public String getUiStudentId() {
-        return uiStudentId;
-    }
+	@Column(name = "ui_email", length = 128)
+	public String getUiEmail() {
+		return this.uiEmail;
+	}
 
-    public void setUiStudentId(String uiStudentId) {
-        this.uiStudentId = uiStudentId;
-    }
+	public void setUiEmail(String uiEmail) {
+		this.uiEmail = uiEmail;
+	}
 
-    @Basic
-    @Column(name = "ui_work_unit")
-    public String getUiWorkUnit() {
-        return uiWorkUnit;
-    }
+	@Column(name = "ui_craduate_school")
+	public String getUiCraduateSchool() {
+		return this.uiCraduateSchool;
+	}
 
-    public void setUiWorkUnit(String uiWorkUnit) {
-        this.uiWorkUnit = uiWorkUnit;
-    }
+	public void setUiCraduateSchool(String uiCraduateSchool) {
+		this.uiCraduateSchool = uiCraduateSchool;
+	}
 
+	@Column(name = "ui_craduate_department")
+	public String getUiCraduateDepartment() {
+		return this.uiCraduateDepartment;
+	}
 
-    @Basic
-    @Column(name = "ui_post")
-    public String getUiPost() {
-        return uiPost;
-    }
+	public void setUiCraduateDepartment(String uiCraduateDepartment) {
+		this.uiCraduateDepartment = uiCraduateDepartment;
+	}
 
-    public void setUiPost(String uiPost) {
-        this.uiPost = uiPost;
-    }
+	@Column(name = "ui_craduate_time", length = 128)
+	public String getUiCraduateTime() {
+		return this.uiCraduateTime;
+	}
 
-    @Basic
-    @Column(name = "ui_address")
-    public String getUiAddress() {
-        return uiAddress;
-    }
+	public void setUiCraduateTime(String uiCraduateTime) {
+		this.uiCraduateTime = uiCraduateTime;
+	}
 
-    public void setUiAddress(String uiAddress) {
-        this.uiAddress = uiAddress;
-    }
+	@Column(name = "ui_major")
+	public String getUiMajor() {
+		return this.uiMajor;
+	}
 
-    @Basic
-    @Column(name = "ui_home_court")
-    public String getUiHomeCourt() {
-        return uiHomeCourt;
-    }
+	public void setUiMajor(String uiMajor) {
+		this.uiMajor = uiMajor;
+	}
 
-    public void setUiHomeCourt(String uiHomeCourt) {
-        this.uiHomeCourt = uiHomeCourt;
-    }
+	@Column(name = "ui_work_unit")
+	public String getUiWorkUnit() {
+		return this.uiWorkUnit;
+	}
 
-    @Basic
-    @Column(name = "ui_is_valid")
-    public Integer getUiIsValid() {
-        return uiIsValid;
-    }
+	public void setUiWorkUnit(String uiWorkUnit) {
+		this.uiWorkUnit = uiWorkUnit;
+	}
 
-    public void setUiIsValid(Integer uiIsValid) {
-        this.uiIsValid = uiIsValid;
-    }
+	@Column(name = "ui_address")
+	public String getUiAddress() {
+		return this.uiAddress;
+	}
 
-    @Basic
-    @Column(name = "ui_create_time")
-    public Long getUiCreateTime() {
-        return uiCreateTime;
-    }
+	public void setUiAddress(String uiAddress) {
+		this.uiAddress = uiAddress;
+	}
 
-    public void setUiCreateTime(Long uiCreateTime) {
-        this.uiCreateTime = uiCreateTime;
-    }
+	@Column(name = "ui_is_valid")
+	public Integer getUiIsValid() {
+		return this.uiIsValid;
+	}
 
-    @Basic
-    @Column(name = "ui_create_user_name")
-    public String getUiCreateUserName() {
-        return uiCreateUserName;
-    }
+	public void setUiIsValid(Integer uiIsValid) {
+		this.uiIsValid = uiIsValid;
+	}
 
-    public void setUiCreateUserName(String uiCreateUserName) {
-        this.uiCreateUserName = uiCreateUserName;
-    }
+	@Column(name = "ui_create_time")
+	public Long getUiCreateTime() {
+		return this.uiCreateTime;
+	}
 
-    @Basic
-    @Column(name = "ui_create_user_id")
-    public Long getUiCreateUserId() {
-        return uiCreateUserId;
-    }
+	public void setUiCreateTime(Long uiCreateTime) {
+		this.uiCreateTime = uiCreateTime;
+	}
 
-    public void setUiCreateUserId(Long uiCreateUserId) {
-        this.uiCreateUserId = uiCreateUserId;
-    }
+	@Column(name = "ui_create_user_name", length = 128)
+	public String getUiCreateUserName() {
+		return this.uiCreateUserName;
+	}
 
-    @Basic
-    @Column(name = "ui_update_time")
-    public Long getUiUpdateTime() {
-        return uiUpdateTime;
-    }
+	public void setUiCreateUserName(String uiCreateUserName) {
+		this.uiCreateUserName = uiCreateUserName;
+	}
 
-    public void setUiUpdateTime(Long uiUpdateTime) {
-        this.uiUpdateTime = uiUpdateTime;
-    }
+	@Column(name = "ui_create_user_id")
+	public Long getUiCreateUserId() {
+		return this.uiCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "ui_update_user_name")
-    public String getUiUpdateUserName() {
-        return uiUpdateUserName;
-    }
+	public void setUiCreateUserId(Long uiCreateUserId) {
+		this.uiCreateUserId = uiCreateUserId;
+	}
 
-    public void setUiUpdateUserName(String uiUpdateUserName) {
-        this.uiUpdateUserName = uiUpdateUserName;
-    }
+	@Column(name = "ui_update_time")
+	public Long getUiUpdateTime() {
+		return this.uiUpdateTime;
+	}
 
-    @Basic
-    @Column(name = "ui_update_user_id")
-    public Long getUiUpdateUserId() {
-        return uiUpdateUserId;
-    }
+	public void setUiUpdateTime(Long uiUpdateTime) {
+		this.uiUpdateTime = uiUpdateTime;
+	}
 
-    public void setUiUpdateUserId(Long uiUpdateUserId) {
-        this.uiUpdateUserId = uiUpdateUserId;
-    }
+	@Column(name = "ui_update_user_name", length = 128)
+	public String getUiUpdateUserName() {
+		return this.uiUpdateUserName;
+	}
 
+	public void setUiUpdateUserName(String uiUpdateUserName) {
+		this.uiUpdateUserName = uiUpdateUserName;
+	}
+
+	@Column(name = "ui_update_user_id")
+	public Long getUiUpdateUserId() {
+		return this.uiUpdateUserId;
+	}
+
+	public void setUiUpdateUserId(Long uiUpdateUserId) {
+		this.uiUpdateUserId = uiUpdateUserId;
+	}
+
+	@Column(name = "ui_student_id", length = 255)
+	public String getUiStudentId() {
+		return uiStudentId;
+	}
+
+	public void setUiStudentId(String uiStudentId) {
+		this.uiStudentId = uiStudentId;
+	}
+
+	@Column(name = "ui_post", length = 255)
+	public String getUiPost() {
+		return uiPost;
+	}
+
+	public void setUiPost(String uiPost) {
+		this.uiPost = uiPost;
+	}
+
+	@Column(name = "ui_home_court", length = 255)
+	public String getUiHomeCourt() {
+		return uiHomeCourt;
+	}
+
+	public void setUiHomeCourt(String uiHomeCourt) {
+		this.uiHomeCourt = uiHomeCourt;
+	}
 }

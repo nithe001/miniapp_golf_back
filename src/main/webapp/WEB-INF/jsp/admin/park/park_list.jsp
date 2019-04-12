@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
    	<title>球场列表</title>
-	<jsp:include page="../include/commonInclude.jsp"></jsp:include>	
+	<jsp:include page="../include/commonInclude.jsp"></jsp:include>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
@@ -33,6 +33,7 @@
 							<input type="radio" name="state" value="1" <c:if test="${state == 1 }">checked</c:if> />是
 							<input type="radio" name="state" value="0" <c:if test="${state == 0 }">checked</c:if> />否
 							<button type="button" class="btn btn-success" id="searchBtn">搜索</button>
+                            <button type="button" class="btn btn-success" id="importBtn">导入</button>
 					  </form>
 		            </div>
 		            </div>
@@ -43,12 +44,10 @@
 		                <thead>
 		                <tr>
 		                  	<th>序号</th>
-							<th>球场名称</th>
+                            <th>城市</th>
+                            <th>球场名称</th>
 							<th>logo</th>
 							<th>位置</th>
-							<th>创建人</th>
-							<th>更新时间</th>
-							<th>更新人</th>
 							<th>状态</th>
 							<th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
 		                </tr>
@@ -57,19 +56,17 @@
 		                <c:forEach items="${pageInfo.items}" var="p" varStatus="s">
      					<tr>
      						<td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
-							<td>${p.auUserName }</td>
-							<td>${p.auShowName }</td>
-							<td>${p.createTimeStr }</td>
-							<td>${p.auCreateUserName }</td>
-							<td>${p.updateTimeStr }</td>
-							<td>${p.auUpdateUserName }</td>
+							<td>${p.piCity }</td>
+                            <td>${p.piName }</td>
+							<td></td>
+							<td></td>
 							<td>
 								<c:if test="${p.piIsValid == 1 }">是</c:if>
 								<c:if test="${p.piIsValid == 0 }">否</c:if>
 							</td>
 							<td>
 								<c:if test="${p.piIsValid == 1 }">
-									<a class="btn btn-success" href="/admin/park/parkEditUI?id=${p.piId}">
+									<a class="btn btn-success" href="/admin/park/parkEditUI?parkId=${p.piId}">
 										修改
 									</a>
 									<a class="btn btn-danger" href="javascript:void(0);" onclick="resetPark(${p.piId})">注销</a>
@@ -118,7 +115,27 @@
 	</div>
 </div>
 
-
+    <!-- Modal -->
+    <div class="modal fade" id="myFileModal" tabindex="-1" role="dialog" aria-labelledby="myFileModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myFileModalLabel">提示</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="multiFileUpload" name="file" cssClass="form-control"/>
+                    <br/>
+                    <div class="col-md-12"></div><br/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <jsp:include page="../include/adminlteJsInclude.jsp"/>
 <script type="text/javascript">
@@ -140,6 +157,26 @@
 
 		$("#sureBtn").click(function () {
 		    window.location.href="admin/park/parkReset?parkId="+$("#parkId").val();
+        });
+
+        $("#importBtn").bind("click", function () {
+            $('#myFileModal').modal('show');
+            $('#multiFileUpload').fileupload({
+                type: "POST",
+                cache: false,
+                async: false,
+                dataType: "json",
+                url: 'admin/park/importPark',
+                success: function (json) {
+                    if (json.success) {
+                        $('#myFileModal').modal('hide');
+                        // window.location.href="admin/sysuser/list";
+                        showMsg(ky.lang["upload.file.tip"]);
+                    } else {
+                        showMsg(json.msg);
+                    }
+                }
+            });
         });
 	});
 	function resetPark(parkId) {

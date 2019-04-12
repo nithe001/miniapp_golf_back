@@ -49,10 +49,10 @@ $(document).ready(function(){
 
 function initValidation() {
     var validations = [
-        {class: 'fqName', valid: "validate[required, custom[onlyLetterSp]] text-input"},
-        {class: 'qdxh', valid: "validate[required, min[1], max[9], custom[onlyNumberSp]] text-input"},
-        {class: 'bzg', valid: "validate[required, min[1], max[7], custom[onlyNumberSp]] text-input"},
-        {class: 'juli', valid: "validate[required, min[1], max[100], custom[onlyNumberSp]] text-input"}
+        // {class: 'fqName', valid: "validate[required, custom[onlyLetterSp]] text-input"},
+        // {class: 'qdxh', valid: "validate[required, min[1], max[9], custom[onlyNumberSp]] text-input"},
+        // {class: 'bzg', valid: "validate[required, min[1], max[7], custom[onlyNumberSp]] text-input"},
+        // {class: 'juli', valid: "validate[required, min[1], max[100], custom[onlyNumberSp]] text-input"}
     ];
     for(var i=0,len = validations.length; i<len;i++ ){
         $("."+ validations[i].class).addClass(validations[i].valid);

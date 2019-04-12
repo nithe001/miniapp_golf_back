@@ -1,7 +1,11 @@
 package com.golf.golf.web;
 
 import com.golf.common.Const;
+import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.TeamService;
 import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
@@ -14,7 +18,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * 球队管理
@@ -32,9 +43,9 @@ public class TeamManageController {
 
 
     /**
-     * 获取球队列表
+     * 获取所有球队 或者 可以加入的球队列表
      * @param page 分页
-     * @param type 1：我加入的球队  0：所有球队
+     * @param type 0：所有球队 1：可以加入的球队
      * @param keyword 球队名称
      * @return
      */
@@ -45,16 +56,18 @@ public class TeamManageController {
         if (page > 0) {
             nowPage = page;
         }
-        POJOPageInfo pageInfo = new POJOPageInfo<Object[]>(Const.ROWSPERPAGE , nowPage);
+        POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
         try {
             SearchBean searchBean = new SearchBean();
-            if(StringUtils.isNotEmpty(keyword)){
+            if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
-            if(type == null){
+            if(type == null || type == 0){
+            	//所有球队
                 pageInfo = teamService.getTeamList(searchBean, pageInfo);
-            }else if(type == 0){
-                searchBean.addParpField("userId", UserUtil.getUserId());
+            }else if(type >= 1){
+                searchBean.addParpField("userId", 4L);
+				searchBean.addParpField("type", type);
                 pageInfo = teamService.getMyTeamList(searchBean, pageInfo);
             }
         } catch (Exception e) {
@@ -65,6 +78,43 @@ public class TeamManageController {
         }
         return JsonWrapper.newDataInstance(pageInfo);
     }
+
+	/**
+	 * 获取我创建的球队列表 或者 我加入的球队列表
+	 * @param page 分页
+	 * @param type 0：我加入的 1：我创建的
+	 * @param keyword 球队名称
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMyTeamList")
+	public JsonElement getMyTeamList(Integer page,Integer type, String keyword) {
+		Integer nowPage = 1;
+		if (page > 0) {
+			nowPage = page;
+		}
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+		try {
+			SearchBean searchBean = new SearchBean();
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			searchBean.addParpField("type", type);
+
+			searchBean.addParpField("userId", 4L);
+
+			pageInfo = teamService.getMyCreateTeamList(searchBean, pageInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+			errmsg = "前台-获取我创建的球队列表出错。";
+			logger.error(errmsg+ e );
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newDataInstance(pageInfo);
+	}
+
+
+
 
 	/**
 	 * 获取球队详情
@@ -88,14 +138,64 @@ public class TeamManageController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = "createTeam")
-	public JsonElement createTeam(ModelMap mm, Long matchId) {
+	@RequestMapping(value = "saveTeamInfo")
+	public JsonElement saveTeamInfo(String teamInfo, String logoPath) {
 		try {
+			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
+				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
+				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
+				teamInfoBean.setTiLogo(PropertyConst.DOMAIN+logoPath);
+				teamService.saveOrUpdateTeamInfo(teamInfoBean);
+			}
+			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("创建球队时出错。" + e);
 			return JsonWrapper.newErrorInstance("创建球队时出错");
 		}
-		return JsonWrapper.newSuccessInstance();
+	}
+
+	/**
+	 * 创建球队——上传logo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "uploadImg")
+	public JsonElement uploadImg(HttpServletRequest request, @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+		try {
+			String logoPath = null;
+			System.out.println("执行upload");
+			request.setCharacterEncoding("UTF-8");
+			logger.info("执行图片上传");
+			if(!file.isEmpty()) {
+				logger.info("成功获取照片");
+				String fileName = file.getOriginalFilename();
+				String type = null;
+				type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length()) : null;
+				logger.info("图片初始名称为：" + fileName + " 类型为：" + type);
+				if (type != null) {
+					if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
+						// 项目在容器中实际发布运行的根路径
+						String realPath = WebUtil.getRealPath("up/teamLogo");
+						// 自定义的文件名称
+						String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
+						file.transferTo(new File(realPath,trueFileName));
+						logoPath = "up/teamLogo/"+trueFileName;
+						logger.info("文件成功上传到指定目录下");
+					}else {
+						return JsonWrapper.newErrorInstance("文件类型不正确");
+					}
+				}else {
+					return JsonWrapper.newErrorInstance("文件不存在");
+				}
+			}else {
+				return JsonWrapper.newErrorInstance("文件不存在");
+			}
+			return JsonWrapper.newDataInstance(logoPath);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("上传球队logo时出错。" + e);
+			return JsonWrapper.newErrorInstance("上传球队logo时出错");
+		}
 	}
 }

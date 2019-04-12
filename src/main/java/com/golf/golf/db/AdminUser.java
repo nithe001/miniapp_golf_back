@@ -4,185 +4,205 @@ import com.golf.common.util.TimeUtil;
 
 import javax.persistence.*;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 @Entity
 @Table(name = "admin_user")
 public class AdminUser {
-    private Long auId;
-    private String auUserName;
-    private String auPassword;
-    private String auShowName;
-    private Integer auSex;
-    private Integer auAge;
-    private String auTel;
-    private String auEmail;
-    private Long auRole;
-    private Integer auIsValid;
-    private Long auCreateDate;
-    private Long auCreateUserId;
-    private String auCreateUserName;
-    private Long auUpdateUserId;
-    private String auUpdateUserName;
-    private Long auUpdateDate;
+	// Fields
 
-    @Id
-    @Column(name = "au_id")
-    public Long getAuId() {
-        return auId;
-    }
+	private Long auId;
+	private String auUserName;
+	private String auPassword;
+	private String auShowName;
+	private Integer auSex;
+	private Integer auAge;
+	private String auTel;
+	private String auEmail;
+	private Long auRole;
+	private Integer auIsValid;
+	private Long auCreateDate;
+	private Long auCreateUserId;
+	private String auCreateUserName;
+	private Long auUpdateUserId;
+	private String auUpdateUserName;
+	private Long auUpdateDate;
 
-    public void setAuId(Long auId) {
-        this.auId = auId;
-    }
+	// Constructors
 
-    @Basic
-    @Column(name = "au_user_name")
-    public String getAuUserName() {
-        return auUserName;
-    }
+	/** default constructor */
+	public AdminUser() {
+	}
 
-    public void setAuUserName(String auUserName) {
-        this.auUserName = auUserName;
-    }
+	/** full constructor */
+	public AdminUser(String auUserName, String auPassword, String auShowName,
+					 Integer auSex, Integer auAge, String auTel, String auEmail,
+					 Long auRole, Integer auIsValid, Long auCreateDate,
+					 Long auCreateUserId, String auCreateUserName, Long auUpdateUserId,
+					 String auUpdateUserName, Long auUpdateDate) {
+		this.auUserName = auUserName;
+		this.auPassword = auPassword;
+		this.auShowName = auShowName;
+		this.auSex = auSex;
+		this.auAge = auAge;
+		this.auTel = auTel;
+		this.auEmail = auEmail;
+		this.auRole = auRole;
+		this.auIsValid = auIsValid;
+		this.auCreateDate = auCreateDate;
+		this.auCreateUserId = auCreateUserId;
+		this.auCreateUserName = auCreateUserName;
+		this.auUpdateUserId = auUpdateUserId;
+		this.auUpdateUserName = auUpdateUserName;
+		this.auUpdateDate = auUpdateDate;
+	}
 
-    @Basic
-    @Column(name = "au_password")
-    public String getAuPassword() {
-        return auPassword;
-    }
+	// Property accessors
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "au_id", unique = true, nullable = false)
+	public Long getAuId() {
+		return this.auId;
+	}
 
-    public void setAuPassword(String auPassword) {
-        this.auPassword = auPassword;
-    }
+	public void setAuId(Long auId) {
+		this.auId = auId;
+	}
 
-    @Basic
-    @Column(name = "au_show_name")
-    public String getAuShowName() {
-        return auShowName;
-    }
+	@Column(name = "au_user_name", length = 128)
+	public String getAuUserName() {
+		return this.auUserName;
+	}
 
-    public void setAuShowName(String auShowName) {
-        this.auShowName = auShowName;
-    }
+	public void setAuUserName(String auUserName) {
+		this.auUserName = auUserName;
+	}
 
-    @Basic
-    @Column(name = "au_sex")
-    public Integer getAuSex() {
-        return auSex;
-    }
+	@Column(name = "au_password", length = 128)
+	public String getAuPassword() {
+		return this.auPassword;
+	}
 
-    public void setAuSex(Integer auSex) {
-        this.auSex = auSex;
-    }
+	public void setAuPassword(String auPassword) {
+		this.auPassword = auPassword;
+	}
 
-    @Basic
-    @Column(name = "au_age")
-    public Integer getAuAge() {
-        return auAge;
-    }
+	@Column(name = "au_show_name", length = 128)
+	public String getAuShowName() {
+		return this.auShowName;
+	}
 
-    public void setAuAge(Integer auAge) {
-        this.auAge = auAge;
-    }
+	public void setAuShowName(String auShowName) {
+		this.auShowName = auShowName;
+	}
 
-    @Basic
-    @Column(name = "au_tel")
-    public String getAuTel() {
-        return auTel;
-    }
+	@Column(name = "au_sex")
+	public Integer getAuSex() {
+		return this.auSex;
+	}
 
-    public void setAuTel(String auTel) {
-        this.auTel = auTel;
-    }
+	public void setAuSex(Integer auSex) {
+		this.auSex = auSex;
+	}
 
-    @Basic
-    @Column(name = "au_email")
-    public String getAuEmail() {
-        return auEmail;
-    }
+	@Column(name = "au_age")
+	public Integer getAuAge() {
+		return this.auAge;
+	}
 
-    public void setAuEmail(String auEmail) {
-        this.auEmail = auEmail;
-    }
+	public void setAuAge(Integer auAge) {
+		this.auAge = auAge;
+	}
 
-    @Basic
-    @Column(name = "au_role")
-    public Long getAuRole() {
-        return auRole;
-    }
+	@Column(name = "au_tel", length = 128)
+	public String getAuTel() {
+		return this.auTel;
+	}
 
-    public void setAuRole(Long auRole) {
-        this.auRole = auRole;
-    }
+	public void setAuTel(String auTel) {
+		this.auTel = auTel;
+	}
 
-    @Basic
-    @Column(name = "au_is_valid")
-    public Integer getAuIsValid() {
-        return auIsValid;
-    }
+	@Column(name = "au_email", length = 128)
+	public String getAuEmail() {
+		return this.auEmail;
+	}
 
-    public void setAuIsValid(Integer auIsValid) {
-        this.auIsValid = auIsValid;
-    }
+	public void setAuEmail(String auEmail) {
+		this.auEmail = auEmail;
+	}
 
-    @Basic
-    @Column(name = "au_create_date")
-    public Long getAuCreateDate() {
-        return auCreateDate;
-    }
+	@Column(name = "au_role")
+	public Long getAuRole() {
+		return this.auRole;
+	}
 
-    public void setAuCreateDate(Long auCreateDate) {
-        this.auCreateDate = auCreateDate;
-    }
+	public void setAuRole(Long auRole) {
+		this.auRole = auRole;
+	}
 
-    @Basic
-    @Column(name = "au_create_user_id")
-    public Long getAuCreateUserId() {
-        return auCreateUserId;
-    }
+	@Column(name = "au_is_valid")
+	public Integer getAuIsValid() {
+		return this.auIsValid;
+	}
 
-    public void setAuCreateUserId(Long auCreateUserId) {
-        this.auCreateUserId = auCreateUserId;
-    }
+	public void setAuIsValid(Integer auIsValid) {
+		this.auIsValid = auIsValid;
+	}
 
-    @Basic
-    @Column(name = "au_create_user_name")
-    public String getAuCreateUserName() {
-        return auCreateUserName;
-    }
+	@Column(name = "au_create_date")
+	public Long getAuCreateDate() {
+		return this.auCreateDate;
+	}
 
-    public void setAuCreateUserName(String auCreateUserName) {
-        this.auCreateUserName = auCreateUserName;
-    }
+	public void setAuCreateDate(Long auCreateDate) {
+		this.auCreateDate = auCreateDate;
+	}
 
-    @Basic
-    @Column(name = "au_update_user_id")
-    public Long getAuUpdateUserId() {
-        return auUpdateUserId;
-    }
+	@Column(name = "au_create_user_id")
+	public Long getAuCreateUserId() {
+		return this.auCreateUserId;
+	}
 
-    public void setAuUpdateUserId(Long auUpdateUserId) {
-        this.auUpdateUserId = auUpdateUserId;
-    }
+	public void setAuCreateUserId(Long auCreateUserId) {
+		this.auCreateUserId = auCreateUserId;
+	}
 
-    @Basic
-    @Column(name = "au_update_user_name")
-    public String getAuUpdateUserName() {
-        return auUpdateUserName;
-    }
+	@Column(name = "au_create_user_name", length = 128)
+	public String getAuCreateUserName() {
+		return this.auCreateUserName;
+	}
 
-    public void setAuUpdateUserName(String auUpdateUserName) {
-        this.auUpdateUserName = auUpdateUserName;
-    }
+	public void setAuCreateUserName(String auCreateUserName) {
+		this.auCreateUserName = auCreateUserName;
+	}
 
-    @Basic
-    @Column(name = "au_update_date")
-    public Long getAuUpdateDate() {
-        return auUpdateDate;
-    }
+	@Column(name = "au_update_user_id")
+	public Long getAuUpdateUserId() {
+		return this.auUpdateUserId;
+	}
 
-    public void setAuUpdateDate(Long auUpdateDate) {
-        this.auUpdateDate = auUpdateDate;
-    }
+	public void setAuUpdateUserId(Long auUpdateUserId) {
+		this.auUpdateUserId = auUpdateUserId;
+	}
+
+	@Column(name = "au_update_user_name", length = 128)
+	public String getAuUpdateUserName() {
+		return this.auUpdateUserName;
+	}
+
+	public void setAuUpdateUserName(String auUpdateUserName) {
+		this.auUpdateUserName = auUpdateUserName;
+	}
+
+	@Column(name = "au_update_date")
+	public Long getAuUpdateDate() {
+		return this.auUpdateDate;
+	}
+
+	public void setAuUpdateDate(Long auUpdateDate) {
+		this.auUpdateDate = auUpdateDate;
+	}
 
     private String createTimeStr;
     private String updateTimeStr;

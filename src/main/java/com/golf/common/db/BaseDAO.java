@@ -750,4 +750,28 @@ public class BaseDAO {
 		q.setResultTransformer(transformers);
 		return q.list();
 	}
+
+	public <E> List<E> createQuery(final String query, final int offset, final int maxRow, ResultTransformer transformers) {
+		Query q = getCurrentSession().createQuery(query);
+		q.setResultTransformer(transformers);
+		q = limit(q, offset, maxRow);
+		return q.list();
+	}
+
+	public <E> List<E> createQuery(final String query, final Map parp, final int offset, final int maxRow, ResultTransformer transformers) {
+		Query q = getCurrentSession().createQuery(query);
+		q.setResultTransformer(transformers);
+		q = addParameter(q, parp);
+		q = limit(q, offset, maxRow);
+		return q.list();
+	}
+
+	public <E> List<E> createSQLQuery(final String query, final Map parp,  final int offset, final int maxRow, ResultTransformer transformers) {
+		Query q = getCurrentSession().createSQLQuery(query);
+		q.setResultTransformer(transformers);
+		q = addParameter(q, parp);
+		q = limit(q, offset, maxRow);
+		return q.list();
+	}
+
 }
