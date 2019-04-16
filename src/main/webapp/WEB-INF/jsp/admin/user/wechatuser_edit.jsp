@@ -1,11 +1,10 @@
-<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@ page language="java" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ page import="com.golf.golf.common.security.AdminUserUtil" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-   	<title>编辑前台用户信息</title>
-	<jsp:include page="../include/commonInclude.jsp"></jsp:include>	
+    <title>编辑小程序用户信息</title>
+    <jsp:include page="../include/commonInclude.jsp"></jsp:include>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
@@ -16,10 +15,10 @@
 		
 		<div class="content-wrapper">
 			<section class="content-header">
-				<h1>编辑前台用户</h1>
+				<h1>编辑小程序用户信息</h1>
 		        <ol class="breadcrumb">
-		           <li><a href="admin/user/wechatUserList"><i class="fa fa-dashboard"></i>前台用户列表</a></li>
-		           <li class="active">编辑前台用户</li>
+		           <li><a href="admin/user/wechatUserList"><i class="fa fa-dashboard"></i>小程序用户列表</a></li>
+		           <li class="active">编辑小程序用户信息</li>
 		        </ol>
 		    </section>
 		    <section class="content">
@@ -27,7 +26,7 @@
 				  <div class="col-md-12">
 		            <div class="box box-info">
 			            <div class="box-header with-border">
-			              <h3 class="box-title">前台用户信息</h3>
+			              <h3 class="box-title">小程序用户信息</h3>
 			            </div>
 			            <!-- /.box-header -->
 		            <!-- form start -->

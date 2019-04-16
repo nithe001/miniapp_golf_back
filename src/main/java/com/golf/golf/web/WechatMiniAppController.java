@@ -55,7 +55,7 @@ public class WechatMiniAppController extends GenericController {
      */
 	@ResponseBody
     @RequestMapping(value = "onLogin")
-    public JsonElement wechatCore(String code, String userInfo){
+    public JsonElement wechatCore(String code){
         String errMsg = "";
 		try{
         	if(StringUtils.isNotEmpty(code)){
@@ -69,10 +69,24 @@ public class WechatMiniAppController extends GenericController {
 					if (session.getAttribute(loginSessionKey) != null) {
 						session.removeAttribute(loginSessionKey);
 					}
+					//通过openid获取用户信息
+					UserModel userModel = new UserModel();
+					WechatUserInfo wechatUserInfo = userService.getWechatUserByOpenid(openid);
+					userModel.setWechatUser(wechatUserInfo);
+					if(wechatUserInfo.getWuiUId() != null){
+						UserInfo userInfo = userService.getUserById(wechatUserInfo.getWuiUId());
+						userModel.setUser(userInfo);
+					}
+					session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
+
 					//以3rd_session为key,session_key+openid为value写入session存储
 					session.setAttribute(loginSessionKey, sessionkey+","+openid);
 					//回传loginSessionKey
-					return JsonWrapper.newDataInstance(loginSessionKey);
+					Map<String, Object> result = new HashMap<String, Object>();
+					result.put("openid",openid);
+					result.put("loginSessionKey",loginSessionKey);
+					result.put("sessionId",session.getId());
+					return JsonWrapper.newDataInstance(result);
 				}
 			}else{
 				// 错误 未获取到用户凭证code
@@ -82,7 +96,7 @@ public class WechatMiniAppController extends GenericController {
         	e.printStackTrace();
             logger.error("响应微信请求失败。code="+code, e);
         }
-		return JsonWrapper.newErrorInstance("获取用户微信信息失败-"+errMsg);
+		return JsonWrapper.newErrorInstance("获取用户openid失败-"+errMsg);
     }
 
 
@@ -142,6 +156,8 @@ public class WechatMiniAppController extends GenericController {
 				}
 				UserModel model = WechatUserUtil.getLoginUserBySessionId(sessionId);
 				model.setWechatUser(userInfo);
+
+
 				//更新session
 				WechatUserUtil.saveUserInfoBySessionId(model, sessionId);
 				return JsonWrapper.newDataInstance(model);

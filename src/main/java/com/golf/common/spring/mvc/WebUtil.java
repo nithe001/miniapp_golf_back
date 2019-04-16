@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.golf.common.MySessionContext;
+import com.golf.golf.common.security.UserModel;
+import com.golf.golf.common.security.WechatUserUtil;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.WebUtils;
@@ -207,4 +210,72 @@ public class WebUtil {
 			session.removeAttribute(key);
 		}
 	}
+
+	/**
+	 * 获取header中的sessionid
+	 */
+	public static String getSessionIdByCookie() {
+		return getRequest().getSession().getId();
+	}
+
+	/**
+	 * 通过sessionid获取session
+	 */
+	public static HttpSession getSessionById(String sessionId) {
+		MySessionContext myc= MySessionContext.getInstance();
+		HttpSession sess = myc.getSession(sessionId);
+		return sess;
+	}
+
+	/**
+	 * 通过sessionid获取session
+	 */
+	public static HttpSession getSessionById() {
+		String sessionId = WebUtil.getSessionIdByCookie();
+		HttpSession sess = getSessionById(sessionId);
+		return sess;
+	}
+
+	/**
+	 * 通过sessionid获取UserModel
+	 */
+	public static UserModel getUserModelBySessionId(){
+		String sessionId = WebUtil.getSessionIdByCookie();
+		HttpSession session = WebUtil.getSessionById(sessionId);
+		UserModel model = (UserModel)session.getAttribute(WechatUserUtil.USER_SESSION_NAME);
+		return model;
+	}
+
+	/**
+	 * 通过sessionid获取UserId
+	 */
+	public static Long getUserIdBySessionId(){
+		String sessionId = WebUtil.getSessionIdByCookie();
+		HttpSession session = WebUtil.getSessionById(sessionId);
+		UserModel model = (UserModel)session.getAttribute(WechatUserUtil.USER_SESSION_NAME);
+		if(model != null){
+			if(model.getUser() == null){
+				return model.getWechatUser().getWuiId();
+			}
+			return model.getUser().getUiId();
+		}
+		return null;
+	}
+
+	/**
+	 * 通过sessionid获取UserRealName
+	 */
+	public static String getUserNameBySessionId(){
+		String sessionId = WebUtil.getSessionIdByCookie();
+		HttpSession session = WebUtil.getSessionById(sessionId);
+		UserModel model = (UserModel)session.getAttribute(WechatUserUtil.USER_SESSION_NAME);
+		if(model != null){
+			if(model.getUser() == null){
+				return model.getWechatUser().getWuiNickName();
+			}
+			return model.getUser().getUiRealName();
+		}
+		return null;
+	}
+
 }

@@ -149,24 +149,6 @@ public class MatchJoinController {
 	}
 
     /**
-     * 赛长——获取报名用户列表
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getJoinUserList")
-    public JsonElement getJoinUserList(Long matchId) {
-        try {
-            List<UserInfo> userInfoList = matchService.getUserListByMatchId(matchId);
-            return JsonWrapper.newDataInstance(userInfoList);
-        } catch (Exception e) {
-            errmsg = "前台-报名-赛长获取报名用户列表时出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-    /**
      * 赛长——审核报名用户，将用户加入该组
      * @return
      */

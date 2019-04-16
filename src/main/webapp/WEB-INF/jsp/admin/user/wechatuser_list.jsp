@@ -43,39 +43,53 @@
                                     <thead>
                                     <tr>
                                         <th>序号</th>
+                                        <th>头像</th>
                                         <th>昵称</th>
                                         <th>openid</th>
                                         <th>真实姓名</th>
                                         <th>性别</th>
                                         <th>省份</th>
                                         <th>城市</th>
+                                        <th>用户类型</th>
                                         <th>关注时间</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
                                     </thead>
                                     <tbody>
+                                    <%--String select ="select wu.wui_u_id as wui_u_id,wu.wui_nick_name as wui_nick_name,wu.wui_openid as wui_openid," +--%>
+                                    <%--"u.ui_real_name as ui_real_name,wu.wui_sex as wui_sex,wu.wui_province as wui_province," +--%>
+                                    <%--"wu.wui_city as wui_city,wu.create_time as create_time ";--%>
                                     <c:forEach items="${pageInfo.items}" var="user" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
-                                            <%--select wu.wui_nick_name,wu.wui_openid,u.ui_real_name,wu.wui_sex,wu.wui_province,wu.wui_city,wu.create_time--%>
-                                            <td>${user[1]}</td>
-                                            <td>${user[2]}</td>
-                                            <td>${user[3]}</td>
-                                            <td>${user[4]}</td>
-                                            <td>${user[5]}</td>
-                                            <td>${user[6]}</td>
-                                            <td>${user[7]}</td>
+                                            <td><img src="${user.wui_headimg}" style="width:65px;height:65px;"></td>
+                                            <td>${user.wui_nick_name}</td>
+                                            <td>${user.wui_openid}</td>
+                                            <td>${user.ui_real_name}</td>
+                                            <td>${user.wui_sex}</td>
+                                            <td>${user.wui_province}</td>
+                                            <td>${user.wui_city}</td>
                                             <td>
-                                                <c:if test="${user[0] != null }">
-                                                    <a class="btn btn-success"
-                                                       href="admin/user/wechatUserEditUI?id=${user[0]}">
-                                                        <span class="glyphicon glyphicon-pencil"></span>查看
-                                                    </a>&nbsp;|
-                                                    <%--<a class="btn btn-success"
-                                                       href="admin/user/setAdmin?userId=${user[0]}">
-                                                        <span class="glyphicon glyphicon-pencil"></span>设为赛事管理员
-                                                    </a>--%>
+                                                <c:if test="${user.ui_type == 0 }">
+                                                    理事会
                                                 </c:if>
+                                                <c:if test="${user.ui_type == 1 }">
+                                                    委员会
+                                                </c:if>
+                                                <c:if test="${user.ui_type == 2 }">
+                                                    普通用户
+                                                </c:if>
+                                            </td>
+                                            <td>${user.create_time}</td>
+                                            <td>
+                                                <a class="btn btn-success"
+                                                   href="admin/user/wechatUserEditUI?wechatId=${user.wui_id}">
+                                                    <span class="glyphicon glyphicon-pencil"></span>查看
+                                                </a>&nbsp;|
+                                                <a class="btn btn-success"
+                                                   href="admin/user/setAdmin?userId=${user.wui_u_id}">
+                                                    <span class="glyphicon glyphicon-pencil"></span>设为赛事管理员
+                                                </a>
                                             </td>
                                         </tr>
                                     </c:forEach>

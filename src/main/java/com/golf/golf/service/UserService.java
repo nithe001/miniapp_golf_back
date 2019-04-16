@@ -1,18 +1,19 @@
 package com.golf.golf.service;
 
-import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
 import com.golf.common.IBaseService;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
+import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
@@ -20,7 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -54,7 +55,9 @@ public class UserService implements IBaseService {
      * @return
      */
     public UserInfo getUserById(Long userId){
-        return dao.get(UserInfo.class, userId);
+		UserInfo userInfo = dao.get(UserInfo.class, userId);
+		userInfo.setUiHeadimg(PropertyConst.DOMAIN + userInfo.getUiHeadimg());
+		return userInfo;
     }
 
     /**
@@ -64,72 +67,6 @@ public class UserService implements IBaseService {
      */
     public WechatUserInfo getWechatUserByOpenid(String openid){
         return dao.getWechatUserByOpenid(openid);
-    }
-
-    /**
-     * 根据用户手机号取得用户信息
-     * @param telNo 手机号码
-     * @return
-     */
-    public UserInfo getUserByTelNo(String telNo){
-        return dao.getUserByTelNo(telNo);
-    }
-
-	/**
-	 * 新增用户微信信息
-	 * @param wxMaUserInfo
-	 */
-	public WechatUserInfo saveWechatUser(WxMaUserInfo wxMaUserInfo) throws IOException {
-		String openid = wxMaUserInfo.getOpenId();
-		String headImgPath = PropertyConst.HEADIMG_PATH + File.separator +openid + ".png";
-		String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
-		if(StringUtils.isNotEmpty(wxMaUserInfo.getAvatarUrl())){
-			HttpUtil.downloadPicture(wxMaUserInfo.getAvatarUrl(), path,openid + ".png");
-		}
-		WechatUserInfo wechatUserInfo = new WechatUserInfo();
-		wechatUserInfo.setWuiOpenid(wxMaUserInfo.getOpenId());
-		wechatUserInfo.setWuiNickName(wxMaUserInfo.getNickName());
-		wechatUserInfo.setWuiSex(wxMaUserInfo.getGender());
-		wechatUserInfo.setWuiLanguage(wxMaUserInfo.getLanguage());
-		wechatUserInfo.setWuiCity(wxMaUserInfo.getCity());
-		wechatUserInfo.setWuiProvince(wxMaUserInfo.getProvince());
-		wechatUserInfo.setWuiCountry(wxMaUserInfo.getCountry());
-		wechatUserInfo.setWuiHeadimgurl(wxMaUserInfo.getAvatarUrl());
-		wechatUserInfo.setWuiHeadimg(headImgPath);
-		wechatUserInfo.setWuiUnionid(wxMaUserInfo.getUnionId());
-		wechatUserInfo.setWatermarkAppid(wxMaUserInfo.getWatermark().getAppid());
-		wechatUserInfo.setWatermarkTimestamp(wxMaUserInfo.getWatermark().getTimestamp());
-		wechatUserInfo.setWuiIsValid(1);
-		wechatUserInfo.setCreateTime(System.currentTimeMillis());
-		dao.save(wechatUserInfo);
-		return wechatUserInfo;
-	}
-
-    /**
-     * 更新微信用户信息
-     */
-    public void updateWechatUser(WxMaUserInfo wxMaUserInfo, WechatUserInfo dbWechatUserInfo) throws IOException {
-        String openid = wxMaUserInfo.getOpenId();
-		String headImgPath = PropertyConst.HEADIMG_PATH + File.separator +openid + ".png";
-		String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
-		if(StringUtils.isNotEmpty(wxMaUserInfo.getAvatarUrl())){
-			HttpUtil.downloadPicture(wxMaUserInfo.getAvatarUrl(), path,openid + ".png");
-		}
-		dbWechatUserInfo.setWuiOpenid(wxMaUserInfo.getOpenId());
-		dbWechatUserInfo.setWuiNickName(wxMaUserInfo.getNickName());
-		dbWechatUserInfo.setWuiSex(wxMaUserInfo.getGender());
-		dbWechatUserInfo.setWuiLanguage(wxMaUserInfo.getLanguage());
-		dbWechatUserInfo.setWuiCity(wxMaUserInfo.getCity());
-		dbWechatUserInfo.setWuiProvince(wxMaUserInfo.getProvince());
-		dbWechatUserInfo.setWuiCountry(wxMaUserInfo.getCountry());
-		dbWechatUserInfo.setWuiHeadimgurl(wxMaUserInfo.getAvatarUrl());
-		dbWechatUserInfo.setWuiHeadimg(headImgPath);
-		dbWechatUserInfo.setWuiUnionid(wxMaUserInfo.getUnionId());
-		dbWechatUserInfo.setWatermarkAppid(wxMaUserInfo.getWatermark().getAppid());
-		dbWechatUserInfo.setWatermarkTimestamp(wxMaUserInfo.getWatermark().getTimestamp());
-		dbWechatUserInfo.setWuiIsValid(1);
-		dbWechatUserInfo.setCreateTime(System.currentTimeMillis());
-        dao.update(dbWechatUserInfo);
     }
 
 
@@ -154,7 +91,7 @@ public class UserService implements IBaseService {
      * @param user
      */
     public void updateUser(UserInfo user) throws Exception {
-    	UserInfo db = dao.get(UserInfo.class,4L);
+    	UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
     	db.setUiTelNo(user.getUiTelNo());
 		db.setUiEmail(user.getUiEmail());
 		db.setUiCraduateSchool(user.getUiCraduateSchool());
@@ -167,6 +104,8 @@ public class UserService implements IBaseService {
 		db.setUiAddress(user.getUiAddress());
 		db.setUiHomeCourt(user.getUiHomeCourt());
 		db.setUiUpdateTime(System.currentTimeMillis());
+		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
+		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
         dao.update(db);
     }
 
@@ -187,17 +126,18 @@ public class UserService implements IBaseService {
 
 	//通过openId获取用户信息
 	public UserModel getUserInfoByOpenId(String openId) {
-		UserModel user = null;
+		UserModel userModel = null;
 		WechatUserInfo dbUser = dao.getUserInfoByOpenId(openId);
 		if(dbUser != null){
-			user = new UserModel();
-			user.setWechatUser(dbUser);
+			userModel = new UserModel();
+			userModel.setWechatUser(dbUser);
 			if(dbUser.getWuiId() != null){
 				UserInfo UserInfo = dao.get(UserInfo.class,dbUser.getWuiId());
-				user.setUser(UserInfo);
+				userModel.setUser(UserInfo);
 			}
 		}
-		return user;
+		userModel.setOpenId(openId);
+		return userModel;
 	}
 
 	/**
@@ -208,21 +148,6 @@ public class UserService implements IBaseService {
 		return dao.getCalendarListByUserId(cuClub);
 	}
 
-	public void updateWUser(WechatUserInfo userInfo, String nickName, String avatarUrl, String gender, String province, String city, String country) throws IOException {
-		userInfo.setWuiNickName(nickName);
-		String openid = userInfo.getWuiOpenid();
-		String headImgPath = PropertyConst.HEADIMG_PATH + File.separator +openid + ".png";
-		String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
-		if(StringUtils.isNotEmpty(avatarUrl)){
-			HttpUtil.downloadPicture(avatarUrl, path,openid + ".png");
-		}
-		userInfo.setWuiSex(gender);
-		userInfo.setWuiHeadimg(headImgPath);
-		userInfo.setWuiProvince(province);
-		userInfo.setWuiCity(city);
-		userInfo.setWuiCountry(country);
-		dao.update(userInfo);
-	}
 
     /**
      * 根据用户id获取用户信息
@@ -246,9 +171,8 @@ public class UserService implements IBaseService {
      * @return
      */
     public boolean userInfoIsOpen(Long userId) {
-		Long myId = UserUtil.getUserId();
         //是否是我的队友
-        Long teamId = dao.getIsMyTeammate(1L,userId);
+        Long teamId = dao.getIsMyTeammate(WebUtil.getUserIdBySessionId(),userId);
         if(teamId != null){
             TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
             if(teamInfo != null && teamInfo.getTiInfoOpenType() == 1){
@@ -257,4 +181,118 @@ public class UserService implements IBaseService {
         }
         return false;
     }
+
+	/**
+	 * 保存/更新 微信用户信息
+	 * @return
+	 */
+	public void saveOrUpdateWechatUserInfo(String openid, String userDataStr) throws IOException {
+//		Session登录
+		HttpSession session = WebUtil.getSessionById();
+		UserModel userModel = WebUtil.getUserModelBySessionId();
+		if(userModel == null){
+			userModel = new UserModel();
+		}
+		userModel.setOpenId(openid);
+
+		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openid);
+		UserInfo userInfo = null;
+		if(wechatUserInfo.getWuiUId() != null){
+			userInfo = dao.get(UserInfo.class, wechatUserInfo.getWuiUId());
+		}
+		if(wechatUserInfo != null){
+			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+			wechatUserInfo.setWuiOpenid(openid);
+			wechatUserInfo.setWuiNickName(jsonObject.get("nickName").toString());
+			String gender = jsonObject.get("gender").toString();
+			if("1".equals(gender)){
+				wechatUserInfo.setWuiSex("男");
+			}else if("0".equals(gender)){
+				wechatUserInfo.setWuiSex("女");
+			}else{
+				wechatUserInfo.setWuiSex("未知");
+			}
+			wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
+			wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
+			wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
+			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
+
+			//下载头像
+			String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
+			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
+			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
+				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
+			}
+			wechatUserInfo.setWuiHeadimg(headImgPath);
+			wechatUserInfo.setWuiIsValid(1);
+			wechatUserInfo.setCreateTime(System.currentTimeMillis());
+
+			//创建一条用户信息
+			saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
+			userModel.setUser(userInfo);
+			wechatUserInfo.setWuiUId(userInfo.getUiId());
+			dao.update(wechatUserInfo);
+			userModel.setWechatUser(wechatUserInfo);
+		}else{
+			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+			wechatUserInfo = new WechatUserInfo();
+			wechatUserInfo.setWuiOpenid(openid);
+			wechatUserInfo.setWuiNickName(jsonObject.get("nickName").toString());
+			String gender = jsonObject.get("gender").toString();
+			if("1".equals(gender)){
+				wechatUserInfo.setWuiSex("男");
+			}else if("0".equals(gender)){
+				wechatUserInfo.setWuiSex("女");
+			}else{
+				wechatUserInfo.setWuiSex("未知");
+			}
+			wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
+			wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
+			wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
+			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
+
+			//下载头像
+			String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
+			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
+			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
+				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
+			}
+			wechatUserInfo.setWuiHeadimg(headImgPath);
+			wechatUserInfo.setWuiIsValid(1);
+			wechatUserInfo.setCreateTime(System.currentTimeMillis());
+
+			//创建一条用户信息
+			saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
+			userModel.setUser(userInfo);
+			wechatUserInfo.setWuiUId(userInfo.getUiId());
+			dao.save(wechatUserInfo);
+
+			userModel.setWechatUser(wechatUserInfo);
+		}
+		//登录
+		session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
+	}
+
+	private void saveOrUpdateUserInfo(UserInfo userInfo, String openid, WechatUserInfo wechatUserInfo) {
+		if(wechatUserInfo.getWuiUId() == null){
+			userInfo = new UserInfo();
+		}
+		userInfo.setUiOpenId(openid);
+		userInfo.setUiNickName(wechatUserInfo.getWuiNickName());
+		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimg());
+		userInfo.setUiSex(wechatUserInfo.getWuiSex());
+		if(wechatUserInfo.getWuiUId() == null){
+			//普通用户
+			userInfo.setUiType(UserTypeEnum.PT.ordinal());
+			userInfo.setUiCreateTime(System.currentTimeMillis());
+			userInfo.setUiCreateUserId(WebUtil.getUserIdBySessionId());
+			userInfo.setUiCreateUserName(WebUtil.getUserNameBySessionId());
+			dao.save(userInfo);
+		}else{
+			userInfo.setUiUpdateTime(System.currentTimeMillis());
+			userInfo.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
+			userInfo.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+			dao.update(userInfo);
+		}
+	}
 }

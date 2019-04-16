@@ -3,19 +3,17 @@ package com.golf.golf.service;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.common.util.TimeUtil;
+import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.bean.MatchGroupBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
 import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
-import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +108,7 @@ public class MatchService implements IBaseService {
 		//是否是赛长
 		SearchBean searchBean = new SearchBean();
 		searchBean.addParpField("matchId", matchId);
-		searchBean.addParpField("userId", 4L);
+		searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
 		Long captainCount = matchDao.getIsCaptain(searchBean);
 		Boolean isCaptain = false;
 		if(captainCount > 0){
@@ -129,7 +127,7 @@ public class MatchService implements IBaseService {
 	 * @param map
 	 * @param key
 	 */
-	private String getName(Map<String, Object> map, String key){
+	public String getName(Map<String, Object> map, String key){
 		if(map == null || map.get(key) == null){
 			return null;
 		}else{
@@ -142,7 +140,7 @@ public class MatchService implements IBaseService {
 	 * @param map
 	 * @param key
 	 */
-	private Long getLongValue(Map<String, Object> map, String key){
+	public Long getLongValue(Map<String, Object> map, String key){
 		if(map == null || map.get(key) == null){
 			return null;
 		}else{
@@ -155,7 +153,7 @@ public class MatchService implements IBaseService {
 	 * @param map
 	 * @param key
 	 */
-	private Integer getIntegerValue(Map<String, Object> map, String key){
+	public Integer getIntegerValue(Map<String, Object> map, String key){
 		if(map == null || map.get(key) == null){
 			return 0;
 		}else{
@@ -412,12 +410,11 @@ public class MatchService implements IBaseService {
 	}
 
     /**
-     * 赛长——获取报名用户列表
+     * 赛长——本组用户列表
      * @return
      */
-    public List<UserInfo> getUserListByMatchId(Long matchId) {
-    	return null;
-//       return matchDao.getUserListByMatchId(matchId,1);
+    public List<Map<String, Object>> getUserListByMatchIdGroupId(Long matchId, Long groupId) {
+		return matchDao.getUserListByMatchIdGroupId(matchId, groupId);
     }
 
     /**
@@ -471,7 +468,7 @@ public class MatchService implements IBaseService {
 	 * 单练——开始记分——保存数据
 	 * @return
 	 */
-	public void saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
+	public Long saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
 		MatchInfo matchInfo = new MatchInfo();
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if(parkInfo != null){
@@ -484,9 +481,10 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiDigest(digest);
 		matchInfo.setMiJoinOpenType(3);
 		matchInfo.setCreateTimeStr(System.currentTimeMillis());
-//		matchInfo.setMiCreateUserId(UserUtil.getUserId());
-//		matchInfo.setMiCreateUserName(UserUtil.getShowName());
-		matchDao.save(matchInfo);
+		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
+		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
+//		matchDao.save(matchInfo);
+		return matchInfo.getMiId();
 	}
 
 	/**
@@ -494,7 +492,7 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public MatchInfo getMySinglePlay() {
-		Long userId = 4L;
+		Long userId = WebUtil.getUserIdBySessionId();
 		return matchDao.getMySinglePlay(userId);
 	}
 
@@ -511,8 +509,8 @@ public class MatchService implements IBaseService {
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
 		group.setMgGroupName("第"+max+"组");
-		group.setMgCreateUserId(4L);
-		group.setMgCreateUserName("wangwu");
+		group.setMgCreateUserId(WebUtil.getUserIdBySessionId());
+		group.setMgCreateUserName(WebUtil.getUserNameBySessionId());
 		group.setMgCreateTime(System.currentTimeMillis());
 		matchDao.save(group);
 	}
@@ -553,11 +551,39 @@ public class MatchService implements IBaseService {
 					matchUserGroupMapping.setMugmUserType(0);
 					matchUserGroupMapping.setMugmUserId(Long.parseLong(userId));
 					matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
-					matchUserGroupMapping.setMugmCreateUserId(4L);
-					matchUserGroupMapping.setMugmCreateUserName("wangwu");
+					matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
+					matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
 					matchDao.save(matchUserGroupMapping);
 				}
 			}
 		}
+	}
+
+	/**
+	 * 比赛详情——保存——将用户从该分组删除
+	 * @return
+	 */
+	public void delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+		if(StringUtils.isNotEmpty(userIds)){
+			userIds = userIds.replace("[","");
+			userIds = userIds.replace("]","");
+			userIds = userIds.replace("\"","");
+			String[] uIds = userIds.split(",");
+			for(String userId :uIds){
+				if(StringUtils.isNotEmpty(userId)){
+					matchDao.delUserByMatchIdGroupId(matchId, groupId, Long.parseLong(userId));
+				}
+			}
+		}
+	}
+
+	/**
+	 * 获取参赛球队列表
+	 * @return
+	 */
+	public List<Map<String, Object>> getteamListByMatchId(Long matchId) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+		return matchDao.getApplyUserListByMatchId(matchId,teamIdList);
 	}
 }

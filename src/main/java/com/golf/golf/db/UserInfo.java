@@ -1,5 +1,7 @@
 package com.golf.golf.db;
 
+import com.golf.common.util.TimeUtil;
+
 import javax.persistence.*;
 import static javax.persistence.GenerationType.IDENTITY;
 

@@ -4,6 +4,7 @@ import com.golf.common.Const;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.TeamService;
@@ -113,26 +114,6 @@ public class TeamManageController {
 		return JsonWrapper.newDataInstance(pageInfo);
 	}
 
-
-
-
-	/**
-	 * 获取球队详情
-	 * @return
-	 */
-	@RequestMapping("getMatchDetail")
-	public String getMatchDetail(ModelMap mm, Long matchId) {
-		try {
-//			MatchInfo matchInfo = t.getMatchInfoById(matchId);
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("前台-获取球队详情出错。" + e);
-			return "admin/error";
-		}
-		return "activities/detail";
-	}
-
-
 	/**
 	 * 创建球队
 	 * @return
@@ -144,7 +125,7 @@ public class TeamManageController {
 			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
-				teamInfoBean.setTiLogo(PropertyConst.DOMAIN+logoPath);
+				teamInfoBean.setTiLogo(PropertyConst.DOMAIN + logoPath);
 				teamService.saveOrUpdateTeamInfo(teamInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();

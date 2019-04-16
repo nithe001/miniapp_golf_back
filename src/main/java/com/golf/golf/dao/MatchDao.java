@@ -4,7 +4,6 @@ import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.*;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -34,14 +33,10 @@ public class MatchDao extends CommonDao {
 				"m.mi_apply_end_time as mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end ");
 		hql.append("FROM match_info AS m ");
-		hql.append("LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id ");
-		if((Integer)parp.get("type") != 3){
-			hql.append(" and j.mjwi_type = 1) ");
-		}else{
-			hql.append(" ) ");
-		}
-
+		hql.append("LEFT JOIN match_join_watch_info AS j ON m.mi_id = j.mjwi_match_id ");
 		hql.append("WHERE 1=1 ");
+		hql.append(" and j.mjwi_type = 1 ");
+
 		if((Integer)parp.get("type") == 1){
 			//我参加的比赛
 			hql.append("AND m.mi_id IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 WHERE j1.mjwi_user_id = :userId) ");
@@ -128,7 +123,7 @@ public class MatchDao extends CommonDao {
         StringBuilder hql = new StringBuilder();
         hql.append("SELECT u.uiId as uiId,u.uiHeadimg as uiHeadimg,u.uiRealName as uiRealName ");
         hql.append("FROM MatchUserGroupMapping AS g,UserInfo as u WHERE 1=1 ");
-        hql.append("AND g.mugmGroupId = :groupId AND g.mugmUserId = u.uiId ");
+        hql.append("AND g.mugmGroupId = :groupId AND g.mugmUserId = u.uiId and g.mugmUserType = 0 ");
         hql.append("ORDER BY g.mugmGroupId ASC,g.mugmCreateTime DESC ");
 
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(), parp, 0, 4, Transformers.ALIAS_TO_ENTITY_MAP);
@@ -353,5 +348,41 @@ public class MatchDao extends CommonDao {
 		sql.append("ORDER BY tum.tum_id ");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
+	}
+
+	/**
+	 * 赛长——本组用户列表
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserListByMatchIdGroupId(Long matchId, Long groupId) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId", matchId);
+		parp.put("groupId", groupId);
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiHeadimg as uiHeadimg ");
+		sql.append("FROM MatchUserGroupMapping AS m,UserInfo as u ");
+		sql.append("WHERE m.mugmUserId = u.uiId ");
+		sql.append("and m.mugmMatchId = :matchId ");
+		sql.append("and m.mugmGroupId = :groupId ");
+		sql.append("ORDER BY m.mugmCreateTime DESC");
+		List<Map<String, Object>> list = dao.createQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 比赛详情——保存——将用户从该分组删除
+	 * @return
+	 */
+	public void delUserByMatchIdGroupId(Long matchId, Long groupId, Long userId) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId", matchId);
+		parp.put("groupId", groupId);
+		parp.put("userId", userId);
+		StringBuilder sql = new StringBuilder();
+		sql.append("DELETE FROM MatchUserGroupMapping ");
+		sql.append("WHERE mugmUserId = :userId ");
+		sql.append("and mugmMatchId = :matchId ");
+		sql.append("and mugmGroupId = :groupId ");
+		dao.executeHql(sql.toString(),parp);
 	}
 }

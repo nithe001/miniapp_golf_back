@@ -25,13 +25,10 @@ public class UserDao extends CommonDao {
      * @return
      */
     public WechatUserInfo getWechatUserByOpenid(String openid){
-
         Map<String, String> parp = new HashMap<>();
         parp.put("openid", openid);
-
         StringBuilder hql = new StringBuilder();
-        hql.append("FROM WechatUserInfo WHERE openid = :openid");
-
+        hql.append("FROM WechatUserInfo WHERE wuiOpenid = :openid");
         return dao.findOne(hql.toString(), parp);
 
     }
@@ -88,7 +85,7 @@ public class UserDao extends CommonDao {
 		Map<String, Object> parp = new HashMap<String, Object>();
 		parp.put("openId", openId);
 		StringBuffer hql = new StringBuffer();
-		hql.append("FROM WechatUserInfo WHERE openid = :openId");
+		hql.append("FROM WechatUserInfo WHERE wuiOpenid = :openId");
 		List<WechatUserInfo> userList = dao.createQuery(hql.toString(), parp);
 		if(userList != null && userList.size() > 0){
 			user = userList.get(0);

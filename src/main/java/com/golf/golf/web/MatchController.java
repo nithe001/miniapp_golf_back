@@ -5,8 +5,11 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.db.*;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.TeamService;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -73,8 +77,28 @@ public class MatchController {
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
+
 		return JsonWrapper.newDataInstance(pageInfo);
 	}
+
+	/**
+	 * 获取参赛球队列表
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getJoinTeamList")
+	public JsonElement getMatchDetail(Long matchId) {
+		try {
+			List<Map<String, Object>> teamList = matchService.getteamListByMatchId(matchId);
+			return JsonWrapper.newDataInstance(teamList);
+		} catch (Exception e) {
+			e.printStackTrace();
+			errmsg = "前台-获取参赛球队列表出错。";
+			logger.error(errmsg+ e );
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 	/**
 	 * 创建比赛
@@ -87,7 +111,7 @@ public class MatchController {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
-				matchInfoBean.setMiLogo(PropertyConst.DOMAIN+logoPath);
+				matchInfoBean.setMiLogo(PropertyConst.DOMAIN + logoPath);
 				matchService.saveMatchInfo(matchInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();
@@ -174,13 +198,19 @@ public class MatchController {
 
 	/**
 	 * 比赛详情——赛长获取已经报名的用户
+	 * @param type 2:添加组员（获取已经报名的用户）  1 删除组员（获取本组用户）
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getApplyUserByMatchId")
-	public JsonElement getApplyUserByMatchId(Long matchId) {
+	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId, Integer type) {
 		try {
-			List<Map<String, Object>> applyUserList = matchService.getApplyUserByMatchId(matchId);
+			List<Map<String, Object>> applyUserList = null;
+			if(type == 0){
+				applyUserList = matchService.getApplyUserByMatchId(matchId);
+			}else{
+				applyUserList = matchService.getUserListByMatchIdGroupId(matchId, groupId);
+			}
 			return JsonWrapper.newDataInstance(applyUserList);
 		} catch (Exception e) {
 			errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
@@ -189,6 +219,7 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
 
 	/**
 	 * 比赛详情——保存——将用户加入该分组
@@ -208,10 +239,23 @@ public class MatchController {
 		}
 	}
 
-
-
-
-
+	/**
+	 * 比赛详情——保存——将用户从该分组删除
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("delUserByMatchIdGroupId")
+	public JsonElement delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+		try {
+			matchService.delUserByMatchIdGroupId(matchId,groupId,userIds);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-比赛详情—将用户删除该分组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 
     /**
@@ -382,8 +426,8 @@ public class MatchController {
 	@RequestMapping("saveSinglePlay")
 	public JsonElement saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
 		try {
-			matchService.saveSinglePlay(parkName, playTime, peopleNum, digest);
-			return JsonWrapper.newSuccessInstance();
+			Long singleMatchId = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest);
+			return JsonWrapper.newDataInstance(singleMatchId);
 		} catch (Exception e) {
 			errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();

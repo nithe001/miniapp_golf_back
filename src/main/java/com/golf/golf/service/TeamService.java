@@ -3,18 +3,17 @@ package com.golf.golf.service;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.bean.MatchUserGroupMappingBean;
+import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.TeamDao;
-import com.golf.golf.db.*;
-import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
+import com.golf.golf.db.ParkPartition;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.TeamUserMapping;
+import com.golf.golf.db.UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -182,18 +181,18 @@ public class TeamService implements IBaseService {
 	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean) {
 		if(teamInfoBean.getTiId() == null){
 			teamInfoBean.setTiCreateTime(System.currentTimeMillis());
-			teamInfoBean.setTiCreateUserId(4L);
-			teamInfoBean.setTiCreateUserName("wangwu");
+			teamInfoBean.setTiCreateUserId(WebUtil.getUserIdBySessionId());
+			teamInfoBean.setTiCreateUserName(WebUtil.getUserNameBySessionId());
 			Long teamId = teamDao.save(teamInfoBean);
 			//向球队用户表新增一条记录
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
 			teamUserMapping.setTumTeamId(teamId);
-			teamUserMapping.setTumUserId(4L);
+			teamUserMapping.setTumUserId(WebUtil.getUserIdBySessionId());
 			teamUserMapping.setTumUserType(1);
 			teamUserMapping.setTumType(1);
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-			teamUserMapping.setTumCreateUserId(4L);
-			teamUserMapping.setTumCreateUserName("wangwu");
+			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
+			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
@@ -208,9 +207,9 @@ public class TeamService implements IBaseService {
 			db.setTiUserInfoType(teamInfoBean.getTiUserInfoType());
 			db.setTiMatchResultAuditType(teamInfoBean.getTiMatchResultAuditType());
 			db.setTiUpdateTime(System.currentTimeMillis());
-//			db.setTiUpdateUserId(UserUtil.getUserId());
-//			db.setTiUpdateUserName(UserUtil.getShowName());
-//			teamDao.update(db);
+			db.setTiUpdateUserId(WebUtil.getUserIdBySessionId());
+			db.setTiUpdateUserName(WebUtil.getUserNameBySessionId());
+			teamDao.update(db);
 		}
 
 	}

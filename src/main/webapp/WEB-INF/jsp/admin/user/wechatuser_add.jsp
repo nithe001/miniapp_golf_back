@@ -3,7 +3,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-   	<title>新增前台用户</title>
+   	<title>新增小程序用户</title>
 	<jsp:include page="../include/commonInclude.jsp"></jsp:include>	
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -15,10 +15,10 @@
 		
 		<div class="content-wrapper">
 			<section class="content-header">
-				<h1>新增前台用户</h1>
+				<h1>新增小程序用户</h1>
 		        <ol class="breadcrumb">
-		           <li><a href="admin/user/wechatUserList"><i class="fa fa-dashboard"></i>前台用户列表</a></li>
-		           <li class="active">新增前台用户</li>
+		           <li><a href="admin/user/wechatUserList"><i class="fa fa-dashboard"></i>小程序用户列表</a></li>
+		           <li class="active">新增小程序用户</li>
 		        </ol>
 		    </section>
 		    <section class="content">

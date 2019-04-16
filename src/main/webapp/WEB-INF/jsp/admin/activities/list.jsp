@@ -31,9 +31,22 @@
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="keyword"
                                                name="keyword" placeholder="标题" value="${keyword }"/>
-                                        状态：
-                                        <select class="form-control" name="isDel">
+                                        类型：
+                                        <select class="form-control" name="type">
                                             <option value="">全部</option>
+                                            <option value="1" <c:if test='${type == 1}'>selected="selected"</c:if>>
+                                                团队/多人赛
+                                            </option>
+                                            <option value="0" <c:if test='${type == 0}'>selected="selected"</c:if>>
+                                                单练
+                                            </option>
+                                        </select>
+                                        状态：
+                                        <select class="form-control" name="state">
+                                            <option value="">全部</option>
+                                            <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
+                                                报名中
+                                            </option>
                                             <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
                                                 进行中
                                             </option>
@@ -57,8 +70,19 @@
                                     <tr>
                                         <th>序号</th>
                                         <th>标题</th>
+                                        <th>类型</th>
+                                        <th>所在球场</th>
+                                        <th>前9洞</th>
+                                        <th>后9洞</th>
+                                        <th>观战范围</th>
+                                        <th>参赛范围</th>
+                                        <%--（2 0:个人 、1:双人 1 0:比杆 、1:比洞）--%>
+                                        <th>赛制</th>
+                                        <th>开球时间</th>
                                         <th>创建时间</th>
                                         <th>创建人</th>
+                                        <th>更新时间</th>
+                                        <th>更新人</th>
                                         <th>状态</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
@@ -67,19 +91,21 @@
                                     <c:forEach items="${pageInfo.items}" var="matchInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
-                                            <td>${matchInfo.wcTitle}</td>
-                                            <td>${matchInfo.wcCreateTime}</td>
-                                            <td>${matchInfo.wcCreateUserName}</td>
-                                            <td>${matchInfo.state}</td>
+                                            <td>${matchInfo.miTitle}</td>
+                                            <td><c:if test="${matchInfo.miType == 0}">单练</c:if>
+                                                <c:if test="${matchInfo.miType == 1}">团队/多人赛</c:if></td>
+                                            <td>${matchInfo.miCreateTime}</td>
+                                            <td>${matchInfo.miCreateUserName}</td>
+                                            <%--<td>${matchInfo.state}</td>--%>
                                             <td>
-                                                <a class="btn btn-success" href="admin/activities/editMatchUI?matchId=${calendar[0]}">
+                                                <a class="btn btn-success" href="admin/activities/editMatchUI?matchId=${matchInfo.miId}">
                                                     <span class="glyphicon glyphicon-pencil"></span>编辑
                                                 </a>&nbsp;
-                                                <a class="btn btn-success" href="admin/activities/delMatch?matchId=${calendar[0]}">
-                                                    <span class="glyphicon glyphicon-pencil"></span>
-                                                    <c:if test="${matchInfo.wcIsDel == null || matchInfo.wcIsDel == 0}">删除</c:if>
-                                                    <c:if test="${matchInfo.wcIsDel == 1 }">恢复</c:if>
-                                                </a>
+                                                <%--<a class="btn btn-success" href="admin/activities/delMatch?matchId=${calendar[0]}">--%>
+                                                    <%--<span class="glyphicon glyphicon-pencil"></span>--%>
+                                                    <%--<c:if test="${matchInfo.miIsDel == null || matchInfo.miIsDel == 0}">删除</c:if>--%>
+                                                    <%--<c:if test="${matchInfo.miIsDel == 1 }">恢复</c:if>--%>
+                                                <%--</a>--%>
                                             </td>
                                         </tr>
                                     </c:forEach>

@@ -1,14 +1,14 @@
 package com.golf.golf.web.admin;
 
-import com.golf.golf.db.AdminUser;
-import com.golf.golf.db.UserInfo;
-import com.google.gson.JsonElement;
 import com.golf.common.Const;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
+import com.golf.golf.db.AdminUser;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.admin.AdminUserService;
+import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,7 @@ public class AdminUserController {
 		if (rowsPerPage == null || rowsPerPage.intValue() == 0) {
 			rowsPerPage = Const.ROWSPERPAGE;
 		}
-		POJOPageInfo pageInfo = new POJOPageInfo<Object[]>(rowsPerPage , page);
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String,Object>>(rowsPerPage , page);
 		try {
 			SearchBean searchBean = new SearchBean();
 			if (StringUtils.isNotEmpty(keyword)) {
@@ -256,15 +256,15 @@ public class AdminUserController {
 	/**
 	 * 编辑前台用户init
 	 * @param mm
-	 * @param id
+	 * @param wechatId
 	 * @return
 	 */
 	@RequestMapping("wechatUserEditUI")
-	public String wechatUserEditUI(ModelMap mm, Long id){
+	public String wechatUserEditUI(ModelMap mm, Long wechatId){
 		try{
-			Map<String, Object> parp = logic.getWechatUserById(id);
+			Map<String, Object> parp = logic.getWechatUserById(wechatId);
 			mm.addAttribute("wechatUser",parp.get("wechatUser"));
-			mm.addAttribute("cmUser",parp.get("cmUser"));
+			mm.addAttribute("userInfo",parp.get("userInfo"));
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("获取前台用户信息时出错。"+ e );

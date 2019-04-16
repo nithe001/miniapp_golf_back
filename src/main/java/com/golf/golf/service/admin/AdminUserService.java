@@ -10,6 +10,7 @@ import com.golf.golf.dao.admin.AdminUserDao;
 import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
+import com.golf.golf.service.MatchService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class AdminUserService implements IBaseService {
 	
     @Autowired
     private AdminUserDao dao;
+    @Autowired
+	private MatchService matchService;
+
 
     /**
      * 管理员用户列表
@@ -55,10 +59,10 @@ public class AdminUserService implements IBaseService {
 	}
 
 	private void updatePageInfo(POJOPageInfo pageInfo) {
-		for(Object[] obj:(List<Object[]>)pageInfo.getItems()){
-//			select wu.wui_nick_name,wu.wui_openid,u.ui_real_name,wu.wui_sex,wu.wui_province,wu.wui_city,wu.create_time
-			if(obj[7] != null){
-				obj[7] = TimeUtil.longToString(Long.parseLong(obj[6].toString()), TimeUtil.FORMAT_DATETIME_HH_MM);
+		for(Map<String, Object> result:(List<Map<String, Object>>)pageInfo.getItems()){
+			Long createTime = matchService.getLongValue(result,"create_time");
+			if(createTime != null){
+				result.put("create_time",TimeUtil.longToString(createTime, TimeUtil.FORMAT_DATETIME_HH_MM));
 			}
 		}
 	}
@@ -125,13 +129,15 @@ public class AdminUserService implements IBaseService {
 		dao.save(user);
 	}
 
-	//获取前台用户信息+微信信息
-	public Map<String, Object> getWechatUserById(Long id) {
+	//获取前台用户微信信息 + 个人信息
+	public Map<String, Object> getWechatUserById(Long wechatId) {
 		Map<String, Object> parp = new HashMap<String,Object>();
-		WechatUserInfo wechatUser = dao.getWechatUserByUserId(id);
-		UserInfo UserInfo = dao.get(UserInfo.class, id);
+		WechatUserInfo wechatUser = dao.get(WechatUserInfo.class,wechatId);
+		if(wechatUser.getWuiUId() != null){
+			UserInfo UserInfo = dao.get(UserInfo.class, wechatUser.getWuiUId());
+			parp.put("userInfo",UserInfo);
+		}
 		parp.put("wechatUser",wechatUser);
-		parp.put("UserInfo",UserInfo);
 		return parp;
 	}
 

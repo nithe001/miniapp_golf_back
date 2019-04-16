@@ -7,6 +7,7 @@ import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -74,13 +75,16 @@ public class AdminUserDao extends CommonDao {
 		}
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
-			pageInfo.setItems(new ArrayList<Object[]>());
+			pageInfo.setItems(new ArrayList<Map<String, Object>>());
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		String select ="select wu.wui_u_id,wu.wui_nick_name,wu.wui_openid,u.ui_real_name,wu.wui_sex,wu.wui_province,wu.wui_city,wu.create_time ";
-		String group ="group by wu.wui_id order by wu.create_time";
-		List<Object[]> list = dao.createSQLQuery(select+hql.toString()+group, parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		String select ="select wu.wui_id as wui_id,wu.wui_headimg as wui_headimg,wu.wui_nick_name as wui_nick_name,wu.wui_openid as wui_openid," +
+				"u.ui_real_name as ui_real_name,wu.wui_sex as wui_sex,wu.wui_province as wui_province," +
+				"wu.wui_city as wui_city,wu.create_time as create_time, u.ui_type as ui_type ";
+		hql.append("group by wu.wui_id order by wu.create_time ");
+		List<Map<String, Object>> list = dao.createSQLQuery(select+hql.toString(),parp, pageInfo.getStart(),
+														pageInfo.getRowsPerPage(), Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
 		return pageInfo;

@@ -1,6 +1,7 @@
 package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
+import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
@@ -32,46 +33,29 @@ public class UserController {
 			.getLogger(UserController.class);
 
 	@Autowired
-	private UserService service;
+	private UserService userService;
 	@Autowired
 	protected WxMpService wxMpService;
 
-	/**
-	 * 登录Init
-	 *
-	 * @return
-	 */
-	@RequestMapping("loginInit")
-	public String loginInit() {
-		return "user/login";
-	}
 
 
 	/**
-	 * 注册Init
-	 *
+	 * 保存/更新 微信用户信息
 	 * @return
 	 */
-	@RequestMapping("registerInit")
-	public String register() {
-		return "user/register";
-	}
-
-	/**
-	 * 注册
-	 *
-	 * @return
-	 */
-	@RequestMapping("register")
-	public String register(UserInfo user, String captcha) {
+	@ResponseBody
+	@RequestMapping(value = "saveUserInfo")
+	public JsonElement saveUserInfo(String openid, String userDataStr) {
 		try {
-			service.saveUser(user,captcha);
+			if(StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(userDataStr)){
+				userService.saveOrUpdateWechatUserInfo(openid, userDataStr);
+			}
+			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("注册时出错。", e);
-			return "error";
+			logger.error("保存微信用户信息时出错。" + e);
+			return JsonWrapper.newErrorInstance("保存微信用户信息时出错");
 		}
-		return "redirect:userManage";
 	}
 
 	/**
@@ -82,7 +66,7 @@ public class UserController {
 	@RequestMapping("getUserInfo")
 	public JsonElement getUserInfo() {
 		try {
-			UserInfo userInfo = service.getUserById(4L);
+			UserInfo userInfo = userService.getUserById(WebUtil.getUserIdBySessionId());
 			return JsonWrapper.newDataInstance(userInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -102,7 +86,7 @@ public class UserController {
 			if(StringUtils.isNotEmpty(userInfo)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
 				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
-				service.updateUser(userInfoBean);
+				userService.updateUser(userInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -122,10 +106,10 @@ public class UserController {
 	public JsonElement getUserInfoById(Long userId) {
 		try {
 			Map<String, Object> result = new HashMap<>();
-			UserInfo userInfo = service.getUserById(userId);
+			UserInfo userInfo = userService.getUserById(userId);
 			result.put("userInfo",userInfo);
-			boolean isOpen = service.userInfoIsOpen(userId);
-			result.put("isOpen",true);
+			boolean isOpen = userService.userInfoIsOpen(userId);
+			result.put("isOpen",isOpen);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -143,8 +127,8 @@ public class UserController {
 	public String myClub(ModelMap mm) {
 		try {
 			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = service.getUserById(userModel.getUser().getUiId());
-			List<MatchInfo> calendarList = service.getCalendarListByUserId(null);
+			UserInfo user = userService.getUserById(userModel.getUser().getUiId());
+			List<MatchInfo> calendarList = userService.getCalendarListByUserId(null);
 			mm.addAttribute("calendarList", calendarList);
 			mm.addAttribute("user", user);
 		} catch (Exception e) {

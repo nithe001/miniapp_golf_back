@@ -27,27 +27,27 @@ public class AdminMatchDao extends CommonDao {
 	public POJOPageInfo matchList(SearchBean searchBean, POJOPageInfo pageInfo){
 		Map<String, Object> parp = searchBean.getParps();
 		StringBuilder hql = new StringBuilder();
-		hql.append("FROM MatchInfo AS t WHERE 1=1 ");
+		hql.append("FROM MatchInfo AS m WHERE 1=1 ");
 		//状态 进行中、已结束
 		if(parp.get("state") != null){
 			hql.append("AND c.wcState = :state ");
 		}
 		if(parp.get("keywords") != null){
-			hql.append("AND c.wcTitle LIKE :keyword ");
+			hql.append("AND c.miTitle LIKE :keyword ");
 		}
-		if(parp.get("isOpen") != null){
-			hql.append("AND c.wcIsOpen = :isOpen ");
+		if(parp.get("type") != null){
+			hql.append("AND m.miType = :type ");
 		}
-		if(parp.get("isDel") != null){
-			hql.append("AND c.wcIsDel = :isDel ");
-		}
+//		if(parp.get("isDel") != null){
+//			hql.append("AND m.wcIsDel = :isDel ");
+//		}
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
 			pageInfo.setItems(new ArrayList<MatchInfo>());
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append("RDER BY c.wcCreateTime DESC ");
+		hql.append("ORDER BY m.miCreateTime DESC ");
 		List<MatchInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
