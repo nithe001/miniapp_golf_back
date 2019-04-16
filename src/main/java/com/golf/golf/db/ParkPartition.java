@@ -8,7 +8,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 public class ParkPartition {
 	private Long ppId;
 	private Long ppPId;
-	private String ppZoneName;
+	private String ppName;
 	private Integer ppHoleNum;
 	private Integer ppHoleStandardRod;
 
@@ -19,10 +19,10 @@ public class ParkPartition {
 	}
 
 	/** full constructor */
-	public ParkPartition(Long ppPId, String ppZoneName, Integer ppHoleNum,
+	public ParkPartition(Long ppPId, String ppName, Integer ppHoleNum,
 						 Integer ppHoleStandardRod) {
 		this.ppPId = ppPId;
-		this.ppZoneName = ppZoneName;
+		this.ppName = ppName;
 		this.ppHoleNum = ppHoleNum;
 		this.ppHoleStandardRod = ppHoleStandardRod;
 	}
@@ -48,13 +48,13 @@ public class ParkPartition {
 		this.ppPId = ppPId;
 	}
 
-	@Column(name = "pp_zone_name", length = 128)
-	public String getPpZoneName() {
-		return this.ppZoneName;
+	@Column(name = "pp_name", length = 128)
+	public String getppName() {
+		return this.ppName;
 	}
 
-	public void setPpZoneName(String ppZoneName) {
-		this.ppZoneName = ppZoneName;
+	public void setPpName(String ppName) {
+		this.ppName = ppName;
 	}
 
 	@Column(name = "pp_hole_num")

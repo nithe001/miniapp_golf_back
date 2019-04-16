@@ -67,7 +67,7 @@ public class TeamManageController {
             	//所有球队
                 pageInfo = teamService.getTeamList(searchBean, pageInfo);
             }else if(type >= 1){
-                searchBean.addParpField("userId", 4L);
+                searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
 				searchBean.addParpField("type", type);
                 pageInfo = teamService.getMyTeamList(searchBean, pageInfo);
             }
@@ -101,9 +101,7 @@ public class TeamManageController {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
-
-			searchBean.addParpField("userId", 4L);
-
+			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
 			pageInfo = teamService.getMyCreateTeamList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -125,7 +123,7 @@ public class TeamManageController {
 			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
-				teamInfoBean.setTiLogo(PropertyConst.DOMAIN + logoPath);
+				teamInfoBean.setTiLogo(logoPath);
 				teamService.saveOrUpdateTeamInfo(teamInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();
@@ -179,4 +177,23 @@ public class TeamManageController {
 			return JsonWrapper.newErrorInstance("上传球队logo时出错");
 		}
 	}
+
+	/**
+	 * 获取球队详情
+	 * @param teamId:球队id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getTeamDetailById")
+	public JsonElement getTeamDetailById(Long teamId) {
+		try {
+			Map<String, Object> result = teamService.getTeamInfoById(teamId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取球队详情时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("获取球队详情时出错");
+		}
+	}
+
 }

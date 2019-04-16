@@ -248,7 +248,7 @@ public class AdminParkController {
 				Integer hole =  Integer.parseInt(row.getCell(j).toString().replace(".0",""));
 				ParkPartition parkPartition = new ParkPartition();
 				parkPartition.setPpPId(parkId);
-				parkPartition.setPpZoneName(zone);
+				parkPartition.setPpName(zone);
 				parkPartition.setPpHoleNum(j-2);
 				parkPartition.setPpHoleStandardRod(hole);
 				adminParkService.saveParkPartition(parkPartition);

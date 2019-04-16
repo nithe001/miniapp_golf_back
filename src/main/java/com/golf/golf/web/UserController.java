@@ -97,6 +97,26 @@ public class UserController {
 	}
 
 	/**
+	 * 更新签名
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateUserSignature")
+	public JsonElement updateUserSignature(String signature) {
+		try {
+			if(StringUtils.isNotEmpty(signature)){
+				userService.updateUserSignature(signature);
+			}
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("更新用户签名时失败。", e);
+			return JsonWrapper.newErrorInstance("更新用户签名时失败");
+		}
+	}
+
+
+	/**
 	 * 基本信息
 	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
 	 * @return

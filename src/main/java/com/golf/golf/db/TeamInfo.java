@@ -17,7 +17,6 @@ public class TeamInfo {
 	private String tiSignature;
 	private String tiDigest;
 	private String tiAddress;
-	private String tiSlogan;
 	private Integer tiJoinOpenType;
 	private Integer tiInfoOpenType;
 	private Integer tiUserInfoType;
@@ -37,7 +36,7 @@ public class TeamInfo {
 
 	/** full constructor */
 	public TeamInfo(String tiLogo, String tiName, String tiSignature,
-					String tiDigest, String tiAddress, String tiSlogan,
+					String tiDigest, String tiAddress,
 					Integer tiJoinOpenType, Integer tiInfoOpenType, Integer tiUserInfoType,
 					Integer tiMatchResultAuditType, Long tiCreateTime,
 					Long tiCreateUserId, String tiCreateUserName, Long tiUpdateTime,
@@ -47,7 +46,6 @@ public class TeamInfo {
 		this.tiSignature = tiSignature;
 		this.tiDigest = tiDigest;
 		this.tiAddress = tiAddress;
-		this.tiSlogan = tiSlogan;
 		this.tiJoinOpenType = tiJoinOpenType;
 		this.tiInfoOpenType = tiInfoOpenType;
 		this.tiUserInfoType = tiUserInfoType;
@@ -115,15 +113,6 @@ public class TeamInfo {
 
 	public void setTiAddress(String tiAddress) {
 		this.tiAddress = tiAddress;
-	}
-
-	@Column(name = "ti_slogan")
-	public String getTiSlogan() {
-		return this.tiSlogan;
-	}
-
-	public void setTiSlogan(String tiSlogan) {
-		this.tiSlogan = tiSlogan;
 	}
 
 	@Column(name = "ti_join_open_type")
@@ -219,7 +208,7 @@ public class TeamInfo {
 	private String createTimeStr;
 	@Transient
 	public String getCreateTimeStr() {
-		createTimeStr = TimeUtil.longToString(this.getTiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
+		createTimeStr = TimeUtil.longToString(this.getTiCreateTime(),TimeUtil.FORMAT_DATE);
 		return createTimeStr;
 	}
 

@@ -15,10 +15,10 @@
 
 		<div class="content-wrapper">
             <section class="content-header">
-                <h1>新增球场</h1>
+                <h1>编辑球场</h1>
                 <ol class="breadcrumb">
                     <li><a href="admin/park/list"><i class="fa fa-dashboard"></i>球场列表</a></li>
-                    <li class="active">新增球场</li>
+                    <li class="active">编辑球场</li>
                 </ol>
             </section>
 		    <section class="content">

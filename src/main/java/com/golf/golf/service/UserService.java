@@ -92,6 +92,8 @@ public class UserService implements IBaseService {
      */
     public void updateUser(UserInfo user) throws Exception {
     	UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+    	db.setUiRealName(user.getUiRealName());
+    	db.setUiAge(user.getUiAge());
     	db.setUiTelNo(user.getUiTelNo());
 		db.setUiEmail(user.getUiEmail());
 		db.setUiCraduateSchool(user.getUiCraduateSchool());
@@ -108,6 +110,19 @@ public class UserService implements IBaseService {
 		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
         dao.update(db);
     }
+
+	/**
+	 * 更新签名
+	 * @return
+	 */
+	public void updateUserSignature(String signature) {
+		UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+		db.setUiPersonalizedSignature(signature);
+		db.setUiUpdateTime(System.currentTimeMillis());
+		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
+		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+		dao.update(db);
+	}
 
 	/**
 	 * 注册
@@ -295,4 +310,5 @@ public class UserService implements IBaseService {
 			dao.update(userInfo);
 		}
 	}
+
 }

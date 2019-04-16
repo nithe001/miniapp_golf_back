@@ -44,10 +44,9 @@
 		                <thead>
 		                <tr>
 		                  	<th>序号</th>
+                            <th>logo</th>
                             <th>城市</th>
                             <th>球场名称</th>
-							<th>logo</th>
-							<th>位置</th>
 							<th>状态</th>
 							<th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
 		                </tr>
@@ -56,10 +55,9 @@
 		                <c:forEach items="${pageInfo.items}" var="p" varStatus="s">
      					<tr>
      						<td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
+                            <td>${p.piLogo }</td>
 							<td>${p.piCity }</td>
                             <td>${p.piName }</td>
-							<td></td>
-							<td></td>
 							<td>
 								<c:if test="${p.piIsValid == 1 }">是</c:if>
 								<c:if test="${p.piIsValid == 0 }">否</c:if>
@@ -67,7 +65,7 @@
 							<td>
 								<c:if test="${p.piIsValid == 1 }">
 									<a class="btn btn-success" href="/admin/park/parkEditUI?parkId=${p.piId}">
-										修改
+										查看
 									</a>
 									<a class="btn btn-danger" href="javascript:void(0);" onclick="resetPark(${p.piId})">注销</a>
 								</c:if>

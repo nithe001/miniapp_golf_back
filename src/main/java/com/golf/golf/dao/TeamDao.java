@@ -45,7 +45,8 @@ public class TeamDao extends CommonDao {
             return pageInfo;
         }
 		hql.append("ORDER BY t.ti_create_time desc ");
-		List<Map<String, Object>> list = dao.createSQLQuery("select t.ti_id as ti_id,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo " + hql.toString(),
+        String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
+		List<Map<String, Object>> list = dao.createSQLQuery( select + hql.toString(),
 				parp, pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
         pageInfo.setCount(count.intValue());
         pageInfo.setItems(list);
@@ -95,7 +96,7 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<String> getCaptainByTeamId(Long teamId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiRealName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
+		hql.append("SELECT u.uiNickName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
 				"AND t.tumTeamId = "+teamId+" AND t.tumUserType = 1 AND t.tumUserId = u.uiId ");
 		return dao.createQuery(hql.toString());
 	}
@@ -202,12 +203,6 @@ public class TeamDao extends CommonDao {
     }
 
 
-
-
-
-
-
-
     /**
      * 创建比赛—点击球场-获取分区和洞
      * @return
@@ -247,10 +242,25 @@ public class TeamDao extends CommonDao {
 			return pageInfo;
 		}
 		hql.append("ORDER BY t.tiCreateTime desc ");
-		List<Map<String, Object>> list = dao.createQuery("select t.tiId as ti_id,t.tiName AS tiName,count(tm.tumUserId) AS userCount,t.tiLogo as logo " + hql.toString(),
+		List<Map<String, Object>> list = dao.createQuery("select t.tiId as tiId,t.tiName AS tiName,count(tm.tumUserId) AS userCount,t.tiLogo as logo " + hql.toString(),
 				parp, pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
 		return pageInfo;
+	}
+
+	/**
+	 * 获取本球队的前12个队员
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiHeadimg as uiHeadimg ");
+		hql.append("FROM TeamUserMapping AS m,UserInfo AS u WHERE 1=1 ");
+		hql.append("AND m.tumTeamId = "+teamId);
+		hql.append(" and m.tumUserId = u.uiId ");
+		hql.append("ORDER BY m.tumUserType desc ");
+		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 12,Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
 	}
 }

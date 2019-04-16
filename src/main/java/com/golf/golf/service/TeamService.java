@@ -4,6 +4,7 @@ import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.ParkPartition;
@@ -11,9 +12,11 @@ import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,9 @@ public class TeamService implements IBaseService {
 
     @Autowired
     private TeamDao teamDao;
+	@Autowired
+	private MatchService matchService;
+
 
     /**
      * 获取球队列表
@@ -41,11 +47,11 @@ public class TeamService implements IBaseService {
 	private void getCaptain(POJOPageInfo pageInfo) {
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
 			for(Map<String,Object> result : (List<Map<String,Object>>)pageInfo.getItems()){
-				Integer count = getIntegerValue(result, "userCount");
+				Integer count = matchService.getIntegerValue(result, "userCount");
 				if(count == 0){
 					result.put("userCount", 0);
 				}
-				Long teamId = getLongValue(result, "ti_id");
+				Long teamId = matchService.getLongValue(result, "tiId");
 				if(teamId != null){
 					List<String> captainList = teamDao.getCaptainByTeamId(teamId);
 					if(captainList == null || captainList.size() ==0){
@@ -54,35 +60,14 @@ public class TeamService implements IBaseService {
 						result.put("captain", captainList.get(0));
 					}
 				}
+				String logo = matchService.getName(result, "logo");
+				if(StringUtils.isNotEmpty(logo)){
+					result.put("logo", PropertyConst.DOMAIN + logo);
+				}
 			}
 		}
     }
 
-	/**
-	 * 获取long
-	 * @param map
-	 * @param key
-	 */
-	private Long getLongValue(Map<String, Object> map, String key){
-		if(map == null || map.get(key) == null){
-			return null;
-		}else{
-			return Long.parseLong(map.get(key).toString());
-		}
-	}
-
-	/**
-	 * Integer
-	 * @param map
-	 * @param key
-	 */
-	private Integer getIntegerValue(Map<String, Object> map, String key){
-		if(map == null || map.get(key) == null){
-			return 0;
-		}else{
-			return Integer.parseInt(map.get(key).toString());
-		}
-	}
 
 	/**
      * 获取  我加入的球队列表 或者  可以加入的球队
@@ -201,7 +186,6 @@ public class TeamService implements IBaseService {
 			db.setTiAddress(teamInfoBean.getTiAddress());
 			db.setTiDigest(teamInfoBean.getTiDigest());
 			db.setTiSignature(teamInfoBean.getTiSignature());
-			db.setTiSlogan(teamInfoBean.getTiSlogan());
 			db.setTiJoinOpenType(teamInfoBean.getTiJoinOpenType());
 			db.setTiInfoOpenType(teamInfoBean.getTiInfoOpenType());
 			db.setTiUserInfoType(teamInfoBean.getTiUserInfoType());
@@ -212,5 +196,24 @@ public class TeamService implements IBaseService {
 			teamDao.update(db);
 		}
 
+	}
+
+	/**
+	 * 获取球队详情
+	 * @param teamId:球队id count 显示的队员人数
+	 * @return
+	 */
+	public Map<String, Object> getTeamInfoById(Long teamId) {
+		Map<String, Object> result = new HashMap<>();
+		TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
+		teamInfo.getCreateTimeStr();
+		result.put("teamInfo",teamInfo);
+		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
+		for(Map<String, Object> user :userList){
+			String headimg = matchService.getName(user,"uiHeadimg");
+			user.put("uiHeadimg", PropertyConst.DOMAIN + headimg);
+		}
+		result.put("userList",userList);
+		return result;
 	}
 }

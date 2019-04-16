@@ -474,16 +474,18 @@ public class MatchService implements IBaseService {
 		if(parkInfo != null){
 			matchInfo.setMiParkId(parkInfo.getPiId());
 		}
+		matchInfo.setMiTitle(WebUtil.getUserNameBySessionId()+"的单练");
 		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiType(0);
 		matchInfo.setMiMatchTime(playTime);
 		matchInfo.setMiPeopleNum(peopleNum);
 		matchInfo.setMiDigest(digest);
 		matchInfo.setMiJoinOpenType(3);
+		matchInfo.setMiIsEnd(0);
 		matchInfo.setCreateTimeStr(System.currentTimeMillis());
 		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
 		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
-//		matchDao.save(matchInfo);
+		matchDao.save(matchInfo);
 		return matchInfo.getMiId();
 	}
 

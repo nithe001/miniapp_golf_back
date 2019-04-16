@@ -1,28 +1,11 @@
 <%@ page language="java" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<style>
-    .divBorder {
-        border: 1px solid #00acd6;
-    }
-
-    .width100 {
-        width: 100%;
-    }
-
-    .width20 {
-        width: 20%;
-    }
-
-    .width10 {
-        width: 10%;
-    }
-</style>
 <input type="hidden" name="piId" id="piId" value="${park.piId }"/>
 <div class="box-body">
     <div class="form-group">
-        <label for="piName" class="col-sm-2 control-label">球场名</label>
+        <label for="piName" class="col-sm-2 control-label">球场名称</label>
         <div class="col-sm-5">
-            <input type="text" class="form-control" id="piName" name="piName" value="${park.piName}" placeholder="球场名"
+            <input type="text" class="form-control" id="piName" name="piName" value="${park.piName}" placeholder="球场名称"
             <c:if test='${park.piId != null}'>
                    readonly
             </c:if>
@@ -30,31 +13,36 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="piLogo" class="col-sm-2 control-label">logo</label>
+        <label for="piLat" class="col-sm-2 control-label">地图展示</label>
         <div class="col-sm-5">
-            <img src="${park.piLogo}" id="piLogo"/>
-            <input type="file" value="上传Logo"/>
+            待加
         </div>
     </div>
+
+    <%--<div class="form-group">--%>
+        <%--<label for="piLogo" class="col-sm-2 control-label">logo</label>--%>
+        <%--<div class="col-sm-5">--%>
+            <%--<img src="${park.piLogo}" id="piLogo"/>--%>
+            <%--<input type="file" value="上传Logo"/>--%>
+        <%--</div>--%>
+    <%--</div>--%>
     <div class="form-group">
         <label for="piLat" class="col-sm-2 control-label">球场经度</label>
         <div class="col-sm-5">
-            <input type="text" class="form-control" id="piLat" name="piLat" value="${park.piLat}"
-                   placeholder="球场经度">
+            <input type="text" class="form-control" id="piLat" name="piLat" value="${park.piLat}" readonly>
         </div>
     </div>
     <div class="form-group">
         <label for="piLng" class="col-sm-2 control-label">球场纬度</label>
         <div class="col-sm-5">
-            <input type="text" class="form-control" id="piLng" name="piLng" value="${park.piLng}"
-                   placeholder="球场纬度">
+            <input type="text" class="form-control" id="piLng" name="piLng" value="${park.piLng}" readonly>
         </div>
     </div>
 
     <div class="form-group">
         <label for="zone" class="col-sm-2 control-label">球场分区</label>
         <div class="col-sm-7" id="zone">
-            <input type="button" class="btn btn-success" value="添加分区" id="addFenqu"/><br/><br/>
+            <%--<input type="button" class="btn btn-success" value="添加分区" id="addFenqu"/><br/><br/>--%>
             <div id="fenquDiv">
                 <c:if test="${parkZoneList != null && parkZoneList.size() > 0 }">
                     <table id="example2" class="table table-bordered table-hover">
@@ -68,7 +56,7 @@
                         <tbody>
                         <c:forEach items="${parkZoneList}" var="zone" varStatus="s">
                             <tr>
-                                <td>${zone.ppZoneName }</td>
+                                <td>${zone.ppName }</td>
                                 <td>${zone.ppHoleNum }</td>
                                 <td>${zone.ppHoleStandardRod }</td>
                             </tr>

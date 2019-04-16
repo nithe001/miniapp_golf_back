@@ -69,7 +69,7 @@ public class MatchController {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
-			searchBean.addParpField("userId", 4L);
+			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();

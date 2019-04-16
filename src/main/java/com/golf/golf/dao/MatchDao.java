@@ -282,7 +282,8 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("FROM MatchInfo AS t WHERE 1=1 ");
 		sql.append("AND t.miCreateUserId = "+userId);
-		sql.append("AND t.miIsEnd = 1");
+		sql.append("AND t.miType = 0");
+		sql.append("AND t.miIsEnd = 0");
 		List<MatchInfo> matchInfo = dao.createQuery(sql.toString());
 		if(matchInfo != null && matchInfo.size()>0){
 			return matchInfo.get(0);
