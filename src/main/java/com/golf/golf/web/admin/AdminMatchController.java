@@ -70,7 +70,7 @@ public class AdminMatchController {
 		mm.addAttribute("state",state);
 		mm.addAttribute("startDate", startDate);
 		mm.addAttribute("endDate", endDate);
-		return "admin/activities/list";
+		return "admin/match/list";
 	}
 
 

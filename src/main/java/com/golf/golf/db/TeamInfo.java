@@ -21,6 +21,7 @@ public class TeamInfo {
 	private Integer tiInfoOpenType;
 	private Integer tiUserInfoType;
 	private Integer tiMatchResultAuditType;
+	private Integer tiIsValid;
 	private Long tiCreateTime;
 	private Long tiCreateUserId;
 	private String tiCreateUserName;
@@ -38,7 +39,7 @@ public class TeamInfo {
 	public TeamInfo(String tiLogo, String tiName, String tiSignature,
 					String tiDigest, String tiAddress,
 					Integer tiJoinOpenType, Integer tiInfoOpenType, Integer tiUserInfoType,
-					Integer tiMatchResultAuditType, Long tiCreateTime,
+					Integer tiMatchResultAuditType, Integer tiIsValid, Long tiCreateTime,
 					Long tiCreateUserId, String tiCreateUserName, Long tiUpdateTime,
 					Long tiUpdateUserId, String tiUpdateUserName) {
 		this.tiLogo = tiLogo;
@@ -50,6 +51,7 @@ public class TeamInfo {
 		this.tiInfoOpenType = tiInfoOpenType;
 		this.tiUserInfoType = tiUserInfoType;
 		this.tiMatchResultAuditType = tiMatchResultAuditType;
+		this.tiIsValid = tiIsValid;
 		this.tiCreateTime = tiCreateTime;
 		this.tiCreateUserId = tiCreateUserId;
 		this.tiCreateUserName = tiCreateUserName;
@@ -149,6 +151,15 @@ public class TeamInfo {
 
 	public void setTiMatchResultAuditType(Integer tiMatchResultAuditType) {
 		this.tiMatchResultAuditType = tiMatchResultAuditType;
+	}
+
+	@Column(name = "ti_is_valid")
+	public Integer getTiIsValid() {
+		return tiIsValid;
+	}
+
+	public void setTiIsValid(Integer tiIsValid) {
+		this.tiIsValid = tiIsValid;
 	}
 
 	@Column(name = "ti_create_time")

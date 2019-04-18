@@ -5,10 +5,6 @@
 <div class="box-body">
     用户微信信息：
     <div class="form-group">
-        <label for="cuUserName" class="col-sm-2 control-label">头像</label>
-        <div class="col-sm-3">${wechatUser.wuiHeadimg}</div>
-    </div>
-    <div class="form-group">
         <label for="cuUserName" class="col-sm-2 control-label">openid</label>
         <div class="col-sm-3">${wechatUser.wuiOpenid}</div>
     </div>

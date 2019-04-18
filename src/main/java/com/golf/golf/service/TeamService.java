@@ -5,14 +5,10 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
-import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.TeamDao;
-import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
-import com.golf.golf.db.UserInfo;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -77,28 +73,7 @@ public class TeamService implements IBaseService {
         return teamDao.getMyTeamList(searchBean,pageInfo);
     }
 
-    /**
-     * 查询球场列表——所有球场
-     * @return
-     */
-    public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
-        return teamDao.getParkList(searchBean,pageInfo);
-    }
 
-    /**
-     * 查询球场列表——附近的球场
-     * @return
-     */
-    public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
-        UserInfo userInfo = teamDao.get(UserInfo.class, UserUtil.getUserId());
-        if(userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLongitude())
-                && StringUtils.isNotEmpty(userInfo.getUiLatitude())){
-            //用户经纬度存在, 计算我附近5千米的经纬度
-            searchBean = findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
-                    Double.parseDouble(userInfo.getUiLatitude()));
-        }
-        return teamDao.getParkListNearby(searchBean,pageInfo);
-    }
 
     /**
      * 计算我附近5千米的经纬度
@@ -125,29 +100,6 @@ public class TeamService implements IBaseService {
         return searchBean;
     }
 
-    /**
-     * 查询球场区域
-     * @return
-     */
-    public POJOPageInfo getParkListByRegion(SearchBean searchBean, POJOPageInfo pageInfo) {
-        return teamDao.getParkListByRegion(searchBean,pageInfo);
-    }
-
-    /**
-     * 查询该区域下的球场
-     * @return
-     */
-    public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
-        return teamDao.getParkListByRegionName(searchBean,pageInfo);
-    }
-
-    /**
-     * 创建比赛—点击球场-获取分区和洞
-     * @return
-     */
-    public List<ParkPartition> getParkZoneAndHole(Long parkId) {
-        return teamDao.getParkZoneAndHole(parkId);
-    }
 
 	/**
 	 * 获取我创建的球队列表
@@ -168,6 +120,7 @@ public class TeamService implements IBaseService {
 			teamInfoBean.setTiCreateTime(System.currentTimeMillis());
 			teamInfoBean.setTiCreateUserId(WebUtil.getUserIdBySessionId());
 			teamInfoBean.setTiCreateUserName(WebUtil.getUserNameBySessionId());
+			teamInfoBean.setTiIsValid(1);
 			Long teamId = teamDao.save(teamInfoBean);
 			//向球队用户表新增一条记录
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
@@ -178,6 +131,7 @@ public class TeamService implements IBaseService {
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
 			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
+			teamUserMapping.setTumIsValid(1);
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
@@ -209,11 +163,23 @@ public class TeamService implements IBaseService {
 		teamInfo.getCreateTimeStr();
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
-		for(Map<String, Object> user :userList){
-			String headimg = matchService.getName(user,"uiHeadimg");
-			user.put("uiHeadimg", PropertyConst.DOMAIN + headimg);
-		}
 		result.put("userList",userList);
 		return result;
+	}
+
+	/**
+	 * 删除球队
+	 * @return
+	 */
+	public boolean delTeamById(Long teamId) {
+		Long userId = WebUtil.getUserIdBySessionId();
+		//是否是该球队的队长
+		Long count = teamDao.isCaptainIdByTeamId(teamId,userId);
+		if(count >0){
+			//删除球队、用户mapping 逻辑删除
+			teamDao.delTeam(teamId);
+			return true;
+		}
+		return false;
 	}
 }

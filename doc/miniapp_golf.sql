@@ -2,15 +2,15 @@
 Navicat MySQL Data Transfer
 
 Source Server         : localhost
-Source Server Version : 50528
+Source Server Version : 50725
 Source Host           : localhost:3306
 Source Database       : miniapp_golf
 
 Target Server Type    : MYSQL
-Target Server Version : 50528
+Target Server Version : 50725
 File Encoding         : 65001
 
-Date: 2019-04-16 13:20:06
+Date: 2019-04-18 15:23:24
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -37,7 +37,7 @@ CREATE TABLE `admin_user` (
   `au_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人名称',
   `au_update_date` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`au_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='后台用户表';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COMMENT='后台用户表';
 
 -- ----------------------------
 -- Records of admin_user
@@ -79,7 +79,7 @@ CREATE TABLE `match_group` (
   `mg_update_user_name` varchar(128) DEFAULT NULL COMMENT '分组更新人姓名',
   `mg_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
   PRIMARY KEY (`mg_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='比赛分组表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
 
 -- ----------------------------
 -- Records of match_group
@@ -101,7 +101,7 @@ CREATE TABLE `match_info` (
   `mi_zone_after_nine` varchar(255) DEFAULT NULL COMMENT '后9洞打哪个区（A/B/C）',
   `mi_digest` varchar(512) DEFAULT NULL COMMENT '比赛介绍',
   `mi_match_time` varchar(128) DEFAULT NULL COMMENT '比赛日期/开球时间',
-  `mi_content` text COMMENT '比赛内容',
+  `mi_content` mediumtext COMMENT '比赛内容',
   `mi_match_open_type` int(11) DEFAULT NULL COMMENT '观战范围：（1、公开 球友均可见；2、队内公开：参赛者的队友可见；3、封闭：参赛队员可见）',
   `mi_join_open_type` int(255) DEFAULT NULL COMMENT '参赛范围(1、公开 球友均可报名；2、队内：某几个球队队员可报名；3:不公开)',
   `mi_match_format_1` int(128) DEFAULT NULL COMMENT '赛制1( 0:比杆 、1:比洞)',
@@ -111,6 +111,7 @@ CREATE TABLE `match_info` (
   `mi_hit` int(11) DEFAULT NULL COMMENT '点击量',
   `mi_apply_end_time` bigint(20) DEFAULT NULL COMMENT '报名截止时间',
   `mi_is_end` int(11) DEFAULT NULL COMMENT '比赛是否结束(1：是  0：否)',
+  `mi_is_valid` int(11) DEFAULT NULL COMMENT '是否可用 1是 0否',
   `mi_create_user_name` varchar(128) DEFAULT NULL COMMENT '比赛发起人',
   `mi_create_user_id` bigint(20) DEFAULT NULL COMMENT '比赛发起人id',
   `mi_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
@@ -118,12 +119,11 @@ CREATE TABLE `match_info` (
   `mi_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `mi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mi_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='赛事活动表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
 
 -- ----------------------------
 -- Records of match_info
 -- ----------------------------
-INSERT INTO `match_info` VALUES ('1', '0', '4', null, null, null, 'undefined', null, null, 'undefined', '2019-04-16', null, null, '3', null, null, null, null, null, null, null, null, '1', null, null, null, null);
 
 -- ----------------------------
 -- Table structure for match_join_watch_info
@@ -167,7 +167,7 @@ CREATE TABLE `match_score` (
   `ms_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `ms_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`ms_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='比赛成绩表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
 
 -- ----------------------------
 -- Records of match_score
@@ -207,7 +207,7 @@ CREATE TABLE `match_user_group_mapping` (
   `mugm_create_user_name` varchar(128) DEFAULT NULL COMMENT '分组创建人姓名',
   `mugm_create_time` bigint(20) DEFAULT NULL COMMENT '分组创建时间',
   PRIMARY KEY (`mugm_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='比赛用户分组mapping记录表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
 
 -- ----------------------------
 -- Records of match_user_group_mapping
@@ -13296,11 +13296,11 @@ CREATE TABLE `team_info` (
   `ti_signature` varchar(512) DEFAULT NULL COMMENT '球队签名',
   `ti_digest` varchar(512) DEFAULT NULL COMMENT '球队简介',
   `ti_address` varchar(255) DEFAULT NULL COMMENT '所在地区',
-  `ti_slogan` varchar(255) DEFAULT NULL COMMENT '球队签名(口号)',
   `ti_join_open_type` int(11) DEFAULT NULL COMMENT '是否有加入审核(1、是（队长审批）  0、否)',
   `ti_info_open_type` int(11) DEFAULT NULL COMMENT '信息是否公开（1、公开 比赛成绩等向所有球友开放；2、封闭，比赛成绩等向队友开放）',
   `ti_user_info_type` int(11) DEFAULT NULL COMMENT '队员详细资料（1：需要  0：不需要）',
   `ti_match_result_audit_type` int(11) DEFAULT NULL COMMENT '比赛成绩审核（1：是  0：否）',
+  `ti_is_valid` int(11) DEFAULT NULL COMMENT '是否有效',
   `ti_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   `ti_create_user_id` bigint(20) DEFAULT NULL COMMENT '创建人id',
   `ti_create_user_name` varchar(128) DEFAULT NULL COMMENT '创建人姓名',
@@ -13308,11 +13308,12 @@ CREATE TABLE `team_info` (
   `ti_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `ti_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   PRIMARY KEY (`ti_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='球队表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='球队表';
 
 -- ----------------------------
 -- Records of team_info
 -- ----------------------------
+INSERT INTO `team_info` VALUES ('1', 'up/teamLogo/1555559373596.png', 'mm', 'yutruyt', 'iiiiiiiiiiiiiii', 'dd', '1', '1', '1', '1', '1', '1555559386902', '1', null, null, null, null);
 
 -- ----------------------------
 -- Table structure for team_user_integral
@@ -13323,7 +13324,7 @@ CREATE TABLE `team_user_integral` (
   `tui_team_id` bigint(20) DEFAULT NULL COMMENT '球队主键',
   `tui_user_id` bigint(20) DEFAULT NULL COMMENT '球友主键',
   PRIMARY KEY (`tui_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='球队球友积分表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='球队球友积分表';
 
 -- ----------------------------
 -- Records of team_user_integral
@@ -13340,6 +13341,7 @@ CREATE TABLE `team_user_mapping` (
   `tum_user_type` int(11) DEFAULT NULL COMMENT '用户类型（1：队长  0：队员）',
   `tum_type` int(11) DEFAULT NULL COMMENT '类型（0：待审核，1：审核通过）',
   `tum_point` int(11) DEFAULT NULL COMMENT '积分',
+  `tum_is_valid` int(11) DEFAULT NULL COMMENT '是否可用 1是 0否',
   `tum_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   `tum_create_user_id` bigint(11) DEFAULT NULL COMMENT '创建人id',
   `tum_create_user_name` varchar(128) DEFAULT NULL COMMENT '创建人姓名',
@@ -13347,11 +13349,12 @@ CREATE TABLE `team_user_mapping` (
   `tum_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `tum_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   PRIMARY KEY (`tum_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户加入球队表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='用户加入球队表';
 
 -- ----------------------------
 -- Records of team_user_mapping
 -- ----------------------------
+INSERT INTO `team_user_mapping` VALUES ('1', '1', '1', '1', '1', null, '1', '1555559386905', '1', null, null, null, null);
 
 -- ----------------------------
 -- Table structure for user_info
@@ -13388,12 +13391,12 @@ CREATE TABLE `user_info` (
   `ui_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   `ui_update_user_id` bigint(11) DEFAULT NULL COMMENT '更新人用户id',
   PRIMARY KEY (`ui_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='用户详细资料表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='用户详细资料表';
 
 -- ----------------------------
 -- Records of user_info
 -- ----------------------------
-INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', null, null, null, null, '牜', '男', null, null, null, null, null, null, null, null, null, null, null, null, null, '1555322672147', null, null, '1555383785456', null, '1');
+INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, null, '牜', '男', null, null, null, null, null, null, null, null, null, null, null, null, null, '1555322672147', null, null, '1555560121750', null, '1');
 
 -- ----------------------------
 -- Table structure for wechat_user_info
@@ -13423,9 +13426,9 @@ CREATE TABLE `wechat_user_info` (
   `watermark_appid` varchar(128) DEFAULT NULL,
   `watermark_timestamp` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`wui_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='微信用户表';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COMMENT='微信用户表';
 
 -- ----------------------------
 -- Records of wechat_user_info
 -- ----------------------------
-INSERT INTO `wechat_user_info` VALUES ('4', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1555383774434', null, null, null);
+INSERT INTO `wechat_user_info` VALUES ('4', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1555560121750', null, null, null);

@@ -98,10 +98,10 @@
                                             <td>${matchInfo.miCreateUserName}</td>
                                             <%--<td>${matchInfo.state}</td>--%>
                                             <td>
-                                                <a class="btn btn-success" href="admin/activities/editMatchUI?matchId=${matchInfo.miId}">
+                                                <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
                                                     <span class="glyphicon glyphicon-pencil"></span>编辑
                                                 </a>&nbsp;
-                                                <%--<a class="btn btn-success" href="admin/activities/delMatch?matchId=${calendar[0]}">--%>
+                                                <%--<a class="btn btn-success" href="admin/match/delMatch?matchId=${calendar[0]}">--%>
                                                     <%--<span class="glyphicon glyphicon-pencil"></span>--%>
                                                     <%--<c:if test="${matchInfo.miIsDel == null || matchInfo.miIsDel == 0}">删除</c:if>--%>
                                                     <%--<c:if test="${matchInfo.miIsDel == 1 }">恢复</c:if>--%>
@@ -116,7 +116,7 @@
                                 暂无数据！
                             </c:if>
                             <jsp:include page="../include/pojoPageInfo.jsp">
-                                <jsp:param value="admin/activities/list" name="act"/>
+                                <jsp:param value="admin/match/list" name="act"/>
                                 <jsp:param value="searchForm" name="formName"/>
                             </jsp:include>
                         </div>
@@ -132,7 +132,7 @@
         //检索
         $("#searchBtn").bind("click", function () {
             var form = document.forms[0];
-            form.action = "admin/activities/list";
+            form.action = "admin/match/list";
             $("#page").val(1);
             form.submit();
         });

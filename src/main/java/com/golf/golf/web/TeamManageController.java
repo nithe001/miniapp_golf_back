@@ -1,23 +1,19 @@
 package com.golf.golf.web;
 
 import com.golf.common.Const;
-import com.golf.common.spring.mvc.WebUtil;
-import com.golf.common.util.PropertyConst;
-import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamInfo;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.service.TeamService;
-import com.google.gson.JsonElement;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.PropertyConst;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.service.TeamService;
+import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -155,10 +151,15 @@ public class TeamManageController {
 				if (type != null) {
 					if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
 						// 项目在容器中实际发布运行的根路径
-						String realPath = WebUtil.getRealPath("up/teamLogo");
+						String realPath = WebUtil.getRealPath(PropertyConst.TEAM_LOGO_PATH);
 						// 自定义的文件名称
 						String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
-						file.transferTo(new File(realPath,trueFileName));
+
+						File targetFile = new File(realPath, trueFileName);
+						if(!targetFile.exists()){
+							targetFile.mkdirs();
+						}
+						file.transferTo(targetFile);
 						logoPath = "up/teamLogo/"+trueFileName;
 						logger.info("文件成功上传到指定目录下");
 					}else {
@@ -175,6 +176,29 @@ public class TeamManageController {
 			e.printStackTrace();
 			logger.error("上传球队logo时出错。" + e);
 			return JsonWrapper.newErrorInstance("上传球队logo时出错");
+		}
+	}
+
+	/**
+	 * 删除球队
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "delTeamById")
+	public JsonElement delTeamById(Long teamId) {
+		try {
+			boolean flag = false;
+			if(teamId != null){
+				flag = teamService.delTeamById(teamId);
+			}
+			if(flag){
+				return JsonWrapper.newSuccessInstance();
+			}
+			return JsonWrapper.newErrorInstance("无权删除该球队");
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("删除球队时出错。" + e);
+			return JsonWrapper.newErrorInstance("删除球队时出错");
 		}
 	}
 

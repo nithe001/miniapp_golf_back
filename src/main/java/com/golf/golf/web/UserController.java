@@ -38,7 +38,6 @@ public class UserController {
 	protected WxMpService wxMpService;
 
 
-
 	/**
 	 * 保存/更新 微信用户信息
 	 * @return

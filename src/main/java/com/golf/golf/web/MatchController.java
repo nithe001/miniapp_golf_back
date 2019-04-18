@@ -89,7 +89,7 @@ public class MatchController {
 	@RequestMapping("getJoinTeamList")
 	public JsonElement getMatchDetail(Long matchId) {
 		try {
-			List<Map<String, Object>> teamList = matchService.getteamListByMatchId(matchId);
+			List<Map<String, Object>> teamList = matchService.getTeamListByMatchId(matchId);
 			return JsonWrapper.newDataInstance(teamList);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -462,19 +462,19 @@ public class MatchController {
             POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>(Const.ROWSPERPAGE , nowPage);
             if(type == null){
                 //全部
-                pageInfo = teamService.getParkList(searchBean, pageInfo);
+                pageInfo = matchService.getParkList(searchBean, pageInfo);
             }else if(type == 0){
                 //附近
-                pageInfo = teamService.getParkListNearby(searchBean, pageInfo);
+                pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
             }else if(type == 1){
                 //区域
                 pageInfo.setRowsPerPage(0);
                 pageInfo.setNowPage(1);
-                pageInfo = teamService.getParkListByRegion(searchBean, pageInfo);
+                pageInfo = matchService.getParkListByRegion(searchBean, pageInfo);
             }else if(StringUtils.isNotEmpty(regionName)){
                 //该区域下的所有球场
                 searchBean.addParpField("regionName", regionName);
-                pageInfo = teamService.getParkListByRegionName(searchBean, pageInfo);
+                pageInfo = matchService.getParkListByRegionName(searchBean, pageInfo);
             }
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
@@ -493,7 +493,7 @@ public class MatchController {
     @RequestMapping("getParkZoneAndHole")
     public JsonElement getParkZoneAndHole(Long parkId) {
         try {
-            List<ParkPartition> parkPartitionList = teamService.getParkZoneAndHole(parkId);
+            List<ParkPartition> parkPartitionList = matchService.getParkZoneAndHole(parkId);
             return JsonWrapper.newDataInstance(parkPartitionList);
         } catch (Exception e) {
             errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
@@ -502,29 +502,6 @@ public class MatchController {
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
-
-    /**
-     * 创建比赛—确定
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("createMatch")
-    public JsonElement createMatch(Long parkId) {
-        try {
-            List<ParkPartition> parkPartitionList = teamService.getParkZoneAndHole(parkId);
-            return JsonWrapper.newDataInstance(parkPartitionList);
-        } catch (Exception e) {
-            errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-
-
-
-
 
     /**
      * 创建比赛—单练

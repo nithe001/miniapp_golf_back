@@ -79,7 +79,7 @@ public class AdminUserDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		String select ="select wu.wui_id as wui_id,wu.wui_headimg as wui_headimg,wu.wui_nick_name as wui_nick_name,wu.wui_openid as wui_openid," +
+		String select ="select wu.wui_id as wui_id,wu.wui_headimgurl as wui_headimg,wu.wui_nick_name as wui_nick_name,wu.wui_openid as wui_openid," +
 				"u.ui_real_name as ui_real_name,wu.wui_sex as wui_sex,wu.wui_province as wui_province," +
 				"wu.wui_city as wui_city,wu.create_time as create_time, u.ui_type as ui_type ";
 		hql.append("group by wu.wui_id order by wu.create_time ");

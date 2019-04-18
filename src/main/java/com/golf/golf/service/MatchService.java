@@ -28,6 +28,9 @@ public class MatchService implements IBaseService {
 
     @Autowired
     private MatchDao matchDao;
+	@Autowired
+	private TeamService teamService;
+
 
 	/**
 	 * 获取全部比赛列表 或 获取我参加的比赛列表
@@ -237,6 +240,55 @@ public class MatchService implements IBaseService {
 		return matchDao.get(TeamInfo.class,Long.parseLong(teamId));
 	}
 
+
+	/**
+	 * 创建比赛—点击球场-获取分区和洞
+	 * @return
+	 */
+	public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+		return matchDao.getParkZoneAndHole(parkId);
+	}
+
+	/**
+	 * 查询球场区域
+	 * @return
+	 */
+	public POJOPageInfo getParkListByRegion(SearchBean searchBean, POJOPageInfo pageInfo) {
+		return matchDao.getParkListByRegion(searchBean,pageInfo);
+	}
+
+	/**
+	 * 查询该区域下的球场
+	 * @return
+	 */
+	public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
+		return matchDao.getParkListByRegionName(searchBean,pageInfo);
+	}
+
+	/**
+	 * 查询球场列表——所有球场
+	 * @return
+	 */
+	public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		return matchDao.getParkList(searchBean,pageInfo);
+	}
+
+	/**
+	 * 查询球场列表——附近的球场
+	 * @return
+	 */
+	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
+		UserInfo userInfo = matchDao.get(UserInfo.class, UserUtil.getUserId());
+		if(userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLongitude())
+				&& StringUtils.isNotEmpty(userInfo.getUiLatitude())){
+			//用户经纬度存在, 计算我附近5千米的经纬度
+			searchBean = teamService.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
+					Double.parseDouble(userInfo.getUiLatitude()));
+		}
+		return matchDao.getParkListNearby(searchBean,pageInfo);
+	}
+
+
     /**
      * 保存一条用户记分对应关系
      * @return
@@ -406,7 +458,8 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiCreateTime(System.currentTimeMillis());
 		matchInfo.setMiCreateUserId(UserUtil.getUserId());
 		matchInfo.setMiCreateUserName(UserUtil.getShowName());
-//		matchDao.save(matchInfo);
+		matchInfo.setMiIsValid(1);
+		matchDao.save(matchInfo);
 	}
 
     /**
@@ -583,9 +636,13 @@ public class MatchService implements IBaseService {
 	 * 获取参赛球队列表
 	 * @return
 	 */
-	public List<Map<String, Object>> getteamListByMatchId(Long matchId) {
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-		return matchDao.getApplyUserListByMatchId(matchId,teamIdList);
+	public List<Map<String, Object>> getTeamListByMatchId(Long matchId) {
+		if(matchId != null){
+			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+			List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+			return matchDao.getApplyUserListByMatchId(matchId,teamIdList);
+		}else{
+			return null;
+		}
 	}
 }

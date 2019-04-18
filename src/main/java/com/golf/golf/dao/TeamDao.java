@@ -6,6 +6,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.golf.db.ParkInfo;
 import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.TeamUserMapping;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -31,8 +32,8 @@ public class TeamDao extends CommonDao {
         hql.append("from team_info as t LEFT JOIN ( ");
 		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
 		hql.append("from team_user_mapping as tm where 1=1 GROUP BY tum_team_id ");
-		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
-		hql.append("where 1=1 ");
+		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_is_valid = 1)");
+		hql.append("where 1=1  ");
 
         if(parp.get("keyword") != null){
             hql.append("AND t.ti_name LIKE :keyword ");
@@ -61,7 +62,7 @@ public class TeamDao extends CommonDao {
     public POJOPageInfo getMyTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
         Map<String, Object> parp = searchBean.getParps();
         StringBuilder hql = new StringBuilder();
-        hql.append("from team_info as t LEFT JOIN team_user_mapping as tm on t.ti_id = tm.tum_team_id ");
+        hql.append("from team_info as t LEFT JOIN team_user_mapping as tm on (t.ti_id = tm.tum_team_id and t.ti_is_valid = 1) ");
 		hql.append("where 1=1 ");
         if((Integer)parp.get("type") == 1){
 			hql.append("and t.ti_id not in (select m.tum_team_id from team_user_mapping as m where m.tum_user_id = :userId) ");
@@ -90,129 +91,6 @@ public class TeamDao extends CommonDao {
         return pageInfo;
     }
 
-	/**
-	 * 通过球队id获取队长
-	 * @return
-	 */
-	public List<String> getCaptainByTeamId(Long teamId) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiNickName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
-				"AND t.tumTeamId = "+teamId+" AND t.tumUserType = 1 AND t.tumUserId = u.uiId ");
-		return dao.createQuery(hql.toString());
-	}
-
-
-    /**
-     * 查询球场列表-所有球场
-     * @return
-     */
-    public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
-        Map<String, Object> parp = searchBean.getParps();
-        StringBuilder hql = new StringBuilder();
-        hql.append("FROM ParkInfo AS p WHERE 1=1 ");
-        if(parp.get("keyword") != null){
-            hql.append("AND p.piName LIKE :keyword  ");
-        }
-
-        Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
-        if (count == null || count.intValue() == 0) {
-            pageInfo.setItems(new ArrayList<ParkInfo>());
-            pageInfo.setCount(0);
-            return pageInfo;
-        }
-        hql.append("GROUP BY p.piCreateTime ");
-        List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
-        pageInfo.setCount(count.intValue());
-        pageInfo.setItems(list);
-        return pageInfo;
-    }
-
-    /**
-     * 查询球场列表-附近球场
-     * @return
-     */
-    public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
-        Map<String, Object> parp = searchBean.getParps();
-        StringBuilder hql = new StringBuilder();
-        hql.append("FROM ParkInfo AS p WHERE 1=1 ");
-        if(parp.get("keyword") != null){
-            hql.append("AND p.piName LIKE :keyword  ");
-        }
-       /* searchBean.addParpField("minlng", minlng);
-        searchBean.addParpField("maxlng", maxlng);
-        searchBean.addParpField("minlat", minlat);
-        searchBean.addParpField("maxlat", maxlat);*/
-//        String hql = "from Property where longitude>=? and longitude =<? and latitude>=? latitude=<? and state=0";
-
-        hql.append("AND p.piLng >= :minlng ");
-        hql.append("AND p.piLng <= :maxlng ");
-        hql.append("AND p.piLat >= :minlat ");
-        hql.append("AND p.piLat <= :maxlat ");
-
-        Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
-        if (count == null || count.intValue() == 0) {
-            pageInfo.setItems(new ArrayList<ParkInfo>());
-            pageInfo.setCount(0);
-            return pageInfo;
-        }
-        hql.append("GROUP BY p.piCreateTime ");
-        List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
-        pageInfo.setCount(count.intValue());
-        pageInfo.setItems(list);
-        return pageInfo;
-    }
-
-    /**
-     * 查询球场区域
-     * @return
-     */
-    public POJOPageInfo getParkListByRegion(SearchBean searchBean, POJOPageInfo pageInfo) {
-        Map<String, Object> parp = searchBean.getParps();
-        StringBuilder hql = new StringBuilder();
-        hql.append("select DISTINCT p.piCity from ParkInfo as p where p.piIsValid = 1");
-        List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
-        pageInfo.setItems(list);
-        return pageInfo;
-    }
-
-
-    /**
-     * 查询该区域下的球场
-     * @return
-     */
-    public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
-        Map<String, Object> parp = searchBean.getParps();
-        StringBuilder hql = new StringBuilder();
-        hql.append(" from ParkInfo as p where p.piIsValid = 1");
-        if(parp.get("keyword") != null){
-            hql.append("AND p.piName LIKE :keyword  ");
-        }
-        hql.append("AND p.piCity = :regionName  ");
-
-        Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
-        if (count == null || count.intValue() == 0) {
-            pageInfo.setItems(new ArrayList<ParkInfo>());
-            pageInfo.setCount(0);
-            return pageInfo;
-        }
-        hql.append("GROUP BY p.piCreateTime ");
-        List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
-        pageInfo.setCount(count.intValue());
-        pageInfo.setItems(list);
-        return pageInfo;
-    }
-
-
-    /**
-     * 创建比赛—点击球场-获取分区和洞
-     * @return
-     */
-    public List<ParkPartition> getParkZoneAndHole(Long parkId) {
-        StringBuilder hql = new StringBuilder();
-        hql.append("SELECT DISTINCT p.ppName FROM ParkPartition AS p WHERE 1=1 ");
-        hql.append("AND p.ppPId = " +parkId);
-        return dao.createQuery(hql.toString());
-    }
 
 
 	/**
@@ -225,6 +103,7 @@ public class TeamDao extends CommonDao {
 		hql.append("FROM TeamUserMapping AS tm,TeamInfo AS t WHERE 1=1 ");
 		hql.append("AND tm.tumTeamId = t.tiId ");
 		hql.append("and tm.tumUserId = :userId ");
+		hql.append("and tm.tumIsValid = 1 ");
 		if((Integer)parp.get("type") == 1){
 			//我创建的球队
 			hql.append("and tm.tumUserType = :type ");
@@ -250,6 +129,29 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
+	 * 通过球队id获取队长
+	 * @return
+	 */
+	public List<String> getCaptainByTeamId(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT u.uiNickName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
+				"AND t.tumTeamId = "+teamId+" AND t.tumUserType = 1 AND t.tumUserId = u.uiId ");
+		return dao.createQuery(hql.toString());
+	}
+
+	/**
+	 * 判断是否是该队队长
+	 * @return
+	 */
+	public Long isCaptainIdByTeamId(Long teamId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT COUNT(*) FROM TeamUserMapping AS t WHERE 1=1 " +
+				"AND t.tumTeamId = "+teamId+" AND t.tumUserType = 1 AND t.tumUserId = " + userId);
+		return dao.createCountQuery(hql.toString());
+	}
+
+
+	/**
 	 * 获取本球队的前12个队员
 	 * @return
 	 */
@@ -262,5 +164,18 @@ public class TeamDao extends CommonDao {
 		hql.append("ORDER BY m.tumUserType desc ");
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 12,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
+	}
+
+	/**
+	 * 删除球队 和 用户mapping
+	 * @return
+	 */
+	public void delTeam(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("update TeamInfo as t set t.tiIsValid = 0 WHERE t.tiId = "+teamId);
+		dao.executeHql(hql.toString());
+		hql.delete(0, hql.length());
+		hql.append("update TeamUserMapping as m set m.tumIsValid = 0 WHERE m.tumTeamId = "+teamId);
+		dao.executeHql(hql.toString());
 	}
 }

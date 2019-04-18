@@ -260,6 +260,118 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
+	 * 创建比赛—点击球场-获取分区和洞
+	 * @return
+	 */
+	public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT DISTINCT p.ppName FROM ParkPartition AS p WHERE 1=1 ");
+		hql.append("AND p.ppPId = " +parkId);
+		return dao.createQuery(hql.toString());
+	}
+
+	/**
+	 * 查询球场区域
+	 * @return
+	 */
+	public POJOPageInfo getParkListByRegion(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		hql.append("select DISTINCT p.piCity from ParkInfo as p where p.piIsValid = 1");
+		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
+
+
+	/**
+	 * 查询该区域下的球场
+	 * @return
+	 */
+	public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		hql.append(" from ParkInfo as p where p.piIsValid = 1");
+		if(parp.get("keyword") != null){
+			hql.append("AND p.piName LIKE :keyword  ");
+		}
+		hql.append("AND p.piCity = :regionName  ");
+
+		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+		if (count == null || count.intValue() == 0) {
+			pageInfo.setItems(new ArrayList<ParkInfo>());
+			pageInfo.setCount(0);
+			return pageInfo;
+		}
+		hql.append("GROUP BY p.piCreateTime ");
+		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		pageInfo.setCount(count.intValue());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
+
+	/**
+	 * 查询球场列表-所有球场
+	 * @return
+	 */
+	public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		hql.append("FROM ParkInfo AS p WHERE 1=1 ");
+		if(parp.get("keyword") != null){
+			hql.append("AND p.piName LIKE :keyword  ");
+		}
+
+		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+		if (count == null || count.intValue() == 0) {
+			pageInfo.setItems(new ArrayList<ParkInfo>());
+			pageInfo.setCount(0);
+			return pageInfo;
+		}
+		hql.append("GROUP BY p.piCreateTime ");
+		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		pageInfo.setCount(count.intValue());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
+
+	/**
+	 * 查询球场列表-附近球场
+	 * @return
+	 */
+	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		hql.append("FROM ParkInfo AS p WHERE 1=1 ");
+		if(parp.get("keyword") != null){
+			hql.append("AND p.piName LIKE :keyword  ");
+		}
+       /* searchBean.addParpField("minlng", minlng);
+        searchBean.addParpField("maxlng", maxlng);
+        searchBean.addParpField("minlat", minlat);
+        searchBean.addParpField("maxlat", maxlat);*/
+//        String hql = "from Property where longitude>=? and longitude =<? and latitude>=? latitude=<? and state=0";
+
+		hql.append("AND p.piLng >= :minlng ");
+		hql.append("AND p.piLng <= :maxlng ");
+		hql.append("AND p.piLat >= :minlat ");
+		hql.append("AND p.piLat <= :maxlat ");
+
+		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+		if (count == null || count.intValue() == 0) {
+			pageInfo.setItems(new ArrayList<ParkInfo>());
+			pageInfo.setCount(0);
+			return pageInfo;
+		}
+		hql.append("GROUP BY p.piCreateTime ");
+		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
+		pageInfo.setCount(count.intValue());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
+
+
+	/**
 	 * 根据球场名称获取球场信息
 	 * @return
 	 */

@@ -33,6 +33,7 @@ public class MatchInfo {
 	private Integer miHit;
 	private Long miApplyEndTime;
 	private Integer miIsEnd;
+	private Integer miIsValid;
 	private String miCreateUserName;
 	private Long miCreateUserId;
 	private Long miCreateTime;
@@ -52,7 +53,7 @@ public class MatchInfo {
 					 String miZoneAfterNine, String miDigest, String miMatchTime,
 					 String miContent, Integer miMatchOpenType, Integer miJoinOpenType,
 					 Integer miMatchFormat1, Integer miMatchFormat2, String miJoinTeamIds,
-					 String miReportScoreTeamId, Integer miHit, Long miApplyEndTime, Integer miIsEnd,
+					 String miReportScoreTeamId, Integer miHit, Long miApplyEndTime, Integer miIsEnd, Integer miIsValid,
 					 String miCreateUserName, Long miCreateUserId, Long miCreateTime,
 					 String miUpdateUserName, Long miUpdateUserId, Long miUpdateTime) {
 		this.miType = miType;
@@ -75,6 +76,7 @@ public class MatchInfo {
 		this.miHit = miHit;
 		this.miApplyEndTime = miApplyEndTime;
 		this.miIsEnd = miIsEnd;
+		this.miIsValid = miIsValid;
 		this.miCreateUserName = miCreateUserName;
 		this.miCreateUserId = miCreateUserId;
 		this.miCreateTime = miCreateTime;
@@ -274,6 +276,15 @@ public class MatchInfo {
 
 	public void setMiIsEnd(Integer miIsEnd) {
 		this.miIsEnd = miIsEnd;
+	}
+
+	@Column(name = "mi_is_valid")
+	public Integer getMiIsValid() {
+		return miIsValid;
+	}
+
+	public void setMiIsValid(Integer miIsValid) {
+		this.miIsValid = miIsValid;
 	}
 
 	@Column(name = "mi_create_user_name", length = 128)

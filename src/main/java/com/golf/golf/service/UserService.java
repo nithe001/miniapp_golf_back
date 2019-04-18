@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -56,7 +57,7 @@ public class UserService implements IBaseService {
      */
     public UserInfo getUserById(Long userId){
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
-		userInfo.setUiHeadimg(PropertyConst.DOMAIN + userInfo.getUiHeadimg());
+//		userInfo.setUiHeadimg(PropertyConst.DOMAIN + userInfo.getUiHeadimg());
 		return userInfo;
     }
 
@@ -233,12 +234,12 @@ public class UserService implements IBaseService {
 			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
 
 			//下载头像
-			String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
+			/*String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
 			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
 			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
 				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
-			}
-			wechatUserInfo.setWuiHeadimg(headImgPath);
+			}*/
+//			wechatUserInfo.setWuiHeadimg(headImgPath);
 			wechatUserInfo.setWuiIsValid(1);
 			wechatUserInfo.setCreateTime(System.currentTimeMillis());
 
@@ -267,12 +268,12 @@ public class UserService implements IBaseService {
 			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
 
 			//下载头像
-			String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
+			/*String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
 			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
 			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
 				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
 			}
-			wechatUserInfo.setWuiHeadimg(headImgPath);
+			wechatUserInfo.setWuiHeadimg(headImgPath);*/
 			wechatUserInfo.setWuiIsValid(1);
 			wechatUserInfo.setCreateTime(System.currentTimeMillis());
 
@@ -294,7 +295,7 @@ public class UserService implements IBaseService {
 		}
 		userInfo.setUiOpenId(openid);
 		userInfo.setUiNickName(wechatUserInfo.getWuiNickName());
-		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimg());
+		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimgurl());
 		userInfo.setUiSex(wechatUserInfo.getWuiSex());
 		if(wechatUserInfo.getWuiUId() == null){
 			//普通用户
