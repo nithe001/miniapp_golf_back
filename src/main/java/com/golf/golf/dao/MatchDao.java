@@ -33,7 +33,7 @@ public class MatchDao extends CommonDao {
 				"m.mi_apply_end_time as mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end ");
 		hql.append("FROM match_info AS m ");
-		hql.append("LEFT JOIN match_join_watch_info AS j ON m.mi_id = j.mjwi_match_id ");
+		hql.append("LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1) ");
 		hql.append("WHERE 1=1 ");
 		hql.append(" and j.mjwi_type = 1 ");
 
@@ -497,5 +497,18 @@ public class MatchDao extends CommonDao {
 		sql.append("and mugmMatchId = :matchId ");
 		sql.append("and mugmGroupId = :groupId ");
 		dao.executeHql(sql.toString(),parp);
+	}
+
+	/**
+	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
+	 * @return
+	 */
+	public List<TeamInfo> getTeamsById(List<Long> teamIds) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("teamIds", teamIds);
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM TeamInfo AS t ");
+		sql.append("WHERE t.tiId in (:teamIds) ");
+		return dao.createQuery(sql.toString(),parp);
 	}
 }

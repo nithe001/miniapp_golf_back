@@ -4,8 +4,10 @@ import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.PropertyConst;
 import com.golf.golf.bean.MatchGroupBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
+import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
@@ -448,18 +450,37 @@ public class MatchService implements IBaseService {
 	 * 创建比赛-保存-自动成为赛长
 	 * @return
 	 */
-	public void saveMatchInfo(MatchInfo matchInfo) {
-		ParkInfo parkInfo = matchDao.getParkIdByName(matchInfo.getMiParkName());
+	public void saveMatchInfo(MatchInfo matchInfo, String parkName) {
+		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if(parkInfo != null){
 			matchInfo.setMiParkId(parkInfo.getPiId());
 		}
-		matchInfo.setMiParkName(matchInfo.getMiParkName());
+		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiType(1);
 		matchInfo.setMiCreateTime(System.currentTimeMillis());
-		matchInfo.setMiCreateUserId(UserUtil.getUserId());
-		matchInfo.setMiCreateUserName(UserUtil.getShowName());
+		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
+		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
 		matchInfo.setMiIsValid(1);
 		matchDao.save(matchInfo);
+
+		MatchGroup matchGroup = new MatchGroup();
+		matchGroup.setMgMatchId(matchInfo.getMiId());
+		matchGroup.setMgGroupName("第1组");
+		matchGroup.setMgCreateTime(System.currentTimeMillis());
+		matchGroup.setMgCreateUserId(WebUtil.getUserIdBySessionId());
+		matchGroup.setMgCreateUserName(WebUtil.getUserNameBySessionId());
+		matchDao.save(matchGroup);
+
+		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
+		matchUserGroupMapping.setMugmUserType(1);
+		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
+		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+		matchUserGroupMapping.setMugmUserId(WebUtil.getUserIdBySessionId());
+		matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
+		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+		matchDao.save(matchUserGroupMapping);
 	}
 
     /**
@@ -509,6 +530,14 @@ public class MatchService implements IBaseService {
 		List<String> cityList = matchDao.getParkInfoCityList();
 		if(StringUtils.isEmpty(city)){
 			city = cityList.get(0);
+		}
+		UserModel userModel = WebUtil.getUserModelBySessionId();
+		if(userModel != null){
+			WechatUserInfo wechatUserInfo = userModel.getWechatUser();
+			if(wechatUserInfo != null){
+				//用户的经纬度 获取就近的场地
+
+			}
 		}
 		List<String> parkList = matchDao.getParkInfoList(city);
 		result.put("cityList", cityList);
@@ -644,5 +673,26 @@ public class MatchService implements IBaseService {
 		}else{
 			return null;
 		}
+	}
+
+	/**
+	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
+	 * @return
+	 */
+	public List<TeamInfo> getTeamsById(String teamIds) {
+		if(StringUtils.isNotEmpty(teamIds)){
+			List<Long> teamIdList = new ArrayList<>();
+			teamIds = teamIds.replace("[","");
+			teamIds = teamIds.replace("]","");
+			teamIds = teamIds.replace("\"","");
+			String[] teamids = teamIds.split(",");
+			for(String teamId :teamids){
+				if(StringUtils.isNotEmpty(teamId)){
+					teamIdList.add(Long.parseLong(teamId));
+				}
+			}
+			return matchDao.getTeamsById(teamIdList);
+		}
+		return null;
 	}
 }

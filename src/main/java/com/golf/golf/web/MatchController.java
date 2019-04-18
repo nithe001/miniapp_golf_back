@@ -106,13 +106,14 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
-	public JsonElement saveMatchInfo(String matchInfo, String logoPath) {
+	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String teamIds, String parkName) {
 		try {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
 				matchInfoBean.setMiLogo(PropertyConst.DOMAIN + logoPath);
-				matchService.saveMatchInfo(matchInfoBean);
+				matchInfoBean.setMiJoinTeamIds(teamIds);
+				matchService.saveMatchInfo(matchInfoBean,parkName);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -575,4 +576,22 @@ public class MatchController {
 		}
 	}
 
+
+	/**
+	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTeamsById")
+	public JsonElement getTeamsById(String teamIds) {
+		try {
+			List<TeamInfo> teamInfoList = matchService.getTeamsById(teamIds);
+			return JsonWrapper.newDataInstance(teamInfoList);
+		} catch (Exception e) {
+			errmsg = "前台-创建比赛—通过id查询球队名称和logo时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 }

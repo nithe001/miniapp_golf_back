@@ -56,10 +56,10 @@ public class TeamService implements IBaseService {
 						result.put("captain", captainList.get(0));
 					}
 				}
-				String logo = matchService.getName(result, "logo");
-				if(StringUtils.isNotEmpty(logo)){
-					result.put("logo", PropertyConst.DOMAIN + logo);
-				}
+//				String logo = matchService.getName(result, "logo");
+//				if(StringUtils.isNotEmpty(logo)){
+//					result.put("logo", PropertyConst.DOMAIN + logo);
+//				}
 			}
 		}
     }

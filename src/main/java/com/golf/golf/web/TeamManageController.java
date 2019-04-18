@@ -119,7 +119,7 @@ public class TeamManageController {
 			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
-				teamInfoBean.setTiLogo(logoPath);
+				teamInfoBean.setTiLogo(PropertyConst.DOMAIN + logoPath);
 				teamService.saveOrUpdateTeamInfo(teamInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();
