@@ -70,6 +70,9 @@ public class MatchController {
 			}
 			searchBean.addParpField("type", type);
 			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
+			UserInfo userInfo = WebUtil.getUserInfoBySessionId();
+			searchBean.addParpField("lat", userInfo.getUiLatitude());
+			searchBean.addParpField("lng", userInfo.getUiLongitude());
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,7 +90,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getJoinTeamList")
-	public JsonElement getMatchDetail(Long matchId) {
+	public JsonElement getJoinTeamList(Long matchId) {
 		try {
 			List<Map<String, Object>> teamList = matchService.getTeamListByMatchId(matchId);
 			return JsonWrapper.newDataInstance(teamList);
@@ -106,13 +109,17 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
-	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String teamIds, String parkName) {
+	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String teamIds, String parkName, String beforeZoneName,
+									 String afterZoneName,String reportTeamIds) {
 		try {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
 				matchInfoBean.setMiLogo(PropertyConst.DOMAIN + logoPath);
 				matchInfoBean.setMiJoinTeamIds(teamIds);
+				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
+				matchInfoBean.setMiZoneAfterNine(afterZoneName);
+				matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				matchService.saveMatchInfo(matchInfoBean,parkName);
 			}
 			return JsonWrapper.newSuccessInstance();
@@ -137,6 +144,24 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
 			errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 点击进入比赛详情——获取是否是赛长
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getIsCaptain")
+	public JsonElement getIsCaptain(Long matchId) {
+		try {
+			boolean isCaptain = matchService.getIsCaptain(matchId);
+			return JsonWrapper.newDataInstance(isCaptain);
+		} catch (Exception e) {
+			errmsg = "前台-点击进入比赛详情-获取是否是赛长时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -399,26 +424,6 @@ public class MatchController {
 		}
 	}
 
-
-
-	/**
-	 * 单练——选择器——获取球场
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getParkInfo")
-	public JsonElement getParkInfo(String city) {
-		try {
-			Map<String, Object> parkInfoList = matchService.getParkInfoList(city);
-			return JsonWrapper.newDataInstance(parkInfoList);
-		} catch (Exception e) {
-			errmsg = "前台-单练——选择器——获取球场时出错。";
-			e.printStackTrace();
-			logger.error(errmsg + e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
-
 	/**
 	 * 单练——开始记分——保存数据
 	 * @return
@@ -444,39 +449,31 @@ public class MatchController {
      * 创建比赛—获取球场列表
      * @param page 翻页
      * @param keyword 搜索关键字
-     * @param type 0:附近 1：区域
-     * @param regionName 区域名称
      * @return
      */
     @ResponseBody
     @RequestMapping("getParkList")
-    public JsonElement getParkList(Integer page, String keyword, Integer type, String regionName) {
-        Integer nowPage = 1;
-        if (page > 0) {
-            nowPage = page;
+    public JsonElement getParkList(Integer page, String keyword) {
+        if (page == null || page == 0) {
+            page = 1;
         }
         try {
             SearchBean searchBean = new SearchBean();
             if(StringUtils.isNotEmpty(keyword)){
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
-            POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>(Const.ROWSPERPAGE , nowPage);
-            if(type == null){
-                //全部
-                pageInfo = matchService.getParkList(searchBean, pageInfo);
-            }else if(type == 0){
-                //附近
-                pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
-            }else if(type == 1){
-                //区域
-                pageInfo.setRowsPerPage(0);
-                pageInfo.setNowPage(1);
-                pageInfo = matchService.getParkListByRegion(searchBean, pageInfo);
-            }else if(StringUtils.isNotEmpty(regionName)){
-                //该区域下的所有球场
-                searchBean.addParpField("regionName", regionName);
-                pageInfo = matchService.getParkListByRegionName(searchBean, pageInfo);
-            }
+            POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>( Const.ROWSPERPAGE, page);
+			//附近
+			pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
+//                //区域
+//                pageInfo.setRowsPerPage(0);
+//                pageInfo.setNowPage(1);
+//                pageInfo = matchService.getParkListByRegion(searchBean, pageInfo);
+//            }else if(StringUtils.isNotEmpty(regionName)){
+//                //该区域下的所有球场
+//                searchBean.addParpField("regionName", regionName);
+//                pageInfo = matchService.getParkListByRegionName(searchBean, pageInfo);
+//            }
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
             errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
@@ -491,10 +488,10 @@ public class MatchController {
      * @return
      */
     @ResponseBody
-    @RequestMapping("getParkZoneAndHole")
-    public JsonElement getParkZoneAndHole(Long parkId) {
+    @RequestMapping("getZoneByParkId")
+    public JsonElement getZoneByParkId(Long parkId) {
         try {
-            List<ParkPartition> parkPartitionList = matchService.getParkZoneAndHole(parkId);
+			List<Object[]> parkPartitionList = matchService.getParkZoneAndHole(parkId);
             return JsonWrapper.newDataInstance(parkPartitionList);
         } catch (Exception e) {
             errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
@@ -553,11 +550,15 @@ public class MatchController {
 				if (type != null) {
 					if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
 						// 项目在容器中实际发布运行的根路径
-						String realPath = WebUtil.getRealPath("up/teamLogo");
+						String realPath = WebUtil.getRealPath(PropertyConst.MATHC_LOGO_PATH);
 						// 自定义的文件名称
 						String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
-						file.transferTo(new File(realPath,trueFileName));
-						logoPath = "up/matchLogo/"+trueFileName;
+						File targetFile = new File(realPath, trueFileName);
+						if(!targetFile.exists()){
+							targetFile.mkdirs();
+						}
+						file.transferTo(targetFile);
+						logoPath = PropertyConst.MATHC_LOGO_PATH+trueFileName;
 						logger.info("文件成功上传到指定目录下");
 					}else {
 						return JsonWrapper.newErrorInstance("文件类型不正确");

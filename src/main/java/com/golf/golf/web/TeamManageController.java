@@ -160,7 +160,7 @@ public class TeamManageController {
 							targetFile.mkdirs();
 						}
 						file.transferTo(targetFile);
-						logoPath = "up/teamLogo/"+trueFileName;
+						logoPath = PropertyConst.TEAM_LOGO_PATH+trueFileName;
 						logger.info("文件成功上传到指定目录下");
 					}else {
 						return JsonWrapper.newErrorInstance("文件类型不正确");

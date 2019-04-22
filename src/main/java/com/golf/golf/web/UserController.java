@@ -57,6 +57,27 @@ public class UserController {
 		}
 	}
 
+
+	/**
+	 * 更新用户经纬度信息
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "updateUserLocation")
+	public JsonElement updateUserLocation(String latitude, String longitude) {
+		try {
+			if(StringUtils.isNotEmpty(latitude) && StringUtils.isNotEmpty(longitude)){
+				userService.updateUserLocation(latitude, longitude);
+			}
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("保存微信用户信息时出错。" + e);
+			return JsonWrapper.newErrorInstance("保存微信用户信息时出错");
+		}
+	}
+
+
 	/**
 	 * 获取我的信息
 	 * @return

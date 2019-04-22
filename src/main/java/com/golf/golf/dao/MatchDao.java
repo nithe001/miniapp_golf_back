@@ -27,22 +27,23 @@ public class MatchDao extends CommonDao {
 		Map<String, Object> parp = searchBean.getParps();
 		StringBuilder hql = new StringBuilder();
 		hql.append(" from ( SELECT m.mi_id AS mi_id," +
+				"m.mi_logo as mi_logo," +
 				"m.mi_title AS mi_title," +
 				"m.mi_park_name AS mi_park_name," +
 				"m.mi_match_time AS mi_match_time," +
 				"m.mi_apply_end_time as mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end ");
 		hql.append("FROM match_info AS m ");
-		hql.append("LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1) ");
+		hql.append("LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 and j.mjwi_type = 1) ");
 		hql.append("WHERE 1=1 ");
-		hql.append(" and j.mjwi_type = 1 ");
 
 		if((Integer)parp.get("type") == 1){
 			//我参加的比赛
 			hql.append("AND m.mi_id IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 WHERE j1.mjwi_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
 			//我可以报名的比赛
-			hql.append("AND m.mi_id NOT IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 WHERE j1.mjwi_user_id = :userId) ");
+			hql.append("AND m.mi_id NOT IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 " +
+					"WHERE j1.mjwi_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的比赛
 			hql.append("AND m.mi_create_user_id = :userId ");
@@ -53,6 +54,10 @@ public class MatchDao extends CommonDao {
 		if(parp.get("keyword") != null){
 			hql.append("WHERE 1=1 AND ma.mi_title LIKE :keyword ");
 		}
+		//计算我附近的比赛
+
+
+
 		hql.append("GROUP BY ma.mi_id ");
 
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) from (select * "+hql.toString()+" ) as t", parp);
@@ -164,19 +169,6 @@ public class MatchDao extends CommonDao {
      * @return
      */
     public List<MatchUserGroupMapping> getMatchGroupMappingList(Long matchId) {
-        /*SELECT
-        m.mugm_id,
-                m.mugm_group_id,
-                m.mugm_group_name,
-                m.mugm_is_captain,
-                m.mugm_user_id,
-                m.mugm_user_name from match_user_group_mapping AS m
-	, match_group AS g
-        where m.mugm_group_id = g.mg_id
-        and m.mugm_match_id = 1
-        GROUP BY
-        m.mugm_is_captain,m.mugm_group_name,m.mugm_user_id
-        ORDER BY m.mugm_is_captain desc*/
         StringBuilder hql = new StringBuilder();
         hql.append("SELECT m.mugmId,m.mugmGroupId,m.mugmGroupName,m.mugmUserType,m.mugmUserId,m.mugmUserName  ");
         hql.append("FROM MatchScoreUserMapping AS m , MatchGroup AS g WHERE 1=1 ");
@@ -230,10 +222,12 @@ public class MatchDao extends CommonDao {
      * @return
      */
     public List<TeamInfo> getTeamListByIds(List<Long> teamIdList) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("teamIdList",teamIdList);
         StringBuilder sql = new StringBuilder();
         sql.append(" FROM TeamInfo AS t WHERE 1=1 ");
-        sql.append(" AND t.tiId in ( "+teamIdList +")");
-        return dao.createQuery(sql.toString());
+        sql.append(" AND t.tiId in ( :teamIdList )");
+        return dao.createQuery(sql.toString(),parp);
     }
 
 	/**
@@ -249,13 +243,23 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 单练——选择器——获取球场 场地
+	 * 获取球场 场地（旧版为选择器picker现改为页面列表显示）
 	 * @return
 	 */
-	public List<String> getParkInfoList(String city) {
+	/*public List<String> getParkInfoList(String city) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT p.piName FROM ParkInfo AS p WHERE 1=1 ");
 		sql.append("AND p.piCity = '"+city+"'");
+		return dao.createQuery(sql.toString());
+	}*/
+
+	public List<ParkInfo> getParkInfoList(Map<String, Object> parp) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM ParkInfo AS p WHERE 1=1 ");
+		if(parp.get("keywords") != null){
+			sql.append("AND p.piCity = :keywords");
+		}
+		//计算我附近的
 		return dao.createQuery(sql.toString());
 	}
 
@@ -263,10 +267,11 @@ public class MatchDao extends CommonDao {
 	 * 创建比赛—点击球场-获取分区和洞
 	 * @return
 	 */
-	public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+	public List<Object[]> getParkZoneAndHole(Long parkId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT DISTINCT p.ppName FROM ParkPartition AS p WHERE 1=1 ");
+		hql.append("SELECT DISTINCT p.ppName,count(p.ppName) FROM ParkPartition AS p WHERE 1=1 ");
 		hql.append("AND p.ppPId = " +parkId);
+		hql.append("GROUP BY p.ppName");
 		return dao.createQuery(hql.toString());
 	}
 
@@ -310,30 +315,6 @@ public class MatchDao extends CommonDao {
 		return pageInfo;
 	}
 
-	/**
-	 * 查询球场列表-所有球场
-	 * @return
-	 */
-	public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		Map<String, Object> parp = searchBean.getParps();
-		StringBuilder hql = new StringBuilder();
-		hql.append("FROM ParkInfo AS p WHERE 1=1 ");
-		if(parp.get("keyword") != null){
-			hql.append("AND p.piName LIKE :keyword  ");
-		}
-
-		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
-		if (count == null || count.intValue() == 0) {
-			pageInfo.setItems(new ArrayList<ParkInfo>());
-			pageInfo.setCount(0);
-			return pageInfo;
-		}
-		hql.append("GROUP BY p.piCreateTime ");
-		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
-		pageInfo.setCount(count.intValue());
-		pageInfo.setItems(list);
-		return pageInfo;
-	}
 
 	/**
 	 * 查询球场列表-附近球场
@@ -346,16 +327,10 @@ public class MatchDao extends CommonDao {
 		if(parp.get("keyword") != null){
 			hql.append("AND p.piName LIKE :keyword  ");
 		}
-       /* searchBean.addParpField("minlng", minlng);
-        searchBean.addParpField("maxlng", maxlng);
-        searchBean.addParpField("minlat", minlat);
-        searchBean.addParpField("maxlat", maxlat);*/
-//        String hql = "from Property where longitude>=? and longitude =<? and latitude>=? latitude=<? and state=0";
-
 		hql.append("AND p.piLng >= :minlng ");
-		hql.append("AND p.piLng <= :maxlng ");
+//		hql.append("AND p.piLng <= :maxlng ");
 		hql.append("AND p.piLat >= :minlat ");
-		hql.append("AND p.piLat <= :maxlat ");
+//		hql.append("AND p.piLat <= :maxlat ");
 
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
@@ -363,7 +338,7 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append("GROUP BY p.piCreateTime ");
+		hql.append("ORDER BY p.piLng,p.piLat ");
 		List<ParkInfo> list = dao.createQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage());
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);

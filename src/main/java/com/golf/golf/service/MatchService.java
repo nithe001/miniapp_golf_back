@@ -33,6 +33,20 @@ public class MatchService implements IBaseService {
 	@Autowired
 	private TeamService teamService;
 
+	/**
+	 * 查询球场列表——附近的球场
+	 * @return
+	 */
+	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
+		UserInfo userInfo = WebUtil.getUserInfoBySessionId();
+		//用户经纬度存在, 计算我附近10千米的经纬度
+		if(StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())){
+			searchBean = teamService.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
+					Double.parseDouble(userInfo.getUiLatitude()),10);
+		}
+
+		return matchDao.getParkListNearby(searchBean,pageInfo);
+	}
 
 	/**
 	 * 获取全部比赛列表 或 获取我参加的比赛列表
@@ -44,13 +58,8 @@ public class MatchService implements IBaseService {
 			List<MatchInfo> matchInfoList = new ArrayList<>();
 			for(Map<String, Object> result: (List<Map<String, Object>>)pageInfo_.getItems()){
 				MatchInfo matchInfo = new MatchInfo();
-//				String select = "m.mi_id AS mi_id," +
-//				"m.mi_title AS mi_title," +
-//				"m.mi_park_name AS mi_park_name," +
-//				"m.mi_match_time AS mi_match_time," +
-//				"m.mi_apply_end_time as mi_apply_end_time," +
-//				"m.mi_is_end AS mi_is_end,count(mj.mjwi_user_id) as userCount ";
 				matchInfo.setMiId(getLongValue(result,"mi_id"));
+				matchInfo.setMiLogo(getName(result, "mi_logo"));
 				matchInfo.setMiTitle(getName(result, "mi_title"));
 				matchInfo.setMiParkName(getName(result, "mi_park_name"));
 				matchInfo.setMiMatchTime(getName(result,"mi_match_time"));
@@ -125,6 +134,21 @@ public class MatchService implements IBaseService {
         result.put("groupList", groupList);
 		result.put("isCaptain", isCaptain);
 		return result;
+	}
+
+	/**
+	 * 当前登录用户是否是赛长
+	 */
+	public boolean getIsCaptain(Long matchId) {
+		SearchBean searchBean = new SearchBean();
+		searchBean.addParpField("matchId", matchId);
+		searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
+		Long captainCount = matchDao.getIsCaptain(searchBean);
+		Boolean isCaptain = false;
+		if(captainCount > 0){
+			isCaptain = true;
+		}
+		return isCaptain;
 	}
 
 	/**
@@ -247,7 +271,7 @@ public class MatchService implements IBaseService {
 	 * 创建比赛—点击球场-获取分区和洞
 	 * @return
 	 */
-	public List<ParkPartition> getParkZoneAndHole(Long parkId) {
+	public List<Object[]> getParkZoneAndHole(Long parkId) {
 		return matchDao.getParkZoneAndHole(parkId);
 	}
 
@@ -265,29 +289,6 @@ public class MatchService implements IBaseService {
 	 */
 	public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
 		return matchDao.getParkListByRegionName(searchBean,pageInfo);
-	}
-
-	/**
-	 * 查询球场列表——所有球场
-	 * @return
-	 */
-	public POJOPageInfo getParkList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return matchDao.getParkList(searchBean,pageInfo);
-	}
-
-	/**
-	 * 查询球场列表——附近的球场
-	 * @return
-	 */
-	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
-		UserInfo userInfo = matchDao.get(UserInfo.class, UserUtil.getUserId());
-		if(userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLongitude())
-				&& StringUtils.isNotEmpty(userInfo.getUiLatitude())){
-			//用户经纬度存在, 计算我附近5千米的经纬度
-			searchBean = teamService.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
-					Double.parseDouble(userInfo.getUiLatitude()));
-		}
-		return matchDao.getParkListNearby(searchBean,pageInfo);
 	}
 
 
@@ -481,6 +482,13 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
+
+		MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+		matchJoinWatchInfo.setMjwiType(1);
+		matchJoinWatchInfo.setMjwiMatchId(matchInfo.getMiId());
+		matchJoinWatchInfo.setMjwiUserId(WebUtil.getUserIdBySessionId());
+		matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+		matchDao.save(matchJoinWatchInfo);
 	}
 
     /**
@@ -519,31 +527,6 @@ public class MatchService implements IBaseService {
         matchInfo.setMiCreateUserName(UserUtil.getShowName());
         matchDao.save(matchInfo);
     }
-
-
-	/**
-	 * 单练——选择器——获取球场
-	 * @return
-	 */
-	public Map<String, Object> getParkInfoList(String city) {
-		Map<String, Object> result = new HashMap<String, Object>();
-		List<String> cityList = matchDao.getParkInfoCityList();
-		if(StringUtils.isEmpty(city)){
-			city = cityList.get(0);
-		}
-		UserModel userModel = WebUtil.getUserModelBySessionId();
-		if(userModel != null){
-			WechatUserInfo wechatUserInfo = userModel.getWechatUser();
-			if(wechatUserInfo != null){
-				//用户的经纬度 获取就近的场地
-
-			}
-		}
-		List<String> parkList = matchDao.getParkInfoList(city);
-		result.put("cityList", cityList);
-		result.put("parkList", parkList);
-		return result;
-	}
 
 
 	/**
@@ -695,4 +678,5 @@ public class MatchService implements IBaseService {
 		}
 		return null;
 	}
+
 }

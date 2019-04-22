@@ -12,6 +12,8 @@ import javax.servlet.http.HttpSession;
 import com.golf.common.MySessionContext;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.WechatUserUtil;
+import com.golf.golf.db.UserInfo;
+import com.golf.golf.db.WechatUserInfo;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.WebUtils;
@@ -247,17 +249,43 @@ public class WebUtil {
 	}
 
 	/**
+	 * 通过sessionid获取UserInfo
+	 */
+	public static UserInfo getUserInfoBySessionId(){
+		UserModel model = getUserModelBySessionId();
+		return model.getUser();
+	}
+
+	/**
+	 * 通过sessionid获取WechatUserInfo
+	 */
+	public static WechatUserInfo getWechatUserInfoBySessionId(){
+		UserModel model = getUserModelBySessionId();
+		return model.getWechatUser();
+	}
+
+	/**
 	 * 通过sessionid获取UserId
 	 */
 	public static Long getUserIdBySessionId(){
 		String sessionId = WebUtil.getSessionIdByCookie();
 		HttpSession session = WebUtil.getSessionById(sessionId);
 		UserModel model = (UserModel)session.getAttribute(WechatUserUtil.USER_SESSION_NAME);
-		if(model != null){
-			if(model.getUser() == null){
-				return model.getWechatUser().getWuiId();
-			}
+		if(model != null && model.getUser() != null){
 			return model.getUser().getUiId();
+		}
+		return null;
+	}
+
+	/**
+	 * 通过sessionid获取UserWechatId
+	 */
+	public static Long getUserWechatIdBySessionId(){
+		String sessionId = WebUtil.getSessionIdByCookie();
+		HttpSession session = WebUtil.getSessionById(sessionId);
+		UserModel model = (UserModel)session.getAttribute(WechatUserUtil.USER_SESSION_NAME);
+		if(model != null && model.getWechatUser() != null) {
+			return model.getWechatUser().getWuiId();
 		}
 		return null;
 	}

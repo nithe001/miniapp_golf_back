@@ -312,4 +312,17 @@ public class UserService implements IBaseService {
 		}
 	}
 
+	/**
+	 * 更新用户经纬度信息
+	 * @return
+	 */
+	public void updateUserLocation(String latitude, String longitude) {
+		UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+		db.setUiLatitude(latitude);
+		db.setUiLongitude(longitude);
+		db.setUiUpdateTime(System.currentTimeMillis());
+		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
+		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+		dao.update(db);
+	}
 }
