@@ -6,6 +6,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.bean.MatchGroupBean;
+import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
@@ -16,10 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 学术活动
@@ -482,13 +480,6 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
-
-		MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-		matchJoinWatchInfo.setMjwiType(1);
-		matchJoinWatchInfo.setMjwiMatchId(matchInfo.getMiId());
-		matchJoinWatchInfo.setMjwiUserId(WebUtil.getUserIdBySessionId());
-		matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-		matchDao.save(matchJoinWatchInfo);
 	}
 
     /**
@@ -679,4 +670,96 @@ public class MatchService implements IBaseService {
 		return null;
 	}
 
+	/**
+	 * 通过matchid和groupid查询本组记分卡信息
+	 * @return
+	 */
+	public Map<String,Object> getScoreCardInfoByGroupId(Long matchId, Long groupId) {
+		Map<String,Object> result = new HashMap<>();
+		List<MatchGroupUserScoreBean> list = new ArrayList<>();
+		//本组用户
+		List<Map<String,Object>> userList = matchDao.getUserListById(matchId, groupId);
+		result.put("userList",userList);
+
+		//半场球洞
+		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
+		result.put("parkHoleList",parkHoleList);
+
+		//第一条记录（半场分区信息）
+		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
+		thBean.setUserId(0L);
+		thBean.setUserName("球洞球杆");
+		thBean.setUserScoreList(parkHoleList);
+		list.add(thBean);
+		//本组用户每个洞得分情况
+		List<Map<String, Object>> uscoreList = matchDao.getUserInfoListByGroupId(matchId, groupId);
+
+		//用户得分
+		MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+		for(Map<String, Object> userScore: uscoreList){
+			Long userId = getLongValue(userScore, "ui_id");
+			String realName = getName(userScore, "real_name");
+			Integer socre = getIntegerValue(userScore, "score");
+			String holeName = getName(userScore, "hole_name");
+			Integer holeNum = getIntegerValue(userScore, "hole_num");
+			if(bean.getUserId() != null && !bean.getUserId().equals(userId)){
+				bean = new MatchGroupUserScoreBean();
+			}
+			bean.setUserId(userId);
+			bean.setUserName(realName);
+//				us.ui_id,us.real_name, s.ms_score AS score,s.ms_hole_name AS hole_name,s.ms_hole_num AS hole_num
+
+			List<Map<String, Object>> userScoreList = new ArrayList<>();
+			//球洞列表
+			for(Map<String, Object> parkHole: parkHoleList){
+				String holeName_park = getName(parkHole, "ppName");
+				Integer holeNum_park = getIntegerValue(parkHole, "holeNum");
+//			select pp.ppId as holeId,pp.ppPId as parkId,pp.ppName as ppName,pp.ppHoleNum as holeNum," +
+//			"pp.ppHoleStandardRod as holeStandardRod
+				Map<String, Object> map = new HashMap<>();
+				if(StringUtils.isNotEmpty(holeName) && holeName.equals(holeName_park) && holeNum != null && holeNum.equals(holeNum_park)){
+					//是否上球道
+					map.put("isUp",getIntegerValue(userScore, "is_up"));
+					//杆数
+					map.put("rodNum",getIntegerValue(userScore, "rod_num"));
+					//推杆数
+					map.put("pushNum",getIntegerValue(userScore, "push_num"));
+				}else{
+					//是否上球道
+					map.put("isUp","");
+					//杆数
+					map.put("rodNum","");
+					//推杆数
+					map.put("pushNum","");
+				}
+				userScoreList.add(map);
+			}
+			bean.setUserScoreList(userScoreList);
+			list.add(bean);
+		}
+		HashSet hs = new HashSet(list);
+		list.clear();
+		list.addAll(hs);
+		//排序
+		Collections.sort(list);
+		result.put("parkHoleList",list);
+		return result;
+	}
+
+	/**
+	 * 通过matchid和groupid查询本组记分卡信息
+	 * @return
+	 */
+	public Map<String,Object> getScoreCardInfoByGroupId3(Long matchId, Long groupId) {
+		Map<String,Object> result = new HashMap<>();
+		//本组用户
+		List<Map<String,Object>> userList = matchDao.getUserListById(matchId, groupId);
+		result.put("userList",userList);
+
+		//半场球洞
+		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
+		result.put("parkHoleList",parkHoleList);
+
+		return result;
+	}
 }

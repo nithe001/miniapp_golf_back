@@ -7,6 +7,7 @@ import com.golf.golf.db.*;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
+import javax.xml.crypto.dsig.Transform;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,7 @@ public class MatchDao extends CommonDao {
 			//我参加的比赛
 			hql.append("AND m.mi_id IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 WHERE j1.mjwi_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
-			//我可以报名的比赛
+			//我可以报名的比赛包括我发起的比赛
 			hql.append("AND m.mi_id NOT IN (SELECT j1.mjwi_match_id FROM match_join_watch_info AS j1 " +
 					"WHERE j1.mjwi_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 3){
@@ -485,5 +486,82 @@ public class MatchDao extends CommonDao {
 		sql.append("FROM TeamInfo AS t ");
 		sql.append("WHERE t.tiId in (:teamIds) ");
 		return dao.createQuery(sql.toString(),parp);
+	}
+
+	/**
+	 * 分组记分卡——获取半场球洞
+	 * @return
+	 */
+	public List<Map<String, Object>> getParkPartitionList(Long matchId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select pp.ppId as holeId,pp.ppPId as parkId,pp.ppName as ppName,pp.ppHoleNum as holeNum," +
+				"pp.ppHoleStandardRod as holeStandardRod ");
+		sql.append("FROM MatchInfo AS m,ParkInfo as p,ParkPartition as pp ");
+		sql.append("WHERE m.miId = "+matchId);
+		sql.append(" and p.piId = m.miParkId ");
+		sql.append(" and (m.miZoneAfterNine = pp.ppName or m.miZoneBeforeNine = pp.ppName) ");
+		sql.append(" and pp.ppPId = p.piId ");
+		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 分组记分卡——获取本组用户
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserInfoListByGroupId(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT us.*, s.ms_score AS score," +
+				"s.ms_hole_name AS hole_name," +
+				"s.ms_is_up as is_up," +
+				"s.ms_hole_num AS hole_num," +
+				"s.ms_rod_num as rod_num," +
+				"s.ms_push_rod_num as push_num ");
+		sql.append("FROM ( ");
+		sql.append("SELECT u.ui_id AS ui_id," +
+					"u.ui_real_name AS real_name " +
+					"FROM match_user_group_mapping AS gm, " +
+					"user_info AS u " +
+					"WHERE 1 = 1 " +
+					"AND gm.mugm_match_id = " +matchId+
+					" AND gm.mugm_group_id = " +groupId+
+					" AND gm.mugm_user_id = u.ui_id ");
+		sql.append(" ) AS us " +
+				"LEFT JOIN match_score AS s ON ( " +
+				"s.ms_match_id = " +matchId+
+				" AND s.ms_group_id = " +groupId+
+				" AND s.ms_user_id = us.ui_id" +
+				")" +
+				"GROUP BY s.ms_id, us.ui_id " +
+				"ORDER BY us.ui_id ,s.ms_hole_name ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+
+	/**
+	 * 分组记分卡——获取本组用户得分
+	 * @return
+	 */
+	public List<MatchScore> getMatchScoreList(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("from MatchScore as s ");
+		sql.append("WHERE s.msMatchId = "+matchId+" and s.msGroupId = "+groupId );
+		sql.append(" ORDER BY s.ms_hole_name");
+
+		return dao.createQuery(sql.toString());
+	}
+
+	//本组用户
+	public List<Map<String, Object>> getUserListById(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT u.uiId as uiId, u.uiRealName as uiRealName ");
+		sql.append("FROM MatchUserGroupMapping as m ,UserInfo as u ");
+		sql.append("where m.mugmMatchId = "+matchId);
+		sql.append(" and m.mugmGroupId = "+groupId);
+		sql.append(" and m.mugmUserId = u.uiId ");
+		sql.append(" order by u.uiId ");
+		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
 	}
 }

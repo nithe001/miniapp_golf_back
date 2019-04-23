@@ -1,11 +1,19 @@
 package com.golf.golf.db;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import static javax.persistence.GenerationType.IDENTITY;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+/**
+ * MatchScore entity. @author MyEclipse Persistence Tools
+ */
 @Entity
-@Table(name = "match_score")
-public class MatchScore {
+@Table(name = "match_score", catalog = "miniapp_golf")
+public class MatchScore implements java.io.Serializable {
+
 	// Fields
 
 	private Long msId;
@@ -17,11 +25,11 @@ public class MatchScore {
 	private Long msUserId;
 	private String msUserName;
 	private Integer msScore;
+	private String msHoleName;
 	private Integer msHoleNum;
-	private Integer msHoleTotalRodNum;
-	private Integer msPushRodNum;
 	private Integer msIsUp;
-	private Integer msMatchTotalRodNum;
+	private Integer msRodNum;
+	private Integer msPushRodNum;
 	private Long msCreateUserId;
 	private Long msCreateTime;
 	private Long msUpdateUserId;
@@ -36,9 +44,9 @@ public class MatchScore {
 	/** full constructor */
 	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
 					  Long msGroupId, String msGroupName, Long msUserId,
-					  String msUserName, Integer msScore, Integer msHoleNum,
-					  Integer msHoleTotalRodNum, Integer msPushRodNum, Integer msIsUp,
-					  Integer msMatchTotalRodNum, Long msCreateUserId, Long msCreateTime,
+					  String msUserName, Integer msScore, String msHoleName,
+					  Integer msHoleNum, Integer msIsUp, Integer msRodNum,
+					  Integer msPushRodNum, Long msCreateUserId, Long msCreateTime,
 					  Long msUpdateUserId, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
 		this.msMatchId = msMatchId;
@@ -48,11 +56,11 @@ public class MatchScore {
 		this.msUserId = msUserId;
 		this.msUserName = msUserName;
 		this.msScore = msScore;
+		this.msHoleName = msHoleName;
 		this.msHoleNum = msHoleNum;
-		this.msHoleTotalRodNum = msHoleTotalRodNum;
-		this.msPushRodNum = msPushRodNum;
 		this.msIsUp = msIsUp;
-		this.msMatchTotalRodNum = msMatchTotalRodNum;
+		this.msRodNum = msRodNum;
+		this.msPushRodNum = msPushRodNum;
 		this.msCreateUserId = msCreateUserId;
 		this.msCreateTime = msCreateTime;
 		this.msUpdateUserId = msUpdateUserId;
@@ -143,6 +151,15 @@ public class MatchScore {
 		this.msScore = msScore;
 	}
 
+	@Column(name = "ms_hole_name", length = 128)
+	public String getMsHoleName() {
+		return this.msHoleName;
+	}
+
+	public void setMsHoleName(String msHoleName) {
+		this.msHoleName = msHoleName;
+	}
+
 	@Column(name = "ms_hole_num")
 	public Integer getMsHoleNum() {
 		return this.msHoleNum;
@@ -150,24 +167,6 @@ public class MatchScore {
 
 	public void setMsHoleNum(Integer msHoleNum) {
 		this.msHoleNum = msHoleNum;
-	}
-
-	@Column(name = "ms_hole_total_rod_num")
-	public Integer getMsHoleTotalRodNum() {
-		return this.msHoleTotalRodNum;
-	}
-
-	public void setMsHoleTotalRodNum(Integer msHoleTotalRodNum) {
-		this.msHoleTotalRodNum = msHoleTotalRodNum;
-	}
-
-	@Column(name = "ms_push_rod_num")
-	public Integer getMsPushRodNum() {
-		return this.msPushRodNum;
-	}
-
-	public void setMsPushRodNum(Integer msPushRodNum) {
-		this.msPushRodNum = msPushRodNum;
 	}
 
 	@Column(name = "ms_is_up")
@@ -179,13 +178,22 @@ public class MatchScore {
 		this.msIsUp = msIsUp;
 	}
 
-	@Column(name = "ms_match_total_rod_num")
-	public Integer getMsMatchTotalRodNum() {
-		return this.msMatchTotalRodNum;
+	@Column(name = "ms_rod_num")
+	public Integer getMsRodNum() {
+		return this.msRodNum;
 	}
 
-	public void setMsMatchTotalRodNum(Integer msMatchTotalRodNum) {
-		this.msMatchTotalRodNum = msMatchTotalRodNum;
+	public void setMsRodNum(Integer msRodNum) {
+		this.msRodNum = msRodNum;
+	}
+
+	@Column(name = "ms_push_rod_num")
+	public Integer getMsPushRodNum() {
+		return this.msPushRodNum;
+	}
+
+	public void setMsPushRodNum(Integer msPushRodNum) {
+		this.msPushRodNum = msPushRodNum;
 	}
 
 	@Column(name = "ms_create_user_id")
@@ -223,4 +231,5 @@ public class MatchScore {
 	public void setMsUpdateTime(Long msUpdateTime) {
 		this.msUpdateTime = msUpdateTime;
 	}
+
 }

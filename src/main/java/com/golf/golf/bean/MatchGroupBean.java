@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 球队比赛 bean
+ * 球队比赛——分组 bean
  * Created by dev on 17-2-10
  */
 public class MatchGroupBean {

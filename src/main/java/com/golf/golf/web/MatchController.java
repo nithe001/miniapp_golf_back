@@ -7,6 +7,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.common.security.WechatUserUtil;
@@ -224,7 +225,7 @@ public class MatchController {
 
 	/**
 	 * 比赛详情——赛长获取已经报名的用户
-	 * @param type 2:添加组员（获取已经报名的用户）  1 删除组员（获取本组用户）
+	 * @param type 0:添加组员（获取已经报名的用户）  1 删除组员（获取本组用户）
 	 * @return
 	 */
 	@ResponseBody
@@ -595,4 +596,24 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+	/**
+	 * 通过matchid和groupid查询本组记分卡信息
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getScoreCardInfoByGroupId")
+	public JsonElement getScoreCardInfoByGroupId(Long matchId, Long groupId) {
+		try {
+//			List<MatchGroupUserScoreBean> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
+			Map<String,Object> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
+			return JsonWrapper.newDataInstance(groupInfoList);
+		} catch (Exception e) {
+			errmsg = "前台-比赛—通过matchid和groupid查询本组记分卡信息时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 }
