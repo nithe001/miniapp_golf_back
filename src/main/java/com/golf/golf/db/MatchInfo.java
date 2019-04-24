@@ -360,21 +360,7 @@ public class MatchInfo {
 		return stateStr;
 	}
 
-	public void setStateStr() {
-		Long nowTime = System.currentTimeMillis();
-		//比赛当天的开始时间
-		Long matchStartTime = TimeUtil.stringToLong(this.getMiMatchTime(),TimeUtil.FORMAT_DATE);
-		Long matchEndTime = matchStartTime +(24 * 60 * 60 * 1000);
-		if(this.getMiMatchTime() == null && nowTime < matchStartTime - (24 * 60 * 60 * 1000)){
-			this.stateStr = "报名中";
-		}else{
-			if(nowTime < matchStartTime){
-				this.stateStr = "报名中";
-			}else if(nowTime > matchStartTime && nowTime < matchEndTime){
-				this.stateStr = "进行中";
-			}else if(nowTime > matchEndTime){
-				this.stateStr = "已结束";
-			}
-		}
+	public void setStateStr(String stateStr) {
+		this.stateStr = stateStr;
 	}
 }

@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -415,8 +416,8 @@ public class MatchController {
 	@RequestMapping("getMySinglePlay")
 	public JsonElement getMySinglePlay() {
 		try {
-			MatchInfo matchInfo = matchService.getMySinglePlay();
-			return JsonWrapper.newDataInstance(matchInfo);
+			Map<String,Object> result = matchService.getMySinglePlay();
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			errmsg = "前台-单练——查询是否有我正在进行的单练时出错。";
 			e.printStackTrace();
@@ -426,14 +427,15 @@ public class MatchController {
 	}
 
 	/**
-	 * 单练——开始记分——保存数据
+	 * 单练——创建单练
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
-	public JsonElement saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
+	public JsonElement saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest,
+									  String beforeZoneName, String afterZoneName) {
 		try {
-			Long singleMatchId = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest);
+			Long singleMatchId = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
 			return JsonWrapper.newDataInstance(singleMatchId);
 		} catch (Exception e) {
 			errmsg = "前台-单练——开始记分——保存数据时出错。";
@@ -605,7 +607,6 @@ public class MatchController {
 	@RequestMapping("getScoreCardInfoByGroupId")
 	public JsonElement getScoreCardInfoByGroupId(Long matchId, Long groupId) {
 		try {
-//			List<MatchGroupUserScoreBean> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
 			Map<String,Object> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
@@ -615,5 +616,46 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+
+	/**
+	 * 保存或更新计分数据
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("saveOrUpdateScore")
+	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
+										 Integer holeNum, String isUp, Integer rod, Integer pushRod) {
+		try {
+			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum, isUp, rod, pushRod);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-比赛—保存或更新计分数据时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+
+	/**
+	 * 保存或更新比赛状态
+	 * state   0：报名中  1进行中  2结束
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateMatchState")
+	public JsonElement updateMatchState(Long matchId, Integer state) {
+		try {
+			matchService.updateMatchState(matchId, state);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-比赛—保存或更新比赛状态时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 }

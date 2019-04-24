@@ -84,9 +84,12 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement getUserInfo() {
+	public JsonElement getUserInfo(Long userId) {
 		try {
-			UserInfo userInfo = userService.getUserById(WebUtil.getUserIdBySessionId());
+			if(userId == null){
+				userId = WebUtil.getUserIdBySessionId();
+			}
+			UserInfo userInfo = userService.getUserById(userId);
 			return JsonWrapper.newDataInstance(userInfo);
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -61,8 +61,17 @@ public class MatchService implements IBaseService {
 				matchInfo.setMiTitle(getName(result, "mi_title"));
 				matchInfo.setMiParkName(getName(result, "mi_park_name"));
 				matchInfo.setMiMatchTime(getName(result,"mi_match_time"));
-				matchInfo.setStateStr();
+				Integer state = getIntegerValue(result,"mi_is_end");
+				//0：报名中  1进行中  2结束
+				if(state == null || state == 0){
+					matchInfo.setStateStr("报名中");
+				}else if(state == 1){
+					matchInfo.setStateStr("进行中");
+				}else{
+					matchInfo.setStateStr("已结束");
+				}
 				matchInfo.setMiHit(getIntegerValue(result,"userCount"));
+				matchInfo.setMiIsEnd(getIntegerValue(result,"mi_is_end"));
 				matchInfoList.add(matchInfo);
 			}
 			pageInfo.setItems(matchInfoList);
@@ -460,6 +469,8 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
 		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
 		matchInfo.setMiIsValid(1);
+		//0：报名中  1进行中  2结束
+		matchInfo.setMiIsEnd(0);
 		matchDao.save(matchInfo);
 
 		MatchGroup matchGroup = new MatchGroup();
@@ -480,6 +491,13 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
+
+		MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+		matchJoinWatchInfo.setMjwiType(1);
+		matchJoinWatchInfo.setMjwiMatchId(matchInfo.getMiId());
+		matchJoinWatchInfo.setMjwiUserId(WebUtil.getUserIdBySessionId());
+		matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+		matchDao.save(matchJoinWatchInfo);
 	}
 
     /**
@@ -524,7 +542,8 @@ public class MatchService implements IBaseService {
 	 * 单练——开始记分——保存数据
 	 * @return
 	 */
-	public Long saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest) {
+	public Long saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest,
+							   String beforeZoneName, String afterZoneName) {
 		MatchInfo matchInfo = new MatchInfo();
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if(parkInfo != null){
@@ -532,16 +551,56 @@ public class MatchService implements IBaseService {
 		}
 		matchInfo.setMiTitle(WebUtil.getUserNameBySessionId()+"的单练");
 		matchInfo.setMiParkName(parkName);
+		matchInfo.setMiZoneBeforeNine(beforeZoneName);
+		matchInfo.setMiZoneAfterNine(afterZoneName);
 		matchInfo.setMiType(0);
 		matchInfo.setMiMatchTime(playTime);
 		matchInfo.setMiPeopleNum(peopleNum);
 		matchInfo.setMiDigest(digest);
 		matchInfo.setMiJoinOpenType(3);
-		matchInfo.setMiIsEnd(0);
+		matchInfo.setMiIsEnd(1);
 		matchInfo.setCreateTimeStr(System.currentTimeMillis());
 		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
 		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
 		matchDao.save(matchInfo);
+
+		//创建分组
+		MatchGroup matchGroup = new MatchGroup();
+		matchGroup.setMgMatchId(matchInfo.getMiId());
+		matchGroup.setMgGroupName("第1组");
+		matchGroup.setMgCreateUserId(WebUtil.getUserIdBySessionId());
+		matchGroup.setMgCreateUserName(WebUtil.getUserNameBySessionId());
+		matchGroup.setMgCreateTime(System.currentTimeMillis());
+		matchDao.save(matchGroup);
+
+		//保存我的用户分组信息
+		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
+		matchUserGroupMapping.setMugmUserType(1);
+		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
+		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+		matchUserGroupMapping.setMugmUserId(WebUtil.getUserIdBySessionId());
+		matchUserGroupMapping.setMugmUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
+		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+		matchDao.save(matchUserGroupMapping);
+
+		//随机生成几个用户队友
+		for(int i=1;i<=peopleNum;i++){
+			MatchUserGroupMapping otherPeople = new MatchUserGroupMapping();
+			otherPeople.setMugmMatchId(matchInfo.getMiId());
+			otherPeople.setMugmUserType(0);
+			otherPeople.setMugmGroupId(matchGroup.getMgId());
+			otherPeople.setMugmGroupName(matchGroup.getMgGroupName());
+			otherPeople.setMugmUserId(null);
+			otherPeople.setMugmUserName("球友"+i);
+			otherPeople.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
+			otherPeople.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+			otherPeople.setMugmCreateTime(System.currentTimeMillis());
+			System.out.println();
+		}
+
 		return matchInfo.getMiId();
 	}
 
@@ -549,9 +608,15 @@ public class MatchService implements IBaseService {
 	 * 单练——查询是否有我正在进行的单练
 	 * @return
 	 */
-	public MatchInfo getMySinglePlay() {
+	public Map<String,Object> getMySinglePlay() {
+		Map<String,Object> result = new HashMap<>();
 		Long userId = WebUtil.getUserIdBySessionId();
-		return matchDao.getMySinglePlay(userId);
+		MatchInfo matchInfo = matchDao.getMySinglePlay(userId);
+		result.put("matchInfo", matchInfo);
+		//我所在的组id
+		MatchGroup matchGroup = matchDao.getMyGroupById(matchInfo.getMiId());
+		result.put("groupId", matchGroup.getMgId());
+		return result;
 	}
 
 	/**
@@ -677,13 +742,13 @@ public class MatchService implements IBaseService {
 	public Map<String,Object> getScoreCardInfoByGroupId(Long matchId, Long groupId) {
 		Map<String,Object> result = new HashMap<>();
 		List<MatchGroupUserScoreBean> list = new ArrayList<>();
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
 		//本组用户
 		List<Map<String,Object>> userList = matchDao.getUserListById(matchId, groupId);
 		result.put("userList",userList);
 
 		//半场球洞
 		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
-		result.put("parkHoleList",parkHoleList);
 
 		//第一条记录（半场分区信息）
 		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
@@ -691,75 +756,92 @@ public class MatchService implements IBaseService {
 		thBean.setUserName("球洞球杆");
 		thBean.setUserScoreList(parkHoleList);
 		list.add(thBean);
+
 		//本组用户每个洞得分情况
-		List<Map<String, Object>> uscoreList = matchDao.getUserInfoListByGroupId(matchId, groupId);
-
-		//用户得分
-		MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
-		for(Map<String, Object> userScore: uscoreList){
-			Long userId = getLongValue(userScore, "ui_id");
-			String realName = getName(userScore, "real_name");
-			Integer socre = getIntegerValue(userScore, "score");
-			String holeName = getName(userScore, "hole_name");
-			Integer holeNum = getIntegerValue(userScore, "hole_num");
-			if(bean.getUserId() != null && !bean.getUserId().equals(userId)){
-				bean = new MatchGroupUserScoreBean();
-			}
-			bean.setUserId(userId);
-			bean.setUserName(realName);
-//				us.ui_id,us.real_name, s.ms_score AS score,s.ms_hole_name AS hole_name,s.ms_hole_num AS hole_num
-
-			List<Map<String, Object>> userScoreList = new ArrayList<>();
-			//球洞列表
-			for(Map<String, Object> parkHole: parkHoleList){
-				String holeName_park = getName(parkHole, "ppName");
-				Integer holeNum_park = getIntegerValue(parkHole, "holeNum");
-//			select pp.ppId as holeId,pp.ppPId as parkId,pp.ppName as ppName,pp.ppHoleNum as holeNum," +
-//			"pp.ppHoleStandardRod as holeStandardRod
-				Map<String, Object> map = new HashMap<>();
-				if(StringUtils.isNotEmpty(holeName) && holeName.equals(holeName_park) && holeNum != null && holeNum.equals(holeNum_park)){
-					//是否上球道
-					map.put("isUp",getIntegerValue(userScore, "is_up"));
-					//杆数
-					map.put("rodNum",getIntegerValue(userScore, "rod_num"));
-					//推杆数
-					map.put("pushNum",getIntegerValue(userScore, "push_num"));
-				}else{
-					//是否上球道
-					map.put("isUp","");
-					//杆数
-					map.put("rodNum","");
-					//推杆数
-					map.put("pushNum","");
+		if(userList != null && userList.size()>0){
+			for(Map<String,Object> user: userList){
+				Long uiId = getLongValue(user,"uiId");
+				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+				bean.setUserId(uiId);
+				bean.setUserName(getName(user,"uiRealName"));
+				//本用户得分情况
+				List<Map<String, Object>> uscoreList = matchDao.getScoreByUserId(groupId, uiId, matchInfo);
+				if(uscoreList != null && uscoreList.size()>0){
+					bean.setUserScoreList(uscoreList);
+					list.add(bean);
 				}
-				userScoreList.add(map);
+
 			}
-			bean.setUserScoreList(userScoreList);
-			list.add(bean);
 		}
-		HashSet hs = new HashSet(list);
-		list.clear();
-		list.addAll(hs);
-		//排序
-		Collections.sort(list);
 		result.put("parkHoleList",list);
+
+		//总杆数
+		Long totalRod = matchDao.getTotalRod(matchInfo);
+		result.put("totalRod",totalRod);
+		//用户总分
+		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId,groupId);
+		result.put("totalScoreList",totalScoreList);
 		return result;
 	}
 
 	/**
-	 * 通过matchid和groupid查询本组记分卡信息
+	 * 保存或更新计分数据
 	 * @return
 	 */
-	public Map<String,Object> getScoreCardInfoByGroupId3(Long matchId, Long groupId) {
-		Map<String,Object> result = new HashMap<>();
-		//本组用户
-		List<Map<String,Object>> userList = matchDao.getUserListById(matchId, groupId);
-		result.put("userList",userList);
+	public void saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
+								  Integer holeNum, String isUp, Integer rod, Integer pushRod) {
+		if(scoreId != null){
+			MatchScore scoreDb = matchDao.get(MatchScore.class, scoreId);
+			scoreDb.setMsIsUp(isUp);
+			scoreDb.setMsRodNum(rod);
+			scoreDb.setMsPushRodNum(pushRod);
+			scoreDb.setMsUpdateTime(System.currentTimeMillis());
+			scoreDb.setMsUpdateUserId(WebUtil.getUserIdBySessionId());
+			scoreDb.setMsUpdateUserName(WebUtil.getUserNameBySessionId());
+			matchDao.update(scoreDb);
+		}else{
+			MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+			MatchGroup matchGroup = matchDao.get(MatchGroup.class,groupId);
+			UserInfo userInfo = matchDao.get(UserInfo.class, userId);
+			Long teamId = null;
+			if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds())){
+				List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+				List<Long> teamIdList = matchDao.getTeamIds(teamIds,userId);
+				if(teamIdList != null && teamIdList.size()>0){
+					teamId = teamIdList.get(0);
+				}
+			}
+			MatchScore score = new MatchScore();
+			score.setMsTeamId(teamId);
+			score.setMsMatchId(matchId);
+			score.setMsMatchTitle(matchInfo.getMiTitle());
+			score.setMsGroupId(groupId);
+			score.setMsGroupName(matchGroup.getMgGroupName());
+			score.setMsUserId(userId);
+			score.setMsUserName(userInfo.getUiRealName());
+			score.setMsHoleName(holeName);
+			score.setMsHoleNum(holeNum);
+			score.setMsIsUp(isUp);
+			score.setMsRodNum(rod);
+			score.setMsPushRodNum(pushRod);
+			score.setMsCreateUserId(WebUtil.getUserIdBySessionId());
+			score.setMsCreateUserName(WebUtil.getUserNameBySessionId());
+			score.setMsCreateTime(System.currentTimeMillis());
+			matchDao.save(score);
+		}
+	}
 
-		//半场球洞
-		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
-		result.put("parkHoleList",parkHoleList);
-
-		return result;
+	/**
+	 * 保存或更新比赛状态
+	 * state   0：报名中  1进行中  2结束
+	 * @return
+	 */
+	public void updateMatchState(Long matchId, Integer state) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		matchInfo.setMiIsEnd(state);
+		matchInfo.setMiUpdateUserId(WebUtil.getUserIdBySessionId());
+		matchInfo.setMiUpdateUserName(WebUtil.getUserNameBySessionId());
+		matchInfo.setMiUpdateTime(System.currentTimeMillis());
+		matchDao.update(matchInfo);
 	}
 }

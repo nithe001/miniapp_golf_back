@@ -12,6 +12,8 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
     private Long userId;
     private String userName;
     private List<Map<String, Object>>  userScoreList;
+    private Integer totalRodScore;
+	private Integer totalPushRodScore;
 
 	public Long getUserId() {
 		return userId;
@@ -35,6 +37,22 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 
 	public void setUserScoreList(List<Map<String, Object>> userScoreList) {
 		this.userScoreList = userScoreList;
+	}
+
+	public Integer getTotalRodScore() {
+		return totalRodScore;
+	}
+
+	public void setTotalRodScore(Integer totalRodScore) {
+		this.totalRodScore = totalRodScore;
+	}
+
+	public Integer getTotalPushRodScore() {
+		return totalPushRodScore;
+	}
+
+	public void setTotalPushRodScore(Integer totalPushRodScore) {
+		this.totalPushRodScore = totalPushRodScore;
 	}
 
 	@Override

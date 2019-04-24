@@ -5,6 +5,7 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.common.util.TimeUtil;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
@@ -205,5 +206,18 @@ public class TeamService implements IBaseService {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 获取球队记分详情
+	 * @param teamId:球队id
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamPointByYear(String date, Long teamId) {
+		Map<String,Object> parp = new HashMap<>();
+		parp.put("startYear", TimeUtil.getYearFirst(Integer.parseInt(date)));
+		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
+		parp.put("teamId", teamId);
+		return teamDao.getTeamPointByYear(parp);
 	}
 }

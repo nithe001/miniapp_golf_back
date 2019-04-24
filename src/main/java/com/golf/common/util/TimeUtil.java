@@ -376,10 +376,36 @@ public class TimeUtil {
 	    }
 	    return year%100+"年"+(month+1)+"月"+day+"日 "+hour +"点"+minute+"分";
 	}
-	
-	
-	
-	
+
+	/**
+	 * 获取某年第一天日期
+	 * @param year 年份
+	 * @return Date
+	 */
+	public static Long getYearFirst(int year){
+		Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		calendar.set(Calendar.YEAR, year);
+		Date currYearFirst = calendar.getTime();
+		return currYearFirst.getTime();
+	}
+
+	/**
+	 * 获取某年最后一天日期
+	 * @param year 年份
+	 * @return Date
+	 */
+	public static Long getYearLast(int year){
+		Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		calendar.set(Calendar.YEAR, year);
+		calendar.roll(Calendar.DAY_OF_YEAR, -1);
+		Date currYearLast = calendar.getTime();
+		return currYearLast.getTime();
+	}
+
+
+
 	/**
 	 * date到String格式的转换
 	 * 
@@ -395,5 +421,7 @@ public class TimeUtil {
 	public static void main(String[] args) {
 		System.out.println(TimeUtil.stringToLong("2018-12-18",FORMAT_DATE));
 		System.out.println(TimeUtil.longToString(1542245400000L,FORMAT_DATETIME_HH_MM));
+		System.out.println(longToString(TimeUtil.getYearFirst(2019),FORMAT_DATETIME_HH_MM));
+		System.out.println(longToString(TimeUtil.getYearLast(2019),FORMAT_DATETIME_HH_MM));
 	}
 }

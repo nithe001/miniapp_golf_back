@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -219,5 +220,26 @@ public class TeamManageController {
 			return JsonWrapper.newErrorInstance("获取球队详情时出错");
 		}
 	}
+
+
+	/**
+	 * 获取球队记分详情
+	 * @param teamId:球队id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getTeamPointByYear")
+	public JsonElement getTeamPointByYear(String date, Long teamId) {
+		try {
+			List<Map<String, Object>> result = teamService.getTeamPointByYear(date, teamId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取球队记分详情时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("获取球队记分详情时出错");
+		}
+	}
+
+
 
 }

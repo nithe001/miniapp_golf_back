@@ -24,15 +24,18 @@ public class MatchScore implements java.io.Serializable {
 	private String msGroupName;
 	private Long msUserId;
 	private String msUserName;
+	private Integer msType;
 	private Integer msScore;
 	private String msHoleName;
 	private Integer msHoleNum;
-	private Integer msIsUp;
+	private String msIsUp;
 	private Integer msRodNum;
 	private Integer msPushRodNum;
 	private Long msCreateUserId;
+	private String msCreateUserName;
 	private Long msCreateTime;
 	private Long msUpdateUserId;
+	private String msUpdateUserName;
 	private Long msUpdateTime;
 
 	// Constructors
@@ -44,10 +47,10 @@ public class MatchScore implements java.io.Serializable {
 	/** full constructor */
 	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
 					  Long msGroupId, String msGroupName, Long msUserId,
-					  String msUserName, Integer msScore, String msHoleName,
-					  Integer msHoleNum, Integer msIsUp, Integer msRodNum,
-					  Integer msPushRodNum, Long msCreateUserId, Long msCreateTime,
-					  Long msUpdateUserId, Long msUpdateTime) {
+					  String msUserName, Integer msType, Integer msScore, String msHoleName,
+					  Integer msHoleNum, String msIsUp, Integer msRodNum,
+					  Integer msPushRodNum, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
+					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
 		this.msMatchId = msMatchId;
 		this.msMatchTitle = msMatchTitle;
@@ -55,6 +58,7 @@ public class MatchScore implements java.io.Serializable {
 		this.msGroupName = msGroupName;
 		this.msUserId = msUserId;
 		this.msUserName = msUserName;
+		this.msType = msType;
 		this.msScore = msScore;
 		this.msHoleName = msHoleName;
 		this.msHoleNum = msHoleNum;
@@ -62,8 +66,10 @@ public class MatchScore implements java.io.Serializable {
 		this.msRodNum = msRodNum;
 		this.msPushRodNum = msPushRodNum;
 		this.msCreateUserId = msCreateUserId;
+		this.msCreateUserName = msCreateUserName;
 		this.msCreateTime = msCreateTime;
 		this.msUpdateUserId = msUpdateUserId;
+		this.msUpdateUserName = msUpdateUserName;
 		this.msUpdateTime = msUpdateTime;
 	}
 
@@ -142,6 +148,15 @@ public class MatchScore implements java.io.Serializable {
 		this.msUserName = msUserName;
 	}
 
+	@Column(name = "ms_type")
+	public Integer getMsType() {
+		return msType;
+	}
+
+	public void setMsType(Integer msType) {
+		this.msType = msType;
+	}
+
 	@Column(name = "ms_score")
 	public Integer getMsScore() {
 		return this.msScore;
@@ -169,12 +184,12 @@ public class MatchScore implements java.io.Serializable {
 		this.msHoleNum = msHoleNum;
 	}
 
-	@Column(name = "ms_is_up")
-	public Integer getMsIsUp() {
+	@Column(name = "ms_is_up",length = 128)
+	public String getMsIsUp() {
 		return this.msIsUp;
 	}
 
-	public void setMsIsUp(Integer msIsUp) {
+	public void setMsIsUp(String msIsUp) {
 		this.msIsUp = msIsUp;
 	}
 
@@ -232,4 +247,21 @@ public class MatchScore implements java.io.Serializable {
 		this.msUpdateTime = msUpdateTime;
 	}
 
+	@Column(name = "ms_create_user_name",length = 128)
+	public String getMsCreateUserName() {
+		return msCreateUserName;
+	}
+
+	public void setMsCreateUserName(String msCreateUserName) {
+		this.msCreateUserName = msCreateUserName;
+	}
+
+	@Column(name = "ms_update_user_name",length = 128)
+	public String getMsUpdateUserName() {
+		return msUpdateUserName;
+	}
+
+	public void setMsUpdateUserName(String msUpdateUserName) {
+		this.msUpdateUserName = msUpdateUserName;
+	}
 }

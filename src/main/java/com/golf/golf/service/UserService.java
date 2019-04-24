@@ -191,7 +191,7 @@ public class UserService implements IBaseService {
         Long teamId = dao.getIsMyTeammate(WebUtil.getUserIdBySessionId(),userId);
         if(teamId != null){
             TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
-            if(teamInfo != null && teamInfo.getTiInfoOpenType() == 1){
+            if(teamInfo != null && teamInfo.getTiUserInfoType() == 1){
                 return true;
             }
         }

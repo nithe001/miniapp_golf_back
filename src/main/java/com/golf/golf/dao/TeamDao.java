@@ -3,6 +3,7 @@ package com.golf.golf.dao;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.common.util.TimeUtil;
 import com.golf.golf.db.ParkInfo;
 import com.golf.golf.db.ParkPartition;
 import com.golf.golf.db.TeamInfo;
@@ -177,5 +178,37 @@ public class TeamDao extends CommonDao {
 		hql.delete(0, hql.length());
 		hql.append("update TeamUserMapping as m set m.tumIsValid = 0 WHERE m.tumTeamId = "+teamId);
 		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 获取球队记分详情
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT u.ui_real_name as real_name, score.* FROM (");
+
+			hql.append("SELECT matchInfo.userId," +
+					" matchInfo.totalMatchNum," +
+					" scoreInfo.avgRodNum," +
+					" scoreInfo.sumRodNum," +
+					" scoreInfo.s_user_id FROM ");
+					hql.append("(SELECT tm.tum_user_id AS userId, count(mgm.mugm_id) AS totalMatchNum FROM team_user_mapping AS tm ");
+					hql.append("LEFT JOIN match_user_group_mapping AS mgm ON ( tm.tum_team_id = :teamId AND tm.tum_user_id = mgm.mugm_user_id )");
+					hql.append("AND tm.tum_create_time >= :startYear ");
+					hql.append("AND tm.tum_create_time <= :endYear ");
+					hql.append("GROUP BY tm.tum_user_id ) AS matchInfo ");
+		hql.append("LEFT JOIN ");
+				hql.append("( SELECT AVG(s.ms_rod_num) AS avgRodNum, SUM(s.ms_rod_num) AS sumRodNum, s.ms_user_id as s_user_id " +
+				" FROM match_score AS s WHERE s.ms_team_id = :teamId " +
+						"AND s.ms_create_time >= :startYear " +
+						"AND s.ms_create_time <= :endYear " +
+						"GROUP BY s.ms_user_id ) AS scoreInfo ");
+			hql.append("ON matchInfo.userId = scoreInfo.s_user_id ");
+
+		hql.append(")as score ,user_info as u where score.userId = u.ui_id ");
+
+		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
 	}
 }
