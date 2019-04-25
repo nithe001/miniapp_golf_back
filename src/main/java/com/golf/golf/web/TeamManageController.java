@@ -39,17 +39,47 @@ public class TeamManageController {
     @Autowired
     private TeamService teamService;
 
+	/**
+	 * 获取球队列表
+	 * @param page 分页
+	 * @param type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
+	 * @param keyword 球队名称
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTeamList")
+	public JsonElement getTeamList(Integer page, Integer type, String keyword) {
+		Integer nowPage = 1;
+		if (page > 0) {
+			nowPage = page;
+		}
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+		try {
+			SearchBean searchBean = new SearchBean();
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			searchBean.addParpField("type", type);
+			pageInfo = teamService.getTeamList(searchBean, pageInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+			errmsg = "前台-获取球队列表出错。";
+			logger.error(errmsg+ e );
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newDataInstance(pageInfo);
+	}
 
     /**
      * 获取所有球队 或者 可以加入的球队列表
      * @param page 分页
-     * @param type 0：所有球队 1：可以加入的球队
+     * @param type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
      * @param keyword 球队名称
      * @return
      */
     @ResponseBody
-    @RequestMapping("getTeamList")
-    public JsonElement getTeamList(Integer page, Integer type, String keyword) {
+    @RequestMapping("getTeamList4")
+    public JsonElement getTeamList4(Integer page, Integer type, String keyword) {
         Integer nowPage = 1;
         if (page > 0) {
             nowPage = page;

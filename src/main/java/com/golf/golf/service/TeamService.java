@@ -29,13 +29,24 @@ public class TeamService implements IBaseService {
 	@Autowired
 	private MatchService matchService;
 
+	/**
+	 * 获取球队列表
+	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
+	 * @return
+	 */
+	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
+		getCaptain(pageInfo);
+		return pageInfo;
+	}
 
     /**
      * 获取球队列表
+	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
      * @return
      */
-    public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
+    public POJOPageInfo getTeamList3(SearchBean searchBean, POJOPageInfo pageInfo) {
+		pageInfo = teamDao.getTeamList4(searchBean,pageInfo);
 		getCaptain(pageInfo);
         return pageInfo;
     }
