@@ -5,6 +5,7 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.service.admin.AdminMatchService;
 import com.golf.golf.service.admin.AdminTeamService;
 import org.apache.commons.lang3.StringUtils;
@@ -103,7 +104,7 @@ public class AdminTeamController {
     @RequestMapping("editTeamUI")
     public String editTeamUI(ModelMap mm, Long teamId){
 		try{
-			TeamInfo teamInfo = adminTeamService.getMatchById(teamId);
+			Map<String,Object> teamInfo = adminTeamService.getMatchInfoById(teamId);
 			mm.addAttribute("teamInfo",teamInfo);
 		}catch(Exception e){
 			e.printStackTrace();

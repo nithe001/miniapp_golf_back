@@ -75,10 +75,6 @@
                                     <c:forEach items="${pageInfo.items}" var="teamInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
-                                    <%--select t.ti_id as tiId,t.ti_name as tiName,count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id,t.ti_create_time as ti_create_time,t.ti_logo as logo--%>
-
-                                    <%--String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo,t.ti_create_time as createTime," +--%>
-                                    <%--"t.ti_create_user_name as createUser,ti_update_time as updateTime,ti_update_user_name as updateUser ";--%>
                                             <td><img src="${teamInfo.logo}" style="width:65px;height:65px;"></td>
                                             <td>${teamInfo.tiName}</td>
                                             <td>${teamInfo.captain}</td>
@@ -90,14 +86,13 @@
                                             <td><c:if test="${teamInfo.valid == 0}">无效</c:if>
                                                 <c:if test="${teamInfo.valid == 1}">有效</c:if></td>
                                             <td>
-                                                <%--<a class="btn btn-success" href="admin/team/editMatchUI?matchId=${teamInfo.miId}">--%>
-                                                    <%--<span class="glyphicon glyphicon-pencil"></span>查看--%>
-                                                <%--</a>&nbsp;--%>
-                                                <%--<a class="btn btn-success" href="admin/team/delMatch?matchId=${calendar[0]}">--%>
-                                                    <%--<span class="glyphicon glyphicon-pencil"></span>--%>
-                                                    <%--<c:if test="${teamInfo.miIsDel == null || teamInfo.miIsDel == 0}">注销</c:if>--%>
-                                                    <%--<c:if test="${teamInfo.miIsDel == 1 }">恢复</c:if>--%>
-                                                <%--</a>--%>
+                                                <a class="btn btn-success" href="admin/team/editTeamUI?teamId=${teamInfo.tiId}">
+                                                    查看
+                                                </a>&nbsp;
+                                                <a class="btn btn-danger" href="admin/team/delTeam?teamId=${teamInfo.tiId}">
+                                                    <c:if test="${teamInfo.valid == null || teamInfo.valid == 1}">注销</c:if>
+                                                    <c:if test="${teamInfo.valid == 0 }">恢复</c:if>
+                                                </a>
                                             </td>
                                         </tr>
                                     </c:forEach>

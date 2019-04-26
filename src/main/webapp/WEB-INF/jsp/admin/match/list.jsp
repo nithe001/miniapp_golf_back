@@ -99,10 +99,9 @@
                                             <%--<td>${matchInfo.state}</td>--%>
                                             <td>
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
-                                                    <span class="glyphicon glyphicon-pencil"></span>编辑
+                                                    编辑
                                                 </a>&nbsp;
-                                                <%--<a class="btn btn-success" href="admin/match/delMatch?matchId=${calendar[0]}">--%>
-                                                    <%--<span class="glyphicon glyphicon-pencil"></span>--%>
+                                                <%--<a class="btn btn-danger" href="admin/match/delMatch?matchId=${calendar[0]}">--%>
                                                     <%--<c:if test="${matchInfo.miIsDel == null || matchInfo.miIsDel == 0}">删除</c:if>--%>
                                                     <%--<c:if test="${matchInfo.miIsDel == 1 }">恢复</c:if>--%>
                                                 <%--</a>--%>

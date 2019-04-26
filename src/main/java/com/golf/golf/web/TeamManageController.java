@@ -60,6 +60,7 @@ public class TeamManageController {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
+			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
 			pageInfo = teamService.getTeamList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -70,74 +71,6 @@ public class TeamManageController {
 		return JsonWrapper.newDataInstance(pageInfo);
 	}
 
-    /**
-     * 获取所有球队 或者 可以加入的球队列表
-     * @param page 分页
-     * @param type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
-     * @param keyword 球队名称
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getTeamList4")
-    public JsonElement getTeamList4(Integer page, Integer type, String keyword) {
-        Integer nowPage = 1;
-        if (page > 0) {
-            nowPage = page;
-        }
-        POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
-        try {
-            SearchBean searchBean = new SearchBean();
-            if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
-                searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
-            }
-            if(type == null || type == 0){
-            	//所有球队
-                pageInfo = teamService.getTeamList(searchBean, pageInfo);
-            }else if(type >= 1){
-                searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
-				searchBean.addParpField("type", type);
-                pageInfo = teamService.getMyTeamList(searchBean, pageInfo);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            errmsg = "前台-获取球队列表出错。";
-            logger.error(errmsg+ e );
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-        return JsonWrapper.newDataInstance(pageInfo);
-    }
-
-	/**
-	 * 获取我创建的球队列表 或者 我加入的球队列表
-	 * @param page 分页
-	 * @param type 0：我加入的 1：我创建的
-	 * @param keyword 球队名称
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getMyTeamList")
-	public JsonElement getMyTeamList(Integer page,Integer type, String keyword) {
-		Integer nowPage = 1;
-		if (page > 0) {
-			nowPage = page;
-		}
-		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
-		try {
-			SearchBean searchBean = new SearchBean();
-			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
-				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
-			}
-			searchBean.addParpField("type", type);
-			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
-			pageInfo = teamService.getMyCreateTeamList(searchBean, pageInfo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			errmsg = "前台-获取我创建的球队列表出错。";
-			logger.error(errmsg+ e );
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-		return JsonWrapper.newDataInstance(pageInfo);
-	}
 
 	/**
 	 * 创建球队
@@ -270,6 +203,43 @@ public class TeamManageController {
 		}
 	}
 
+	/**
+	 * 获取球队已报名的用户或者球队用户列表
+	 * @param teamId:球队id
+	 * @param type:0已报名的 1本队用户
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getUserListByTeamId")
+	public JsonElement getUserListByTeamId(Long teamId, Integer type) {
+		try {
+			List<Map<String, Object>> result = teamService.getUserListByTeamId(teamId, type);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取球队球友列表时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("获取球队球友列表时出错");
+		}
+	}
 
+	/**
+	 * 更新球队用户
+	 * @param teamId:球队id
+	 * @param userIds:用户
+	 * @param type:0添加已报名的 1删除这些用户
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "updateTeamUserByTeamId")
+	public JsonElement updateTeamUserByTeamId(Long teamId, String userIds, Integer type) {
+		try {
+			teamService.updateTeamUserByTeamId(teamId, userIds, type);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("更新球队用户时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("更新球队用户时出错");
+		}
+	}
 
 }

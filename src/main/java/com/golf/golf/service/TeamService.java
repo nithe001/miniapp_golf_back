@@ -7,6 +7,8 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.dao.TeamDao;
+import com.golf.golf.db.MatchGroup;
+import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import org.apache.commons.lang3.StringUtils;
@@ -40,17 +42,6 @@ public class TeamService implements IBaseService {
 		return pageInfo;
 	}
 
-    /**
-     * 获取球队列表
-	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
-     * @return
-     */
-    public POJOPageInfo getTeamList3(SearchBean searchBean, POJOPageInfo pageInfo) {
-		pageInfo = teamDao.getTeamList4(searchBean,pageInfo);
-		getCaptain(pageInfo);
-        return pageInfo;
-    }
-
     //队长
 	private void getCaptain(POJOPageInfo pageInfo) {
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
@@ -75,16 +66,6 @@ public class TeamService implements IBaseService {
 			}
 		}
     }
-
-
-	/**
-     * 获取  我加入的球队列表 或者  可以加入的球队
-     * @return
-     */
-    public POJOPageInfo getMyTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
-        return teamDao.getMyTeamList(searchBean,pageInfo);
-    }
-
 
 
     /**
@@ -136,17 +117,6 @@ public class TeamService implements IBaseService {
 		Object[] values = {minlng,maxlng,minlat,maxlat};
 	}
 
-
-	/**
-	 * 获取我创建的球队列表
-	 * @return
-	 */
-	public POJOPageInfo getMyCreateTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		pageInfo = teamDao.getMyCreateTeamList(searchBean,pageInfo);
-		getCaptain(pageInfo);
-		return pageInfo;
-	}
-
 	/**
 	 * 创建更新球队
 	 * @return
@@ -162,7 +132,8 @@ public class TeamService implements IBaseService {
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
 			teamUserMapping.setTumTeamId(teamId);
 			teamUserMapping.setTumUserId(WebUtil.getUserIdBySessionId());
-			teamUserMapping.setTumUserType(1);
+			//设置队长
+			teamUserMapping.setTumUserType(0);
 			teamUserMapping.setTumType(1);
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
@@ -200,6 +171,8 @@ public class TeamService implements IBaseService {
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
 		result.put("userList",userList);
+		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
+		result.put("isCaptain",isCaptain);
 		return result;
 	}
 
@@ -230,5 +203,50 @@ public class TeamService implements IBaseService {
 		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
 		parp.put("teamId", teamId);
 		return teamDao.getTeamPointByYear(parp);
+	}
+
+	/**
+	 * 获取球队已报名的用户或者球队用户列表
+	 * @param teamId:球队id
+	 * @param type:0已报名的 1本队用户
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserListByTeamId(Long teamId, Integer type) {
+		if(type == 0){
+			return teamDao.getApplyUserListByTeamId(teamId);
+		}else{
+			return teamDao.getUserListByTeamId(teamId);
+		}
+	}
+
+	/**
+	 * 更新球队用户
+	 * @param teamId:球队id
+	 * @param userIds:用户
+	 * @param type:0添加已报名的 1删除这些用户
+	 * @return
+	 */
+	public void updateTeamUserByTeamId(Long teamId, String userIds, Integer type) {
+		if(StringUtils.isNotEmpty(userIds)){
+			userIds = userIds.replace("[","");
+			userIds = userIds.replace("]","");
+			userIds = userIds.replace("\"","");
+			String[] uIds = userIds.split(",");
+			for(String userId :uIds){
+				if(StringUtils.isNotEmpty(userId)){
+					TeamUserMapping teamUserMapping = teamDao.getTeamUserMapping(teamId,Long.parseLong(userId));
+					if(type == 0){
+						//设置为 普通队员
+						teamUserMapping.setTumUserType(1);
+						teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+						teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
+						teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
+						teamDao.update(teamUserMapping);
+					}else{
+						teamDao.del(teamUserMapping);
+					}
+				}
+			}
+		}
 	}
 }

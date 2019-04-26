@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Time;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,10 +63,6 @@ public class AdminTeamService implements IBaseService {
 						result.put("captain", captainList.get(0));
 					}
 				}
-				String logo = matchService.getName(result, "logo");
-				if(StringUtils.isNotEmpty(logo)){
-					result.put("logo", PropertyConst.DOMAIN + logo);
-				}
 				Long createTime = matchService.getLongValue(result, "createTime");
 				if(createTime != null){
 					result.put("createTime", TimeUtil.longToString(createTime, TimeUtil.FORMAT_DATETIME_HH_MM));
@@ -85,6 +82,20 @@ public class AdminTeamService implements IBaseService {
 	 */
 	public TeamInfo getMatchById(Long id) {
 		return adminTeamDao.get(TeamInfo.class,id);
+	}
+
+	/**
+	 * 获取球队明细
+	 * @param teamId
+	 * @return
+	 */
+	public Map<String,Object> getMatchInfoById(Long teamId) {
+		Map<String,Object> result = new HashMap<>();
+		TeamInfo teamInfo = adminTeamDao.get(TeamInfo.class,teamId);
+		result.put("teamInfo", teamInfo);
+		List<Map<String, Object>> userList = adminTeamDao.getTeamUserListByTeamId(teamId);
+		result.put("userList",userList);
+		return result;
 	}
 
 }

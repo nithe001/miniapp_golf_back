@@ -57,4 +57,18 @@ public class AdminTeamDao extends CommonDao {
 		return pageInfo;
 	}
 
+	/**
+	 * 获取本球队的所有队员 包括申请入队的
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiHeadimg as uiHeadimg,m.tumUserType as tumUserType  ");
+		hql.append("FROM TeamUserMapping AS m,UserInfo AS u WHERE 1=1 ");
+		hql.append("AND m.tumTeamId = "+teamId);
+		hql.append(" and m.tumUserId = u.uiId ");
+		hql.append("ORDER BY m.tumUserType ");
+		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 12,Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
 }
