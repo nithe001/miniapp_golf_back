@@ -37,15 +37,12 @@ public class TeamDao extends CommonDao {
 		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_is_valid = 1 )");
 		hql.append("where 1=1 ");
 
-		if((Integer)parp.get("type") == 1){
-			//我加入的球队
-			hql.append("and t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId) ");
+		if((Integer)parp.get("type") == 1 || (Integer)parp.get("type") == 3){
+			//我加入的球队 包括我创建的球队
+			hql.append("AND (t.ti_create_user_id = :userId or t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId)) ");
 		}else if((Integer)parp.get("type") == 2){
 			//我可以加入的球队
 			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
-		}else if((Integer)parp.get("type") == 3){
-			//我创建的球队
-			hql.append("AND t.ti_create_user_id = :userId ");
 		}
 
         if(parp.get("keyword") != null){
@@ -89,6 +86,19 @@ public class TeamDao extends CommonDao {
 		return dao.createCountQuery(hql.toString());
 	}
 
+	/**
+	 * 是否在该球队中
+	 * @param teamId:球队id
+	 * @param userId:用户id
+	 * @return
+	 */
+	public Long isInTeamById(Long teamId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT COUNT(*) FROM TeamUserMapping AS t WHERE 1=1 " +
+				"AND t.tumTeamId = "+teamId+" AND t.tumUserId = " + userId);
+		return dao.createCountQuery(hql.toString());
+	}
+
 
 	/**
 	 * 获取本球队的前12个队员
@@ -120,7 +130,7 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
-	 * 获取球队记分详情
+	 * 获取球队记分详情 按平均杆排名
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
@@ -134,6 +144,7 @@ public class TeamDao extends CommonDao {
 					" scoreInfo.s_user_id FROM ");
 					hql.append("(SELECT tm.tum_user_id AS userId, count(mgm.mugm_id) AS totalMatchNum FROM team_user_mapping AS tm ");
 					hql.append("LEFT JOIN match_user_group_mapping AS mgm ON ( tm.tum_team_id = :teamId AND tm.tum_user_id = mgm.mugm_user_id )");
+					hql.append("where tm.tum_user_type !=2 ");
 					hql.append("AND tm.tum_create_time >= :startYear ");
 					hql.append("AND tm.tum_create_time <= :endYear ");
 					hql.append("GROUP BY tm.tum_user_id ) AS matchInfo ");
@@ -145,7 +156,7 @@ public class TeamDao extends CommonDao {
 						"GROUP BY s.ms_user_id ) AS scoreInfo ");
 			hql.append("ON matchInfo.userId = scoreInfo.s_user_id ");
 
-		hql.append(")as score ,user_info as u where score.userId = u.ui_id ");
+		hql.append(")as score ,user_info as u where score.userId = u.ui_id order by score.avgRodNum desc ");
 
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
@@ -157,8 +168,9 @@ public class TeamDao extends CommonDao {
 	 * @param teamId:球队id
 	 * @return
 	 */
-	public List<Map<String, Object>> getApplyUserListByTeamId(Long teamId) {
+	public List<Map<String, Object>> getUserListByTeamId(Long teamId, Integer type) {
 		StringBuilder hql = new StringBuilder();
+		List<Map<String, Object>> list = null;
 		hql.append("SELECT " +
 				"u.uiId AS uiId, " +
 				"u.uiHeadimg AS uiHeadimg, " +
@@ -168,21 +180,19 @@ public class TeamDao extends CommonDao {
 				"TeamUserMapping AS m, " +
 				"UserInfo AS u " +
 				"WHERE " +
-				"m.tumUserId = u.uiId " +
-				"AND m.tumUserType = 2 and m.tumTeamId = "+teamId);
-		List<Map<String, Object>> list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
-		return list;
-	}
-
-	/**
-	 * 获取球队用户列表
-	 * @param teamId:球队id
-	 * @return
-	 */
-	public List<Map<String, Object>> getUserListByTeamId(Long teamId) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.ui_real_name as real_name, score.* FROM (");
-		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+				"m.tumUserId = u.uiId and m.tumTeamId = "+teamId);
+		if(type == 0){
+			hql.append(" AND m.tumUserType = 2 " );
+			hql.append(" order by m.tumCreateTime desc " );
+			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		}else if(type == 1){
+			hql.append(" AND m.tumUserType = 1 " );
+			hql.append(" order by m.tumCreateTime desc " );
+			list = dao.createQuery(hql.toString(),1,11, Transformers.ALIAS_TO_ENTITY_MAP);
+		}else{
+			hql.append(" order by m.tumCreateTime desc " );
+			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		}
 		return list;
 	}
 
@@ -194,10 +204,31 @@ public class TeamDao extends CommonDao {
 	public TeamUserMapping getTeamUserMapping(Long teamId, Long userId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("FROM TeamUserMapping as tum where tum.tumTeamId = "+teamId+ " and tum.tumUserId = "+userId);
-		List<TeamUserMapping> list = dao.createSQLQuery(hql.toString());
+		List<TeamUserMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size()>0){
 			return list.get(0);
 		}
+		return null;
+	}
+
+	/**
+	 * 退出该球队
+	 * @param teamId:球队id
+	 * @param userId:用户id
+	 * @return
+	 */
+	public void deleteFromTeamUserMapping(Long teamId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM TeamUserMapping where tumTeamId = "+teamId+ " and tumUserId = "+userId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 获取球队比赛榜
+	 * 列出当年所有本球队相关的比赛情况统计
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		return null;
 	}
 }

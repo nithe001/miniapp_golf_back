@@ -12,8 +12,6 @@ public class TeamUserMapping {
 	private Long tumTeamId;
 	private Long tumUserId;
 	private Integer tumUserType;
-	private Integer tumType;
-	private Integer tumIsValid;
 	private Long tumCreateTime;
 	private Long tumCreateUserId;
 	private String tumCreateUserName;
@@ -34,15 +32,13 @@ public class TeamUserMapping {
 
 	/** full constructor */
 	public TeamUserMapping(Long tumId, Long tumTeamId, Long tumUserId,
-						   Integer tumUserType, Integer tumType, Integer tumIsValid, Long tumCreateTime,
+						   Integer tumUserType, Long tumCreateTime,
 						   Long tumCreateUserId, String tumCreateUserName, Long tumUpdateTime,
 						   Long tumUpdateUserId, String tumUpdateUserName) {
 		this.tumId = tumId;
 		this.tumTeamId = tumTeamId;
 		this.tumUserId = tumUserId;
 		this.tumUserType = tumUserType;
-		this.tumType = tumType;
-		this.tumIsValid = tumIsValid;
 		this.tumCreateTime = tumCreateTime;
 		this.tumCreateUserId = tumCreateUserId;
 		this.tumCreateUserName = tumCreateUserName;
@@ -88,24 +84,6 @@ public class TeamUserMapping {
 
 	public void setTumUserType(Integer tumUserType) {
 		this.tumUserType = tumUserType;
-	}
-
-	@Column(name = "tum_type")
-	public Integer getTumType() {
-		return this.tumType;
-	}
-
-	public void setTumType(Integer tumType) {
-		this.tumType = tumType;
-	}
-
-	@Column(name = "tum_is_valid")
-	public Integer getTumIsValid() {
-		return tumIsValid;
-	}
-
-	public void setTumIsValid(Integer tumIsValid) {
-		this.tumIsValid = tumIsValid;
 	}
 
 	@Column(name = "tum_create_time")

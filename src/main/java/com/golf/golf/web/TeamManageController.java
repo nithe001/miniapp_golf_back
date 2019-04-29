@@ -188,13 +188,14 @@ public class TeamManageController {
 	/**
 	 * 获取球队记分详情
 	 * @param teamId:球队id
+	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamPointByYear")
-	public JsonElement getTeamPointByYear(String date, Long teamId) {
+	public JsonElement getTeamPointByYear(Integer type, String date, Long teamId) {
 		try {
-			List<Map<String, Object>> result = teamService.getTeamPointByYear(date, teamId);
+			List<Map<String, Object>> result = teamService.getTeamPointByYear(type, date, teamId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -239,6 +240,43 @@ public class TeamManageController {
 			e.printStackTrace();
 			logger.error("更新球队用户时出错。球队id="+teamId + e);
 			return JsonWrapper.newErrorInstance("更新球队用户时出错");
+		}
+	}
+
+	/**
+	 * 获取本球队所有用户
+	 * @param teamId:球队id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getAllUserListByTeamId")
+	public JsonElement getAllUserListByTeamId(Long teamId) {
+		try {
+			List<Map<String, Object>> result = teamService.getAllUserListByTeamId(teamId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取本球队所有用户时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("获取本球队所有用户时出错");
+		}
+	}
+
+	/**
+	 * 加入或退出该球队
+	 * @param teamId:球队id
+	 * @param type:0加入 1退出
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "joinOrQuitTeamById")
+	public JsonElement joinOrQuitTeamById(Long teamId, Integer type) {
+		try {
+			teamService.joinOrQuitTeamById(teamId, type);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("加入或退出该球队时出错。球队id="+teamId + e);
+			return JsonWrapper.newErrorInstance("加入或退出该球队时出错");
 		}
 	}
 

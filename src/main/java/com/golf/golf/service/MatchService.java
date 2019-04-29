@@ -107,6 +107,8 @@ public class MatchService implements IBaseService {
         	count = 0;
 		}
         POJOPageInfo pageInfo = new POJOPageInfo(count, 1);
+        //比赛详情
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
 	    //围观
 		List<Map<String, Object>> watchList = matchDao.getUserListByMatchId(matchId, 0, pageInfo);
 
@@ -136,6 +138,7 @@ public class MatchService implements IBaseService {
 			isCaptain = true;
 		}
 
+		result.put("matchInfo", matchInfo);
         result.put("watchList", watchList);
 		result.put("captainList", captainList);
         result.put("groupList", groupList);
@@ -473,6 +476,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiIsEnd(0);
 		matchDao.save(matchInfo);
 
+		//创建比赛分组
 		MatchGroup matchGroup = new MatchGroup();
 		matchGroup.setMgMatchId(matchInfo.getMiId());
 		matchGroup.setMgGroupName("第1组");
@@ -481,6 +485,7 @@ public class MatchService implements IBaseService {
 		matchGroup.setMgCreateUserName(WebUtil.getUserNameBySessionId());
 		matchDao.save(matchGroup);
 
+		//创建用户分组mapping 创建人自动成为赛长
 		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
 		matchUserGroupMapping.setMugmUserType(1);
@@ -492,12 +497,29 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
 
-		MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-		matchJoinWatchInfo.setMjwiType(1);
-		matchJoinWatchInfo.setMjwiMatchId(matchInfo.getMiId());
-		matchJoinWatchInfo.setMjwiUserId(WebUtil.getUserIdBySessionId());
-		matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-		matchDao.save(matchJoinWatchInfo);
+		//如果是队际赛 每个队的队长自动成为赛长
+		if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds())){
+			List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+			List<Long> teamCaptainList = matchDao.getTeamCaptailByTeamIds(teamIdList);
+			if(teamCaptainList != null && teamCaptainList.size()>0){
+				for(Long captainUserId:teamCaptainList){
+					//是否存在
+					if(captainUserId.equals(WebUtil.getUserIdBySessionId())){
+						continue;
+					}
+					MatchUserGroupMapping mugm = new MatchUserGroupMapping();
+					mugm.setMugmMatchId(matchInfo.getMiId());
+					mugm.setMugmUserType(1);
+					mugm.setMugmGroupId(matchGroup.getMgId());
+					mugm.setMugmGroupName(matchGroup.getMgGroupName());
+					mugm.setMugmUserId(captainUserId);
+					mugm.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
+					mugm.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+					mugm.setMugmCreateTime(System.currentTimeMillis());
+					matchDao.save(mugm);
+				}
+			}
+		}
 	}
 
     /**
@@ -843,5 +865,26 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiUpdateUserName(WebUtil.getUserNameBySessionId());
 		matchInfo.setMiUpdateTime(System.currentTimeMillis());
 		matchDao.update(matchInfo);
+	}
+
+	/**
+	 * 根据比赛id获取参赛球队
+	 * @return
+	 */
+	public List<TeamInfo> getTeamByMatchId(Long matchId) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+		return matchDao.getTeamListByIds(teamIds);
+	}
+
+	/**
+	 * 成绩上报
+	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
+	 * @param baseScore 基础分,
+	 * @param rodScore 杆差倍数,
+	 * @param winScore 赢球奖分
+	 * @return
+	 */
+	public void submitScoreByTeamId(Long matchId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
 	}
 }

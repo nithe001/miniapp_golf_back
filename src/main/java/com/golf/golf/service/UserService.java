@@ -213,7 +213,7 @@ public class UserService implements IBaseService {
 
 		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openid);
 		UserInfo userInfo = null;
-		if(wechatUserInfo.getWuiUId() != null){
+		if(wechatUserInfo != null && wechatUserInfo.getWuiUId() != null){
 			userInfo = dao.get(UserInfo.class, wechatUserInfo.getWuiUId());
 		}
 		if(wechatUserInfo != null){
@@ -278,7 +278,7 @@ public class UserService implements IBaseService {
 			wechatUserInfo.setCreateTime(System.currentTimeMillis());
 
 			//创建一条用户信息
-			saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
+			userInfo = saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
 			userModel.setUser(userInfo);
 			wechatUserInfo.setWuiUId(userInfo.getUiId());
 			dao.save(wechatUserInfo);
@@ -289,7 +289,7 @@ public class UserService implements IBaseService {
 		session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
 	}
 
-	private void saveOrUpdateUserInfo(UserInfo userInfo, String openid, WechatUserInfo wechatUserInfo) {
+	private UserInfo saveOrUpdateUserInfo(UserInfo userInfo, String openid, WechatUserInfo wechatUserInfo) {
 		if(wechatUserInfo.getWuiUId() == null){
 			userInfo = new UserInfo();
 		}
@@ -310,6 +310,7 @@ public class UserService implements IBaseService {
 			userInfo.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
 			dao.update(userInfo);
 		}
+		return userInfo;
 	}
 
 	/**

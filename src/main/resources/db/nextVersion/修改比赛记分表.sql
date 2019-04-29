@@ -11,3 +11,7 @@ alter table match_score add column  ms_update_user_name varchar(128) comment '�
 
 alter table team_user_mapping modify column tum_user_type comment '用户类型（0：队长  1：队员 2:申请入队）';
 alter table team_info modify column ti_info_open_type comment '1、公开 比赛成绩等向所有球友开放；0、封闭，比赛成绩等向队友开放';
+
+-- 删除球队用户mapping表的字段
+alter table team_user_mapping drop column tum_type;
+alter table team_user_mapping drop column tum_is_valid;

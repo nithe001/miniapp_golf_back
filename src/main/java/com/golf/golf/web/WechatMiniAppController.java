@@ -72,12 +72,14 @@ public class WechatMiniAppController extends GenericController {
 					//通过openid获取用户信息
 					UserModel userModel = new UserModel();
 					WechatUserInfo wechatUserInfo = userService.getWechatUserByOpenid(openid);
-					userModel.setWechatUser(wechatUserInfo);
-					if(wechatUserInfo.getWuiUId() != null){
-						UserInfo userInfo = userService.getUserById(wechatUserInfo.getWuiUId());
-						userModel.setUser(userInfo);
+					if(wechatUserInfo != null){
+						userModel.setWechatUser(wechatUserInfo);
+						if(wechatUserInfo.getWuiUId() != null){
+							UserInfo userInfo = userService.getUserById(wechatUserInfo.getWuiUId());
+							userModel.setUser(userInfo);
+						}
+						session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
 					}
-					session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
 
 					//以3rd_session为key,session_key+openid为value写入session存储
 					session.setAttribute(loginSessionKey, sessionkey+","+openid);

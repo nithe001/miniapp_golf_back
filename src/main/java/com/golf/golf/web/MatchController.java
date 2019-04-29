@@ -104,7 +104,6 @@ public class MatchController {
 		}
 	}
 
-
 	/**
 	 * 创建比赛
 	 * @return
@@ -657,5 +656,45 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 根据比赛id获取参赛球队
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTeamByMatchId")
+	public JsonElement getTeamByMatchId(Long matchId) {
+		try {
+			List<TeamInfo> teamInfoList = matchService.getTeamByMatchId(matchId);
+			return JsonWrapper.newDataInstance(teamInfoList);
+		} catch (Exception e) {
+			errmsg = "前台-比赛—保存或更新比赛状态时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+
+	/**
+	 * 成绩上报
+	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
+	 * @param baseScore 基础分,
+	 * @param rodScore 杆差倍数,
+	 * @param winScore 赢球奖分
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("submitScoreByTeamId")
+	public JsonElement submitScoreByTeamId(Long matchId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
+		try {
+			matchService.submitScoreByTeamId(matchId, scoreType, baseScore, rodScore, winScore);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 }

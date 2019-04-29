@@ -12,6 +12,7 @@ import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +51,7 @@ public class TeamService implements IBaseService {
 				if(count == 0){
 					result.put("userCount", 0);
 				}
+				//队长名字
 				Long teamId = matchService.getLongValue(result, "tiId");
 				if(teamId != null){
 					List<String> captainList = teamDao.getCaptainByTeamId(teamId);
@@ -59,10 +61,9 @@ public class TeamService implements IBaseService {
 						result.put("captain", captainList.get(0));
 					}
 				}
-//				String logo = matchService.getName(result, "logo");
-//				if(StringUtils.isNotEmpty(logo)){
-//					result.put("logo", PropertyConst.DOMAIN + logo);
-//				}
+				//我是否是队长
+				Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
+				result.put("isCaptain", isCaptain);
 			}
 		}
     }
@@ -134,11 +135,9 @@ public class TeamService implements IBaseService {
 			teamUserMapping.setTumUserId(WebUtil.getUserIdBySessionId());
 			//设置队长
 			teamUserMapping.setTumUserType(0);
-			teamUserMapping.setTumType(1);
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
 			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
-			teamUserMapping.setTumIsValid(1);
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
@@ -173,6 +172,8 @@ public class TeamService implements IBaseService {
 		result.put("userList",userList);
 		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
 		result.put("isCaptain",isCaptain);
+		Long isInTeam = teamDao.isInTeamById(teamId, WebUtil.getUserIdBySessionId());
+		result.put("isInTeam",isInTeam);
 		return result;
 	}
 
@@ -195,28 +196,35 @@ public class TeamService implements IBaseService {
 	/**
 	 * 获取球队记分详情
 	 * @param teamId:球队id
+	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
 	 * @return
 	 */
-	public List<Map<String, Object>> getTeamPointByYear(String date, Long teamId) {
+	public List<Map<String, Object>> getTeamPointByYear(Integer type, String date, Long teamId) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("startYear", TimeUtil.getYearFirst(Integer.parseInt(date)));
 		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
 		parp.put("teamId", teamId);
-		return teamDao.getTeamPointByYear(parp);
+		if(type == 0){
+			//比分榜
+			return teamDao.getTeamPointByYear(parp);
+		}else if(type == 1){
+			//TODO
+			//积分榜
+			return null;
+		}else{
+			//比赛榜 列出当年所有本球队相关的比赛情况统计
+			return teamDao.getTeamMatchByYear(parp);
+		}
 	}
 
 	/**
 	 * 获取球队已报名的用户或者球队用户列表
 	 * @param teamId:球队id
-	 * @param type:0已报名的 1本队用户
+	 * @param type:0已报名的 1本队用户 2本队所有用户
 	 * @return
 	 */
 	public List<Map<String, Object>> getUserListByTeamId(Long teamId, Integer type) {
-		if(type == 0){
-			return teamDao.getApplyUserListByTeamId(teamId);
-		}else{
-			return teamDao.getUserListByTeamId(teamId);
-		}
+		return teamDao.getUserListByTeamId(teamId, type);
 	}
 
 	/**
@@ -247,6 +255,47 @@ public class TeamService implements IBaseService {
 					}
 				}
 			}
+		}
+	}
+
+
+	/**
+	 * 获取本球队所有用户
+	 * @param teamId:球队id
+	 * type:0已报名的 1本队用户 2本队所有用户
+	 * @return
+	 */
+	public List<Map<String, Object>> getAllUserListByTeamId(Long teamId) {
+		return teamDao.getUserListByTeamId(teamId, 2);
+	}
+
+	/**
+	 * 申请加入或退出该球队
+	 * @param teamId:球队id
+	 * @param type:0加入 1退出
+	 * @return
+	 */
+	public void joinOrQuitTeamById(Long teamId, Integer type) {
+		Long userId = WebUtil.getUserIdBySessionId();
+		if(type == 0){
+			TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
+			TeamUserMapping teamUserMapping = new TeamUserMapping();
+			teamUserMapping.setTumTeamId(teamId);
+			teamUserMapping.setTumUserId(userId);
+			//是否开启入队审核
+			if(teamInfo.getTiJoinOpenType() == 1){
+				//申请入队
+				teamUserMapping.setTumUserType(2);
+			}else{
+				//直接入队
+				teamUserMapping.setTumUserType(1);
+			}
+			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
+			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
+			teamDao.save(teamUserMapping);
+		}else{
+			teamDao.deleteFromTeamUserMapping(teamId, userId);
 		}
 	}
 }
