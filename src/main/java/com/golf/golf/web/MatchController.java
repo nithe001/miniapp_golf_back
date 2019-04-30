@@ -408,7 +408,7 @@ public class MatchController {
     }
 
 	/**
-	 * 单练——查询是否有我正在进行的单练
+	 * 单练——查询是否有我正在进行的单练 今天
 	 * @return
 	 */
 	@ResponseBody
@@ -426,7 +426,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 单练——创建单练
+	 * 单练——创建单练  默认单人比杆
 	 * @return
 	 */
 	@ResponseBody
@@ -434,8 +434,8 @@ public class MatchController {
 	public JsonElement saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest,
 									  String beforeZoneName, String afterZoneName) {
 		try {
-			Long singleMatchId = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
-			return JsonWrapper.newDataInstance(singleMatchId);
+			Map<String,Object> result = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();
@@ -623,10 +623,11 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
+//	userId=10000001&matchId=8&groupId=8&scoreId=&holeName=A&holeNum=4&holeStandardRod=undefined&isUp=%E5%BC%80%E7%90%83%E5%81%8F%E5%B7%A6&rod=3&pushRod=11
 	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
-										 Integer holeNum, String isUp, Integer rod, Integer pushRod) {
+										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, Integer pushRod) {
 		try {
-			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum, isUp, rod, pushRod);
+			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum, holeStandardRod, isUp, rod, pushRod);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -676,7 +677,7 @@ public class MatchController {
 
 
 	/**
-	 * 成绩上报
+	 * 成绩上报 计算积分
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param baseScore 基础分,
 	 * @param rodScore 杆差倍数,
@@ -691,6 +692,24 @@ public class MatchController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 结束单练
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("endSingleMatchById")
+	public JsonElement endSingleMatchById(Long matchId) {
+		try {
+			matchService.endSingleMatchById(matchId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);

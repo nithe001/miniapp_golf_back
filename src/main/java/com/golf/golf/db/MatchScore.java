@@ -30,6 +30,7 @@ public class MatchScore implements java.io.Serializable {
 	private Integer msHoleNum;
 	private String msIsUp;
 	private Integer msRodNum;
+	private Integer msRodCha;
 	private Integer msPushRodNum;
 	private Long msCreateUserId;
 	private String msCreateUserName;
@@ -48,7 +49,7 @@ public class MatchScore implements java.io.Serializable {
 	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
 					  Long msGroupId, String msGroupName, Long msUserId,
 					  String msUserName, Integer msType, Integer msScore, String msHoleName,
-					  Integer msHoleNum, String msIsUp, Integer msRodNum,
+					  Integer msHoleNum, Integer msRodCha, String msIsUp, Integer msRodNum,
 					  Integer msPushRodNum, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
 					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
@@ -64,6 +65,7 @@ public class MatchScore implements java.io.Serializable {
 		this.msHoleNum = msHoleNum;
 		this.msIsUp = msIsUp;
 		this.msRodNum = msRodNum;
+		this.msRodCha = msRodCha;
 		this.msPushRodNum = msPushRodNum;
 		this.msCreateUserId = msCreateUserId;
 		this.msCreateUserName = msCreateUserName;
@@ -200,6 +202,15 @@ public class MatchScore implements java.io.Serializable {
 
 	public void setMsRodNum(Integer msRodNum) {
 		this.msRodNum = msRodNum;
+	}
+
+	@Column(name = "ms_rod_cha")
+	public Integer getMsRodCha() {
+		return msRodCha;
+	}
+
+	public void setMsRodCha(Integer msRodCha) {
+		this.msRodCha = msRodCha;
 	}
 
 	@Column(name = "ms_push_rod_num")
