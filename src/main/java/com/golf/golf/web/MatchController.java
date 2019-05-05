@@ -5,13 +5,12 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
-import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
-import com.golf.golf.bean.MatchGroupUserScoreBean;
-import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.common.security.WechatUserUtil;
-import com.golf.golf.db.*;
+import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.ParkInfo;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.TeamService;
 import com.google.gson.JsonElement;
@@ -26,10 +25,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +39,6 @@ import java.util.Map;
 @RequestMapping(value = "/match")
 public class MatchController {
 	private final static Logger logger = LoggerFactory.getLogger(MatchController.class);
-	private String errmsg;
 
 	@Autowired
 	private MatchService matchService;
@@ -78,7 +74,7 @@ public class MatchController {
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
-			errmsg = "前台-获取比赛列表出错。";
+			String errmsg = "前台-获取比赛列表出错。";
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
@@ -98,7 +94,7 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(teamList);
 		} catch (Exception e) {
 			e.printStackTrace();
-			errmsg = "前台-获取参赛球队列表出错。";
+			String errmsg = "前台-获取参赛球队列表出错。";
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
@@ -133,7 +129,7 @@ public class MatchController {
 
 
 	/**
-	 * 点击进入比赛详情——获取围观用户列表和比赛分组
+	 * 点击进入比赛详情——获取围观用户列表和比赛分组 如果不是参赛人员，则加入围观用户
 	 * @param count 获取围观显示的个数
 	 * @return
 	 */
@@ -141,10 +137,12 @@ public class MatchController {
 	@RequestMapping("getMatchDetail")
 	public JsonElement getMatchDetail(Long matchId, Integer count) {
 		try {
+			//如果不是参赛人员，则加入围观用户
+			matchService.saveOrUpdateWatch(matchId);
 			Map<String, Object> matchMap = matchService.getMatchInfo(matchId, count);
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
-			errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
+			String errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -162,7 +160,7 @@ public class MatchController {
 			boolean isCaptain = matchService.getIsCaptain(matchId);
 			return JsonWrapper.newDataInstance(isCaptain);
 		} catch (Exception e) {
-			errmsg = "前台-点击进入比赛详情-获取是否是赛长时出错。";
+			String errmsg = "前台-点击进入比赛详情-获取是否是赛长时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -180,7 +178,7 @@ public class MatchController {
 			List<Map<String, Object>> watchList = matchService.getMoreWatchUserList(matchId);
 			return JsonWrapper.newDataInstance(watchList);
         } catch (Exception e) {
-            errmsg = "前台-获取更多围观用户时出错。matchId="+matchId;
+			String errmsg = "前台-获取更多围观用户时出错。matchId="+matchId;
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -198,7 +196,7 @@ public class MatchController {
 			Map<String, Object> matchDetailInfo = matchService.getMatchDetailInfo(matchId);
 			return JsonWrapper.newDataInstance(matchDetailInfo);
 		} catch (Exception e) {
-			errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
+			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -216,7 +214,7 @@ public class MatchController {
 			matchService.addGroupByTeamId(matchId);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
+			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -240,7 +238,7 @@ public class MatchController {
 			}
 			return JsonWrapper.newDataInstance(applyUserList);
 		} catch (Exception e) {
-			errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
+			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -259,7 +257,7 @@ public class MatchController {
 			matchService.addUserToGroupByMatchId(matchId,groupId,userIds);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛详情——赛长将用户加入该分组时出错。";
+			String errmsg = "前台-比赛详情——赛长将用户加入该分组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -277,7 +275,7 @@ public class MatchController {
 			matchService.delUserByMatchIdGroupId(matchId,groupId,userIds);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛详情—将用户删除该分组时出错。";
+			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -296,7 +294,7 @@ public class MatchController {
             matchService.saveUserScoreMapping(matchId, groupId, scorerId);
             return JsonWrapper.newSuccessInstance();
         } catch (Exception e) {
-            errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
+			String errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -321,7 +319,7 @@ public class MatchController {
             searchBean.addParpField("userId", UserUtil.getUserId());
             return JsonWrapper.newDataInstance(matchService.getScoreType(searchBean));
         } catch (Exception e) {
-            errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
+			String errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -340,7 +338,7 @@ public class MatchController {
             Map<String, Object> matchInfo = matchService.getMatchInfoById(groupId);
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
-			errmsg = "前台-获取本组比赛结果详情出错。";
+			String errmsg = "前台-获取本组比赛结果详情出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -358,7 +356,7 @@ public class MatchController {
             Map<String, Object> matchInfo = matchService.getMatchInfoById(matchId);
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
-			errmsg = "前台-获取整组比赛结果详情出错。";
+			String errmsg = "前台-获取整组比赛结果详情出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -400,7 +398,7 @@ public class MatchController {
             pageInfo = teamService.getTeamList(searchBean, pageInfo);
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
-            errmsg = "前台-创建比赛—选择参赛范围——查询球队列表时出错。";
+            String errmsg = "前台-创建比赛—选择参赛范围——查询球队列表时出错。";
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -418,7 +416,7 @@ public class MatchController {
 			Map<String,Object> result = matchService.getMySinglePlay();
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
-			errmsg = "前台-单练——查询是否有我正在进行的单练时出错。";
+			String errmsg = "前台-单练——查询是否有我正在进行的单练时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -437,7 +435,7 @@ public class MatchController {
 			Map<String,Object> result = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
-			errmsg = "前台-单练——开始记分——保存数据时出错。";
+			String errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -478,7 +476,7 @@ public class MatchController {
 //            }
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
-            errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
+            String errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -496,7 +494,7 @@ public class MatchController {
 			List<Object[]> parkPartitionList = matchService.getParkZoneAndHole(parkId);
             return JsonWrapper.newDataInstance(parkPartitionList);
         } catch (Exception e) {
-            errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
+            String errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -524,7 +522,7 @@ public class MatchController {
             matchService.saveMyOnlyMatch(parkId, parkName, zoneBeforeNine, zoneAfterNine, playTime, groupPeopleNum, digest);
             return JsonWrapper.newDataInstance(null);
         } catch (Exception e) {
-            errmsg = "前台-创建比赛—创建单练时出错。";
+            String errmsg = "前台-创建比赛—创建单练时出错。";
             e.printStackTrace();
             logger.error(errmsg + e);
             return JsonWrapper.newErrorInstance(errmsg);
@@ -591,7 +589,7 @@ public class MatchController {
 			List<TeamInfo> teamInfoList = matchService.getTeamsById(teamIds);
 			return JsonWrapper.newDataInstance(teamInfoList);
 		} catch (Exception e) {
-			errmsg = "前台-创建比赛—通过id查询球队名称和logo时出错。";
+			String errmsg = "前台-创建比赛—通过id查询球队名称和logo时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -609,7 +607,7 @@ public class MatchController {
 			Map<String,Object> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
-			errmsg = "前台-比赛—通过matchid和groupid查询本组记分卡信息时出错。";
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组记分卡信息时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -623,14 +621,13 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
-//	userId=10000001&matchId=8&groupId=8&scoreId=&holeName=A&holeNum=4&holeStandardRod=undefined&isUp=%E5%BC%80%E7%90%83%E5%81%8F%E5%B7%A6&rod=3&pushRod=11
 	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
 										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, Integer pushRod) {
 		try {
 			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum, holeStandardRod, isUp, rod, pushRod);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛—保存或更新计分数据时出错。";
+			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -650,7 +647,7 @@ public class MatchController {
 			matchService.updateMatchState(matchId, state);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛—保存或更新比赛状态时出错。";
+			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -668,7 +665,7 @@ public class MatchController {
 			List<TeamInfo> teamInfoList = matchService.getTeamByMatchId(matchId);
 			return JsonWrapper.newDataInstance(teamInfoList);
 		} catch (Exception e) {
-			errmsg = "前台-比赛—保存或更新比赛状态时出错。";
+			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -691,7 +688,7 @@ public class MatchController {
 			matchService.submitScoreByTeamId(matchId, scoreType, baseScore, rodScore, winScore);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
+			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -709,11 +706,67 @@ public class MatchController {
 			matchService.endSingleMatchById(matchId);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
+			String errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+	/**
+	 * 比赛——group——总比分
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTotalScoreByMatchId")
+	public JsonElement getTotalScoreByMatchId(Long matchId) {
+		try {
+			Map<String,Object> scoreList = matchService.getTotalScoreByMatchId(matchId);
+			return JsonWrapper.newDataInstance(scoreList);
+		} catch (Exception e) {
+			String errmsg = "比赛——group——获取总比分时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——group——分队比分
+	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTeamScoreByMatchId")
+	public JsonElement getTeamScoreByMatchId(Long matchId) {
+		try {
+			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId);
+			return JsonWrapper.newDataInstance(teamScore);
+		} catch (Exception e) {
+			String errmsg = "比赛——group——获取分队比分时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——group——分队统计
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getTeamTotalScoreByMatchId")
+	public JsonElement getTeamTotalScoreByMatchId(Long matchId) {
+		try {
+			List<Map<String, Object>> scoreList = matchService.getTeamTotalScoreByMatchId(matchId);
+			return JsonWrapper.newDataInstance(scoreList);
+		} catch (Exception e) {
+			String errmsg = "比赛——group——获取分队统计时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 }

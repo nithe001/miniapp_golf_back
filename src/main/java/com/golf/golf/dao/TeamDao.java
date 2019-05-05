@@ -226,6 +226,7 @@ public class TeamDao extends CommonDao {
 	/**
 	 * 获取球队比赛榜
 	 * 列出当年所有本球队相关的比赛情况统计
+	 * 比赛名称、参赛队、时间、参赛人数、基础积分、杆差倍数、赢球奖分
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {

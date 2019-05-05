@@ -8,6 +8,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchGroupBean;
 import com.golf.golf.bean.MatchGroupUserScoreBean;
+import com.golf.golf.bean.MatchScoreBean;
 import com.golf.golf.bean.MatchUserGroupMappingBean;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
@@ -926,5 +927,111 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiUpdateUserId(WebUtil.getUserIdBySessionId());
 		matchInfo.setMiUpdateUserName(WebUtil.getUserNameBySessionId());
 		matchDao.update(matchInfo);
+	}
+
+	/**
+	 * 如果不是参赛人员，则加入围观用户
+	 * @return
+	 */
+	public void saveOrUpdateWatch(Long matchId) {
+		Long userId = WebUtil.getUserIdBySessionId();
+		Long count = matchDao.getIsContestants(userId, matchId);
+		if(count == 0){
+			//加入围观用户
+			MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+			matchJoinWatchInfo.setMjwiUserId(userId);
+			matchJoinWatchInfo.setMjwiMatchId(matchId);
+			matchJoinWatchInfo.setMjwiType(0);
+			matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+			matchDao.save(matchJoinWatchInfo);
+		}
+	}
+
+	/**
+	 * 比赛——group——总比分
+	 * 罗列每个参赛球友的记分卡。其中的数字“蓝色是Par,红色是小鸟，灰色是高于标准杆的。黑色是老鹰”
+	 * @return
+	 */
+	public Map<String, Object> getTotalScoreByMatchId(Long matchId) {
+		Map<String, Object> result = new HashMap<>();
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		result.put("matchInfo", matchInfo);
+
+		List<MatchGroupUserScoreBean> list = new ArrayList<>();
+
+		//比赛的所有用户
+		List<Map<String,Object>> userList = matchDao.getUserListById(matchId, null);
+		result.put("userList",userList);
+
+		//半场球洞
+		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
+
+		//第一条记录（半场分区信息）
+		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
+		thBean.setUserId(0L);
+		thBean.setUserName("球洞球杆");
+		thBean.setUserScoreList(parkHoleList);
+		list.add(thBean);
+
+		//本组用户每个洞得分情况
+		if(userList != null && userList.size()>0){
+			for(Map<String,Object> user: userList){
+				Long uiId = getLongValue(user,"uiId");
+				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+				bean.setUserId(uiId);
+				bean.setUserName(getName(user,"uiRealName"));
+				//本用户得分情况
+				List<Map<String, Object>> uscoreList = matchDao.getScoreByUserId(null, uiId, matchInfo);
+				if(uscoreList != null && uscoreList.size()>0){
+					bean.setUserScoreList(uscoreList);
+					list.add(bean);
+				}
+
+			}
+		}
+		result.put("parkHoleList",list);
+
+		//总杆数
+		Long totalRod = matchDao.getTotalRod(matchInfo);
+		result.put("totalRod",totalRod);
+		//用户总分
+		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId,null);
+		result.put("totalScoreList",totalScoreList);
+
+		return result;
+	}
+
+	/**
+	 * 比赛——group——分队比分
+	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
+	 * @return
+	 */
+	public Map<String, Object> getTeamScoreByMatchId(Long matchId) {
+		Map<String, Object> result = new HashMap<>();
+		//获取参赛球队
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+		List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(teamIds);
+		result.put("teamInfoList", teamInfoList);
+		//获取第一个球队的统计
+		List<MatchScore> matchScoreList = matchDao.getMatchScoreList(matchId,teamIds.get(0));
+		result.put("matchScoreList", matchScoreList);
+		return result;
+	}
+
+	/**
+	 * 比赛——group——分队统计
+	 * 比杆赛：按创建比赛时“参赛范围”选择的球队统计成绩并按平均杆数排名，（球队、参赛人数、平均杆数、总杆数、排名）
+	 * 比洞赛：用不同的表。（球队、获胜组、打平组、得分、排名）
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamTotalScoreByMatchId(Long matchId) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+//		赛制1( 0:比杆 、1:比洞)
+		if(matchInfo.getMiMatchFormat1() == 0){
+			return matchDao.getMatchRodTotalScore(matchId);
+		}else{
+			return matchDao.getMatchHoleTotalScore(matchId);
+		}
 	}
 }
