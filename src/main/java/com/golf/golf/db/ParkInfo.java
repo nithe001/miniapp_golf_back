@@ -110,4 +110,16 @@ public class ParkInfo {
 	public void setPiSumRod(Integer piSumRod) {
 		this.piSumRod = piSumRod;
 	}
+
+	//到我的距离
+	private String toMyDistance;
+	@Transient
+
+	public String getToMyDistance() {
+		return toMyDistance;
+	}
+
+	public void setToMyDistance(String toMyDistance) {
+		this.toMyDistance = toMyDistance;
+	}
 }

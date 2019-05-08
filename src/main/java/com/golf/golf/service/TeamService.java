@@ -39,84 +39,37 @@ public class TeamService implements IBaseService {
 	 */
 	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
 		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
-		getCaptain(pageInfo);
+		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
+			getCaptain(pageInfo.getItems());
+		}
 		return pageInfo;
 	}
 
     //队长
-	private void getCaptain(POJOPageInfo pageInfo) {
-		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
-			for(Map<String,Object> result : (List<Map<String,Object>>)pageInfo.getItems()){
-				Integer count = matchService.getIntegerValue(result, "userCount");
-				if(count == 0){
-					result.put("userCount", 0);
-				}
-				//队长名字
-				Long teamId = matchService.getLongValue(result, "tiId");
-				if(teamId != null){
-					List<String> captainList = teamDao.getCaptainByTeamId(teamId);
-					if(captainList == null || captainList.size() ==0){
-						result.put("captain", "未知");
-					}else{
-						result.put("captain", captainList.get(0));
-					}
-				}
-				//我是否是队长
-				Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
-				result.put("isCaptain", isCaptain);
+	public void getCaptain(List<Map<String,Object>> mapList) {
+		for(Map<String,Object> result : mapList){
+			Integer count = matchService.getIntegerValue(result, "userCount");
+			if(count == 0){
+				result.put("userCount", 0);
 			}
+			//队长名字
+			Long teamId = matchService.getLongValue(result, "tiId");
+			if(teamId != null){
+				List<String> captainList = teamDao.getCaptainByTeamId(teamId);
+				if(captainList == null || captainList.size() ==0){
+					result.put("captain", "未知");
+				}else{
+					result.put("captain", captainList.get(0));
+				}
+			}
+			//logo
+			String logo = matchService.getName(result,"logo");
+			result.put("logo", PropertyConst.DOMAIN+logo);
+			//我是否是队长
+			Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
+			result.put("isCaptain", isCaptain);
 		}
     }
-
-
-    /**
-     * 计算我附近8千米的经纬度
-	 * dis 周围千米数
-     * @return
-     */
-    public SearchBean findNeighPosition(SearchBean searchBean, double longitude,double latitude, double dis){
-        //先计算查询点的经纬度范围
-        double r = 6371;//地球半径千米
-//        double dis = 3;//3千米距离
-        double dlng =  2*Math.asin(Math.sin(dis/(2*r))/Math.cos(latitude*Math.PI/180));
-        dlng = dlng*180/Math.PI;//角度转为弧度
-        double dlat = dis/r;
-        dlat = dlat*180/Math.PI;
-        double minlat =latitude-dlat;
-        double maxlat = latitude+dlat;
-        double minlng = longitude -dlng;
-        double maxlng = longitude + dlng;
-//        Object[] values = {minlng,maxlng,minlat,maxlat};
-        searchBean.addParpField("minlng", minlng+"");
-        searchBean.addParpField("maxlng", maxlng+"");
-        searchBean.addParpField("minlat", minlat+"");
-        searchBean.addParpField("maxlat", maxlat+"");
-
-        return searchBean;
-    }
-
-	public static void main(String[] args) {
-		double longitude = 116.44355;
-		double latitude = 39.9219;
-		findNeighPosition(longitude,latitude);
-	}
-
-	public static void findNeighPosition(double longitude,double latitude){
-		//先计算查询点的经纬度范围
-		double r = 6371;//地球半径千米
-		double dis = 0.5;//0.5千米距离
-		double dlng =  2*Math.asin(Math.sin(dis/(2*r))/Math.cos(latitude*Math.PI/180));
-		dlng = dlng*180/Math.PI;//角度转为弧度
-		double dlat = dis/r;
-		dlat = dlat*180/Math.PI;
-		double minlat =latitude-dlat;
-		double maxlat = latitude+dlat;
-		double minlng = longitude -dlng;
-		double maxlng = longitude + dlng;
-
-		String hql = "from Property where longitude>=? and longitude =<? and latitude>=? latitude=<? and state=0";
-		Object[] values = {minlng,maxlng,minlat,maxlat};
-	}
 
 	/**
 	 * 创建更新球队
@@ -298,4 +251,15 @@ public class TeamService implements IBaseService {
 			teamDao.deleteFromTeamUserMapping(teamId, userId);
 		}
 	}
+
+	/**
+	 * 是否是该球队队长
+	 * @param userId:用户id
+	 * @param teamId:球队id
+	 * @return
+	 */
+	public Long getIsCaptain(Long userId, Long teamId) {
+		return teamDao.getIsCaptain(userId, teamId);
+	}
+
 }

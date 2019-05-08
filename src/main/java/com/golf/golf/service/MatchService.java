@@ -4,6 +4,7 @@ import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.MapUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchGroupBean;
@@ -41,15 +42,30 @@ public class MatchService implements IBaseService {
 		UserInfo userInfo = WebUtil.getUserInfoBySessionId();
 		//用户经纬度存在, 计算我附近10千米的经纬度
 		if(StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())){
-			searchBean = teamService.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
+			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
 					Double.parseDouble(userInfo.getUiLatitude()),10);
 		}
+		pageInfo = matchDao.getParkListNearby(searchBean,pageInfo);
+		//计算离我的距离
+		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size()>0){
+			getToMyDistance(pageInfo);
+		}
+		return pageInfo;
+	}
 
-		return matchDao.getParkListNearby(searchBean,pageInfo);
+	//计算离我的距离
+	private void getToMyDistance(POJOPageInfo pageInfo) {
+		UserInfo userInfo = matchDao.get(UserInfo.class, WebUtil.getUserIdBySessionId());
+		if(StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())){
+			for(ParkInfo parkInfo:(List<ParkInfo>)pageInfo.getItems()){
+				String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
+				parkInfo.setToMyDistance(distance);
+			}
+		}
 	}
 
 	/**
-	 * 获取全部比赛列表 或 获取我参加的比赛列表
+	 * 获取比赛列表 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛 3:我创建的比赛
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -76,6 +92,9 @@ public class MatchService implements IBaseService {
 				}
 				matchInfo.setMiHit(getIntegerValue(result,"userCount"));
 				matchInfo.setMiIsEnd(getIntegerValue(result,"mi_is_end"));
+				matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+				//是否是赛长（显示创建比赛列表时用）
+//				matchInfo.setIsCaptain(matchDao.getIsCaptain(matchInfo.getMiId(),WebUtil.getUserIdBySessionId()));
 				matchInfoList.add(matchInfo);
 			}
 			pageInfo.setItems(matchInfoList);
@@ -133,10 +152,7 @@ public class MatchService implements IBaseService {
 		}
 
 		//是否是赛长
-		SearchBean searchBean = new SearchBean();
-		searchBean.addParpField("matchId", matchId);
-		searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
-		Long captainCount = matchDao.getIsCaptain(searchBean);
+		Long captainCount = matchDao.getIsCaptain(matchId,WebUtil.getUserIdBySessionId());
 		Boolean isCaptain = false;
 		if(captainCount > 0){
 			isCaptain = true;
@@ -154,10 +170,7 @@ public class MatchService implements IBaseService {
 	 * 当前登录用户是否是赛长
 	 */
 	public boolean getIsCaptain(Long matchId) {
-		SearchBean searchBean = new SearchBean();
-		searchBean.addParpField("matchId", matchId);
-		searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
-		Long captainCount = matchDao.getIsCaptain(searchBean);
+		Long captainCount = matchDao.getIsCaptain(matchId, WebUtil.getUserIdBySessionId());
 		Boolean isCaptain = false;
 		if(captainCount > 0){
 			isCaptain = true;
@@ -238,7 +251,7 @@ public class MatchService implements IBaseService {
 		return result;
 	}
 
-	private List<Long> getLongTeamIdList(String teamIds) {
+	public List<Long> getLongTeamIdList(String teamIds) {
 		List<Long> teamIdList = new ArrayList<>();
 		String[] ids = teamIds.split(",");
 		for(String id:ids){
@@ -324,8 +337,9 @@ public class MatchService implements IBaseService {
      * @return
      */
     public boolean getScoreType(SearchBean searchBean) {
+    	Map<String,Object> parp = searchBean.getParps();
         //判断是否赛长
-        Long isCaptain = matchDao.getIsCaptain(searchBean);
+        Long isCaptain = matchDao.getIsCaptain((Long)parp.get("matchId"), (Long)parp.get("userId"));
         if(isCaptain > 0){
             return true;
         }
@@ -760,27 +774,6 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
-	 * @return
-	 */
-	public List<TeamInfo> getTeamsById(String teamIds) {
-		if(StringUtils.isNotEmpty(teamIds)){
-			List<Long> teamIdList = new ArrayList<>();
-			teamIds = teamIds.replace("[","");
-			teamIds = teamIds.replace("]","");
-			teamIds = teamIds.replace("\"","");
-			String[] teamids = teamIds.split(",");
-			for(String teamId :teamids){
-				if(StringUtils.isNotEmpty(teamId)){
-					teamIdList.add(Long.parseLong(teamId));
-				}
-			}
-			return matchDao.getTeamsById(teamIdList);
-		}
-		return null;
-	}
-
-	/**
 	 * 通过matchid和groupid查询本组记分卡信息
 	 * @return
 	 */
@@ -1004,18 +997,27 @@ public class MatchService implements IBaseService {
 	/**
 	 * 比赛——group——分队比分
 	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
+	 * 如果是该队队长，就显示“球队确认”按钮
 	 * @return
 	 */
-	public Map<String, Object> getTeamScoreByMatchId(Long matchId) {
+	public Map<String, Object> getTeamScoreByMatchId(Long matchId, Long teamId) {
 		Map<String, Object> result = new HashMap<>();
 		//获取参赛球队
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		result.put("matchInfo", matchInfo);
 		List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-		List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(teamIds);
-		result.put("teamInfoList", teamInfoList);
-		//获取第一个球队的统计
-		List<MatchScore> matchScoreList = matchDao.getMatchScoreList(matchId,teamIds.get(0));
+		List<TeamInfo> teamList = matchDao.getTeamListByIds(teamIds);
+		result.put("teamList", teamList);
+		if(teamId == null){
+			//如果没选球队，默认显示第一个球队
+			teamId = teamList.get(0).getTiId();
+		}
+		//获取该球队的统计
+		List<MatchScore> matchScoreList = matchDao.getMatchScoreList(matchId,teamId);
 		result.put("matchScoreList", matchScoreList);
+		//是否是该球队队长
+		Long isCaptain = teamService.getIsCaptain(WebUtil.getUserIdBySessionId(),teamId);
+		result.put("isCaptain", isCaptain);
 		return result;
 	}
 
@@ -1033,5 +1035,39 @@ public class MatchService implements IBaseService {
 		}else{
 			return matchDao.getMatchHoleTotalScore(matchId);
 		}
+	}
+
+	/**
+	 * 删除比赛
+	 * @return
+	 */
+	public boolean delMatchById(Long matchId) {
+		//判断是否是我创建的
+		Long count = matchDao.getIsMyCreatMatch(matchId,WebUtil.getUserIdBySessionId());
+		if(count != null && count >0){
+			matchDao.del(MatchInfo.class,matchId);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 创建比赛——获取选中的参赛球队的详情
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamListByIds(String teamIds) {
+		List<Long> ids = getLongTeamIdList(teamIds);
+		List<Map<String, Object>> list = matchDao.getTeamListByTeamIds(ids);
+		teamService.getCaptain(list);
+		return list;
+	}
+
+	/**
+	 * 创建比赛—获取球场城市列表
+	 * @param keyword 搜索关键字
+	 * @return
+	 */
+	public List<String> getParkCityList(String keyword) {
+		return matchDao.getParkCityList(keyword);
 	}
 }

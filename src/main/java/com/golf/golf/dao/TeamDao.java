@@ -48,6 +48,10 @@ public class TeamDao extends CommonDao {
         if(parp.get("keyword") != null){
             hql.append("AND t.ti_name LIKE :keyword ");
         }
+		if(parp.get("teamIds") != null){
+			hql.append("AND t.ti_id not in (:teamIds) ");
+		}
+
 
         Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
         if (count == null || count.intValue() == 0) {
@@ -232,4 +236,17 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		return null;
 	}
+
+	/**
+	 * 是否是该球队队长
+	 * @param userId:用户id
+	 * @param teamId:球队id
+	 * @return
+	 */
+	public Long getIsCaptain(Long userId, Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT COUNT(*) FROM TeamUserMapping as tum where tum.tumUserType = 0 and tum.tumTeamId = "+teamId+ " and tum.tumUserId = "+userId);
+		return dao.createCountQuery(hql.toString());
+	}
+
 }

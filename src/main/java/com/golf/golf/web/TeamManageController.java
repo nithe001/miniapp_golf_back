@@ -7,6 +7,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.db.TeamInfo;
+import com.golf.golf.service.MatchService;
 import com.golf.golf.service.TeamService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
@@ -38,17 +39,20 @@ public class TeamManageController {
 
     @Autowired
     private TeamService teamService;
+	@Autowired
+	private MatchService matchService;
 
 	/**
 	 * 获取球队列表
 	 * @param page 分页
 	 * @param type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
 	 * @param keyword 球队名称
+	 * @param joinTeamIds 用于创建比赛时添加球队，如果不为空，就查询除去这些球队的列表
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamList")
-	public JsonElement getTeamList(Integer page, Integer type, String keyword) {
+	public JsonElement getTeamList(Integer page, Integer type, String keyword, String joinTeamIds) {
 		Integer nowPage = 1;
 		if (page > 0) {
 			nowPage = page;
@@ -58,6 +62,10 @@ public class TeamManageController {
 			SearchBean searchBean = new SearchBean();
 			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds)){
+				List<Long> teamIds = matchService.getLongTeamIdList(joinTeamIds);
+				searchBean.addParpField("teamIds", teamIds);
 			}
 			searchBean.addParpField("type", type);
 			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
@@ -78,12 +86,14 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveTeamInfo")
-	public JsonElement saveTeamInfo(String teamInfo, String logoPath) {
+	public JsonElement saveTeamInfo(String teamInfo, String logoPath, String signature, String digest) {
 		try {
 			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
-				teamInfoBean.setTiLogo(PropertyConst.DOMAIN + logoPath);
+				teamInfoBean.setTiLogo(logoPath);
+				teamInfoBean.setTiSignature(signature);
+				teamInfoBean.setTiDigest(digest);
 				teamService.saveOrUpdateTeamInfo(teamInfoBean);
 			}
 			return JsonWrapper.newSuccessInstance();
@@ -279,5 +289,7 @@ public class TeamManageController {
 			return JsonWrapper.newErrorInstance("加入或退出该球队时出错");
 		}
 	}
+
+
 
 }

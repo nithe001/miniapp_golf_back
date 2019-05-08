@@ -49,7 +49,7 @@ public class MatchController {
 	/**
 	 * 比赛列表
 	 * @param page 翻页
-	 * @param type 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛  3:我创建的比赛
+	 * @param type 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛(包括我创建的比赛，用于审核其他球友的报名)  3:我创建的比赛
 	 * @param keyword 搜索内容
 	 * @return
 	 */
@@ -100,20 +100,38 @@ public class MatchController {
 		}
 	}
 
+
+	/**
+	 * 创建比赛——获取选中的参赛球队列表的详情
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getTeamListByIds")
+	public JsonElement getTeamListByIds(String joinTeamIds) {
+		try {
+			List<Map<String,Object>> list = matchService.getTeamListByIds(joinTeamIds);
+			return JsonWrapper.newDataInstance(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取选中的参赛球队的详情时出错。球队id="+joinTeamIds + e);
+			return JsonWrapper.newErrorInstance("获取选中的参赛球队的详情时出错");
+		}
+	}
+
 	/**
 	 * 创建比赛
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
-	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String teamIds, String parkName, String beforeZoneName,
+	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
 									 String afterZoneName,String reportTeamIds) {
 		try {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
-				matchInfoBean.setMiLogo(PropertyConst.DOMAIN + logoPath);
-				matchInfoBean.setMiJoinTeamIds(teamIds);
+				matchInfoBean.setMiLogo(logoPath);
+				matchInfoBean.setMiJoinTeamIds(joinTeamIds);
 				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
 				matchInfoBean.setMiZoneAfterNine(afterZoneName);
 				matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
@@ -124,6 +142,29 @@ public class MatchController {
 			e.printStackTrace();
 			logger.error("创建比赛时出错。" + e);
 			return JsonWrapper.newErrorInstance("创建比赛时出错");
+		}
+	}
+
+
+
+	/**
+	 * 删除比赛
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "delMatchById")
+	public JsonElement delMatchById(Long matchId) {
+		try {
+			boolean flag = matchService.delMatchById(matchId);
+			if(flag){
+				return JsonWrapper.newSuccessInstance();
+			}else{
+				return JsonWrapper.newErrorInstance("您没有权限删除该比赛");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("删除比赛时出错。" + e);
+			return JsonWrapper.newErrorInstance("删除比赛时出错");
 		}
 	}
 
@@ -371,40 +412,6 @@ public class MatchController {
 
 
 
-
-
-
-
-    /**
-     * 创建比赛—选择参赛范围——查询球队列表
-     * 参赛范围处不选球队为公开赛
-     * 选多个球队为队际赛
-     * 弹出页面从所有球队中选择，可以搜索
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("getTeamList")
-    public JsonElement getTeamList(Integer page, String keyword) {
-        Integer nowPage = 1;
-        if (page > 0) {
-            nowPage = page;
-        }
-        try {
-            SearchBean searchBean = new SearchBean();
-            if(StringUtils.isNotEmpty(keyword)){
-                searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
-            }
-            POJOPageInfo pageInfo = new POJOPageInfo<Object[]>(Const.ROWSPERPAGE , nowPage);
-            pageInfo = teamService.getTeamList(searchBean, pageInfo);
-            return JsonWrapper.newDataInstance(pageInfo);
-        } catch (Exception e) {
-            String errmsg = "前台-创建比赛—选择参赛范围——查询球队列表时出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
 	/**
 	 * 单练——查询是否有我正在进行的单练 今天
 	 * @return
@@ -446,14 +453,15 @@ public class MatchController {
 
 
     /**
-     * 创建比赛—获取球场列表
+     * 创建比赛—获取球场列表——离我最近的排前面
      * @param page 翻页
      * @param keyword 搜索关键字
+	 * @param city 城市
      * @return
      */
     @ResponseBody
     @RequestMapping("getParkList")
-    public JsonElement getParkList(Integer page, String keyword) {
+    public JsonElement getParkList(Integer page, String keyword, String city) {
         if (page == null || page == 0) {
             page = 1;
         }
@@ -462,18 +470,12 @@ public class MatchController {
             if(StringUtils.isNotEmpty(keyword)){
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
+			if(StringUtils.isNotEmpty(city)){
+				searchBean.addParpField("city", city);
+			}
             POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>( Const.ROWSPERPAGE, page);
 			//附近
 			pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
-//                //区域
-//                pageInfo.setRowsPerPage(0);
-//                pageInfo.setNowPage(1);
-//                pageInfo = matchService.getParkListByRegion(searchBean, pageInfo);
-//            }else if(StringUtils.isNotEmpty(regionName)){
-//                //该区域下的所有球场
-//                searchBean.addParpField("regionName", regionName);
-//                pageInfo = matchService.getParkListByRegionName(searchBean, pageInfo);
-//            }
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
             String errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
@@ -482,6 +484,25 @@ public class MatchController {
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
+	/**
+	 * 创建比赛—获取球场城市列表
+	 * @param keyword 搜索关键字
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getParkCityList")
+	public JsonElement getParkCityList(String keyword) {
+		try {
+			List<String> list = matchService.getParkCityList(keyword);
+			return JsonWrapper.newDataInstance(list);
+		} catch (Exception e) {
+			String errmsg = "前台-创建比赛—获取球场城市列表时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
     /**
      * 创建比赛—点击球场-获取分区（前九洞 后九洞）
@@ -574,25 +595,6 @@ public class MatchController {
 			e.printStackTrace();
 			logger.error("上传球队logo时出错。" + e);
 			return JsonWrapper.newErrorInstance("上传球队logo时出错");
-		}
-	}
-
-
-	/**
-	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getTeamsById")
-	public JsonElement getTeamsById(String teamIds) {
-		try {
-			List<TeamInfo> teamInfoList = matchService.getTeamsById(teamIds);
-			return JsonWrapper.newDataInstance(teamInfoList);
-		} catch (Exception e) {
-			String errmsg = "前台-创建比赛—通过id查询球队名称和logo时出错。";
-			e.printStackTrace();
-			logger.error(errmsg + e);
-			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
 
@@ -734,13 +736,14 @@ public class MatchController {
 	/**
 	 * 比赛——group——分队比分
 	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
+	 * 如果是该队队长，就显示“球队确认”按钮
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamScoreByMatchId")
-	public JsonElement getTeamScoreByMatchId(Long matchId) {
+	public JsonElement getTeamScoreByMatchId(Long matchId, Long teamId) {
 		try {
-			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId);
+			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId, teamId);
 			return JsonWrapper.newDataInstance(teamScore);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队比分时出错。matchId="+matchId;
@@ -767,6 +770,8 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+
 
 
 }

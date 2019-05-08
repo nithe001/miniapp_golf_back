@@ -4,6 +4,7 @@ import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.*;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 public class MatchDao extends CommonDao {
 
 	/**
-	 * 获取比赛列表 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛
+	 * 获取比赛列表 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛 3:我创建的比赛
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -44,8 +45,8 @@ public class MatchDao extends CommonDao {
 			//我参加的比赛
 			hql.append("AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
-			//我可以报名的比赛 包括我创建的比赛
-			hql.append("AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) or m.mi_create_user_id = :userId)");
+			//我可以报名的比赛
+			hql.append("AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId))");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的比赛
 			hql.append("AND m.mi_create_user_id = :userId ");
@@ -134,14 +135,13 @@ public class MatchDao extends CommonDao {
      * 判断是否赛长
      * @return
      */
-    public Long getIsCaptain(SearchBean searchBean) {
-        Map<String, Object> parp = searchBean.getParps();
+    public Long getIsCaptain(Long matchId, Long userId) {
         StringBuilder hql = new StringBuilder();
         hql.append("FROM MatchUserGroupMapping AS m WHERE 1=1 ");
-        hql.append("AND m.mugmMatchId = :matchId ");
-        hql.append("AND m.mugmUserType = 1 ");
-        hql.append("AND m.mugmUserId = :userId ");
-        return dao.createCountQuery("SELECT COUNT(*) "+hql.toString(),parp);
+        hql.append("AND m.mugmMatchId =  "+matchId);
+        hql.append(" AND m.mugmUserType = 1 ");
+        hql.append("AND m.mugmUserId =  "+userId);
+        return dao.createCountQuery("SELECT COUNT(*) "+hql.toString());
     }
 
     /**
@@ -209,6 +209,23 @@ public class MatchDao extends CommonDao {
 		sql.append(" AND m.mugmGroupId = "+groupId);
 		sql.append(" AND m.mugmUserType = 0");
 		return dao.createQuery(sql.toString());
+	}
+
+	/**
+	 * 创建比赛——获取选中的参赛球队的详情
+	 * @return
+	 */
+	public List<Map<String, Object>> getTeamListByTeamIds(List<Long> ids) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("ids",ids);
+		StringBuilder hql = new StringBuilder();
+		hql.append("from team_info as t LEFT JOIN ( ");
+		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
+		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
+		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_id in(:ids) and t.ti_is_valid = 1 )");
+		hql.append("where 1=1 ");
+		String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
+		return dao.createSQLQuery( select + hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
 
@@ -322,6 +339,11 @@ public class MatchDao extends CommonDao {
 		if(parp.get("keyword") != null){
 			hql.append("AND p.piName LIKE :keyword  ");
 		}
+
+		if(parp.get("city") != null){
+			hql.append("AND p.piCity = :city  ");
+		}
+
 		hql.append("AND p.piLng >= :minlng ");
 //		hql.append("AND p.piLng <= :maxlng ");
 		hql.append("AND p.piLat >= :minlat ");
@@ -472,19 +494,6 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 创建比赛—选择球队——确认选择——通过id查询球队名称和logo
-	 * @return
-	 */
-	public List<TeamInfo> getTeamsById(List<Long> teamIds) {
-		Map<String, Object> parp = new HashMap<>();
-		parp.put("teamIds", teamIds);
-		StringBuilder sql = new StringBuilder();
-		sql.append("FROM TeamInfo AS t ");
-		sql.append("WHERE t.tiId in (:teamIds) ");
-		return dao.createQuery(sql.toString(),parp);
-	}
-
-	/**
 	 * 分组记分卡——获取半场球洞
 	 * @return
 	 */
@@ -536,15 +545,16 @@ public class MatchDao extends CommonDao {
 
 
 	/**
-	 * 分组记分卡——获取本组用户得分
+	 * 比赛——分组——分队比分
+	 * 该队所有参赛队员的得分情况
 	 * @return
 	 */
-	public List<MatchScore> getMatchScoreList(Long matchId, Long groupId) {
+	public List<MatchScore> getMatchScoreList(Long matchId, Long teamId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("from MatchScore as s ");
 		sql.append("WHERE s.msMatchId = "+matchId );
-		if(groupId != null){
-			sql.append(" and s.msGroupId = "+groupId );
+		if(teamId != null){
+			sql.append(" and s.msTeamId = "+teamId );
 		}
 		sql.append(" ORDER BY s.msHoleName");
 		return dao.createQuery(sql.toString());
@@ -746,5 +756,32 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("FROM ParkPartition AS p WHERE p.ppPId = :parkId and p.ppName = :holeName ");
 		return  dao.createQuery(sql.toString(), parp);
+	}
+
+	/**
+	 * 判断是否是我创建的比赛
+	 */
+	public Long getIsMyCreatMatch(Long matchId, Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT COUNT(*) FROM MatchInfo AS m WHERE m.miId = "+matchId+" and m.miCreateUserId = "+userId);
+		return dao.createCountQuery(sql.toString());
+	}
+
+	/**
+	 * 创建比赛—获取球场城市列表
+	 * @param keyword 搜索关键字
+	 * @return
+	 */
+	public List<String> getParkCityList(String keyword) {
+		Map<String,Object> parp = new HashMap<>();
+		if(StringUtils.isNotEmpty(keyword)){
+			parp.put("keyword","%"+keyword+"%");
+		}
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT DISTINCT(piCity) FROM ParkInfo AS p ");
+		if(StringUtils.isNotEmpty(keyword)){
+			sql.append("where p.piCity like :keyword ");
+		}
+		return dao.createQuery(sql.toString(), parp);
 	}
 }

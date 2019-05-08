@@ -354,13 +354,22 @@ public class MatchInfo {
 	}
 
 	private String stateStr;
+	private Long isCaptain;
 	@Transient
-
 	public String getStateStr() {
 		return stateStr;
 	}
-
 	public void setStateStr(String stateStr) {
 		this.stateStr = stateStr;
+	}
+
+
+	@Transient
+	public Long getIsCaptain() {
+		return isCaptain;
+	}
+
+	public void setIsCaptain(Long isCaptain) {
+		this.isCaptain = isCaptain;
 	}
 }
