@@ -7,6 +7,8 @@ alter table match_score add column  ms_type int comment '记分规则：0杆差 
 alter table match_score add column  ms_create_user_name varchar(128) comment '创建用户姓名' AFTER ms_create_user_id;
 -- 新增字段：更新用户姓名
 alter table match_score add column  ms_update_user_name varchar(128) comment '更新用户姓名' AFTER ms_update_user_id;
+-- 新增字段：前后场
+alter table match_score add column  ms_before_after int comment '0：前9场  1：后9场' AFTER ms_score;
 
 
 alter table team_user_mapping modify column tum_user_type comment '用户类型（0：队长  1：队员 2:申请入队）';
