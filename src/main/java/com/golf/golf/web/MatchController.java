@@ -5,6 +5,7 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.common.util.MapUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
@@ -12,7 +13,6 @@ import com.golf.golf.db.ParkInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
-import com.golf.golf.service.TeamService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,8 +43,6 @@ public class MatchController {
 
 	@Autowired
 	private MatchService matchService;
-	@Autowired
-    private TeamService teamService;
 
 
 	/**
@@ -63,14 +62,11 @@ public class MatchController {
 		POJOPageInfo pageInfo = new POJOPageInfo<MatchInfo>(Const.ROWSPERPAGE , nowPage);
 		try {
 			SearchBean searchBean = new SearchBean();
-			if(StringUtils.isNotEmpty(keyword)){
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
 			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
-			UserInfo userInfo = WebUtil.getUserInfoBySessionId();
-			searchBean.addParpField("lat", userInfo.getUiLatitude());
-			searchBean.addParpField("lng", userInfo.getUiLongitude());
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -271,13 +267,13 @@ public class MatchController {
 	@RequestMapping("getApplyUserByMatchId")
 	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId, Integer type) {
 		try {
-			List<Map<String, Object>> applyUserList = null;
+			Map<String, Object> result = null;
 			if(type == 0){
-				applyUserList = matchService.getApplyUserByMatchId(matchId);
+				result = matchService.getApplyUserByMatchId(matchId, groupId);
 			}else{
-				applyUserList = matchService.getUserListByMatchIdGroupId(matchId, groupId);
+				result = matchService.getUserListByMatchIdGroupId(matchId, groupId);
 			}
-			return JsonWrapper.newDataInstance(applyUserList);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
 			e.printStackTrace();
@@ -522,33 +518,6 @@ public class MatchController {
         }
     }
 
-    /**
-     * 创建比赛—单练
-     * @param parkId 所在球场Id
-     * @param parkName 球场名称
-     * @param zoneBeforeNine 前9洞区域
-     * @param zoneAfterNine 后9洞区域
-     * @param parkName 球场名称
-     * @param playTime 打球时间
-     * @param groupPeopleNum 同组人数
-     * @param digest 备注
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("saveMyOnlyMatch")
-    public JsonElement saveMyOnlyMatch(Long parkId, String parkName, String zoneBeforeNine,
-                                       String zoneAfterNine,
-                                       String playTime, Integer groupPeopleNum, String digest) {
-        try {
-            matchService.saveMyOnlyMatch(parkId, parkName, zoneBeforeNine, zoneAfterNine, playTime, groupPeopleNum, digest);
-            return JsonWrapper.newDataInstance(null);
-        } catch (Exception e) {
-            String errmsg = "前台-创建比赛—创建单练时出错。";
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
 
 	/**
 	 * 创建球队——上传logo
@@ -624,9 +593,11 @@ public class MatchController {
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
 	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
-										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, Integer pushRod) {
+										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod,
+										 Integer pushRod, Integer beforeAfter) {
 		try {
-			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum, holeStandardRod, isUp, rod, pushRod);
+			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum,
+														holeStandardRod, isUp, rod, pushRod, beforeAfter);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -664,8 +635,12 @@ public class MatchController {
 	@RequestMapping("getTeamByMatchId")
 	public JsonElement getTeamByMatchId(Long matchId) {
 		try {
+			Map<String,Object> result = new HashMap<>();
 			List<TeamInfo> teamInfoList = matchService.getTeamByMatchId(matchId);
-			return JsonWrapper.newDataInstance(teamInfoList);
+			result.put("teamInfoList",teamInfoList);
+			MatchInfo matchInfo = matchService.getMatchById(matchId);
+			result.put("matchInfo",matchInfo);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
 			e.printStackTrace();

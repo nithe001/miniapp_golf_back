@@ -26,6 +26,7 @@ public class MatchScore implements java.io.Serializable {
 	private String msUserName;
 	private Integer msType;
 	private Integer msScore;
+	private Integer msBeforeAfter;
 	private String msHoleName;
 	private Integer msHoleNum;
 	private String msIsUp;
@@ -48,7 +49,7 @@ public class MatchScore implements java.io.Serializable {
 	/** full constructor */
 	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
 					  Long msGroupId, String msGroupName, Long msUserId,
-					  String msUserName, Integer msType, Integer msScore, String msHoleName,
+					  String msUserName, Integer msType, Integer msScore, Integer msBeforeAfter, String msHoleName,
 					  Integer msHoleNum, Integer msRodCha, String msIsUp, Integer msRodNum,
 					  Integer msPushRodNum, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
 					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
@@ -61,6 +62,7 @@ public class MatchScore implements java.io.Serializable {
 		this.msUserName = msUserName;
 		this.msType = msType;
 		this.msScore = msScore;
+		this.msBeforeAfter = msBeforeAfter;
 		this.msHoleName = msHoleName;
 		this.msHoleNum = msHoleNum;
 		this.msIsUp = msIsUp;
@@ -166,6 +168,15 @@ public class MatchScore implements java.io.Serializable {
 
 	public void setMsScore(Integer msScore) {
 		this.msScore = msScore;
+	}
+
+	@Column(name = "ms_before_after")
+	public Integer getMsBeforeAfter() {
+		return msBeforeAfter;
+	}
+
+	public void setMsBeforeAfter(Integer msBeforeAfter) {
+		this.msBeforeAfter = msBeforeAfter;
 	}
 
 	@Column(name = "ms_hole_name", length = 128)

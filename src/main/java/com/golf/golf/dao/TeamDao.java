@@ -37,12 +37,15 @@ public class TeamDao extends CommonDao {
 		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_is_valid = 1 )");
 		hql.append("where 1=1 ");
 
-		if((Integer)parp.get("type") == 1 || (Integer)parp.get("type") == 3){
-			//我加入的球队 包括我创建的球队
-			hql.append("AND (t.ti_create_user_id = :userId or t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId)) ");
+		if((Integer)parp.get("type") == 1){
+			//我加入的球队
+			hql.append("AND t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
 			//我可以加入的球队
 			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
+		}else if((Integer)parp.get("type") == 3){
+			//我创建的球队
+			hql.append("AND t.ti_create_user_id = :userId ");
 		}
 
         if(parp.get("keyword") != null){
