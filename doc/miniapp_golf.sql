@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50725
 File Encoding         : 65001
 
-Date: 2019-04-18 15:23:24
+Date: 2019-05-10 16:15:08
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -79,11 +79,14 @@ CREATE TABLE `match_group` (
   `mg_update_user_name` varchar(128) DEFAULT NULL COMMENT '分组更新人姓名',
   `mg_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
   PRIMARY KEY (`mg_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
 
 -- ----------------------------
 -- Records of match_group
 -- ----------------------------
+INSERT INTO `match_group` VALUES ('1', '1', '第1组', '1', '牛牛', '1557369590377', null, null, null);
+INSERT INTO `match_group` VALUES ('2', '1', '第2组', '1', '牛牛', '1557374450142', null, null, null);
+INSERT INTO `match_group` VALUES ('5', '4', '第1组', '1', '牛牛', '1557382312273', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_info
@@ -110,7 +113,7 @@ CREATE TABLE `match_info` (
   `mi_report_score_team_id` varchar(255) DEFAULT NULL COMMENT '成绩上报球队id（以逗号分隔）',
   `mi_hit` int(11) DEFAULT NULL COMMENT '点击量',
   `mi_apply_end_time` bigint(20) DEFAULT NULL COMMENT '报名截止时间',
-  `mi_is_end` int(11) DEFAULT NULL COMMENT '比赛是否结束(1：是  0：否)',
+  `mi_is_end` int(11) DEFAULT NULL COMMENT '比赛是否结束(0：报名中  1进行中  2结束)',
   `mi_is_valid` int(11) DEFAULT NULL COMMENT '是否可用 1是 0否',
   `mi_create_user_name` varchar(128) DEFAULT NULL COMMENT '比赛发起人',
   `mi_create_user_id` bigint(20) DEFAULT NULL COMMENT '比赛发起人id',
@@ -119,11 +122,13 @@ CREATE TABLE `match_info` (
   `mi_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `mi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mi_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
 
 -- ----------------------------
 -- Records of match_info
 -- ----------------------------
+INSERT INTO `match_info` VALUES ('1', '1', null, '立夏比赛', 'up/matchLogo/1557369584365.jpg', '38', '北京净山湖体育休闲俱乐部', 'A', 'B', null, '2019-05-09', '说明说明说明', '1', null, '1', '0', '2,1', '2,1,', null, null, '1', '1', '牛牛', '1', '1557369590354', '牛牛', '1', '1557475972870');
+INSERT INTO `match_info` VALUES ('4', '0', '3', '牛牛的单练', null, '24', '北京大运河高尔夫球俱乐部', 'A', 'A', '他热问题人我', '2019-05-09', null, null, '3', '0', '0', null, null, null, null, '2', null, '牛牛', '1', '1557382312271', '牛牛', '1', '1557388192171');
 
 -- ----------------------------
 -- Table structure for match_join_watch_info
@@ -136,11 +141,14 @@ CREATE TABLE `match_join_watch_info` (
   `mjwi_user_id` bigint(20) DEFAULT NULL COMMENT '用户主键',
   `mjwi_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`mjwi_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户比赛观战、报名 信息  表';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COMMENT='用户比赛观战、报名 信息  表';
 
 -- ----------------------------
 -- Records of match_join_watch_info
 -- ----------------------------
+INSERT INTO `match_join_watch_info` VALUES ('1', '1', '1', '2', null);
+INSERT INTO `match_join_watch_info` VALUES ('2', '1', '1', '3', null);
+INSERT INTO `match_join_watch_info` VALUES ('3', '1', '1', '4', null);
 
 -- ----------------------------
 -- Table structure for match_score
@@ -155,23 +163,35 @@ CREATE TABLE `match_score` (
   `ms_group_name` varchar(255) DEFAULT NULL COMMENT '分组名称',
   `ms_user_id` bigint(20) DEFAULT NULL COMMENT '用户id',
   `ms_user_name` varchar(128) DEFAULT NULL COMMENT '用户名',
+  `ms_type` int(11) DEFAULT NULL COMMENT '记分规则：0杆差  1杆数',
   `ms_score` int(11) DEFAULT NULL COMMENT '分数',
+  `ms_before_after` int(255) DEFAULT NULL COMMENT '0：前9场  1：后9场',
   `ms_hole_name` varchar(128) DEFAULT NULL COMMENT '球洞名称',
   `ms_hole_num` int(11) DEFAULT NULL COMMENT '球洞号（数字1-9）',
-  `ms_is_up` int(11) DEFAULT NULL COMMENT '是否上球道（0：左，1：左前，2：上球道，3：右前，4：右）',
-  `ms_hole_total_rod_num` int(11) DEFAULT NULL COMMENT '本洞总杆',
+  `ms_is_up` varchar(128) DEFAULT NULL COMMENT '是否上球道（0：左，1：左前，2：上球道，3：右前，4：右）',
+  `ms_rod_num` int(11) DEFAULT NULL COMMENT '杆数',
+  `ms_rod_cha` int(11) DEFAULT NULL COMMENT '杆差=杆数-本洞标准杆数',
   `ms_push_rod_num` int(11) DEFAULT NULL COMMENT '推杆',
-  `ms_match_total_rod_num` int(11) DEFAULT NULL COMMENT '本场总杆',
   `ms_create_user_id` bigint(20) DEFAULT NULL COMMENT '创建人id',
+  `ms_create_user_name` varchar(128) DEFAULT NULL,
   `ms_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   `ms_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
+  `ms_update_user_name` varchar(128) DEFAULT NULL,
   `ms_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`ms_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
 
 -- ----------------------------
 -- Records of match_score
 -- ----------------------------
+INSERT INTO `match_score` VALUES ('7', '1', '1', '立夏比赛', '1', '第1组', '1', '牛牛', null, null, '0', 'A', '1', '开球直球', '3', '-1', '1', '1', '牛牛', '1557392453275', null, null, null);
+INSERT INTO `match_score` VALUES ('8', '2', '1', '立夏比赛', '1', '第1组', '2', '球友1', null, null, '0', 'A', '1', '开球直球', '4', '-1', '1', null, null, null, null, null, null);
+INSERT INTO `match_score` VALUES ('9', '1', '1', '立夏比赛', '2', '第2组', '3', '球友3', null, null, '0', 'A', '2', '开球直球', '1', '-1', '1', null, '', null, null, '', null);
+INSERT INTO `match_score` VALUES ('10', '2', '1', '立夏比赛', '2', '第2组', '4', '球友4', null, null, '0', 'A', '2', '开球直球', '2', '-1', '1', null, '', null, null, '', null);
+INSERT INTO `match_score` VALUES ('11', '1', '1', '立夏比赛', '1', '第1组', '1', '牛牛', null, null, '0', 'A', '2', '开球直球', '3', '-1', '1', '1', '牛牛', '1557392453275', null, '', null);
+INSERT INTO `match_score` VALUES ('12', '2', '1', '立夏比赛', '1', '第1组', '2', '球友1', null, null, '0', 'A', '2', '开球直球', '2', '-1', '1', null, '', null, null, '', null);
+INSERT INTO `match_score` VALUES ('13', '1', '1', '立夏比赛', '2', '第2组', '3', '球友3', null, null, '0', 'A', '3', '开球直球', '3', '-1', '1', null, '', null, null, '', null);
+INSERT INTO `match_score` VALUES ('14', '2', '1', '立夏比赛', '2', '第2组', '4', '球友4', null, null, '0', 'A', '3', '开球直球', '4', '-1', '1', null, '', null, null, '', null);
 
 -- ----------------------------
 -- Table structure for match_score_user_mapping
@@ -185,7 +205,7 @@ CREATE TABLE `match_score_user_mapping` (
   `msum_score_user_id` bigint(20) DEFAULT NULL COMMENT '记分人用户id',
   `msum_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`msum_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户记分mapping表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户邀请记分mapping表';
 
 -- ----------------------------
 -- Records of match_score_user_mapping
@@ -207,11 +227,17 @@ CREATE TABLE `match_user_group_mapping` (
   `mugm_create_user_name` varchar(128) DEFAULT NULL COMMENT '分组创建人姓名',
   `mugm_create_time` bigint(20) DEFAULT NULL COMMENT '分组创建时间',
   PRIMARY KEY (`mugm_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
 
 -- ----------------------------
 -- Records of match_user_group_mapping
 -- ----------------------------
+INSERT INTO `match_user_group_mapping` VALUES ('1', '1', '1', '1', '第1组', '1', '牛牛', '1', '牛牛', '1557369590385');
+INSERT INTO `match_user_group_mapping` VALUES ('4', '1', '0', '1', '第1组', '2', '球友1', '1', '牛牛', '1557374628534');
+INSERT INTO `match_user_group_mapping` VALUES ('14', '4', '1', '5', '第1组', '1', '牛牛', '1', '牛牛', '1557382312274');
+INSERT INTO `match_user_group_mapping` VALUES ('15', '4', '0', '5', '第1组', '1000001', '球友1', '1', '牛牛', '1557382312276');
+INSERT INTO `match_user_group_mapping` VALUES ('16', '4', '0', '5', '第1组', '1000002', '球友2', '1', '牛牛', '1557382312277');
+INSERT INTO `match_user_group_mapping` VALUES ('17', '4', '0', '5', '第1组', '1000003', '球友3', '1', '牛牛', '1557382312278');
 
 -- ----------------------------
 -- Table structure for park_info
@@ -13297,7 +13323,7 @@ CREATE TABLE `team_info` (
   `ti_digest` varchar(512) DEFAULT NULL COMMENT '球队简介',
   `ti_address` varchar(255) DEFAULT NULL COMMENT '所在地区',
   `ti_join_open_type` int(11) DEFAULT NULL COMMENT '是否有加入审核(1、是（队长审批）  0、否)',
-  `ti_info_open_type` int(11) DEFAULT NULL COMMENT '信息是否公开（1、公开 比赛成绩等向所有球友开放；2、封闭，比赛成绩等向队友开放）',
+  `ti_info_open_type` int(11) DEFAULT NULL COMMENT '信息是否公开（1、公开 比赛成绩等向所有球友开放；0、封闭，比赛成绩等向队友开放）',
   `ti_user_info_type` int(11) DEFAULT NULL COMMENT '队员详细资料（1：需要  0：不需要）',
   `ti_match_result_audit_type` int(11) DEFAULT NULL COMMENT '比赛成绩审核（1：是  0：否）',
   `ti_is_valid` int(11) DEFAULT NULL COMMENT '是否有效',
@@ -13308,12 +13334,13 @@ CREATE TABLE `team_info` (
   `ti_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `ti_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   PRIMARY KEY (`ti_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='球队表';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COMMENT='球队表';
 
 -- ----------------------------
 -- Records of team_info
 -- ----------------------------
-INSERT INTO `team_info` VALUES ('1', 'up/teamLogo/1555559373596.png', 'mm', 'yutruyt', 'iiiiiiiiiiiiiii', 'dd', '1', '1', '1', '1', '1', '1555559386902', '1', null, null, null, null);
+INSERT INTO `team_info` VALUES ('1', 'up/teamLogo/1557294258516.jpg', '超越队', '我们是超越队！', '啦啦啦啦啦！！！！！！！', '北京', '1', '1', '1', '1', '1', '1557294258567', '1', '牛牛', null, null, null);
+INSERT INTO `team_info` VALUES ('2', 'up/teamLogo/1557367164092.jpg', '万珂队', '', '', '海淀', '0', '1', '0', '0', '1', '1557367164339', '1', '牛牛', null, null, null);
 
 -- ----------------------------
 -- Table structure for team_user_integral
@@ -13338,10 +13365,8 @@ CREATE TABLE `team_user_mapping` (
   `tum_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户加入球队表主键',
   `tum_team_id` bigint(20) DEFAULT NULL COMMENT '球队主键',
   `tum_user_id` bigint(20) DEFAULT NULL COMMENT '用户id',
-  `tum_user_type` int(11) DEFAULT NULL COMMENT '用户类型（1：队长  0：队员）',
-  `tum_type` int(11) DEFAULT NULL COMMENT '类型（0：待审核，1：审核通过）',
-  `tum_point` int(11) DEFAULT NULL COMMENT '积分',
-  `tum_is_valid` int(11) DEFAULT NULL COMMENT '是否可用 1是 0否',
+  `tum_user_type` int(11) DEFAULT NULL COMMENT '用户类型（0：队长  1：队员 2:申请入队）',
+  `tum_point` int(11) DEFAULT NULL COMMENT '确认前积分',
   `tum_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   `tum_create_user_id` bigint(11) DEFAULT NULL COMMENT '创建人id',
   `tum_create_user_name` varchar(128) DEFAULT NULL COMMENT '创建人姓名',
@@ -13349,12 +13374,13 @@ CREATE TABLE `team_user_mapping` (
   `tum_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `tum_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   PRIMARY KEY (`tum_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='用户加入球队表';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COMMENT='用户加入球队表';
 
 -- ----------------------------
 -- Records of team_user_mapping
 -- ----------------------------
-INSERT INTO `team_user_mapping` VALUES ('1', '1', '1', '1', '1', null, '1', '1555559386905', '1', null, null, null, null);
+INSERT INTO `team_user_mapping` VALUES ('1', '1', '1', '0', null, '1557294258568', '1', '牛牛', null, null, null);
+INSERT INTO `team_user_mapping` VALUES ('2', '2', '1', '0', null, '1557367164395', '1', '牛牛', null, null, null);
 
 -- ----------------------------
 -- Table structure for user_info
@@ -13391,12 +13417,16 @@ CREATE TABLE `user_info` (
   `ui_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人姓名',
   `ui_update_user_id` bigint(11) DEFAULT NULL COMMENT '更新人用户id',
   PRIMARY KEY (`ui_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='用户详细资料表';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COMMENT='用户详细资料表';
 
 -- ----------------------------
 -- Records of user_info
 -- ----------------------------
-INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, null, '牜', '男', null, null, null, null, null, null, null, null, null, null, null, null, null, '1555322672147', null, null, '1555560121750', null, '1');
+INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', '挥杆一次去个球~~~', '116.44355', '39.9219', '牛牛', '牜', '男', '35', '12343241', '222@qq.com', '清华大学', '计算机系', '2015-04-01', '计算机专业', '0001', '金叶天成', 'java开发', '北京朝阳', '朝阳区高尔夫球场', null, '1555322672147', null, null, '1557475878271', '牛牛', '1');
+INSERT INTO `user_info` VALUES ('2', 'oXggK4xOgfkhLtHermHfY9VQsE8E', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', '阳光明媚', '116.44355', '39.9219', '球友1', '新增用户1', '女', '27', '666', '66@qq.com', '北京大学', '工商系', '2012-06-01', '工商专业', '134236543', '工商局', '科长', '北京海淀', '', null, '1555322672147', '', null, '1555984654252', '', '1');
+INSERT INTO `user_info` VALUES ('3', 'oXggK4xOgfkhLtHermHfY9VQsE8M', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', '加油！！！', '116.44355', '39.9219', '球友2', '新增用户2', '女', '28', '88888', '8888@qq.com', '南开大学', '金融系', '2009-08-01', '金融专业', '7777777', '华为', '金融分析师', '门头沟', '', null, '1555322672147', '', null, '1555984654252', '', '1');
+INSERT INTO `user_info` VALUES ('4', 'oXggK4xOgfkhLtHermHfY9VQsE8n', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', '加油！！！dafdsafds', '116.44355', '39.9219', '球友3', '新增用户3', '女', '33', '24324', '23548@qq.com', '南开大学654365', '32543666', '2009-08-01', '金融专业', '36543', '华为333', '金融分析师33', '门头沟33', '', null, '1555322672147', '', null, '1555984654252', '', '1');
+INSERT INTO `user_info` VALUES ('5', 'oXggK4xOgfkhLtHermHfY9VQsE8s', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', 'e3432', '116.44355', '39.9219', '球友4', '新增用户4', '男', '33', '24324', 'fdsaewqre@qq.com', '南f', '32hh', '2009-08-01', '金融专业', '36543', '华为333', '金融分析师33', '门头沟33', '', null, '1555322672147', '', null, '1555984654252', '', '1');
 
 -- ----------------------------
 -- Table structure for wechat_user_info
@@ -13426,9 +13456,11 @@ CREATE TABLE `wechat_user_info` (
   `watermark_appid` varchar(128) DEFAULT NULL,
   `watermark_timestamp` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`wui_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COMMENT='微信用户表';
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COMMENT='微信用户表';
 
 -- ----------------------------
 -- Records of wechat_user_info
 -- ----------------------------
-INSERT INTO `wechat_user_info` VALUES ('4', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1555560121750', null, null, null);
+INSERT INTO `wechat_user_info` VALUES ('1', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1557286395359', null, null, null);
+INSERT INTO `wechat_user_info` VALUES ('2', '2', null, 'oXggK4xOgfkhLtHermHfY9VQsE8E', '新增用户1', null, null, '女', null, null, null, 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1555903836524', null, null, null);
+INSERT INTO `wechat_user_info` VALUES ('3', '3', null, 'oXggK4xOgfkhLtHermHfY9VQsE8M', '新增用户2', '', '', '女', '', '', '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, '', '', 'up/headimg/oXggK4xOgfkhLtHermHfY9VQsE8Q.png', '1', '1555903836524', null, '', '');

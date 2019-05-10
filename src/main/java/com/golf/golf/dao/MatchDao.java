@@ -47,8 +47,8 @@ public class MatchDao extends CommonDao {
 			//我参加的比赛
 			hql.append("AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
-			//我可以报名的比赛        包括我创建的比赛，作为赛长可以管理报名
-			hql.append("AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) or m.mi_create_user_id = :userId)");
+			//我可以报名的比赛        包括我创建的比赛(不包括已经结束的)，作为赛长可以管理报名
+			hql.append("AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) or (m.mi_create_user_id = :userId and m.mi_is_end != 2))");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的比赛
 			hql.append("AND m.mi_create_user_id = :userId ");
@@ -506,6 +506,33 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
+	 * 总比分——获取前后半场球洞
+	 * @return
+	 */
+	public List<Map<String, Object>> getBeforeAfterParkPartitionList(Long matchId,Integer type) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT " +
+				"pp.pp_id AS holeId, " +
+				"pp.pp_p_id AS parkId, " +
+				"pp.pp_name AS ppName, " +
+				"pp.pp_hole_num AS holeNum, " +
+				"pp.pp_hole_standard_rod AS holeStandardRod " +
+				"FROM " +
+				"match_info AS m, " +
+				"park_info AS p, " +
+				"park_partition AS pp " +
+				"WHERE m.mi_id = " +matchId+" AND p.pi_id = m.mi_park_id ");
+		if(type == 0){
+			sql.append("AND m.mi_zone_before_nine = pp.pp_name ");
+		}else{
+			sql.append("AND m.mi_zone_after_nine = pp.pp_name ");
+		}
+		sql.append(" AND pp.pp_p_id = p.pi_id ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
 	 * 比赛——分组——分队比分
 	 * 该队所有参赛队员的得分情况
 	 * @return
@@ -606,7 +633,10 @@ public class MatchDao extends CommonDao {
 		return list;
 	}
 
-	//本场地总杆数
+	/**
+	 * 本场地总杆数
+	 * @return
+	 */
 	public Long getTotalRod(MatchInfo matchInfo) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT sum(t.ppHoleStandardRod) as totalRod FROM ParkPartition as t where t.ppPId = " + matchInfo.getMiParkId()+
@@ -614,7 +644,10 @@ public class MatchDao extends CommonDao {
 		return dao.createCountQuery(sql.toString());
 	}
 
-	//获取用户所在的球队id
+	/**
+	 * 获取用户所在的球队id
+	 * @return
+	 */
 	public List<Long> getTeamIds(List<Long> teamIds, Long userId) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("teamIds",teamIds);
@@ -624,7 +657,10 @@ public class MatchDao extends CommonDao {
 		return dao.createQuery(sql.toString(),parp);
 	}
 
-	//单练——我所在的组
+	/**
+	 * 单练——我所在的组
+	 * @return
+	 */
 	public MatchGroup getMyGroupById(Long miId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("FROM MatchGroup as t where t.mgMatchId = "+miId);
@@ -635,7 +671,10 @@ public class MatchDao extends CommonDao {
 		return null;
 	}
 
-	//获取参赛球队的队长
+	/**
+	 * 获取参赛球队的队长
+	 * @return
+	 */
 	public List<Long> getTeamCaptailByTeamIds(List<Long> teamIdList) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("teamIdList", teamIdList);
@@ -644,7 +683,10 @@ public class MatchDao extends CommonDao {
 		return dao.createQuery(sql.toString(),parp);
 	}
 
-	//通过比赛id，组id，用户id 获取mapping
+	/**
+	 * 通过比赛id，组id，用户id 获取mapping
+	 * @return
+	 */
 	public MatchUserGroupMapping getMatchGroupMappingByUserId(Long matchId, Long groupId, Long userId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("FROM MatchUserGroupMapping as m where m.mugmMatchId ="+matchId+" and m.mugmGroupId = "+groupId+" and m.mugmUserId="+userId);
@@ -737,5 +779,91 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("delete FROM MatchJoinWatchInfo AS t where t.mjwiUserId="+uId+" and t.mjwiMatchId = "+matchId);
 		dao.executeHql(sql.toString());
+	}
+
+	/**
+	 * 成绩提交 球队确认  获取本队球友的总得分
+	 */
+	public List<Map<String, Object>> getSumScoreListByMatchIdTeamId(Long matchId, Long teamId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT " +
+				"s.ms_team_id AS teamId, " +
+				"s.ms_user_id AS userId, " +
+				"s.ms_user_name AS userName, " +
+				"SUM(s.ms_rod_num) as sumRodNum, " +
+				"SUM(s.ms_push_rod_num) as sumPushNum ");
+		sql.append("FROM match_score AS s ");
+		sql.append("WHERE s.ms_match_id = "+matchId +" AND s.ms_team_id = "+teamId+" GROUP BY s.ms_user_id ORDER BY sumRodNum ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 获取球友在该队伍的积分情况
+	 */
+	public TeamUserMapping getTeamUserMappingByIds(Long teamId, Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM TeamUserMapping AS m where m.tumTeamId ="+teamId+" and m.tumUserId = "+userId);
+		List<TeamUserMapping> list = dao.createQuery(sql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取本场比赛所有参赛人员的排名，按照杆数排名
+	 */
+	public List<Map<String, Object>> getRankingListByMatchId(Long matchId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select @rows:=@rows+1 as rows, if(@gnum=sumRodNum,@rownum:=@rownum,@rownum:=@rownum+1) as rank, score.* from(");
+		sql.append("SELECT s.ms_team_id AS teamId, s.ms_user_id AS userId, s.ms_user_name AS userName, SUM(s.ms_rod_num) AS sumRodNum," +
+					"SUM(s.ms_push_rod_num) AS sumPushNum " +
+				"FROM match_score AS s WHERE s.ms_match_id = 1 " + matchId+ " GROUP BY s.ms_user_id ORDER BY sumRodNum ");
+		sql.append(") as score,(select @rownum:=0,@gnum:=0,@rows:=0) number ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 获取用户前后半场的得分情况
+	 */
+	public List<Map<String, Object>> getBeforeAfterScoreByUserId(Long uiId, MatchInfo matchInfo,Integer type) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId", matchInfo.getMiId());
+		parp.put("beforeHole", matchInfo.getMiZoneBeforeNine());
+		parp.put("afterHole", matchInfo.getMiZoneAfterNine());
+		parp.put("userId", uiId);
+		parp.put("parkId", matchInfo.getMiParkId());
+		parp.put("type", type);
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("select * from (select p.*,s.ms_id as ms_id,s.ms_user_id as ms_user_id,s.ms_user_name as ms_user_name," +
+				"s.ms_score AS score," +
+				"s.ms_hole_name AS hole_name," +
+				"s.ms_hole_num AS hole_num," +
+				"s.ms_is_up AS is_up," +
+				"s.ms_rod_num AS rod_num," +
+				"s.ms_push_rod_num AS push_num, s.ms_rod_cha as rod_cha,0 as before_after " +
+				"from park_partition as p LEFT JOIN match_score as s on (" +
+				"s.ms_hole_name = p.pp_name and s.ms_hole_num = p.pp_hole_num ");
+		sql.append("and s.ms_match_id = :matchId ");
+		sql.append(" and s.ms_user_id = :userId  ");
+		sql.append(" and s.ms_before_after = :type ) ");
+		sql.append("where p.pp_name = :beforeHole and p.pp_p_id = :parkId ORDER BY p.pp_name, p.pp_hole_num ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 是否参赛球队的队员
+	 */
+	public Long getIsJoinTeamsUser(Long userId, List<Long> teamIdList) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("userId", userId);
+		parp.put("teamIdList", teamIdList);
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM TeamUserMapping as m where m.tumUserId = :userId and m.tumTeamId in (:teamIdList) ");
+		return dao.createCountQuery(sql.toString(),parp);
 	}
 }

@@ -12,6 +12,7 @@ public class TeamUserMapping {
 	private Long tumTeamId;
 	private Long tumUserId;
 	private Integer tumUserType;
+	private Integer tumPoint;
 	private Long tumCreateTime;
 	private Long tumCreateUserId;
 	private String tumCreateUserName;
@@ -32,13 +33,14 @@ public class TeamUserMapping {
 
 	/** full constructor */
 	public TeamUserMapping(Long tumId, Long tumTeamId, Long tumUserId,
-						   Integer tumUserType, Long tumCreateTime,
+						   Integer tumUserType, Integer tumPoint, Long tumCreateTime,
 						   Long tumCreateUserId, String tumCreateUserName, Long tumUpdateTime,
 						   Long tumUpdateUserId, String tumUpdateUserName) {
 		this.tumId = tumId;
 		this.tumTeamId = tumTeamId;
 		this.tumUserId = tumUserId;
 		this.tumUserType = tumUserType;
+		this.tumPoint = tumPoint;
 		this.tumCreateTime = tumCreateTime;
 		this.tumCreateUserId = tumCreateUserId;
 		this.tumCreateUserName = tumCreateUserName;
@@ -84,6 +86,15 @@ public class TeamUserMapping {
 
 	public void setTumUserType(Integer tumUserType) {
 		this.tumUserType = tumUserType;
+	}
+
+	@Column(name = "tum_point")
+	public Integer getTumPoint() {
+		return tumPoint;
+	}
+
+	public void setTumPoint(Integer tumPoint) {
+		this.tumPoint = tumPoint;
 	}
 
 	@Column(name = "tum_create_time")

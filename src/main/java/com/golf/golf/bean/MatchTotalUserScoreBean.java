@@ -1,20 +1,28 @@
 package com.golf.golf.bean;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * 球队比赛——分组——用户记分 bean
  * Created by dev on 17-2-10
  */
-public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBean> {
+public class MatchTotalUserScoreBean implements Comparable<MatchTotalUserScoreBean> {
 
     private Long userId;
     private String userName;
-    private List<Map<String, Object>>  userScoreList;
-	private List<MatchTotalUserScoreBean>  userScoreTotalList;
+	private String holeName;
+	private String holeNum;
+	private Integer rodNum;
+	private Integer holeStandardRod;
+
     private Integer totalRodScore;
 	private Integer totalPushRodScore;
+
+	public Integer getRodNum() {
+		return rodNum;
+	}
+
+	public void setRodNum(Integer rodNum) {
+		this.rodNum = rodNum;
+	}
 
 	public Long getUserId() {
 		return userId;
@@ -32,12 +40,28 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 		this.userName = userName;
 	}
 
-	public List<Map<String, Object>> getUserScoreList() {
-		return userScoreList;
+	public String getHoleName() {
+		return holeName;
 	}
 
-	public void setUserScoreList(List<Map<String, Object>> userScoreList) {
-		this.userScoreList = userScoreList;
+	public void setHoleName(String holeName) {
+		this.holeName = holeName;
+	}
+
+	public String getHoleNum() {
+		return holeNum;
+	}
+
+	public void setHoleNum(String holeNum) {
+		this.holeNum = holeNum;
+	}
+
+	public Integer getHoleStandardRod() {
+		return holeStandardRod;
+	}
+
+	public void setHoleStandardRod(Integer holeStandardRod) {
+		this.holeStandardRod = holeStandardRod;
 	}
 
 	public Integer getTotalRodScore() {
@@ -56,16 +80,8 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 		this.totalPushRodScore = totalPushRodScore;
 	}
 
-	public List<MatchTotalUserScoreBean> getUserScoreTotalList() {
-		return userScoreTotalList;
-	}
-
-	public void setUserScoreTotalList(List<MatchTotalUserScoreBean> userScoreTotalList) {
-		this.userScoreTotalList = userScoreTotalList;
-	}
-
 	@Override
-	public int compareTo(MatchGroupUserScoreBean bean) {
+	public int compareTo(MatchTotalUserScoreBean bean) {
 		return Integer.parseInt(this.userId.toString()) - Integer.parseInt(bean.userId.toString());
 	}
 }
