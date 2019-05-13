@@ -146,9 +146,7 @@ public class WechatMiniAppController extends GenericController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateWui", method = RequestMethod.POST)
-//	String sessionId, String nickName, String avatarUrl, String gender, String province, String city, String country
-	public JsonElement updateWui(String sessionId, String encryptedData,
-								 String iv){
+	public JsonElement updateWui(String sessionId, String encryptedData, String iv){
 		try{
 			if(StringUtils.isNotEmpty(sessionId)){
 				String openId = WechatUserUtil.getOpenIdBySessionId(sessionId);

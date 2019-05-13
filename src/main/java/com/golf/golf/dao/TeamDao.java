@@ -44,8 +44,8 @@ public class TeamDao extends CommonDao {
 			//我可以加入的球队
 			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 3){
-			//我创建的球队
-			hql.append("AND t.ti_create_user_id = :userId ");
+			//我创建的球队 包括我加入的球队
+			hql.append("AND t.ti_create_user_id = :userId or (t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId))");
 		}
 
         if(parp.get("keyword") != null){
@@ -137,7 +137,7 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
-	 * 获取球队记分详情 按平均杆排名
+	 * 获取球队记分详情 按平均杆排名 单练的不算入内
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
@@ -151,19 +151,20 @@ public class TeamDao extends CommonDao {
 					" scoreInfo.s_user_id FROM ");
 					hql.append("(SELECT tm.tum_user_id AS userId, count(mgm.mugm_id) AS totalMatchNum FROM team_user_mapping AS tm ");
 					hql.append("LEFT JOIN match_user_group_mapping AS mgm ON ( tm.tum_team_id = :teamId AND tm.tum_user_id = mgm.mugm_user_id )");
-					hql.append("where tm.tum_user_type !=2 ");
+					hql.append("LEFT JOIN match_info AS m ON m.mi_id = mgm.mugm_match_id ");
+					hql.append("where m.mi_type = 1 and tm.tum_user_type !=2 ");
 					hql.append("AND tm.tum_create_time >= :startYear ");
 					hql.append("AND tm.tum_create_time <= :endYear ");
 					hql.append("GROUP BY tm.tum_user_id ) AS matchInfo ");
 		hql.append("LEFT JOIN ");
 				hql.append("( SELECT AVG(s.ms_rod_num) AS avgRodNum, SUM(s.ms_rod_num) AS sumRodNum, s.ms_user_id as s_user_id " +
-				" FROM match_score AS s WHERE s.ms_team_id = :teamId " +
+				" FROM match_score AS s,match_info AS m WHERE m.mi_type = 1 and s.ms_team_id = :teamId " +
 						"AND s.ms_create_time >= :startYear " +
 						"AND s.ms_create_time <= :endYear " +
 						"GROUP BY s.ms_user_id ) AS scoreInfo ");
 			hql.append("ON matchInfo.userId = scoreInfo.s_user_id ");
 
-		hql.append(")as score ,user_info as u where score.userId = u.ui_id order by score.avgRodNum desc ");
+		hql.append(")as score ,user_info as u where score.userId = u.ui_id order by score.avgRodNum ");
 
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
@@ -194,10 +195,10 @@ public class TeamDao extends CommonDao {
 			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		}else if(type == 1){
 			hql.append(" AND m.tumUserType = 1 " );
-			hql.append(" order by m.tumCreateTime desc " );
+			hql.append(" order by m.tumCreateTime " );
 			list = dao.createQuery(hql.toString(),1,11, Transformers.ALIAS_TO_ENTITY_MAP);
 		}else{
-			hql.append(" order by m.tumCreateTime desc " );
+			hql.append(" order by m.tumCreateTime " );
 			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		}
 		return list;

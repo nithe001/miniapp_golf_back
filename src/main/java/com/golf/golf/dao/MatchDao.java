@@ -134,7 +134,7 @@ public class MatchDao extends CommonDao {
         hql.append("SELECT u.uiId as uiId,u.uiHeadimg as uiHeadimg,u.uiRealName as uiRealName ");
         hql.append("FROM MatchUserGroupMapping AS g,UserInfo as u WHERE 1=1 ");
         hql.append("AND g.mugmGroupId = :groupId AND g.mugmUserId = u.uiId ");
-        hql.append("ORDER BY g.mugmGroupId ASC,g.mugmCreateTime ");
+        hql.append("ORDER BY g.mugmCreateTime");
 
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(), parp, 0, 4, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
@@ -533,29 +533,13 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 比赛——分组——分队比分
-	 * 该队所有参赛队员的得分情况
-	 * @return
-	 */
-	public List<MatchScore> getMatchScoreList(Long matchId, Long teamId) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("from MatchScore as s ");
-		sql.append("WHERE s.msMatchId = "+matchId );
-		if(teamId != null){
-			sql.append(" and s.msTeamId = "+teamId );
-		}
-		sql.append(" ORDER BY s.msHoleName");
-		return dao.createQuery(sql.toString());
-	}
-
-	/**
 	 * 获取本组用户
 	 */
 	public List<Map<String, Object>> getUserListById(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT m.mugmUserId as uiId, m.mugmUserName as uiRealName ");
-		sql.append("FROM MatchUserGroupMapping as m ");
-		sql.append("where m.mugmMatchId = "+matchId);
+		sql.append("SELECT u.uiId as uiId, u.uiRealName as uiRealName, u.uiHeadimg as uiHeadimg  ");
+		sql.append("FROM MatchUserGroupMapping as m,UserInfo as u ");
+		sql.append("where m.mugmUserId = u.uiId and m.mugmMatchId = "+matchId);
 		if(groupId != null){
 			sql.append(" and m.mugmGroupId = "+groupId);
 		}
@@ -563,6 +547,21 @@ public class MatchDao extends CommonDao {
 		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
+
+	/**
+	 * 获取单练的本组用户
+	 */
+	public List<Map<String, Object>> getSingleUserListById(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT m.mugmId as uiId, m.mugmUserName as uiRealName  ");
+		sql.append("FROM MatchUserGroupMapping as m ");
+		sql.append("where m.mugmMatchId = "+matchId);
+		sql.append(" and m.mugmGroupId = "+groupId);
+		sql.append(" order by m.mugmUserId ");
+		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
 
 	/**
 	 * 本用户得分情况
@@ -714,7 +713,7 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getMatchRodTotalScore(Long matchId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT t.ti_name as teamName, count(mm.mugm_user_id) as userCount,round(AVG(s.ms_rod_num),2) AS avgRodNum, SUM(s.ms_rod_num) AS sumRodNum ");
+		hql.append("SELECT t.ti_name as teamName, count(DISTINCT(s.ms_user_id)) as userCount,round(AVG(s.ms_rod_num),2) AS avgRodNum, SUM(DISTINCT(s.ms_rod_num)) AS sumRodNum ");
 		hql.append("FROM  match_score AS s,team_info as t,match_user_group_mapping as mm ");
 		hql.append("WHERE s.ms_match_id = "+matchId+" and s.ms_team_id = t.ti_id AND s.ms_match_id = mm.mugm_match_id GROUP BY s.ms_team_id ORDER BY avgRodNum desc ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
@@ -831,8 +830,11 @@ public class MatchDao extends CommonDao {
 	public List<Map<String, Object>> getBeforeAfterScoreByUserId(Long uiId, MatchInfo matchInfo,Integer type) {
 		Map<String, Object> parp = new HashMap<>();
 		parp.put("matchId", matchInfo.getMiId());
-		parp.put("beforeHole", matchInfo.getMiZoneBeforeNine());
-		parp.put("afterHole", matchInfo.getMiZoneAfterNine());
+		if(type == 0){
+			parp.put("holeName", matchInfo.getMiZoneBeforeNine());
+		}else{
+			parp.put("holeName", matchInfo.getMiZoneAfterNine());
+		}
 		parp.put("userId", uiId);
 		parp.put("parkId", matchInfo.getMiParkId());
 		parp.put("type", type);
@@ -849,8 +851,8 @@ public class MatchDao extends CommonDao {
 				"s.ms_hole_name = p.pp_name and s.ms_hole_num = p.pp_hole_num ");
 		sql.append("and s.ms_match_id = :matchId ");
 		sql.append(" and s.ms_user_id = :userId  ");
-		sql.append(" and s.ms_before_after = :type ) ");
-		sql.append("where p.pp_name = :beforeHole and p.pp_p_id = :parkId ORDER BY p.pp_name, p.pp_hole_num ");
+		sql.append(" and s.ms_before_after = :type )) as t ");
+		sql.append("where t.pp_name = :holeName and t.pp_p_id = :parkId ORDER BY t.pp_name, t.pp_hole_num ");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -863,7 +865,61 @@ public class MatchDao extends CommonDao {
 		parp.put("userId", userId);
 		parp.put("teamIdList", teamIdList);
 		StringBuilder sql = new StringBuilder();
-		sql.append("FROM TeamUserMapping as m where m.tumUserId = :userId and m.tumTeamId in (:teamIdList) ");
+		sql.append("SELECT COUNT(*) FROM TeamUserMapping as m where m.tumUserId = :userId and m.tumTeamId in (:teamIdList) ");
 		return dao.createCountQuery(sql.toString(),parp);
+	}
+
+	/**
+	 * 比赛——普通用户从一个组退出比赛
+	 * @return
+	 */
+	public void delFromMatch(Long matchId, Long groupId, Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM MatchUserGroupMapping as m where m.mugmUserId = "+userId+" and m.mugmMatchId "+matchId+" AND m.mugmGroupId ="+groupId);
+		dao.executeHql(sql.toString());
+	}
+
+	/**
+	 * 获取随机用户最大的用户id
+	 * @return
+	 */
+	public Long getMaxOtherUserId() {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT MAX(mg.mugmUserId) FROM MatchUserGroupMapping as mg where mg.mugmMatchId in (" +
+				"select m.miId from MatchInfo as m where m.miType = 0" +
+				") ");
+		List<Long> maxid = dao.createQuery(sql.toString());
+		if(maxid != null && maxid.size()>0){
+			return maxid.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取比赛的本球队所有用户(首列显示)
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserListByTeamId(Long matchId, Long teamId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT u.uiId as uiId, u.uiRealName as uiRealName, u.uiHeadimg as uiHeadimg  ");
+		sql.append("FROM MatchScore as m,UserInfo as u ");
+		sql.append("where m.msUserId = u.uiId and m.msMatchId = "+matchId);
+		sql.append(" and m.msTeamId = "+teamId);
+		sql.append(" GROUP by u.uiId ");
+		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 是否已经报名
+	 * @return
+	 */
+	public Long getisApplyOrWatch(Long userId, Long matchId,Integer type) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT COUNT(*) FROM MatchJoinWatchInfo as j ");
+		sql.append("where j.mjwiMatchId = "+matchId);
+		sql.append(" and j.mjwiUserId = "+userId);
+		sql.append(" and j.mjwiType =  "+type);
+		return dao.createCountQuery(sql.toString());
 	}
 }

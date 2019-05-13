@@ -42,22 +42,12 @@ public class UserService implements IBaseService {
     protected WxMpService wxMpService;
 
     /**
-     * 根据用户id取得微信的用户信息
-     * @param userId 用户id
-     * @return
-     */
-    public WechatUserInfo getWechatUserById(Long userId){
-        return dao.get(WechatUserInfo.class, userId);
-    }
-
-    /**
      * 根据用户id取得用户信息
      * @param userId 用户id
      * @return
      */
     public UserInfo getUserById(Long userId){
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
-//		userInfo.setUiHeadimg(PropertyConst.DOMAIN + userInfo.getUiHeadimg());
 		return userInfo;
     }
 
@@ -68,22 +58,6 @@ public class UserService implements IBaseService {
      */
     public WechatUserInfo getWechatUserByOpenid(String openid){
         return dao.getWechatUserByOpenid(openid);
-    }
-
-
-    /**
-     * 保存用户注册信息
-     * @param user
-     */
-    public Long saveUser(UserInfo user,String captcha) throws UnsupportedEncodingException, WxErrorException {
-        user.setUiType(Integer.parseInt(MatchGroupUserMappingTypeEnum.ORDINARY.text()));//普通用户
-        user.setUiIsValid(1);
-        user.setUiCreateTime(System.currentTimeMillis());
-        Long uid = dao.save(user);
-		UserModel userModel = new UserModel();
-		userModel.setUser(user);
-		UserUtil.login(userModel);
-		return uid;
     }
 
 
@@ -164,22 +138,6 @@ public class UserService implements IBaseService {
 		return dao.getCalendarListByUserId(cuClub);
 	}
 
-
-    /**
-     * 根据用户id获取用户信息
-     * @return
-     */
-    public UserInfo getUserInfoById(Long userId) {
-        return dao.get(UserInfo.class, userId);
-    }
-
-	/**
-	 * 根据OPENID获取用户信息
-	 * @return
-	 */
-	public UserInfo getUserByOpenid(String openId) {
-		return dao.getUserByOpenid(openId);
-	}
 
 
     /**
