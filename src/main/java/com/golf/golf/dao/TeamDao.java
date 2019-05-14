@@ -58,7 +58,7 @@ public class TeamDao extends CommonDao {
 
         Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
         if (count == null || count.intValue() == 0) {
-            pageInfo.setItems(null);
+            pageInfo.setItems(new ArrayList<>());
             pageInfo.setCount(0);
             return pageInfo;
         }
@@ -146,10 +146,11 @@ public class TeamDao extends CommonDao {
 
 			hql.append("SELECT matchInfo.userId," +
 					" matchInfo.totalMatchNum," +
+					" matchInfo.point," +
 					" scoreInfo.avgRodNum," +
 					" scoreInfo.sumRodNum," +
 					" scoreInfo.s_user_id FROM ");
-					hql.append("(SELECT tm.tum_user_id AS userId, count(mgm.mugm_id) AS totalMatchNum FROM team_user_mapping AS tm ");
+					hql.append("(SELECT tm.tum_user_id AS userId, tm.tum_point as point, count(mgm.mugm_id) AS totalMatchNum FROM team_user_mapping AS tm ");
 					hql.append("LEFT JOIN match_user_group_mapping AS mgm ON ( tm.tum_team_id = :teamId AND tm.tum_user_id = mgm.mugm_user_id )");
 					hql.append("LEFT JOIN match_info AS m ON m.mi_id = mgm.mugm_match_id ");
 					hql.append("where m.mi_type = 1 and tm.tum_user_type !=2 ");

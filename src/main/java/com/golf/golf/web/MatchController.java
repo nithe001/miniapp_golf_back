@@ -280,7 +280,7 @@ public class MatchController {
 
 
 	/**
-	 * 比赛详情——保存——将用户加入该分组
+	 * 比赛详情——保存——赛长将用户加入该分组
 	 * @return
 	 */
 	@ResponseBody
@@ -589,11 +589,11 @@ public class MatchController {
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
 	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
-										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod,
+										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
 										 Integer pushRod, Integer beforeAfter) {
 		try {
 			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum,
-														holeStandardRod, isUp, rod, pushRod, beforeAfter);
+														holeStandardRod, isUp, rod, rodCha, pushRod, beforeAfter);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -638,10 +638,38 @@ public class MatchController {
 	@RequestMapping("submitScoreByTeamId")
 	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
 		try {
-			matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore);
-			return JsonWrapper.newSuccessInstance();
+			boolean flag = matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore);
+			if(flag){
+				return JsonWrapper.newDataInstance(1);
+			}else{
+				return JsonWrapper.newDataInstance(0);
+			}
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 撤销成绩上报
+	 * @param matchId 比赛id,
+	 * @param teamId 上报球队id,
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("cancelScoreByTeamId")
+	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId) {
+		try {
+			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId);
+			if(flag){
+				return JsonWrapper.newDataInstance(1);
+			}else{
+				return JsonWrapper.newDataInstance(0);
+			}
+		} catch (Exception e) {
+			String errmsg = "前台-比赛—撤销成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);

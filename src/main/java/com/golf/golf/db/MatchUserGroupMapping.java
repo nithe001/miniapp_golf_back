@@ -13,6 +13,7 @@ public class MatchUserGroupMapping {
 
 	private Long mugmId;
 	private Long mugmMatchId;
+	private Long mugmTeamId;
 	private Integer mugmUserType;
 	private Long mugmGroupId;
 	private String mugmGroupName;
@@ -29,11 +30,12 @@ public class MatchUserGroupMapping {
 	}
 
 	/** full constructor */
-	public MatchUserGroupMapping(Long mugmMatchId, Integer mugmUserType,
+	public MatchUserGroupMapping(Long mugmMatchId, Long mugmTeamId, Integer mugmUserType,
 								 Long mugmGroupId, String mugmGroupName, Long mugmUserId,
 								 String mugmUserName, Long mugmCreateUserId,
 								 String mugmCreateUserName, Long mugmCreateTime) {
 		this.mugmMatchId = mugmMatchId;
+		this.mugmTeamId = mugmTeamId;
 		this.mugmUserType = mugmUserType;
 		this.mugmGroupId = mugmGroupId;
 		this.mugmGroupName = mugmGroupName;
@@ -63,6 +65,15 @@ public class MatchUserGroupMapping {
 
 	public void setMugmMatchId(Long mugmMatchId) {
 		this.mugmMatchId = mugmMatchId;
+	}
+
+	@Column(name = "mugm_team_id")
+	public Long getMugmTeamId() {
+		return mugmTeamId;
+	}
+
+	public void setMugmTeamId(Long mugmTeamId) {
+		this.mugmTeamId = mugmTeamId;
 	}
 
 	@Column(name = "mugm_user_type")

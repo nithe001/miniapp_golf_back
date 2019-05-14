@@ -754,8 +754,10 @@ public class MatchService implements IBaseService {
 			for (String userId : uIds) {
 				if (StringUtils.isNotEmpty(userId)) {
 					Long uId = Long.parseLong(userId);
+					TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(uId);
 					MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 					matchUserGroupMapping.setMugmMatchId(matchId);
+					matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
 					matchUserGroupMapping.setMugmGroupId(groupId);
 					matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
 					matchUserGroupMapping.setMugmUserType(0);
@@ -881,14 +883,27 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public void saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
-								  Integer holeNum, Integer holeStandardRod, String isUp, Integer rod,
+								  Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
 								  Integer pushRod, Integer beforeAfter) {
 		if (scoreId != null) {
 			MatchScore scoreDb = matchDao.get(MatchScore.class, scoreId);
 			scoreDb.setMsIsUp(isUp);
-			scoreDb.setMsRodNum(rod);
 			//杆差=杆数-本洞标准杆数
-			scoreDb.setMsRodCha(rod - holeStandardRod);
+			if(rod != null){
+				scoreDb.setMsRodNum(rod);
+				scoreDb.setMsRodCha(rod - holeStandardRod);
+			}else{
+				Integer gc = 0;
+				if(rodCha.contains("+")){
+					gc = Integer.parseInt(rodCha.substring(1));
+					scoreDb.setMsRodCha(gc);
+				}else{
+					gc = Integer.parseInt(rodCha);
+					scoreDb.setMsRodCha(gc);
+				}
+				//杆数=标准杆+杆差
+				scoreDb.setMsRodNum(holeStandardRod+gc);
+			}
 			scoreDb.setMsPushRodNum(pushRod);
 			scoreDb.setMsUpdateTime(System.currentTimeMillis());
 			scoreDb.setMsUpdateUserId(WebUtil.getUserIdBySessionId());
@@ -919,9 +934,21 @@ public class MatchService implements IBaseService {
 			score.setMsHoleName(holeName);
 			score.setMsHoleNum(holeNum);
 			score.setMsIsUp(isUp);
-			score.setMsRodNum(rod);
-			//杆差=杆数-本洞标准杆数
-			score.setMsRodCha(rod - holeStandardRod);
+			if(rod != null){
+				score.setMsRodNum(rod);
+				score.setMsRodCha(rod - holeStandardRod);
+			}else{
+				Integer gc = 0;
+				if(rodCha.contains("+")){
+					gc = Integer.parseInt(rodCha.substring(1));
+					score.setMsRodCha(gc);
+				}else{
+					gc = Integer.parseInt(rodCha);
+					score.setMsRodCha(gc);
+				}
+				//杆数=标准杆+杆差
+				score.setMsRodNum(holeStandardRod+gc);
+			}
 			score.setMsPushRodNum(pushRod);
 			score.setMsCreateUserId(WebUtil.getUserIdBySessionId());
 			score.setMsCreateUserName(WebUtil.getUserNameBySessionId());
@@ -953,19 +980,45 @@ public class MatchService implements IBaseService {
 	 * @param winScore  赢球奖分
 	 * @return
 	 */
-	public void submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		Integer format = matchInfo.getMiMatchFormat1();
-		if (format == 0) {
-			//比杆赛
-			//积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（144-球友比分）*杆差倍数
-			//或者 球友积分=基础积分+赢球奖分/比赛排名
-			updatePointByRodScore(matchId, teamId, scoreType, baseScore, rodScore, winScore);
-		} else if (format == 1) {
-			//比洞赛
-			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
-			// 计算公式为：球友积分=基础积分+赢球奖分
-			updatePointByHoleScore(matchId, teamId, baseScore, winScore);
+	public boolean submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
+		//更新配置
+		boolean flag = saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore);
+		if(flag){
+			//计算得分
+			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+			Integer format = matchInfo.getMiMatchFormat1();
+			if (format == 0) {
+				//比杆赛
+				//积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（144-球友比分）*杆差倍数
+				//或者 球友积分=基础积分+赢球奖分/比赛排名
+				updatePointByRodScore(matchId, teamId, scoreType, baseScore, rodScore, winScore);
+			} else if (format == 1) {
+				//比洞赛
+				// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
+				// 计算公式为：球友积分=基础积分+赢球奖分
+				updatePointByHoleScore(matchId, teamId, baseScore, winScore);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private boolean saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore) {
+		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
+		if(config == null){
+			config = new IntegralConfig();
+			config.setIcMatchId(matchId);
+			config.setIcTeamId(teamId);
+			config.setIcBaseScore(baseScore);
+			config.setIcRodCha(rodScore);
+			config.setIcWinScore(winScore);
+			config.setIcCreateTime(System.currentTimeMillis());
+			config.setIcCreateUserId(WebUtil.getUserIdBySessionId());
+			config.setIcCreateUserName(WebUtil.getUserNameBySessionId());
+			matchDao.save(config);
+			return true;
+		}else{
+			return false;
 		}
 	}
 
@@ -1342,9 +1395,12 @@ public class MatchService implements IBaseService {
 		//是否参赛球队的队员
 		Long count = matchDao.getIsJoinTeamsUser(userId,teamIdList);
 		if(count >0){
+			//获取用户所在球队id
+			TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userId);
 			//是 直接加入比赛 不用审核
 			MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 			matchUserGroupMapping.setMugmMatchId(matchId);
+			matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
 			matchUserGroupMapping.setMugmUserType(0);
 			matchUserGroupMapping.setMugmGroupId(groupId);
 			matchUserGroupMapping.setMugmGroupName(groupName);
@@ -1367,5 +1423,33 @@ public class MatchService implements IBaseService {
 	 */
 	public void quitMatch(Long matchId, Long groupId) {
 		matchDao.delFromMatch(matchId,groupId,WebUtil.getUserIdBySessionId());
+	}
+
+	/**
+	 * 撤销成绩上报
+	 * @param matchId 比赛id,
+	 * @param teamId 上报球队id,
+	 * @return
+	 */
+	public boolean cancelScoreByTeamId(Long matchId, Long teamId) {
+		//获取配置
+		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
+		if(config == null){
+			return false;
+		}
+		//计算得分
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		Integer format = matchInfo.getMiMatchFormat1();
+		if (format == 0) {
+			//比杆赛
+			//积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（144-球友比分）*杆差倍数
+			//或者 球友积分=基础积分+赢球奖分/比赛排名
+		} else if (format == 1) {
+			//比洞赛
+			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
+			// 计算公式为：球友积分=基础积分+赢球奖分
+		}
+		matchDao.del(config);
+		return true;
 	}
 }

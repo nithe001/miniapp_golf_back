@@ -157,13 +157,9 @@ public class TeamService implements IBaseService {
 		parp.put("startYear", TimeUtil.getYearFirst(Integer.parseInt(date)));
 		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
 		parp.put("teamId", teamId);
-		if(type == 0){
-			//比分榜
+		if(type <= 1){
+			//比分榜 or 积分榜
 			return teamDao.getTeamPointByYear(parp);
-		}else if(type == 1){
-			//TODO
-			//积分榜
-			return null;
 		}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计
 			return teamDao.getTeamMatchByYear(parp);

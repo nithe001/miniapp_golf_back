@@ -922,4 +922,36 @@ public class MatchDao extends CommonDao {
 		sql.append(" and j.mjwiType =  "+type);
 		return dao.createCountQuery(sql.toString());
 	}
+
+	/**
+	 * 是否已经有提交成绩的计算配置
+	 * @return
+	 */
+	public IntegralConfig getSubmitScoreConfig(Long matchId, Long teamId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM IntegralConfig as c ");
+		sql.append("where c.icMatchId = "+matchId);
+		sql.append(" and c.icTeamId = "+teamId);
+		List<IntegralConfig> list = dao.createQuery(sql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+
+	/**
+	 * 获取用户所在球队id
+	 * @return
+	 */
+	public TeamUserMapping getTeamUserMappingByUserId(Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM TeamUserMapping as t ");
+		sql.append("where t.tumUserId = "+userId);
+		List<TeamUserMapping> list = dao.createQuery(sql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
 }
