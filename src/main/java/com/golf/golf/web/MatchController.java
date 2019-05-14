@@ -588,11 +588,11 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
-	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
+	public JsonElement saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
 										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
 										 Integer pushRod, Integer beforeAfter) {
 		try {
-			matchService.saveOrUpdateScore(userId, matchId, groupId,scoreId, holeName, holeNum,
+			matchService.saveOrUpdateScore(userId, userName, matchId, groupId,scoreId, holeName, holeNum,
 														holeStandardRod, isUp, rod, rodCha, pushRod, beforeAfter);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {

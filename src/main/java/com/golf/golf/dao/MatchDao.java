@@ -553,7 +553,7 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getSingleUserListById(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT m.mugmId as uiId, m.mugmUserName as uiRealName  ");
+		sql.append("SELECT m.mugmUserId as uiId, m.mugmUserName as uiRealName  ");
 		sql.append("FROM MatchUserGroupMapping as m ");
 		sql.append("where m.mugmMatchId = "+matchId);
 		sql.append(" and m.mugmGroupId = "+groupId);

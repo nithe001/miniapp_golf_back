@@ -882,7 +882,7 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long scoreId, String holeName,
+	public void saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
 								  Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
 								  Integer pushRod, Integer beforeAfter) {
 		if (scoreId != null) {
@@ -921,7 +921,6 @@ public class MatchService implements IBaseService {
 				}
 			}
 
-			MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, groupId, userId);
 			MatchScore score = new MatchScore();
 			score.setMsTeamId(teamId);
 			score.setMsMatchId(matchId);
@@ -929,7 +928,12 @@ public class MatchService implements IBaseService {
 			score.setMsGroupId(groupId);
 			score.setMsGroupName(matchGroup.getMgGroupName());
 			score.setMsUserId(userId);
-			score.setMsUserName(matchUserGroupMapping.getMugmUserName());
+            if(matchInfo.getMiType() == 1){
+                MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, groupId, userId);
+                score.setMsUserName(matchUserGroupMapping.getMugmUserName());
+            }else{
+                score.setMsUserName(userName);
+            }
 			score.setMsBeforeAfter(beforeAfter);
 			score.setMsHoleName(holeName);
 			score.setMsHoleNum(holeNum);
