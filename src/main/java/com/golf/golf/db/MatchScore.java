@@ -29,10 +29,15 @@ public class MatchScore implements java.io.Serializable {
 	private Integer msBeforeAfter;
 	private String msHoleName;
 	private Integer msHoleNum;
+	private Integer msHoleStandardRod;
 	private String msIsUp;
 	private Integer msRodNum;
 	private Integer msRodCha;
 	private Integer msPushRodNum;
+	private Integer msIsPar;
+	private Integer msIsBird;
+	private Integer msIsEagle;
+	private Integer msIsOn;
     private Integer msIsTeamSubmit;
 	private Long msCreateUserId;
 	private String msCreateUserName;
@@ -51,8 +56,9 @@ public class MatchScore implements java.io.Serializable {
 	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
 					  Long msGroupId, String msGroupName, Long msUserId,
 					  String msUserName, Integer msType, Integer msScore, Integer msBeforeAfter, String msHoleName,
-					  Integer msHoleNum, Integer msRodCha, String msIsUp, Integer msRodNum,
-					  Integer msPushRodNum, Integer msIsTeamSubmit, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
+					  Integer msHoleNum, Integer msHoleStandardRod, Integer msRodCha, String msIsUp, Integer msRodNum,
+					  Integer msPushRodNum, Integer msIsPar, Integer msIsBird,Integer msIsEagle,Integer msIsOn,
+					  Integer msIsTeamSubmit, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
 					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
 		this.msMatchId = msMatchId;
@@ -66,10 +72,15 @@ public class MatchScore implements java.io.Serializable {
 		this.msBeforeAfter = msBeforeAfter;
 		this.msHoleName = msHoleName;
 		this.msHoleNum = msHoleNum;
+		this.msHoleStandardRod = msHoleStandardRod;
 		this.msIsUp = msIsUp;
 		this.msRodNum = msRodNum;
 		this.msRodCha = msRodCha;
 		this.msPushRodNum = msPushRodNum;
+		this.msIsPar = msIsPar;
+		this.msIsBird = msIsBird;
+		this.msIsEagle = msIsEagle;
+		this.msIsOn = msIsOn;
 		this.msIsTeamSubmit = msIsTeamSubmit;
 		this.msCreateUserId = msCreateUserId;
 		this.msCreateUserName = msCreateUserName;
@@ -199,6 +210,15 @@ public class MatchScore implements java.io.Serializable {
 		this.msHoleNum = msHoleNum;
 	}
 
+	@Column(name = "ms_hole_standard_rod")
+	public Integer getMsHoleStandardRod() {
+		return msHoleStandardRod;
+	}
+
+	public void setMsHoleStandardRod(Integer msHoleStandardRod) {
+		this.msHoleStandardRod = msHoleStandardRod;
+	}
+
 	@Column(name = "ms_is_up",length = 128)
 	public String getMsIsUp() {
 		return this.msIsUp;
@@ -235,7 +255,43 @@ public class MatchScore implements java.io.Serializable {
 		this.msPushRodNum = msPushRodNum;
 	}
 
-    @Column(name = "ms_is_team_submit")
+	@Column(name = "ms_is_par")
+	public Integer getMsIsPar() {
+		return msIsPar;
+	}
+
+	public void setMsIsPar(Integer msIsPar) {
+		this.msIsPar = msIsPar;
+	}
+
+	@Column(name = "ms_is_bird")
+	public Integer getMsIsBird() {
+		return msIsBird;
+	}
+
+	public void setMsIsBird(Integer msIsBird) {
+		this.msIsBird = msIsBird;
+	}
+
+	@Column(name = "ms_is_eagle")
+	public Integer getMsIsEagle() {
+		return msIsEagle;
+	}
+
+	public void setMsIsEagle(Integer msIsEagle) {
+		this.msIsEagle = msIsEagle;
+	}
+
+	@Column(name = "ms_is_on")
+	public Integer getMsIsOn() {
+		return msIsOn;
+	}
+
+	public void setMsIsOn(Integer msIsOn) {
+		this.msIsOn = msIsOn;
+	}
+
+	@Column(name = "ms_is_team_submit")
     public Integer getMsIsTeamSubmit() {
         return msIsTeamSubmit;
     }

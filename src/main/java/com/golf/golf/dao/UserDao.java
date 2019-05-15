@@ -5,6 +5,7 @@ import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
+import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -151,4 +152,51 @@ public class UserDao extends CommonDao {
         hql.append("FROM WechatUserInfo as w WHERE w.wuiUId = " +userId);
         return (WechatUserInfo)dao.createQuery(hql.toString());
     }
+
+	/**
+	 * 年度成绩分析
+	 * 计算一年内平均每18洞分项的数量
+	 * “暴洞”是指+3及以上的洞数总和
+	 * 开球情况对应记分卡 球道滚轮的箭头
+	 * 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
+	 * @return
+	 */
+	public List<Map<String, Object>> getScoreByYear(Map<String, Object> parp) {
+		/*select sum(s.ms_is_par),sum(s.ms_is_bird),sum(s.ms_is_eagle),countRodCha1.rodCha1,countRodCha2.rodCha2,baodong.bao,
+				zhiqiu.zhi,pianzuo.zuo,pianyou.you,chujie.chu,sum(s.ms_push_rod_num) as pushNum,biaoon.bON
+		from match_score as s,
+		(select count(s.ms_id) as rodCha1 from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod = 1) as countRodCha1,
+		(select count(s.ms_id) as rodCha2 from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod = 2) as countRodCha2,
+		-- “暴洞”是指+3及以上的洞数总和 杆数-标准杆>=3
+		(select count(s.ms_id) as bao from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod >= 3) as baodong,
+		(select count(s.ms_id) as zhi from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球直球") as zhiqiu,
+		(select count(s.ms_id) as zuo from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球偏左") as pianzuo,
+		(select count(s.ms_id) as you from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球偏右") as pianyou,
+		(select count(s.ms_id) as chu from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球出界") as chujie,
+		-- 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
+		(select count(s.ms_id) as bON from match_score as s where s.ms_rod_num - s.ms_push_rod_num = s.ms_hole_standard_rod -2) as biaoon
+		where s.ms_user_id = 1
+
+*/
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT * ");
+		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
+		hql.append("and s.msCreateTime >= :startTime ");
+		hql.append("and s.msCreateTime <= :startTime ");
+		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		return list;
+	}
+
+	/**
+	 * 年度成绩分析——总杆数
+	 * @return
+	 */
+	public Long getSumRod(Map<String, Object> parp) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT sum(s.msRodNum) ");
+		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
+		hql.append("and s.msCreateTime >= :startTime ");
+		hql.append("and s.msCreateTime <= :startTime ");
+		return dao.createCountQuery(hql.toString(), parp);
+	}
 }

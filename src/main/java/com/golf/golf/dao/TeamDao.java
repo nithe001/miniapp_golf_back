@@ -193,15 +193,13 @@ public class TeamDao extends CommonDao {
 		if(type == 0){
 			hql.append(" AND m.tumUserType = 2 " );
 			hql.append(" order by m.tumCreateTime desc " );
-			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		}else if(type == 1){
 			hql.append(" AND m.tumUserType = 1 " );
 			hql.append(" order by m.tumCreateTime " );
-			list = dao.createQuery(hql.toString(),1,11, Transformers.ALIAS_TO_ENTITY_MAP);
 		}else{
 			hql.append(" order by m.tumCreateTime " );
-			list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		}
+		list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
 

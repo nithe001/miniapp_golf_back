@@ -4,6 +4,7 @@ import com.golf.common.IBaseService;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.common.security.WechatUserUtil;
@@ -25,7 +26,9 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户管理
@@ -283,5 +286,43 @@ public class UserService implements IBaseService {
 		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
 		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
 		dao.update(db);
+	}
+
+	/**
+	 * 获取我的历史成绩
+	 * 表格同 比赛总比分 ，把人名换成球场名 增加一列时间 第一行下面的杆数不要
+	 * 可以横向布局
+	 * @return
+	 */
+	public List<Map<String, Object>> getMyHistoryScoreByUserId() {
+		Long userId = WebUtil.getUserIdBySessionId();
+
+		return null;
+	}
+
+
+	/**
+	 * 年度成绩分析
+	 * 计算一年内平均每18洞分项的数量
+	 * “暴洞”是指+3及以上的洞数总和
+	 * 开球情况对应记分卡 球道滚轮的箭头
+	 * 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
+	 * @return
+	 */
+	public Map<String, Object> getMyHistoryScoreByYear(String date) {
+		Map<String, Object> result = new HashMap<>();
+		Map<String,Object> parp = new HashMap<>();
+		Long userId = WebUtil.getUserIdBySessionId();
+		parp.put("userId",userId);
+		parp.put("startTime", TimeUtil.getYearFirst(Integer.parseInt(date)));
+		parp.put("endTime", TimeUtil.getYearLast(Integer.parseInt(date)));
+		//总杆数
+		Long sumRod = dao.getSumRod(parp);
+		result.put("sumRod",sumRod);
+		//所有杆数
+		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
+
+		result.put("scoreList",scoreList);
+		return result;
 	}
 }

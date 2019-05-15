@@ -170,9 +170,12 @@ public class MatchController {
 	@RequestMapping("getMatchDetail")
 	public JsonElement getMatchDetail(Long matchId, Integer count) {
 		try {
+			//比赛详情
+			MatchInfo matchInfo = matchService.getMatchById(matchId);
 			//如果不是参赛人员，则加入围观用户
-			matchService.saveOrUpdateWatch(matchId);
-			Map<String, Object> matchMap = matchService.getMatchInfo(matchId, count);
+			boolean isWatch = matchService.saveOrUpdateWatch(matchInfo);
+			Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count);
+			matchMap.put("isWatch",isWatch);
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
@@ -314,25 +317,6 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
-
-
-    /**
-     * 点击“邀请记分”——生成二维码，并显示，对方扫码进入记分页面
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("saveUserScoreMapping")
-    public JsonElement saveUserScoreMapping(Long matchId, Long groupId, Long scorerId) {
-        try {
-            matchService.saveUserScoreMapping(matchId, groupId, scorerId);
-            return JsonWrapper.newSuccessInstance();
-        } catch (Exception e) {
-			String errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
-            e.printStackTrace();
-            logger.error(errmsg + e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
 
     /**
      * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
@@ -584,6 +568,10 @@ public class MatchController {
 
 	/**
 	 * 保存或更新计分数据
+	 * 与标准杆一样 叫平标准杆
+	 * 比标准杆少一杆叫小鸟
+	 * 比标准杆多一杆或者标准杆完成该洞叫Par
+	 * 低于标准杆2杆完成该洞叫老鹰
 	 * @return
 	 */
 	@ResponseBody
@@ -788,6 +776,42 @@ public class MatchController {
 	}
 
 
+
+	/**
+	 * 对方扫码进入记分页面
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("saveUserScoreMapping")
+	public JsonElement saveUserScoreMapping(Long matchId, Long groupId, Long scorerId) {
+		try {
+			matchService.saveUserScoreMapping(matchId, groupId, scorerId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——邀请记分——邀请记分初始化二维码
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("invitationScore")
+	public JsonElement invitationScore(Long matchId, Long groupId) {
+		try {
+			String QRCodePath = matchService.invitationScore(matchId, groupId);
+			return JsonWrapper.newDataInstance(QRCodePath);
+		} catch (Exception e) {
+			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 
 }

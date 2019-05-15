@@ -162,44 +162,43 @@ public class UserController {
 	}
 
 	/**
-	 * 我的日历
-	 *
+	 * 历史成绩
 	 * @return
 	 */
-	@RequestMapping("myClub")
-	public String myClub(ModelMap mm) {
+	@ResponseBody
+	@RequestMapping("getMyHistoryScoreByUserId")
+	public JsonElement getMyHistoryScoreByUserId() {
 		try {
-			UserModel userModel = UserUtil.getLoginUser();
-			UserInfo user = userService.getUserById(userModel.getUser().getUiId());
-			List<MatchInfo> calendarList = userService.getCalendarListByUserId(null);
-			mm.addAttribute("calendarList", calendarList);
-			mm.addAttribute("user", user);
+			List<Map<String,Object>> list = userService.getMyHistoryScoreByUserId();
+			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取用户信息时出错。", e);
-			return "error";
+			logger.error("前台-根据用户id获取历史成绩息失败。" + e);
+			return JsonWrapper.newErrorInstance("根据用户id获取历史成绩息失败。");
 		}
-		return "user/myClub";
 	}
 
 	/**
-	 * 找回密码
+	 * 年度成绩分析
+	 * 计算一年内平均每18洞分项的数量
+	 * “暴洞”是指+3及以上的洞数总和
+	 * 开球情况对应记分卡 球道滚轮的箭头
+	 * 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
 	 * @return
 	 */
-	@RequestMapping("forgetPwdUI")
-	public String forgetPwdUI() {
-		return "user/forgetPwd";
+	@ResponseBody
+	@RequestMapping("getMyHistoryScoreByYear")
+	public JsonElement getMyHistoryScoreByYear(String date) {
+		try {
+			Map<String,Object> result = userService.getMyHistoryScoreByYear(date);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-根据用户id获取历史成绩息失败。" + e);
+			return JsonWrapper.newErrorInstance("根据用户id获取历史成绩息失败。");
+		}
 	}
 
-	/**
-	 * 重置密码页面
-	 * @return
-	 */
-	@RequestMapping("forgetPwdResetUI")
-	public String resetPwdUI(ModelMap mm ,String telNo,String code) {
-		mm.addAttribute("telNo",telNo);
-		mm.addAttribute("code",code);
-		return "user/resetPwd";
-	}
+
 
 }

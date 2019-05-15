@@ -1,11 +1,14 @@
 package com.golf.golf.service;
 
+import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
+import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.MapUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.common.util.QRCodeUtil;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.*;
 import com.golf.golf.common.security.UserModel;
@@ -13,10 +16,15 @@ import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
 import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
+import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -30,6 +38,8 @@ public class MatchService implements IBaseService {
 	private MatchDao matchDao;
 	@Autowired
 	private TeamService teamService;
+	@Autowired
+	protected WxMaService wxMaService;
 
 	/**
 	 * 查询球场列表——附近的球场
@@ -131,14 +141,12 @@ public class MatchService implements IBaseService {
 	 * @param count 获取围观显示的个数
 	 * @return
 	 */
-	public Map<String, Object> getMatchInfo(Long matchId, Integer count) {
+	public Map<String, Object> getMatchInfo(MatchInfo matchInfo, Long matchId, Integer count) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		if (count == null) {
 			count = 0;
 		}
 		POJOPageInfo pageInfo = new POJOPageInfo(count, 1);
-		//比赛详情
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		//围观
 		List<Map<String, Object>> watchList = matchDao.getUserListByMatchId(matchId, 0, pageInfo);
 
@@ -152,7 +160,7 @@ public class MatchService implements IBaseService {
 			for (MatchGroup matchGroup : groupList_) {
 				MatchGroupBean matchGroupBean = new MatchGroupBean();
 				matchGroupBean.setMatchGroup(matchGroup);
-				List<Map<String, Object>> groupUserList = matchDao.getMatchGroupListByGroupId(matchGroup.getMgId());
+				List<Map<String, Object>> groupUserList = matchDao.getMatchGroupListByGroupId(matchId, matchGroup.getMgId());
 				matchGroupBean.setUserInfoList(groupUserList);
 				groupList.add(matchGroupBean);
 			}
@@ -160,16 +168,16 @@ public class MatchService implements IBaseService {
 
 		//是否是赛长
 		Long captainCount = matchDao.getIsCaptain(matchId, WebUtil.getUserIdBySessionId());
-		Boolean isCaptain = false;
+		Boolean isMatchCaptain = false;
 		if (captainCount > 0) {
-			isCaptain = true;
+			isMatchCaptain = true;
 		}
 
 		result.put("matchInfo", matchInfo);
 		result.put("watchList", watchList);
 		result.put("captainList", captainList);
 		result.put("groupList", groupList);
-		result.put("isCaptain", isCaptain);
+		result.put("isMatchCaptain", isMatchCaptain);
 		return result;
 	}
 
@@ -224,6 +232,21 @@ public class MatchService implements IBaseService {
 			return 0;
 		} else {
 			return Integer.parseInt(map.get(key).toString());
+		}
+	}
+
+	/**
+	 * Integer
+	 *
+	 * @param map
+	 * @param key
+	 */
+	public Integer getIntegerDoubleValue(Map<String, Object> map, String key) {
+		if (map == null || map.get(key) == null) {
+			return 0;
+		} else {
+			Double d = (Double)map.get(key);
+			return (int)Math.floor(d);
 		}
 	}
 
@@ -879,7 +902,10 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 保存或更新计分数据
-	 *
+	 * 与标准杆一样 叫平标准杆
+	 * 比标准杆少一杆叫小鸟
+	 * 比标准杆多一杆或者标准杆完成该洞叫Par
+	 * 低于标准杆2杆完成该洞叫老鹰
 	 * @return
 	 */
 	public void saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
@@ -905,6 +931,20 @@ public class MatchService implements IBaseService {
 				scoreDb.setMsRodNum(holeStandardRod+gc);
 			}
 			scoreDb.setMsPushRodNum(pushRod);
+			if(scoreDb.getMsRodNum().equals(holeStandardRod)){
+				//与标准杆一样 叫平标准杆
+				scoreDb.setMsIsOn(1);
+			}else if(holeStandardRod - scoreDb.getMsRodNum() == 1){
+				//比标准杆少一杆叫小鸟
+				scoreDb.setMsIsBird(1);
+			}else if(scoreDb.getMsRodNum() - holeStandardRod == 1){
+				//比标准杆多一杆叫Par
+				scoreDb.setMsIsPar(1);
+			}else if(holeStandardRod - scoreDb.getMsRodNum() == 2){
+				//低于标准杆2杆完成该洞叫老鹰
+				scoreDb.setMsIsEagle(1);
+			}
+
 			scoreDb.setMsUpdateTime(System.currentTimeMillis());
 			scoreDb.setMsUpdateUserId(WebUtil.getUserIdBySessionId());
 			scoreDb.setMsUpdateUserName(WebUtil.getUserNameBySessionId());
@@ -954,6 +994,21 @@ public class MatchService implements IBaseService {
 				score.setMsRodNum(holeStandardRod+gc);
 			}
 			score.setMsPushRodNum(pushRod);
+
+			if(score.getMsRodNum().equals(holeStandardRod)){
+				//与标准杆一样 叫平标准杆
+				score.setMsIsOn(1);
+			}else if(holeStandardRod - score.getMsRodNum() == 1){
+				//比标准杆少一杆叫小鸟
+				score.setMsIsBird(1);
+			}else if(score.getMsRodNum() - holeStandardRod == 1){
+				//比标准杆多一杆叫Par
+				score.setMsIsPar(1);
+			}else if(holeStandardRod - score.getMsRodNum() == 2){
+				//低于标准杆2杆完成该洞叫老鹰
+				score.setMsIsEagle(1);
+			}
+
 			score.setMsCreateUserId(WebUtil.getUserIdBySessionId());
 			score.setMsCreateUserName(WebUtil.getUserNameBySessionId());
 			score.setMsCreateTime(System.currentTimeMillis());
@@ -1002,11 +1057,14 @@ public class MatchService implements IBaseService {
 				// 计算公式为：球友积分=基础积分+赢球奖分
 				updatePointByHoleScore(matchId, teamId, baseScore, winScore);
 			}
+			//将该组的得分成绩标为已确认
+			matchDao.updateMatchScoreById(matchId,teamId);
 			return true;
 		}
 		return false;
 	}
 
+	//保存成绩提交的积分计算配置
 	private boolean saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore) {
 		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
 		if(config == null){
@@ -1034,7 +1092,6 @@ public class MatchService implements IBaseService {
 	 * 赢球奖分 ：球友积分=基础积分+赢球奖分/比赛排名
 	 */
 	private void updatePointByRodScore(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
-		Integer point = 0;
 		if (scoreType == 1) {
 			//杆差倍数 球友积分=基础积分+（144-球友比分）*杆差倍数
 			//获取该队伍的得分情况
@@ -1044,9 +1101,9 @@ public class MatchService implements IBaseService {
 					//杆数
 					Integer score = getIntegerValue(scoreMap, "sumRodNum");
 					Long userId = getLongValue(scoreMap, "userId");
-					point = baseScore + (144 - score) * rodScore;
+					Integer point = baseScore + (144 - score) * rodScore;
 					//更新该球友原先的积分情况
-					updatePointByIds(teamId, userId, point);
+					updatePointByIds(teamId, userId, point, 0);
 				}
 			}
 		} else {
@@ -1059,12 +1116,12 @@ public class MatchService implements IBaseService {
 					if(teamId.equals(teamIdByScore)){
 						Long userId = getLongValue(scoreMap, "userId");
 						//排名
-						Integer rank = getIntegerValue(scoreMap,"rank");
+						Integer rank = getIntegerDoubleValue(scoreMap,"rank");
 						//计算得分
-						point = baseScore + winScore/rank;
+						Integer point = baseScore + winScore/rank;
 						//本队球友
 						//更新该球友原先的积分情况
-						updatePointByIds(teamIdByScore, userId, point);
+						updatePointByIds(teamIdByScore, userId, point, 0);
 
 					}
 				}
@@ -1074,15 +1131,129 @@ public class MatchService implements IBaseService {
 
 
 	/**
-	 * 更新该球友原先的积分情况
+	 * 撤销成绩上报
+	 * @param matchId 比赛id,
+	 * @param teamId 上报球队id,
+	 * @return
 	 */
-	private void updatePointByIds(Long teamId, Long userId, Integer point) {
+	public boolean cancelScoreByTeamId(Long matchId, Long teamId) {
+		//获取配置
+		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
+		if(config == null){
+			return false;
+		}
+		//基础积分
+		Integer baseScore = config.getIcBaseScore();
+		//杆差倍数
+		Integer rodCha = config.getIcRodCha();
+		//赢球奖分
+		Integer winScore = config.getIcWinScore();
+		//计算得分
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		Integer format = matchInfo.getMiMatchFormat1();
+		if (format == 0) {
+			//比杆赛 积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（144-球友比分）*杆差倍数 或者 球友积分=基础积分+赢球奖分/比赛排名
+			if(rodCha != null){
+				//获取该队伍的得分情况
+				List<Map<String, Object>> teamScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchId, teamId);
+				if (teamScoreList != null && teamScoreList.size() > 0) {
+					for (Map<String, Object> scoreMap : teamScoreList) {
+						//杆数
+						Integer score = getIntegerValue(scoreMap, "sumRodNum");
+						Long userId = getLongValue(scoreMap, "userId");
+						Integer point = baseScore + (144 - score) * rodCha;
+						//更新该球友的积分情况
+						updatePointByIds(teamId, userId, point, 1);
+					}
+				}
+			}else if(winScore != null){
+				//选择的赢球奖分 赢球奖分 球友积分=基础积分+赢球奖分/比赛排名
+				//计算杆数的总排名
+				List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchId);
+				if (matchScoreList != null && matchScoreList.size() > 0) {
+					for (Map<String, Object> scoreMap : matchScoreList) {
+						Long teamIdByScore = getLongValue(scoreMap, "teamId");
+						if(teamId.equals(teamIdByScore)){
+							Long userId = getLongValue(scoreMap, "userId");
+							//排名
+							Integer rank = getIntegerDoubleValue(scoreMap,"rank");
+							//计算得分
+							Integer point = baseScore + winScore/rank;
+							//更新该球友原先的积分情况
+							updatePointByIds(teamIdByScore, userId, point, 1);
+						}
+					}
+				}
+			}
+		} else if (format == 1) {
+			//比洞赛
+			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
+			// 计算公式为：球友积分=基础积分+赢球奖分
+			//获取本次比赛中的分组和每组用户的总分
+			List<Map<String,Object>> holeScoreList = matchDao.getMatchHoleScoreList(matchId);
+			if(holeScoreList != null && holeScoreList.size()>0){
+				for(int i = 0;i<holeScoreList.size();i++){
+					Map<String,Object> team1 = holeScoreList.get(i);
+					Map<String,Object> team2 = holeScoreList.get(i+1);
+					i += 1;
+					Long team1Id = getLongValue(team1,"teamId");
+					Long team2Id = getLongValue(team2,"teamId");
+					Integer team1SumRod = getIntegerValue(team1,"sumRod");
+					Integer team2SumRod = getIntegerValue(team2,"sumRod");
+					Long userForTeam = null;
+					Integer point = 0;
+					if(teamId.equals(team1Id)){
+						userForTeam = getLongValue(team1,"userId");
+						if(team1SumRod < team2SumRod){
+							//第一队赢球 球友积分=基础积分+赢球奖分
+							point = baseScore + winScore;
+						}else if(team1SumRod > team2SumRod){
+							//第一队输球 球友积分=基础积分+赢球奖分0
+							point = baseScore;
+						}else if(team1SumRod.equals(team2SumRod)){
+							//打平 球友积分=基础积分+赢球奖分的一半
+							point = baseScore + winScore/2;
+						}
+					}else if(teamId.equals(team2Id)){
+						userForTeam = getLongValue(team2,"userId");
+						if(team2SumRod < team1SumRod){
+							//第二队赢球 球友积分=基础积分+赢球奖分
+							point = baseScore + winScore;
+						}else if(team2SumRod > team1SumRod){
+							//第二队输球 球友积分=基础积分+赢球奖分0
+							point = baseScore;
+						}else if(team2SumRod.equals(team1SumRod)){
+							//打平 球友积分=基础积分+赢球奖分的一半
+							point = baseScore + winScore/2;
+						}
+					}
+					//更新该球友的积分情况
+					updatePointByIds(teamId, userForTeam, point, 1);
+				}
+			}
+		}
+		//删除积分计算配置
+		matchDao.del(config);
+		//将该组的得分成绩标为撤销
+		matchDao.cancelMatchScoreById(matchId,teamId);
+		return true;
+	}
+
+
+	/**
+	 * 更新该球友原先的积分情况
+	 * type: 0:加积分   1：减积分
+	 */
+	private void updatePointByIds(Long teamId, Long userId, Integer point, Integer type) {
 		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(teamId, userId);
-		Integer oldPoint = teamUserMapping.getTumPoint();
-		if (oldPoint == null || oldPoint == 0) {
+		if (teamUserMapping.getTumPoint() == null || teamUserMapping.getTumPoint() == 0) {
 			teamUserMapping.setTumPoint(point);
 		} else {
-			teamUserMapping.setTumPoint(oldPoint + point);
+			if(type == 0){
+				teamUserMapping.setTumPoint(teamUserMapping.getTumPoint() + point);
+			}else{
+				teamUserMapping.setTumPoint(teamUserMapping.getTumPoint() - point);
+			}
 		}
 		teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
 		teamUserMapping.setTumUpdateUserId(WebUtil.getUserIdBySessionId());
@@ -1097,11 +1268,52 @@ public class MatchService implements IBaseService {
 	 * 计算公式为：球友积分=基础积分+赢球奖分
 	 */
 	private void updatePointByHoleScore(Long matchId, Long teamId, Integer baseScore, Integer winScore) {
+		//获取本次比赛中的分组和每组用户的总分
+		List<Map<String,Object>> holeScoreList = matchDao.getMatchHoleScoreList(matchId);
+		if(holeScoreList != null && holeScoreList.size()>0){
+			for(int i = 0;i<holeScoreList.size();i++){
+				Map<String,Object> team1 = holeScoreList.get(i);
+				Map<String,Object> team2 = holeScoreList.get(i+1);
+				i += 1;
+				Long team1Id = getLongValue(team1,"teamId");
+				Long team2Id = getLongValue(team2,"teamId");
+				Integer team1SumRod = getIntegerValue(team1,"sumRod");
+				Integer team2SumRod = getIntegerValue(team2,"sumRod");
+				Long userForTeam = null;
+				Integer point = 0;
+				if(teamId.equals(team1Id)){
+					userForTeam = getLongValue(team1,"userId");
+					if(team1SumRod < team2SumRod){
+						//第一队赢球 球友积分=基础积分+赢球奖分
+						point = baseScore + winScore;
+					}else if(team1SumRod > team2SumRod){
+						//第一队输球 球友积分=基础积分+赢球奖分0
+						point = baseScore;
+					}else if(team1SumRod.equals(team2SumRod)){
+						//打平 球友积分=基础积分+赢球奖分的一半
+						 point = baseScore + winScore/2;
+					}
+				}else if(teamId.equals(team2Id)){
+					userForTeam = getLongValue(team2,"userId");
+					if(team2SumRod < team1SumRod){
+						//第二队赢球 球友积分=基础积分+赢球奖分
+						point = baseScore + winScore;
+					}else if(team2SumRod > team1SumRod){
+						//第二队输球 球友积分=基础积分+赢球奖分0
+						point = baseScore;
+					}else if(team2SumRod.equals(team1SumRod)){
+						//打平 球友积分=基础积分+赢球奖分的一半
+						point = baseScore + winScore/2;
+					}
+				}
+				//更新该球友的积分情况
+				updatePointByIds(teamId, userForTeam, point, 0);
+			}
+		}
 	}
 
 	/**
 	 * 结束单练
-	 *
 	 * @return
 	 */
 	public void endSingleMatchById(Long matchId) {
@@ -1115,25 +1327,51 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 如果不是参赛人员，则加入围观用户
-	 *
 	 * @return
 	 */
-	public void saveOrUpdateWatch(Long matchId) {
+	public boolean saveOrUpdateWatch(MatchInfo matchInfo) {
+		//观战范围：3、封闭：参赛队员可见）
+		if(matchInfo.getMiMatchOpenType() == 3){
+			return false;
+		}
 		Long userId = WebUtil.getUserIdBySessionId();
+		Long matchId = matchInfo.getMiId();
 		//是否已经围观
 		Long watchCount = matchDao.getisApplyOrWatch(userId,matchId,0);
 		if(watchCount <=0){
+			//是否是参赛人员
 			Long count = matchDao.getIsContestants(userId, matchId);
-			if (count == 0) {
-				//加入围观用户
-				MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-				matchJoinWatchInfo.setMjwiUserId(userId);
-				matchJoinWatchInfo.setMjwiMatchId(matchId);
-				matchJoinWatchInfo.setMjwiType(0);
-				matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-				matchDao.save(matchJoinWatchInfo);
+			//没有参加比赛的
+			if (count <= 0) {
+				if(matchInfo.getMiMatchOpenType() == 1){
+					//1、公开 球友均可见； 直接加入围观用户
+					MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+					matchJoinWatchInfo.setMjwiUserId(userId);
+					matchJoinWatchInfo.setMjwiMatchId(matchId);
+					matchJoinWatchInfo.setMjwiType(0);
+					matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+					matchDao.save(matchJoinWatchInfo);
+					return true;
+				}else if(matchInfo.getMiMatchOpenType() == 2){
+					//2、队内公开：参赛者的队友可见 查询是否是参赛球队的队员
+					List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+					Long joinCount = matchDao.getIsJoinTeamsUser(userId,teamIdList);
+					if(joinCount > 0){
+						//是参赛队的队员，加入围观用户
+						MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+						matchJoinWatchInfo.setMjwiUserId(userId);
+						matchJoinWatchInfo.setMjwiMatchId(matchId);
+						matchJoinWatchInfo.setMjwiType(0);
+						matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+						matchDao.save(matchJoinWatchInfo);
+						return true;
+					}
+				}
+			}else{
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -1292,8 +1530,8 @@ public class MatchService implements IBaseService {
 		result.put("list", list);
 
 		//是否是该球队队长
-		Long isCaptain = teamService.getIsCaptain(WebUtil.getUserIdBySessionId(), teamId);
-		result.put("isCaptain", isCaptain);
+		Long isTeamCaptain = teamService.getIsCaptain(WebUtil.getUserIdBySessionId(), teamId);
+		result.put("isTeamCaptain", isTeamCaptain);
 		return result;
 	}
 
@@ -1333,12 +1571,48 @@ public class MatchService implements IBaseService {
 		if (matchInfo.getMiMatchFormat1() == 0) {
 			return matchDao.getMatchRodTotalScore(matchId);
 		} else {
+			List<Map<String, Object>> list = new ArrayList<>();
 			List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-			List<TeamInfo> teamInfoList = matchDao.getTeamListByIds(teamIds);
-			for (TeamInfo teamInfo : teamInfoList) {
-				//获取每个队伍的
+			//获取本次比赛中的分组和每组用户的总分
+			List<Map<String,Object>> holeScoreList = matchDao.getMatchHoleScoreList(matchId);
+			if(holeScoreList != null && holeScoreList.size()>0){
+				for(Long teamId :teamIds){
+					TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
+					Map<String, Object> bean = new HashMap<>();
+					bean.put("teamId",teamId);
+					bean.put("teamName",teamInfo.getTiName());
+					for(int i = 0;i<holeScoreList.size();i++){
+						Map<String,Object> team1 = holeScoreList.get(i);
+						Map<String,Object> team2 = holeScoreList.get(i+1);
+						i += 1;
+						Long team1Id = getLongValue(team1,"teamId");
+						Long team2Id = getLongValue(team2,"teamId");
+						Integer team1SumRod = getIntegerValue(team1,"sumRod");
+						Integer team2SumRod = getIntegerValue(team2,"sumRod");
+						if(teamId.equals(team1Id)){
+							if(team1SumRod < team2SumRod){
+								//第一队赢球
+								bean.put("winGroupName",getName(team1,"groupName"));
+							}else if(team1SumRod.equals(team2SumRod)){
+								//打平
+								bean.put("drewGroupName",getName(team1,"groupName"));
+							}
+							bean.put("score",team1SumRod);
+						}else if(teamId.equals(team2Id)){
+							if(team2SumRod < team1SumRod){
+								//第二队赢球
+								bean.put("winGroupName",getName(team2,"groupName"));
+							}else if(team2SumRod.equals(team1SumRod)){
+								//打平
+								bean.put("drewGroupName",getName(team2,"groupName"));
+							}
+							bean.put("score",team2SumRod);
+						}
+					}
+					list.add(bean);
+				}
 			}
-			return matchDao.getMatchHoleTotalScore(matchId);
+			return list;
 		}
 	}
 
@@ -1429,31 +1703,36 @@ public class MatchService implements IBaseService {
 		matchDao.delFromMatch(matchId,groupId,WebUtil.getUserIdBySessionId());
 	}
 
+
 	/**
-	 * 撤销成绩上报
-	 * @param matchId 比赛id,
-	 * @param teamId 上报球队id,
+	 * 比赛——邀请记分——生成二维码
+	 * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
+	 * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index,
+	 * 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
 	 * @return
 	 */
-	public boolean cancelScoreByTeamId(Long matchId, Long teamId) {
-		//获取配置
-		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
-		if(config == null){
-			return false;
+	public String invitationScore(Long matchId, Long groupId) throws WxErrorException, IOException {
+		String fileName = System.currentTimeMillis()+".png";//文件名称
+		String QRCodePath = WebUtil.getRealPath(PropertyConst.QRCODE_PATH);
+		File file = new File(QRCodePath, fileName);
+		if(!file.exists()){
+//			file.mkdirs();
+			file.createNewFile();
 		}
-		//计算得分
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		Integer format = matchInfo.getMiMatchFormat1();
-		if (format == 0) {
-			//比杆赛
-			//积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（144-球友比分）*杆差倍数
-			//或者 球友积分=基础积分+赢球奖分/比赛排名
-		} else if (format == 1) {
-			//比洞赛
-			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
-			// 计算公式为：球友积分=基础积分+赢球奖分
+		String scene = "1234567890";//参数
+		String page ="";//要跳转的页面，根路径不能加/  不填默认跳转主页
+//		file = wxMaService.getQrcodeService().createWxaCodeUnlimit(scene,page); 此方法好像是有包冲突，会报错
+		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(scene,page,300,false,null,false);
+		InputStream inputStream = null;
+		OutputStream outputStream = null;
+		inputStream = new ByteArrayInputStream(result);
+		outputStream = new FileOutputStream(file);
+		int len = 0;
+		byte[] buf = new byte[1024];
+		while ((len = inputStream.read(buf, 0, 1024)) != -1) {
+			outputStream.write(buf, 0, len);
 		}
-		matchDao.del(config);
-		return true;
+		outputStream.flush();
+		return PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
 	}
 }
