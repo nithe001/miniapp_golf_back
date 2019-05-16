@@ -5,9 +5,12 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.HttpUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
+import com.golf.golf.bean.MatchGroupUserScoreBean;
+import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.common.security.WechatUserUtil;
+import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
@@ -26,6 +29,7 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +47,10 @@ public class UserService implements IBaseService {
     private UserDao dao;
     @Autowired
     protected WxMpService wxMpService;
+    @Autowired
+	private MatchDao matchDao;
+    @Autowired
+	private MatchService matchService;
 
     /**
      * 根据用户id取得用户信息
@@ -294,10 +302,88 @@ public class UserService implements IBaseService {
 	 * 可以横向布局
 	 * @return
 	 */
-	public List<Map<String, Object>> getMyHistoryScoreByUserId() {
+	public Map<String, Object> getMyHistoryScoreByUserId() {
 		Long userId = WebUtil.getUserIdBySessionId();
+		Map<String, Object> result = new HashMap<>();
+		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 
-		return null;
+		//比赛的所有球场(首列显示)
+		List<String> parkList = new ArrayList<>();
+
+		//所有球洞 18
+		List<String> parkHoleList = new ArrayList<>();
+		for(int i=1;i<=18;i++){
+			parkHoleList.add(i+"");
+			if(i==9){
+				parkHoleList.add("");
+			}
+			if(i==18){
+				parkHoleList.add("");
+			}
+		}
+		//第一条记录 所有球洞
+		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
+		thBean.setUserId(0L);
+		thBean.setUserName("Hole");
+		thBean.setParkHoleList(parkHoleList);
+		list.add(thBean);
+
+		//获取我参加的所有比赛所在的球场(比赛id，球场id，球场名称,前半场名称，后半场名称)
+		List<Map<String, Object>> matchList = matchDao.getParkListByUserId(userId);
+		if(matchList != null && matchList.size()>0){
+			for(Map<String, Object> match:matchList){
+				String parkName = matchService.getName(match,"parkName");
+				parkList.add(parkName);
+
+				Long matchId = matchService.getLongValue(match,"miId");
+				MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+				result.put("matchInfo", matchInfo);
+
+				//本用户每个洞得分情况
+				createNewUserScoreList(userId,list,matchInfo);
+				result.put("list", list);
+			}
+		}
+
+		result.put("parkList", parkList);
+		return result;
+	}
+
+	//获取用户在每个球洞的得分情况
+	private void createNewUserScoreList(Long userId, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
+		MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+		bean.setUserId(userId);
+		//本用户的前后半场总得分情况
+		List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
+		//本用户前半场得分情况
+		List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,0);
+		createNewUserScore(userScoreList, uScoreBeforeList);
+		//本用户后半场得分情况
+		List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,1);
+		createNewUserScore(userScoreList, uScoreAfterList);
+		bean.setUserScoreTotalList(userScoreList);
+		list.add(bean);
+	}
+
+
+	//格式化用户半场得分
+	private void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
+		Integer totalRod = 0;
+		//杆差
+		Integer totalRodCha = 0;
+		for(Map<String, Object> map:uScoreList){
+			MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
+			Integer rodNum = matchService.getIntegerValue(map,"rod_num");
+			totalRod += rodNum;
+			//杆数
+			bean.setRodNum(rodNum);
+			bean.setHoleStandardRod(matchService.getIntegerValue(map,"pp_hole_standard_rod"));
+			userScoreList.add(bean);
+		}
+		//每个半场的总杆数
+		MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
+		bean.setRodNum(totalRod);
+		userScoreList.add(bean);
 	}
 
 
@@ -321,7 +407,6 @@ public class UserService implements IBaseService {
 		result.put("sumRod",sumRod);
 		//所有杆数
 		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
-
 		result.put("scoreList",scoreList);
 		return result;
 	}

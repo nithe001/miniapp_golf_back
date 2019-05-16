@@ -343,14 +343,28 @@ public class MatchInfo {
 
 
 	private String createTimeStr;
+	private String updateTimeStr;
 	@Transient
 	public String getCreateTimeStr() {
 		createTimeStr = TimeUtil.longToString(this.getMiCreateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
 		return createTimeStr;
 	}
 
+	public void setCreateTimeStr(String createTimeStr) {
+		this.createTimeStr = createTimeStr;
+	}
 	public void setCreateTimeStr(Long createTime) {
 		this.createTimeStr = TimeUtil.longToString(createTime,TimeUtil.FORMAT_DATETIME_HH_MM);
+	}
+
+	@Transient
+	public String getUpdateTimeStr() {
+		updateTimeStr = TimeUtil.longToString(this.getMiUpdateTime(),TimeUtil.FORMAT_DATETIME_HH_MM);
+		return updateTimeStr;
+	}
+
+	public void setUpdateTimeStr(String updateTimeStr) {
+		this.updateTimeStr = updateTimeStr;
 	}
 
 	private String stateStr;
@@ -371,5 +385,87 @@ public class MatchInfo {
 
 	public void setIsCaptain(Long isCaptain) {
 		this.isCaptain = isCaptain;
+	}
+
+
+	private String watchTypeStr;
+	private String joinTypeStr;
+	private String matchTypeStr;
+	private String state;
+	@Transient
+	public String getWatchTypeStr() {
+		if(this.getMiType() == 0 || this.getMiMatchOpenType() == null){
+			return "不公开";
+		}
+//		观战范围：（1、公开 球友均可见；2、队内公开：参赛者的队友可见；3、封闭：参赛队员可见）
+		if(this.getMiMatchOpenType() == 1){
+			watchTypeStr = "公开";
+		}else if(this.getMiMatchOpenType() == 2){
+			watchTypeStr = "队内公开";
+		}else if(this.getMiMatchOpenType() == 3){
+			watchTypeStr = "封闭";
+		}
+		return watchTypeStr;
+	}
+	public void setWatchTypeStr(String watchTypeStr) {
+		this.watchTypeStr = watchTypeStr;
+	}
+
+	@Transient
+	public String getJoinTypeStr() {
+//		参赛范围(1、公开 球友均可报名；2、队内：某几个球队队员可报名；3:不公开)
+		if(this.getMiType() == 0 || this.getMiJoinOpenType() == null){
+			return "不公开";
+		}
+		if(this.getMiJoinOpenType() == 1){
+			joinTypeStr = "公开";
+		}else if(this.getMiJoinOpenType() == 2){
+			joinTypeStr = "队内公开";
+		}else if(this.getMiJoinOpenType() == 3){
+			joinTypeStr = "不公开";
+		}
+		return joinTypeStr;
+	}
+	public void setJoinTypeStr(String joinTypeStr) {
+		this.joinTypeStr = joinTypeStr;
+	}
+
+	@Transient
+	public String getMatchTypeStr() {
+		if(this.getMiType() == 0){
+			return "个人 | 比杆";
+		}
+//		赛制2( 0:个人 、1:双人)
+		if(this.getMiMatchFormat2() == 0){
+			matchTypeStr = "个人";
+		}else{
+			matchTypeStr = "双人";
+		}
+//		赛制1( 0:比杆 、1:比洞)
+		if(this.getMiMatchFormat1() == 0){
+			matchTypeStr += " | 比杆";
+		}else{
+			matchTypeStr += " | 比洞";
+		}
+		return matchTypeStr;
+	}
+	public void setMatchTypeStr(String matchTypeStr) {
+		this.matchTypeStr = matchTypeStr;
+	}
+
+	@Transient
+	public String getState() {
+		if(this.getMiIsEnd() == 0){
+			state = "报名中";
+		}else if(this.getMiIsEnd() == 1){
+			state = "进行中";
+		}else if(this.getMiIsEnd() == 3){
+			state = "已结束";
+		}
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
 	}
 }

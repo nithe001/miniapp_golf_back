@@ -273,5 +273,19 @@ public class AdminParkController {
 		}
 	}
 
+	/**
+	 * 获取球场地址
+	 * @return
+	 */
+	@RequestMapping("getAddress")
+	public void getAddress(){
+		try{
+			adminParkService.updateParkInfoWithAddress();
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("获取球场地址时出错。"+ e );
+		}
+	}
+
 
 }

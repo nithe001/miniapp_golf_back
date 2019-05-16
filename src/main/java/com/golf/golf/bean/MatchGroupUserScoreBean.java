@@ -13,6 +13,7 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
     private String userName;
     private List<Map<String, Object>>  userScoreList;
 	private List<MatchTotalUserScoreBean>  userScoreTotalList;
+	private List<String> parkHoleList;
     private Integer totalRodScore;
 	private Integer totalPushRodScore;
 
@@ -62,6 +63,14 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 
 	public void setUserScoreTotalList(List<MatchTotalUserScoreBean> userScoreTotalList) {
 		this.userScoreTotalList = userScoreTotalList;
+	}
+
+	public List<String> getParkHoleList() {
+		return parkHoleList;
+	}
+
+	public void setParkHoleList(List<String> parkHoleList) {
+		this.parkHoleList = parkHoleList;
 	}
 
 	@Override

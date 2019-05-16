@@ -283,7 +283,7 @@ public class MatchService implements IBaseService {
 			result.put("teamList", teamList);
 		}
 		//获取成绩上报球队信息
-		if (StringUtils.isNotEmpty(matchInfo.getMiReportScoreTeamId())) {
+		if (StringUtils.isNotEmpty(matchInfo.getMiReportScoreTeamId()) && !matchInfo.getMiReportScoreTeamId().equals("undefined")) {
 			List<Long> reportScoreTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
 			List<TeamInfo> reportScoreTeamList = matchDao.getTeamListByIds(reportScoreTeamIdList);
 			result.put("reportScoreTeamList", reportScoreTeamList);
@@ -712,7 +712,6 @@ public class MatchService implements IBaseService {
 			MatchGroup matchGroup = matchDao.getMyGroupById(matchInfo.getMiId());
 			result.put("groupId", matchGroup.getMgId());
 		}
-		result.put("matchType", 0);
 		return result;
 	}
 
@@ -1444,7 +1443,7 @@ public class MatchService implements IBaseService {
 	}
 
 	//格式化半场球洞
-	private void getNewParkHoleList(List<MatchTotalUserScoreBean> parkHoleList, List<MatchTotalUserScoreBean> parkRodList,
+	public void getNewParkHoleList(List<MatchTotalUserScoreBean> parkHoleList, List<MatchTotalUserScoreBean> parkRodList,
 									List<Map<String, Object>> beforeAfterParkHoleList) {
 		Integer totalStandardRod = 0;
 		String name = "";
@@ -1734,5 +1733,21 @@ public class MatchService implements IBaseService {
 		}
 		outputStream.flush();
 		return PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
+	}
+
+	/**
+	 * 单练——更新临时用户姓名
+	 * @return
+	 */
+	public void updateTemporaryUserNameById(Long userId, String userName, Long matchId, Long groupId) {
+		Map<String,Object> parp = new HashMap<>();
+		parp.put("userId",userId);
+		parp.put("userName",userName);
+		parp.put("matchId",matchId);
+		parp.put("groupId",groupId);
+		//更新比赛用户mapping中的临时用户姓名
+		matchDao.updateMatchUserMapping(parp);
+		//更新记分表中的临时用户姓名
+		matchDao.updateMatchScoreUserInfo(parp);
 	}
 }

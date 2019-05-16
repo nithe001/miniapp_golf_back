@@ -162,27 +162,18 @@ public class UserDao extends CommonDao {
 	 * @return
 	 */
 	public List<Map<String, Object>> getScoreByYear(Map<String, Object> parp) {
-		/*select sum(s.ms_is_par),sum(s.ms_is_bird),sum(s.ms_is_eagle),countRodCha1.rodCha1,countRodCha2.rodCha2,baodong.bao,
-				zhiqiu.zhi,pianzuo.zuo,pianyou.you,chujie.chu,sum(s.ms_push_rod_num) as pushNum,biaoon.bON
-		from match_score as s,
-		(select count(s.ms_id) as rodCha1 from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod = 1) as countRodCha1,
-		(select count(s.ms_id) as rodCha2 from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod = 2) as countRodCha2,
-		-- “暴洞”是指+3及以上的洞数总和 杆数-标准杆>=3
-		(select count(s.ms_id) as bao from match_score as s where s.ms_user_id = 1 and s.ms_rod_num - s.ms_hole_standard_rod >= 3) as baodong,
-		(select count(s.ms_id) as zhi from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球直球") as zhiqiu,
-		(select count(s.ms_id) as zuo from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球偏左") as pianzuo,
-		(select count(s.ms_id) as you from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球偏右") as pianyou,
-		(select count(s.ms_id) as chu from match_score as s where s.ms_user_id = 1 and s.ms_is_up = "开球出界") as chujie,
-		-- 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
-		(select count(s.ms_id) as bON from match_score as s where s.ms_rod_num - s.ms_push_rod_num = s.ms_hole_standard_rod -2) as biaoon
-		where s.ms_user_id = 1
-
-*/
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT * ");
-		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
-		hql.append("and s.msCreateTime >= :startTime ");
-		hql.append("and s.msCreateTime <= :startTime ");
+		hql.append("SELECT " +
+				"sum(s.ms_is_par) as par,sum(s.ms_is_bird) as bird,COALESCE(sum(s.ms_is_eagle),0) as eagle,sum(s.ms_push_rod_num) as pushNum, " +
+				"count(s.ms_rod_num - s.ms_hole_standard_rod = 1 or null) as one, " +
+				"count(s.ms_rod_num - s.ms_hole_standard_rod = 2 or null) as two, " +
+				"count(s.ms_rod_num - s.ms_hole_standard_rod >= 3 or null) as baodong, " +
+				"count(s.ms_is_up = \"开球直球\" OR NULL) AS zhi, " +
+				"count(s.ms_is_up = \"开球偏右\" OR NULL) AS you, " +
+				"count(s.ms_is_up = \"开球偏左\" OR NULL) AS zuo, " +
+				"count(s.ms_is_up = \"开球出界\" OR NULL) AS chu, " +
+				"count(s.ms_rod_num - s.ms_push_rod_num = s.ms_hole_standard_rod -2 or null) as biaoOn ");
+		hql.append("FROM match_score AS s WHERE s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -196,7 +187,7 @@ public class UserDao extends CommonDao {
 		hql.append("SELECT sum(s.msRodNum) ");
 		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
 		hql.append("and s.msCreateTime >= :startTime ");
-		hql.append("and s.msCreateTime <= :startTime ");
+		hql.append("and s.msCreateTime <= :endTime ");
 		return dao.createCountQuery(hql.toString(), parp);
 	}
 }

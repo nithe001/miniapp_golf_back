@@ -124,6 +124,9 @@ public class MatchController {
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
 				matchInfoBean.setMiLogo(logoPath);
 				matchInfoBean.setMiJoinTeamIds(joinTeamIds);
+				if(StringUtils.isNotEmpty(joinTeamIds)){
+					matchInfoBean.setMiJoinOpenType(2);
+				}
 				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
 				matchInfoBean.setMiZoneAfterNine(afterZoneName);
 				matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
@@ -676,6 +679,24 @@ public class MatchController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 单练——更新临时用户姓名
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateTemporaryUserNameById")
+	public JsonElement updateTemporaryUserNameById(Long userId, String userName, Long matchId, Long groupId) {
+		try {
+			matchService.updateTemporaryUserNameById(userId, userName, matchId, groupId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "前台-单练——更新临时用户姓名时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);

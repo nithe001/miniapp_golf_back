@@ -974,4 +974,44 @@ public class MatchDao extends CommonDao {
 		sql.append("select s.msTeamId as teamId,s.msGroupId as groupId,s.msGroupName as groupName,s.msUserId as userId,sum(s.msRodNum) as sumRod from MatchScore as s where s.msMatchId = "+matchId+" GROUP BY s.msUserId ");
 		return dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
+
+
+	/**
+	 * 我的——历史成绩——获取我参加的所有比赛所在的球场(不包括单练)
+	 * @return
+	 */
+	public List<Map<String, Object>> getParkListByUserId(Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select m.miId as miId, m.miParkId as parkId ,m.miParkName as parkName," +
+				"m.miZoneBeforeNine as beforeNine , m.miZoneAfterNine as afterNine " +
+				"from MatchInfo as m where m.miId in(" +
+				"select DISTINCT(g.mugmMatchId) from MatchUserGroupMapping as g where g.mugmUserId = "+userId+") and m.miType = 1");
+		return dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+	}
+
+	/**
+	 * 单练——更新比赛用户mapping中的临时用户姓名
+	 * @return
+	 */
+	public void updateMatchUserMapping(Map<String,Object> parp) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE MatchUserGroupMapping AS t SET t.mugmUserName = :userName ");
+		sql.append(" WHERE t.mugmMatchId = :matchId");
+		sql.append(" AND t.mugmGroupId = :groupId");
+		sql.append(" AND t.mugmUserId = :userId");
+		dao.executeHql(sql.toString(), parp);
+	}
+
+	/**
+	 * 单练——更新记分表中的临时用户姓名
+	 * @return
+	 */
+	public void updateMatchScoreUserInfo(Map<String, Object> parp) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE MatchScore AS s SET s.msUserName = :userName ");
+		sql.append(" WHERE s.msMatchId = :matchId");
+		sql.append(" AND s.msGroupId = :groupId");
+		sql.append(" AND s.msUserId = :userId");
+		dao.executeHql(sql.toString(), parp);
+	}
 }

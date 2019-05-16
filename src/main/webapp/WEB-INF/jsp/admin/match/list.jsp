@@ -68,22 +68,21 @@
                                 <table id="example2" class="table table-bordered table-hover">
                                     <thead>
                                     <tr>
-                                        <th>序号</th>
-                                        <th>标题</th>
-                                        <th>类型</th>
-                                        <th>所在球场</th>
-                                        <th>前9洞</th>
-                                        <th>后9洞</th>
-                                        <th>观战范围</th>
-                                        <th>参赛范围</th>
-                                        <%--（2 0:个人 、1:双人 1 0:比杆 、1:比洞）--%>
-                                        <th>赛制</th>
-                                        <th>开球时间</th>
-                                        <th>创建时间</th>
-                                        <th>创建人</th>
-                                        <th>更新时间</th>
-                                        <th>更新人</th>
-                                        <th>状态</th>
+                                        <th width="5%">序号</th>
+                                        <th width="12%">标题</th>
+                                        <th width="5%">类型</th>
+                                        <th width="12%">所在球场</th>
+                                        <th width="3%">前9</th>
+                                        <th width="3%">后9</th>
+                                        <th width="6%">观战范围</th>
+                                        <th width="6%">参赛范围</th>
+                                        <th width="5%">赛制</th>
+                                        <th width="8%">开球时间</th>
+                                        <th width="8%">创建时间</th>
+                                        <th width="6%">创建人</th>
+                                        <th width="8%">更新时间</th>
+                                        <th width="6%">更新人</th>
+                                        <th width="8%">状态</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
                                     </thead>
@@ -94,9 +93,18 @@
                                             <td>${matchInfo.miTitle}</td>
                                             <td><c:if test="${matchInfo.miType == 0}">单练</c:if>
                                                 <c:if test="${matchInfo.miType == 1}">团队/多人赛</c:if></td>
-                                            <td>${matchInfo.miCreateTime}</td>
+                                            <td>${matchInfo.miParkName}</td>
+                                            <td>${matchInfo.miZoneBeforeNine}</td>
+                                            <td>${matchInfo.miZoneAfterNine}</td>
+                                            <td>${matchInfo.watchTypeStr}</td>
+                                            <td>${matchInfo.joinTypeStr}</td>
+                                            <td>${matchInfo.matchTypeStr}</td>
+                                            <td>${matchInfo.miMatchTime}</td>
+                                            <td>${matchInfo.createTimeStr}</td>
                                             <td>${matchInfo.miCreateUserName}</td>
-                                            <%--<td>${matchInfo.state}</td>--%>
+                                            <td>${matchInfo.updateTimeStr}</td>
+                                            <td>${matchInfo.miUpdateUserName}</td>
+                                            <td>${matchInfo.state}</td>
                                             <td>
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
                                                     编辑

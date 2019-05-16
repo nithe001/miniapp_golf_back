@@ -180,4 +180,46 @@ public class AdminParkService implements IBaseService {
 	public void updateParkInfo(ParkInfo parkInfo) {
 		adminParkDao.update(parkInfo);
 	}
+
+	/**
+	 * 获取球场地址
+	 * @return
+	 */
+	public void updateParkInfoWithAddress() throws Exception {
+		POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>(0, 1);
+		SearchBean searchBean = new SearchBean();
+		pageInfo = adminParkDao.getParkList(searchBean, pageInfo);
+		List<ParkInfo> list = pageInfo.getItems();
+		if (pageInfo.getCount() > 0 && list != null && list.size() > 0) {
+			for (int i = 114;i<119;i++) {
+				ParkInfo parkInfo = list.get(i);
+				String city = parkInfo.getPiCity();
+				String name = parkInfo.getPiName();
+				String ak = "F303b406b7af4e9a0073e886e986a8dd";
+				try {
+					name = java.net.URLEncoder.encode(name,"UTF-8");
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
+				String url = String.format("http://api.map.baidu.com/place/v2/search?ak=%s&region=%s&query=%s&output=json",ak,city, name);
+				String result = CommonApiUtil.getUrl(url);
+				if (StringUtils.isNotEmpty(result)) {
+					JsonElement element = new JsonParser().parse(result);
+					JsonObject jsonObj = element.getAsJsonObject();
+					if (jsonObj != null && jsonObj.get("message").toString().equals("\"ok\"")) {
+						JsonArray resultsJsonArray = jsonObj.get("results").getAsJsonArray();
+						if(resultsJsonArray.size() > 0){
+							JsonObject jsonObj_ = resultsJsonArray.get(0).getAsJsonObject();
+							System.out.println("球场id:"+parkInfo.getPiId()+"球场名称:"+parkInfo.getPiName()+" 地址："+jsonObj_.get("address"));
+							if(jsonObj_.get("address") != null){
+								parkInfo.setPiAddress(jsonObj_.get("address").toString().replaceAll("\"",""));
+								adminParkDao.update(parkInfo);
+							}
+						}
+					}
+				}
+
+			}
+		}
+	}
 }

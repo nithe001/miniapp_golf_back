@@ -169,8 +169,8 @@ public class UserController {
 	@RequestMapping("getMyHistoryScoreByUserId")
 	public JsonElement getMyHistoryScoreByUserId() {
 		try {
-			List<Map<String,Object>> list = userService.getMyHistoryScoreByUserId();
-			return JsonWrapper.newDataInstance(list);
+			Map<String,Object> result = userService.getMyHistoryScoreByUserId();
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("前台-根据用户id获取历史成绩息失败。" + e);

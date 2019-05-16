@@ -12,6 +12,7 @@ public class ParkInfo {
 	private Long piId;
 	private String piCity;
 	private String piName;
+	private String piAddress;
 	private String piLogo;
 	private Integer piIsValid;
 	private String piLng;
@@ -25,10 +26,11 @@ public class ParkInfo {
 	}
 
 	/** full constructor */
-	public ParkInfo(String piCity, String piName, String piLogo,
+	public ParkInfo(String piCity, String piName, String piAddress, String piLogo,
 					Integer piIsValid, String piLng, String piLat, Integer piSumRod) {
 		this.piCity = piCity;
 		this.piName = piName;
+		this.piAddress = piAddress;
 		this.piLogo = piLogo;
 		this.piIsValid = piIsValid;
 		this.piLng = piLng;
@@ -64,6 +66,15 @@ public class ParkInfo {
 
 	public void setPiName(String piName) {
 		this.piName = piName;
+	}
+
+	@Column(name = "pi_address")
+	public String getPiAddress() {
+		return piAddress;
+	}
+
+	public void setPiAddress(String piAddress) {
+		this.piAddress = piAddress;
 	}
 
 	@Column(name = "pi_logo")
