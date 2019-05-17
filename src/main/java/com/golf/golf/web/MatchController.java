@@ -129,7 +129,9 @@ public class MatchController {
 				}
 				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
 				matchInfoBean.setMiZoneAfterNine(afterZoneName);
-				matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
+				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined")){
+					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
+				}
 				matchService.saveMatchInfo(matchInfoBean,parkName);
 			}
 			return JsonWrapper.newSuccessInstance();
@@ -140,6 +142,25 @@ public class MatchController {
 		}
 	}
 
+
+	/**
+	 * 赛长点击本比赛球友信息页面，有指定该用户成为赛长按钮
+	 * @param matchId:比赛id
+	 * @param userId:被指定人id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "setMatchCaptainByUserId")
+	public JsonElement setMatchCaptainByUserId(Long matchId, Long userId) {
+		try {
+			matchService.setMatchCaptainByUserId(matchId, userId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("赛长指定该用户成为赛长时出错。比赛id="+matchId +" 用户id="+userId+ e);
+			return JsonWrapper.newErrorInstance("赛长指定该用户成为赛长时出错");
+		}
+	}
 
 
 	/**
@@ -243,7 +264,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——添加组
+	 * 比赛详情——添加分组 添加组
 	 * @return
 	 */
 	@ResponseBody
@@ -304,7 +325,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——保存——将用户从该分组删除
+	 * 比赛详情——保存——将用户从该分组删除，用户再次进入临时分组
 	 * @return
 	 */
 	@ResponseBody
@@ -834,5 +855,21 @@ public class MatchController {
 		}
 	}
 
-
+	/**
+	 * 比赛——邀请记分——用户扫码后的操作
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("scanScoreQRCode")
+	public JsonElement scanScoreQRCode(Long matchId, Long groupId) {
+		try {
+			String QRCodePath = matchService.invitationScore(matchId, groupId);
+			return JsonWrapper.newDataInstance(QRCodePath);
+		} catch (Exception e) {
+			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 }

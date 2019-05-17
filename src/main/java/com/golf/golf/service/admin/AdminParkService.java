@@ -191,7 +191,7 @@ public class AdminParkService implements IBaseService {
 		pageInfo = adminParkDao.getParkList(searchBean, pageInfo);
 		List<ParkInfo> list = pageInfo.getItems();
 		if (pageInfo.getCount() > 0 && list != null && list.size() > 0) {
-			for (int i = 114;i<119;i++) {
+			for (int i = 122;i<131;i++) {
 				ParkInfo parkInfo = list.get(i);
 				String city = parkInfo.getPiCity();
 				String name = parkInfo.getPiName();

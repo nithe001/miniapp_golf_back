@@ -80,8 +80,8 @@
                                         <th width="8%">开球时间</th>
                                         <th width="8%">创建时间</th>
                                         <th width="6%">创建人</th>
-                                        <th width="8%">更新时间</th>
-                                        <th width="6%">更新人</th>
+                                        <%--<th width="8%">更新时间</th>--%>
+                                        <%--<th width="6%">更新人</th>--%>
                                         <th width="8%">状态</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
@@ -102,17 +102,16 @@
                                             <td>${matchInfo.miMatchTime}</td>
                                             <td>${matchInfo.createTimeStr}</td>
                                             <td>${matchInfo.miCreateUserName}</td>
-                                            <td>${matchInfo.updateTimeStr}</td>
-                                            <td>${matchInfo.miUpdateUserName}</td>
+                                            <%--<td>${matchInfo.updateTimeStr}</td>--%>
+                                            <%--<td>${matchInfo.miUpdateUserName}</td>--%>
                                             <td>${matchInfo.state}</td>
                                             <td>
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
                                                     编辑
                                                 </a>&nbsp;
-                                                <%--<a class="btn btn-danger" href="admin/match/delMatch?matchId=${calendar[0]}">--%>
-                                                    <%--<c:if test="${matchInfo.miIsDel == null || matchInfo.miIsDel == 0}">删除</c:if>--%>
-                                                    <%--<c:if test="${matchInfo.miIsDel == 1 }">恢复</c:if>--%>
-                                                <%--</a>--%>
+                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
+                                                    删除
+                                                </a>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -133,6 +132,30 @@
         </section>
     </div>
 </div>
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
+            </div>
+            <div class="modal-body">确定要这么操作吗</div>
+            <input id="parkId" value="" type="hidden"/>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <jsp:include page="../include/adminlteJsInclude.jsp"/>
 <script type="text/javascript">
     $(document).ready(function () {
@@ -150,5 +173,8 @@
             }
         });
     });
+    function delMatch(matchId) {
+        $("#myModal").modal("show");
+    }
 </script>
 </body>

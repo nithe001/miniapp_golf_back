@@ -2,13 +2,10 @@ package com.golf.golf.service;
 
 import com.golf.common.IBaseService;
 import com.golf.common.spring.mvc.WebUtil;
-import com.golf.common.util.HttpUtil;
-import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.common.security.UserModel;
-import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.UserDao;
@@ -16,19 +13,14 @@ import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
-import com.golf.golf.enums.MatchGroupUserMappingTypeEnum;
 import com.golf.golf.enums.UserTypeEnum;
-import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
-import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +43,21 @@ public class UserService implements IBaseService {
 	private MatchDao matchDao;
     @Autowired
 	private MatchService matchService;
+
+	/**
+	 * 获取“我的”
+	 * @return
+	 */
+	public Map<String,Object> getMyDetail() {
+		Map<String,Object> result = new HashMap<>();
+		Long userId = WebUtil.getUserIdBySessionId();
+		UserInfo userInfo = dao.get(UserInfo.class, userId);
+		result.put("userInfo",userInfo);
+		//差点
+		Integer chaPoint = matchService.getUserChaPoint(userId);
+		result.put("chaPoint",chaPoint);
+		return result;
+	}
 
     /**
      * 根据用户id取得用户信息
@@ -82,10 +89,10 @@ public class UserService implements IBaseService {
     	db.setUiAge(user.getUiAge());
     	db.setUiTelNo(user.getUiTelNo());
 		db.setUiEmail(user.getUiEmail());
-		db.setUiCraduateSchool(user.getUiCraduateSchool());
-		db.setUiCraduateDepartment(user.getUiCraduateDepartment());
+		db.setUiGraduateSchool(user.getUiGraduateSchool());
+		db.setUiGraduateDepartment(user.getUiGraduateDepartment());
 		db.setUiMajor(user.getUiMajor());
-		db.setUiCraduateTime(user.getUiCraduateTime());
+		db.setUiGraduateTime(user.getUiGraduateTime());
 		db.setUiStudentId(user.getUiStudentId());
 		db.setUiWorkUnit(user.getUiWorkUnit());
 		db.setUiPost(user.getUiPost());
@@ -408,6 +415,38 @@ public class UserService implements IBaseService {
 		//所有杆数
 		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
 		result.put("scoreList",scoreList);
+		return result;
+	}
+
+	/**
+	 * 查看用户基本信息
+	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
+	 * @return
+	 */
+	public Map<String, Object> getUserDetaliInfoById(Long teamId, Long matchId, Long userId) {
+		Map<String, Object> result = new HashMap<>();
+		//资料
+		UserInfo userInfo = getUserById(userId);
+		result.put("userInfo",userInfo);
+		//信息是否公开
+		boolean isOpen = userInfoIsOpen(userId);
+		result.put("isOpen",isOpen);
+		//差点
+		Integer chaPoint = matchService.getUserChaPoint(userId);
+		result.put("chaPoint",chaPoint);
+		//是否是本队队长
+		if(teamId != null){
+			Long isTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
+			result.put("isTeamCaptain",isTeamCaptain >0 ?true:false);
+			result.put("isMatchCaptain",true);
+		}
+
+		//是否是本比赛的赛长
+		if(matchId != null){
+			Long isMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
+			result.put("isMatchCaptain",isMatchCaptain >0 ?true:false);
+			result.put("isTeamCaptain",true);
+		}
 		return result;
 	}
 }

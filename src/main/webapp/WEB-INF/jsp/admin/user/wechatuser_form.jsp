@@ -65,24 +65,24 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="uiCraduateSchool" class="col-sm-2 control-label">毕业学校</label>
+        <label for="uiGraduateSchool" class="col-sm-2 control-label">毕业学校</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="uiCraduateSchool" name="uiCraduateSchool"
-                   value="${userInfo.uiCraduateSchool }" placeholder="毕业学校"/>
+            <input type="text" class="form-control" id="uiGraduateSchool" name="uiGraduateSchool"
+                   value="${userInfo.uiGraduateSchool }" placeholder="毕业学校"/>
         </div>
     </div>
     <div class="form-group">
-        <label for="uiCraduateDepartment" class="col-sm-2 control-label">毕业院系</label>
+        <label for="uiGraduateDepartment" class="col-sm-2 control-label">毕业院系</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="uiCraduateDepartment" name="uiCraduateDepartment"
-                   value="${userInfo.uiCraduateDepartment }" placeholder="毕业院系"/>
+            <input type="text" class="form-control" id="uiGraduateDepartment" name="uiGraduateDepartment"
+                   value="${userInfo.uiGraduateDepartment }" placeholder="毕业院系"/>
         </div>
     </div>
     <div class="form-group">
-        <label for="uiCraduateTime" class="col-sm-2 control-label">毕业时间</label>
+        <label for="uiGraduateTime" class="col-sm-2 control-label">毕业时间</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="uiCraduateTime" name="uiCraduateTime"
-                   value="${userInfo.uiCraduateTime}" placeholder="毕业时间"/>
+            <input type="text" class="form-control" id="uiGraduateTime" name="uiGraduateTime"
+                   value="${userInfo.uiGraduateTime}" placeholder="毕业时间"/>
         </div>
     </div>
     <div class="form-group">

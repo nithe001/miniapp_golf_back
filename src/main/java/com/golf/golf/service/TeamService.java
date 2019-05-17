@@ -7,12 +7,9 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.dao.TeamDao;
-import com.golf.golf.db.MatchGroup;
-import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -258,4 +255,18 @@ public class TeamService implements IBaseService {
 		return teamDao.getIsCaptain(userId, teamId);
 	}
 
+	/**
+	 * 队长指定该用户成为队长
+	 * @param teamId:球队id
+	 * @param userId:被指定人id
+	 * @return
+	 */
+	public void setTeamCaptainByUserId(Long teamId, Long userId) {
+		TeamUserMapping teamUserMapping = teamDao.getTeamUserMapping(teamId,userId);
+		teamUserMapping.setTumUserType(0);
+		teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
+		teamUserMapping.setTumUpdateUserId(WebUtil.getUserIdBySessionId());
+		teamUserMapping.setTumUpdateUserName(WebUtil.getUserNameBySessionId());
+		teamDao.update(teamUserMapping);
+	}
 }

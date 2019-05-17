@@ -24,9 +24,9 @@ public class UserInfo {
 	private Integer uiAge;
 	private String uiTelNo;
 	private String uiEmail;
-	private String uiCraduateSchool;
-	private String uiCraduateDepartment;
-	private String uiCraduateTime;
+	private String uiGraduateSchool;
+	private String uiGraduateDepartment;
+	private String uiGraduateTime;
 	private String uiMajor;
 	private String uiStudentId;
 	private String uiWorkUnit;
@@ -51,8 +51,8 @@ public class UserInfo {
 	public UserInfo(String uiOpenId, Integer uiType, String uiHeadimg,
 					String uiPersonalizedSignature, String uiLongitude,
 					String uiLatitude, String uiRealName, String uiNickName, String uiSex, Integer uiAge,
-					String uiTelNo, String uiEmail, String uiCraduateSchool,
-					String uiCraduateDepartment, String uiCraduateTime, String uiMajor,String uiStudentId,
+					String uiTelNo, String uiEmail, String uiGraduateSchool,
+					String uiGraduateDepartment, String uiGraduateTime, String uiMajor,String uiStudentId,
 					String uiWorkUnit, String uiPost, String uiAddress, String uiHomeCourt, Integer uiIsValid,
 					Long uiCreateTime, String uiCreateUserName, Long uiCreateUserId,
 					Long uiUpdateTime, String uiUpdateUserName, Long uiUpdateUserId) {
@@ -68,9 +68,9 @@ public class UserInfo {
 		this.uiAge = uiAge;
 		this.uiTelNo = uiTelNo;
 		this.uiEmail = uiEmail;
-		this.uiCraduateSchool = uiCraduateSchool;
-		this.uiCraduateDepartment = uiCraduateDepartment;
-		this.uiCraduateTime = uiCraduateTime;
+		this.uiGraduateSchool = uiGraduateSchool;
+		this.uiGraduateDepartment = uiGraduateDepartment;
+		this.uiGraduateTime = uiGraduateTime;
 		this.uiMajor = uiMajor;
 		this.uiStudentId = uiStudentId;
 		this.uiWorkUnit = uiWorkUnit;
@@ -206,31 +206,31 @@ public class UserInfo {
 		this.uiEmail = uiEmail;
 	}
 
-	@Column(name = "ui_craduate_school")
-	public String getUiCraduateSchool() {
-		return this.uiCraduateSchool;
+	@Column(name = "ui_graduate_school")
+	public String getUiGraduateSchool() {
+		return this.uiGraduateSchool;
 	}
 
-	public void setUiCraduateSchool(String uiCraduateSchool) {
-		this.uiCraduateSchool = uiCraduateSchool;
+	public void setUiGraduateSchool(String uiGraduateSchool) {
+		this.uiGraduateSchool = uiGraduateSchool;
 	}
 
-	@Column(name = "ui_craduate_department")
-	public String getUiCraduateDepartment() {
-		return this.uiCraduateDepartment;
+	@Column(name = "ui_graduate_department")
+	public String getUiGraduateDepartment() {
+		return this.uiGraduateDepartment;
 	}
 
-	public void setUiCraduateDepartment(String uiCraduateDepartment) {
-		this.uiCraduateDepartment = uiCraduateDepartment;
+	public void setUiGraduateDepartment(String uiGraduateDepartment) {
+		this.uiGraduateDepartment = uiGraduateDepartment;
 	}
 
-	@Column(name = "ui_craduate_time", length = 128)
-	public String getUiCraduateTime() {
-		return this.uiCraduateTime;
+	@Column(name = "ui_graduate_time", length = 128)
+	public String getUiGraduateTime() {
+		return this.uiGraduateTime;
 	}
 
-	public void setUiCraduateTime(String uiCraduateTime) {
-		this.uiCraduateTime = uiCraduateTime;
+	public void setUiGraduateTime(String uiGraduateTime) {
+		this.uiGraduateTime = uiGraduateTime;
 	}
 
 	@Column(name = "ui_major")

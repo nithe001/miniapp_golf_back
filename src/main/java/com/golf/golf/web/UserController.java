@@ -2,10 +2,8 @@ package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.spring.mvc.WebUtil;
-import com.golf.golf.common.security.UserModel;
-import com.golf.golf.common.security.UserUtil;
-import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
+import com.golf.golf.service.MatchService;
 import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -14,12 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,13 +80,10 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement getUserInfo(Long userId) {
+	public JsonElement getUserInfo() {
 		try {
-			if(userId == null){
-				userId = WebUtil.getUserIdBySessionId();
-			}
-			UserInfo userInfo = userService.getUserById(userId);
-			return JsonWrapper.newDataInstance(userInfo);
+			Map<String,Object> result = userService.getMyDetail();
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("获取用户信息失败。", e);
@@ -146,13 +139,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfoById")
-	public JsonElement getUserInfoById(Long userId) {
+	public JsonElement getUserInfoById(Long teamId, Long matchId, Long userId) {
 		try {
-			Map<String, Object> result = new HashMap<>();
-			UserInfo userInfo = userService.getUserById(userId);
-			result.put("userInfo",userInfo);
-			boolean isOpen = userService.userInfoIsOpen(userId);
-			result.put("isOpen",isOpen);
+			Map<String, Object> result = userService.getUserDetaliInfoById(teamId,matchId,userId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -160,6 +149,7 @@ public class UserController {
 			return JsonWrapper.newErrorInstance("根据用户id获取用户信息失败。");
 		}
 	}
+
 
 	/**
 	 * 历史成绩

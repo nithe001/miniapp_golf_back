@@ -3,16 +3,11 @@ package com.golf.golf.dao;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.common.util.TimeUtil;
-import com.golf.golf.db.ParkInfo;
-import com.golf.golf.db.ParkPartition;
-import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -266,5 +261,4 @@ public class TeamDao extends CommonDao {
 		hql.append("SELECT COUNT(*) FROM TeamUserMapping as tum where tum.tumUserType = 0 and tum.tumTeamId = "+teamId+ " and tum.tumUserId = "+userId);
 		return dao.createCountQuery(hql.toString());
 	}
-
 }

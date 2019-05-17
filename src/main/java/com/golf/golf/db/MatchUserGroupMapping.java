@@ -22,6 +22,9 @@ public class MatchUserGroupMapping {
 	private Long mugmCreateUserId;
 	private String mugmCreateUserName;
 	private Long mugmCreateTime;
+	private Long mugmUpdateUserId;
+	private String mugmUpdateUserName;
+	private Long mugmUpdateTime;
 
 	// Constructors
 
@@ -33,7 +36,8 @@ public class MatchUserGroupMapping {
 	public MatchUserGroupMapping(Long mugmMatchId, Long mugmTeamId, Integer mugmUserType,
 								 Long mugmGroupId, String mugmGroupName, Long mugmUserId,
 								 String mugmUserName, Long mugmCreateUserId,
-								 String mugmCreateUserName, Long mugmCreateTime) {
+								 String mugmCreateUserName, Long mugmCreateTime,Long mugmUpdateUserId,
+								 String mugmUpdateUserName,Long mugmUpdateTime) {
 		this.mugmMatchId = mugmMatchId;
 		this.mugmTeamId = mugmTeamId;
 		this.mugmUserType = mugmUserType;
@@ -44,6 +48,9 @@ public class MatchUserGroupMapping {
 		this.mugmCreateUserId = mugmCreateUserId;
 		this.mugmCreateUserName = mugmCreateUserName;
 		this.mugmCreateTime = mugmCreateTime;
+		this.mugmUpdateUserId = mugmUpdateUserId;
+		this.mugmUpdateUserName = mugmUpdateUserName;
+		this.mugmUpdateTime = mugmUpdateTime;
 	}
 
 	// Property accessors
@@ -147,7 +154,35 @@ public class MatchUserGroupMapping {
 	public void setMugmCreateTime(Long mugmCreateTime) {
 		this.mugmCreateTime = mugmCreateTime;
 	}
-    @Transient
+
+	@Column(name = "mugm_update_user_id")
+	public Long getMugmUpdateUserId() {
+		return mugmUpdateUserId;
+	}
+
+	public void setMugmUpdateUserId(Long mugmUpdateUserId) {
+		this.mugmUpdateUserId = mugmUpdateUserId;
+	}
+
+	@Column(name = "mugm_update_user_name", length = 128)
+	public String getMugmUpdateUserName() {
+		return mugmUpdateUserName;
+	}
+
+	public void setMugmUpdateUserName(String mugmUpdateUserName) {
+		this.mugmUpdateUserName = mugmUpdateUserName;
+	}
+
+	@Column(name = "mugm_update_time")
+	public Long getMugmUpdateTime() {
+		return mugmUpdateTime;
+	}
+
+	public void setMugmUpdateTime(Long mugmUpdateTime) {
+		this.mugmUpdateTime = mugmUpdateTime;
+	}
+
+	@Transient
 	public void setCreate() {
 		this.setMugmCreateTime(System.currentTimeMillis());
 		this.setMugmCreateUserId(UserUtil.getUserId());

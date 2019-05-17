@@ -290,6 +290,23 @@ public class TeamManageController {
 		}
 	}
 
-
+	/**
+	 * 队长点击本队队员信息页面，有指定该用户成为队长按钮
+	 * @param teamId:球队id
+	 * @param userId:被指定人id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "setTeamCaptainByUserId")
+	public JsonElement setTeamCaptainByUserId(Long teamId, Long userId) {
+		try {
+			teamService.setTeamCaptainByUserId(teamId, userId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("队长指定该用户成为队长时出错。球队id="+teamId +" 用户id="+userId+ e);
+			return JsonWrapper.newErrorInstance("队长指定该用户成为队长时出错");
+		}
+	}
 
 }
