@@ -2,6 +2,7 @@ package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.spring.mvc.WebUtil;
+import com.golf.golf.db.MatchRule;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.UserService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -189,6 +191,22 @@ public class UserController {
 		}
 	}
 
+	/**
+	 * 高球规则
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMatchRuleList")
+	public JsonElement getMatchRuleList() {
+		try {
+			List<MatchRule> ruleList = userService.getMatchRuleList();
+			return JsonWrapper.newDataInstance(ruleList);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-根据用户id获取历史成绩息失败。" + e);
+			return JsonWrapper.newErrorInstance("根据用户id获取历史成绩息失败。");
+		}
+	}
 
 
 }

@@ -10,6 +10,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.common.util.QRCodeUtil;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.MatchRule;
 import com.golf.golf.service.admin.AdminMatchService;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -191,4 +192,107 @@ public class AdminMatchController {
         }
         return "admin/match/add";
     }
+
+
+
+
+
+
+
+
+
+
+
+
+	/**
+	 * 高球规则列表
+	 * @return
+	 */
+	@RequestMapping("ruleList")
+	public String ruleList(ModelMap mm, String keyword, Integer page,Integer rowsPerPage){
+		if (page == null || page.intValue() == 0) {
+			page = 1;
+		}
+		if (rowsPerPage == null || rowsPerPage.intValue() == 0) {
+			rowsPerPage = Const.ROWSPERPAGE;
+		}
+		POJOPageInfo pageInfo = new POJOPageInfo<MatchRule>(rowsPerPage , page);
+		try {
+			SearchBean searchBean = new SearchBean();
+			if (StringUtils.isNotEmpty(keyword)) {
+				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			pageInfo = adminMatchService.matchRuleList(searchBean, pageInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("后台管理-获取高球规则列表时出错。"+ e );
+			return "admin/error";
+		}
+		mm.addAttribute("pageInfo",pageInfo);
+		mm.addAttribute("keyword",keyword);
+		mm.addAttribute("page",page);
+		mm.addAttribute("rowsPerPage",rowsPerPage);
+		return "admin/matchRule/list";
+	}
+
+
+	/**
+	 * 新增高球规则init
+	 * @return
+	 */
+	@RequestMapping("addRuleUI")
+	public String addRuleUI(){
+		return "admin/matchRule/add";
+	}
+
+	/**
+	 * 新增高球规则
+	 * @return
+	 */
+	@RequestMapping("addRule")
+	public String addRule(MatchRule rule){
+		try{
+			adminMatchService.saveRule(rule);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("新增高球规则时出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:ruleList";
+	}
+
+	/**
+	 * 编辑高球规则init
+	 * @param mm
+	 * @param ruleId id
+	 * @return
+	 */
+	@RequestMapping("editRuleUI")
+	public String editRuleUI(ModelMap mm, Long ruleId){
+		try{
+			MatchRule matchRule = adminMatchService.getRuleById(ruleId);
+			mm.addAttribute("matchRule",matchRule);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("编辑高球规则init出错。"+ e );
+			return "admin/error";
+		}
+		return "admin/matchRule/edit";
+	}
+
+	/**
+	 * 编辑高球规则-保存
+	 * @return
+	 */
+	@RequestMapping("updateRule")
+	public String updateRule(MatchRule rule){
+		try{
+			adminMatchService.editRule(rule);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("编辑高球规则时出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:ruleList";
+	}
 }

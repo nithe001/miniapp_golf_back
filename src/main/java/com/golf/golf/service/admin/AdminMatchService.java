@@ -6,6 +6,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminMatchDao;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.MatchRule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,4 +60,36 @@ public class AdminMatchService implements IBaseService {
 		dao.update(db);
 	}
 
+	/**
+	 * 高球规则列表
+	 * @return
+	 */
+	public POJOPageInfo matchRuleList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		return  dao.matchRuleList(searchBean,pageInfo);
+	}
+
+	/**
+	 * 新增高球规则
+	 * @return
+	 */
+	public void saveRule(MatchRule rule) {
+		dao.save(rule);
+	}
+
+	/**
+	 * 编辑高球规则init
+	 * @param ruleId id
+	 * @return
+	 */
+	public MatchRule getRuleById(Long ruleId) {
+		return dao.get(MatchRule.class,ruleId);
+	}
+
+	/**
+	 * 编辑高球规则-保存
+	 * @return
+	 */
+	public void editRule(MatchRule rule) {
+		dao.update(rule);
+	}
 }

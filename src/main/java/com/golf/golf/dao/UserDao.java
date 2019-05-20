@@ -1,13 +1,11 @@
 package com.golf.golf.dao;
 
 import com.golf.common.db.CommonDao;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamUserMapping;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.db.WechatUserInfo;
+import com.golf.golf.db.*;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,5 +187,19 @@ public class UserDao extends CommonDao {
 		hql.append("and s.msCreateTime >= :startTime ");
 		hql.append("and s.msCreateTime <= :endTime ");
 		return dao.createCountQuery(hql.toString(), parp);
+	}
+
+	/**
+	 * 高球规则
+	 * @return
+	 */
+	public List<MatchRule> getMatchRuleList() {
+		StringBuilder hql = new StringBuilder();
+		hql.append("FROM MatchRule AS r WHERE 1=1 ");
+		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString());
+		if (count == null || count.intValue() == 0) {
+			return new ArrayList<>();
+		}
+		return dao.createQuery(hql.toString());
 	}
 }

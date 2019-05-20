@@ -226,4 +226,16 @@ public class TeamInfo {
 	public void setCreateTimeStr(String createTimeStr) {
 		this.createTimeStr = createTimeStr;
 	}
+
+
+	//创建球队——滑动删除时需要的
+	private Integer shows;
+	@Transient
+	public Integer getShows() {
+		return shows;
+	}
+
+	public void setShows(Integer shows) {
+		this.shows = shows;
+	}
 }

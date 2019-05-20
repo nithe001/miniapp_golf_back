@@ -9,10 +9,7 @@ import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.UserDao;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.TeamInfo;
-import com.golf.golf.db.UserInfo;
-import com.golf.golf.db.WechatUserInfo;
+import com.golf.golf.db.*;
 import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
@@ -448,5 +445,15 @@ public class UserService implements IBaseService {
 			result.put("isTeamCaptain",true);
 		}
 		return result;
+	}
+
+
+
+	/**
+	 * 高球规则
+	 * @return
+	 */
+	public List<MatchRule> getMatchRuleList() {
+		return dao.getMatchRuleList();
 	}
 }

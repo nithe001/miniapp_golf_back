@@ -47,6 +47,7 @@
             <li id="nav_wechatUser"><a href="admin/user/wechatUserList"><i class="fa fa-user"></i> <span>小程序用户</span></a></li>
         </ul>
     </li>
+    <li id="nav_rule"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>高球规则</span></a></li>
 	<li id="nav_park"><a href="admin/park/list"><i class="fa fa-bookmark"></i> <span>球场管理</span></a></li>
     <li id="nav_match"><a href="admin/match/list"><i class="fa fa-bookmark"></i> <span>赛事活动管理</span></a></li>
     <li id="nav_team"><a href="admin/team/list"><i class="fa fa-bookmark"></i> <span>球队管理</span></a></li>
