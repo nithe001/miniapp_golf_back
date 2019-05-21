@@ -3,14 +3,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-   	<title>新增赛事活动</title>
+   	<title>新增球队</title>
 	<jsp:include page="../include/commonInclude.jsp"></jsp:include>
     <script type="text/javascript" src="static/js/admin/activities.js?dt=20170104"></script>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
 		<jsp:include page="../include/header.jsp">
-            <jsp:param value="nav_match" name="navId"/>
+            <jsp:param value="nav_team" name="navId"/>
 		</jsp:include>
 
 		<div class="content-wrapper">

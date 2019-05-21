@@ -3,12 +3,22 @@ package com.golf.golf.service.admin;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.golf.bean.MatchGroupUserScoreBean;
+import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.common.security.AdminUserUtil;
+import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.admin.AdminMatchDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import com.golf.golf.db.TeamInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 赛事活动
@@ -20,6 +30,9 @@ public class AdminMatchService implements IBaseService {
 	
     @Autowired
     private AdminMatchDao dao;
+	@Autowired
+	private MatchDao matchDao;
+
 
 	/**
 	 * 赛事活动列表
@@ -92,4 +105,23 @@ public class AdminMatchService implements IBaseService {
 	public void editRule(MatchRule rule) {
 		dao.update(rule);
 	}
+
+	/**
+	 * 获取参赛队
+	 * @return
+	 */
+	public List<TeamInfo> getJoinTeamList(String teamIds) {
+		if(StringUtils.isNotEmpty(teamIds)){
+			List<Long> teamIdList = new ArrayList<>();
+			String ids[] = teamIds.split(",");
+			for(String id : ids){
+				if(StringUtils.isNotEmpty(id)){
+					teamIdList.add(Long.parseLong(id));
+				}
+			}
+			return matchDao.getTeamListByIds(teamIdList);
+		}
+		return null;
+	}
+
 }

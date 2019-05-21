@@ -9,8 +9,7 @@
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
         <jsp:include page="../include/header.jsp">
-            <jsp:param value="nav_calendar" name="navId"/>
-            <jsp:param value="activities" name="navParentId"/>
+            <jsp:param value="nav_team" name="navId"/>
         </jsp:include>
 		
 		<div class="content-wrapper">

@@ -34,23 +34,23 @@
                                         类型：
                                         <select class="form-control" name="type">
                                             <option value="">全部</option>
-                                            <option value="1" <c:if test='${type == 1}'>selected="selected"</c:if>>
-                                                团队/多人赛
-                                            </option>
                                             <option value="0" <c:if test='${type == 0}'>selected="selected"</c:if>>
                                                 单练
+                                            </option>
+                                            <option value="1" <c:if test='${type == 1}'>selected="selected"</c:if>>
+                                                团队/多人赛
                                             </option>
                                         </select>
                                         状态：
                                         <select class="form-control" name="state">
                                             <option value="">全部</option>
-                                            <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
+                                            <option value="0" <c:if test='${state == 0}'>selected="selected"</c:if>>
                                                 报名中
                                             </option>
                                             <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
                                                 进行中
                                             </option>
-                                            <option value="0" <c:if test='${state == 0}'>selected="selected"</c:if>>
+                                            <option value="2" <c:if test='${state == 2}'>selected="selected"</c:if>>
                                                 已结束
                                             </option>
                                         </select>
@@ -68,20 +68,16 @@
                                 <table id="example2" class="table table-bordered table-hover">
                                     <thead>
                                     <tr>
-                                        <th width="5%">序号</th>
+                                        <th width="4%">序号</th>
+                                        <th width="5%">logo</th>
                                         <th width="12%">标题</th>
-                                        <th width="5%">类型</th>
-                                        <th width="12%">所在球场</th>
-                                        <th width="3%">前9</th>
-                                        <th width="3%">后9</th>
-                                        <th width="6%">观战范围</th>
-                                        <th width="6%">参赛范围</th>
-                                        <th width="5%">赛制</th>
+                                        <th width="8%">类型</th>
+                                        <th width="7%">观战范围</th>
+                                        <th width="7%">参赛范围</th>
+                                        <th width="8%">赛制</th>
                                         <th width="8%">开球时间</th>
-                                        <th width="8%">创建时间</th>
+                                        <th width="10%">创建时间</th>
                                         <th width="6%">创建人</th>
-                                        <%--<th width="8%">更新时间</th>--%>
-                                        <%--<th width="6%">更新人</th>--%>
                                         <th width="8%">状态</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
@@ -90,20 +86,16 @@
                                     <c:forEach items="${pageInfo.items}" var="matchInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
+                                            <td><img src="${matchInfo.miLogo}" style="width:65px;height:65px;border-radius: 50%;"></td>
                                             <td>${matchInfo.miTitle}</td>
                                             <td><c:if test="${matchInfo.miType == 0}">单练</c:if>
                                                 <c:if test="${matchInfo.miType == 1}">团队/多人赛</c:if></td>
-                                            <td>${matchInfo.miParkName}</td>
-                                            <td>${matchInfo.miZoneBeforeNine}</td>
-                                            <td>${matchInfo.miZoneAfterNine}</td>
                                             <td>${matchInfo.watchTypeStr}</td>
                                             <td>${matchInfo.joinTypeStr}</td>
                                             <td>${matchInfo.matchTypeStr}</td>
                                             <td>${matchInfo.miMatchTime}</td>
                                             <td>${matchInfo.createTimeStr}</td>
                                             <td>${matchInfo.miCreateUserName}</td>
-                                            <%--<td>${matchInfo.updateTimeStr}</td>--%>
-                                            <%--<td>${matchInfo.miUpdateUserName}</td>--%>
                                             <td>${matchInfo.state}</td>
                                             <td>
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
@@ -147,7 +139,7 @@
                 <h4 class="modal-title">提示</h4>
             </div>
             <div class="modal-body">确定要这么操作吗</div>
-            <input id="parkId" value="" type="hidden"/>
+            <input id="matchId" value="" type="hidden"/>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
                 <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
@@ -172,8 +164,13 @@
                 $("#searchBtn").click();
             }
         });
+
+        $("#sureBtn").click(function () {
+            window.location.href="admin/match/delMatch?matchId="+$("#matchId").val();
+        });
     });
     function delMatch(matchId) {
+        $("#matchId").val(matchId);
         $("#myModal").modal("show");
     }
 </script>

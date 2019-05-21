@@ -24,7 +24,7 @@
                         <div class="box-body">
                             <!-- search -->
                             <div class="box-header">
-                                <div style="float:left;margin-right:10px"><a class="btn btn-success" href="admin/activities/addMatchUI">新增</a></div>
+                                <%--<div style="float:left;margin-right:10px"><a class="btn btn-success" href="admin/activities/addMatchUI">新增</a></div>--%>
                                 <form class="form-inline" name="searchForm" id="searchForm" style="margin-bottom: 15px;">
                                     <input type="hidden" id="page" name="page" value="${page }"/>
                                     <input type="hidden" id="rowsPerPage" name="rowsPerPage" value="${rowsPerPage }"/>
@@ -75,7 +75,7 @@
                                     <c:forEach items="${pageInfo.items}" var="teamInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
-                                            <td><img src="${teamInfo.logo}" style="width:65px;height:65px;"></td>
+                                            <td><img src="${teamInfo.logo}" style="width:65px;height:65px;border-radius: 50%;"></td>
                                             <td>${teamInfo.tiName}</td>
                                             <td>${teamInfo.captain}</td>
                                             <td>${teamInfo.userCount}</td>

@@ -1,18 +1,17 @@
 package com.golf.golf.web.admin;
 
-import cn.binarywang.wx.miniapp.api.WxMaQrcodeService;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.golf.common.Const;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
-import com.golf.common.util.PropertyConst;
 import com.golf.common.util.QRCodeUtil;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import com.golf.golf.db.TeamInfo;
+import com.golf.golf.service.MatchService;
 import com.golf.golf.service.admin.AdminMatchService;
-import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,8 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 赛事活动
@@ -41,6 +42,8 @@ public class AdminMatchController {
     protected WxMpService wxMpService;
     @Autowired
     protected WxMaService wxMaService;
+	@Autowired
+	private MatchService matchService;
 
 	/**
 	 * 赛事活动列表
@@ -48,7 +51,7 @@ public class AdminMatchController {
 	 */
 	@RequestMapping("list")
 	public String list(ModelMap mm, String keyword, String startDate, String endDate, Integer page,Integer rowsPerPage,
-					   Integer type,Integer isOpen,Integer isDel,Integer state){
+					   Integer type,Integer state){
 		if (page == null || page.intValue() == 0) {
 			page = 1;
 		}
@@ -64,11 +67,8 @@ public class AdminMatchController {
 			if (type != null) {
 				searchBean.addParpField("type", type);
 			}
-			if (isOpen != null) {
-				searchBean.addParpField("isOpen", isOpen);
-			}
-			if (isDel != null) {
-				searchBean.addParpField("isDel", isDel);
+			if (state != null) {
+				searchBean.addParpField("state", state);
 			}
 			pageInfo = adminMatchService.matchList(searchBean, pageInfo);
 		} catch (Exception e) {
@@ -81,8 +81,6 @@ public class AdminMatchController {
 		mm.addAttribute("keyword",keyword);
 		mm.addAttribute("page",page);
 		mm.addAttribute("rowsPerPage",rowsPerPage);
-		mm.addAttribute("isOpen",isOpen);
-		mm.addAttribute("isDel",isDel);
 		mm.addAttribute("state",state);
 		mm.addAttribute("startDate", startDate);
 		mm.addAttribute("endDate", endDate);
@@ -126,26 +124,31 @@ public class AdminMatchController {
     public String editMatchUI(ModelMap mm, Long matchId){
 		try{
 			MatchInfo matchInfo = adminMatchService.getMatchById(matchId);
+			List<TeamInfo> joinTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiJoinTeamIds());
+			List<TeamInfo> submitTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiReportScoreTeamId());
+			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId);
 			mm.addAttribute("matchInfo",matchInfo);
+			mm.addAttribute("joinTeamInfoList",joinTeamInfoList);
+			mm.addAttribute("submitTeamInfoList",submitTeamInfoList);
+			mm.addAttribute("score",score);
+			System.out.println(21);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("编辑赛事活动init出错。"+ e );
 			return "admin/error";
 		}
-        return "admin/activities/edit";
+        return "admin/match/edit";
     }
 
     /**
      * 编辑赛事活动-保存
-     * @param actiivity
+     * @param matchInfo
      * @return
      */
-    @RequestMapping("calendarEdit")
-    public String calendarEdit(MatchInfo actiivity){
+    @RequestMapping("matchEdit")
+    public String matchEdit(MatchInfo matchInfo){
         try{
-			String a = actiivity.getMiContent().replace("\"", "\'");
-			actiivity.setMiContent(a);
-            adminMatchService.editMatch(actiivity);
+            adminMatchService.editMatch(matchInfo);
         }catch(Exception e){
             e.printStackTrace();
 			logger.error("编辑赛事活动时出错。"+ e );

@@ -5,6 +5,7 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -33,11 +34,14 @@ public class AdminMatchDao extends CommonDao {
 		if(parp.get("state") != null){
 			hql.append("AND m.miIsEnd = :state ");
 		}
-		if(parp.get("keywords") != null){
+		if(parp.get("keyword") != null){
 			hql.append("AND m.miTitle LIKE :keyword ");
 		}
 		if(parp.get("type") != null){
 			hql.append("AND m.miType = :type ");
+		}
+		if(parp.get("state") != null){
+			hql.append("AND m.miIsEnd = :state ");
 		}
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {
