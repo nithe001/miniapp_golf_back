@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50725
 File Encoding         : 65001
 
-Date: 2019-05-17 15:42:27
+Date: 2019-05-21 11:29:41
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -86,7 +86,7 @@ CREATE TABLE `match_group` (
   `mg_update_user_name` varchar(128) DEFAULT NULL COMMENT '分组更新人姓名',
   `mg_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
   PRIMARY KEY (`mg_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
 
 -- ----------------------------
 -- Records of match_group
@@ -99,6 +99,7 @@ INSERT INTO `match_group` VALUES ('12', '12', '第1组', '1', '牛牧瑶', '1557
 INSERT INTO `match_group` VALUES ('13', '13', '第1组', '1', '牛牧瑶', '1557993527611', null, null, null);
 INSERT INTO `match_group` VALUES ('14', '14', '第1组', '1', '牛牧瑶', '1557994034118', null, null, null);
 INSERT INTO `match_group` VALUES ('15', '10', '第2组', '1', '牛牧瑶', '1558064583989', null, null, null);
+INSERT INTO `match_group` VALUES ('16', '15', '第1组', '1', '牛牧瑶', '1558403405447', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_info
@@ -134,17 +135,18 @@ CREATE TABLE `match_info` (
   `mi_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `mi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mi_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
 
 -- ----------------------------
 -- Records of match_info
 -- ----------------------------
-INSERT INTO `match_info` VALUES ('1', '1', null, '夏季比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '1', null, '1', '0', '1', '1', null, null, '2', '1', null, '1', '1557729367926', '牛牧瑶', '1', '1558071927858');
+INSERT INTO `match_info` VALUES ('1', '1', null, '夏季比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '1', null, '1', '0', '1', '1', null, null, '1', '1', null, '1', '1557729367926', '牛牧瑶', '1', '1558071927858');
 INSERT INTO `match_info` VALUES ('2', '1', null, '别人创建的比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '3', null, '0', '0', '1', '1', null, null, '0', '1', '', '3', '1557729367926', '吴彦祖', '3', '1557743566167');
 INSERT INTO `match_info` VALUES ('9', '0', '3', '牛牧瑶的单练', null, '38', '北京净山湖体育休闲俱乐部', 'A', 'B', '', '2019-05-13', null, null, '3', '0', '0', null, null, null, null, '1', null, '牛牧瑶', '1', '1557741669486', null, null, null);
 INSERT INTO `match_info` VALUES ('10', '1', null, '达标行比赛', 'up/matchLogo/1557993017567.jpg', '38', '北京净山湖体育休闲俱乐部', 'A', 'B', null, '2019-05-16', '000', '1', '2', '1', '1', '1', '1,', null, null, '0', '1', '牛牧瑶', '1', '1557993019631', null, null, null);
 INSERT INTO `match_info` VALUES ('13', '1', null, '咸鱼大赛', 'up/matchLogo/1557993527520.jpg', '5', '北京清河湾乡村体育俱乐部', 'C', 'D', null, '2019-05-16', '4嗯我热无群', '2', '2', '1', '0', '2,1', '', null, null, '0', '1', '牛牧瑶', '1', '1557993527609', null, null, null);
 INSERT INTO `match_info` VALUES ('14', '0', '3', '牛牧瑶的单练', null, '61', '北京丽宫体育公园高尔夫球俱乐部', 'A', 'B', '666', '2019-05-16', null, null, '3', '0', '0', null, null, null, null, '1', null, '牛牧瑶', '1', '1557994034115', null, null, null);
+INSERT INTO `match_info` VALUES ('15', '1', null, 'uuu', 'up/matchLogo/1558403405179.jpg', '35', '北京红枫湖高尔夫球俱乐部', 'A', 'B', null, '2019-05-21', 'uu878i8iukuy', '2', '2', '0', '0', '2,1', null, null, null, '0', '1', '牛牧瑶', '1', '1558403405409', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_join_watch_info
@@ -164,6 +166,42 @@ CREATE TABLE `match_join_watch_info` (
 -- ----------------------------
 INSERT INTO `match_join_watch_info` VALUES ('1', '0', '1', '3', null);
 INSERT INTO `match_join_watch_info` VALUES ('2', '0', '1', null, '1557900096670');
+
+-- ----------------------------
+-- Table structure for match_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `match_rule`;
+CREATE TABLE `match_rule` (
+  `mr_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '高球规则表主键',
+  `mr_title` varchar(255) DEFAULT NULL COMMENT '标题',
+  `mr_url` varchar(512) DEFAULT NULL COMMENT '外链',
+  `mr_sort` int(11) DEFAULT NULL COMMENT '排序',
+  PRIMARY KEY (`mr_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Records of match_rule
+-- ----------------------------
+INSERT INTO `match_rule` VALUES ('1', '首播！2019高尔夫规则新说 | 第一集：修复果岭上的损伤', 'https://mp.weixin.qq.com/s/c-W4xPDHBbBE2XPT4mNCJg', '1');
+INSERT INTO `match_rule` VALUES ('2', '2019高尔夫规则新说 | 第二集：帮助球员瞄准击球方向的限制', 'https://mp.weixin.qq.com/s/NpIPtzgNfAQjkUz-R2FMWA', '2');
+INSERT INTO `match_rule` VALUES ('3', '2019高尔夫规则新说 | 第三集：果岭上的球被标定拿起后又被放置回原位，随后被自然力移动', 'https://mp.weixin.qq.com/s/v0ATAn5LG-ftP1BQRAhbRw', '3');
+INSERT INTO `match_rule` VALUES ('4', '2019高尔夫规则新说 | 第四集：在果岭上意外移动球不罚杆', 'https://mp.weixin.qq.com/s/kznug7DNGzbWiLxV8SB_iw', '4');
+INSERT INTO `match_rule` VALUES ('5', '2019高尔夫规则新说 | 第五集：球童指示打球线以及触碰果岭表面', 'https://mp.weixin.qq.com/s/1eva54VglZgB2JPqa1RYkA', '5');
+INSERT INTO `match_rule` VALUES ('6', '2019高尔夫规则新说 | 第六集：取消处罚的几种情况', 'https://mp.weixin.qq.com/s/0AIcJbH9rv9rhYM56WX8aA', '6');
+INSERT INTO `match_rule` VALUES ('7', '2019高尔夫规则新说 | 第七集：造成改善后在击球前修复可以免除处罚', 'https://mp.weixin.qq.com/s/PdMiz-C19ZuAxfQIgW4VcQ', '7');
+INSERT INTO `match_rule` VALUES ('8', '2019高尔夫规则新说 | 第八集：发球区的新规则', 'https://mp.weixin.qq.com/s/kXKDHTvo-cdhCrgaBlf2PA', '8');
+INSERT INTO `match_rule` VALUES ('9', '2019高尔夫规则新说 | 第九集：如何抛球', 'https://mp.weixin.qq.com/s/1_ynBC2oILbD5hwBVecYeQ', '9');
+INSERT INTO `match_rule` VALUES ('10', '2019高尔夫规则新说 | 第十集：罚杆区与水障碍区的区别', 'https://mp.weixin.qq.com/s/ZnjgB2ruHNnQivFXtuNX-w', '10');
+INSERT INTO `match_rule` VALUES ('11', '2019高尔夫规则新说 | 第十一集：红色罚杆区的三种补救方法', 'https://mp.weixin.qq.com/s/2l4YbC8s9jorHbhh3D7q-A', '11');
+INSERT INTO `match_rule` VALUES ('12', '2019高尔夫规则新说 | 第十二集：新规则中加快打球速度', 'https://mp.weixin.qq.com/s/sc-L_VyiPRQgkEaEI1inaQ', '12');
+INSERT INTO `match_rule` VALUES ('13', '2019高尔夫规则新说 | 第十三集：寻找球时意外移动球', 'https://mp.weixin.qq.com/s/m7R_1znZw_keotBOWCQwLQ', '13');
+INSERT INTO `match_rule` VALUES ('14', '2019高尔夫规则新说 | 第十四集：如何处理损坏的球杆', 'https://mp.weixin.qq.com/s/MSDpvr8Bx4E94dJAi9mk9Q', '14');
+INSERT INTO `match_rule` VALUES ('15', '2019高尔夫规则新说 | 第十五集：沙坑中的新规则', 'https://mp.weixin.qq.com/s/H65esIPUH65deV5weg-i6g', '15');
+INSERT INTO `match_rule` VALUES ('16', '2019高尔夫规则新说 | 第十六集：沙坑里不可打之球', 'https://mp.weixin.qq.com/s/p4EQ65QEWFwyjpSCBXKImg', '16');
+INSERT INTO `match_rule` VALUES ('17', '2019高尔夫规则新说 | 第十七集：新规则中陷入地面的球', 'https://mp.weixin.qq.com/s/az2LAvhwV0h7WjrqN5ZdVg', '17');
+INSERT INTO `match_rule` VALUES ('18', '2019高尔夫规则新说 | 第十八集：新规则中可换球与不可换球的场合', 'https://mp.weixin.qq.com/s/QC5fE9kxxHD-t8IMTjnujQ', '18');
+INSERT INTO `match_rule` VALUES ('19', '2019高尔夫规则新说 | 第十九集：果岭上被拿起的球意外落入水中', 'https://mp.weixin.qq.com/s/6MsPQFAnB0s0R1Wn-XHf_g', '19');
+INSERT INTO `match_rule` VALUES ('20', '2019高尔夫规则新说最终章 | 第二十集：不可移动妨碍物的例外', 'https://mp.weixin.qq.com/s/Ws7T3gPwYyRqOeygEXFWUg', '20');
 
 -- ----------------------------
 -- Table structure for match_score
@@ -200,7 +238,7 @@ CREATE TABLE `match_score` (
   `ms_update_user_name` varchar(128) DEFAULT NULL,
   `ms_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`ms_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
 
 -- ----------------------------
 -- Records of match_score
@@ -212,6 +250,7 @@ INSERT INTO `match_score` VALUES ('5', '1', '1', '夏季比赛', '1', '第1组',
 INSERT INTO `match_score` VALUES ('6', null, '14', '牛牧瑶的单练', '14', '第1组', '1000008', '吴彦祖', null, null, '0', 'A', '1', null, '开球直球', '8', '4', '2', null, null, null, null, null, '1', '牛牧瑶', '1557998423101', null, null, null);
 INSERT INTO `match_score` VALUES ('7', null, '14', '牛牧瑶的单练', '14', '第1组', '1000010', '莫文蔚', null, null, '0', 'A', '3', null, '开球直球', '5', '2', '3', null, null, null, null, null, '1', '牛牧瑶', '1557998427480', null, null, null);
 INSERT INTO `match_score` VALUES ('8', null, '14', '牛牧瑶的单练', '14', '第1组', '1000013', '李宗盛', null, null, '0', 'A', '1', null, '开球直球', '4', '0', '5', null, null, null, '1', null, '1', '牛牧瑶', '1557998436498', null, null, null);
+INSERT INTO `match_score` VALUES ('9', '1', '1', '夏季比赛', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '3', null, '开球偏左', '2', '-2', '4', null, null, '1', null, null, '1', '牛牧瑶', '1558344909344', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_score_user_mapping
@@ -251,7 +290,7 @@ CREATE TABLE `match_user_group_mapping` (
   `mugm_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人名称',
   `mugm_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mugm_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
 
 -- ----------------------------
 -- Records of match_user_group_mapping
@@ -271,6 +310,8 @@ INSERT INTO `match_user_group_mapping` VALUES ('39', '14', null, '0', '14', '第
 INSERT INTO `match_user_group_mapping` VALUES ('40', '14', null, '1', '14', '第1组', '1000008', '吴彦祖', '1', '牛牧瑶', '1557994034120', null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('41', '14', null, '1', '14', '第1组', '1000010', '莫文蔚', '1', '牛牧瑶', '1557994034122', null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('42', '14', null, '1', '14', '第1组', '1000013', '李宗盛', '1', '牛牧瑶', '1557994034123', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('43', '15', null, '0', '16', '第1组', '1', '牛牧瑶', '1', '牛牧瑶', '1558403405480', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('44', '15', null, '0', '16', '第1组', '2', '张柏芝', '1', '牛牧瑶', '1558403405504', null, null, null);
 
 -- ----------------------------
 -- Table structure for park_info
@@ -13457,7 +13498,7 @@ CREATE TABLE `user_info` (
 -- ----------------------------
 -- Records of user_info
 -- ----------------------------
-INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', 'lalllll', '116.44355', '39.9219', '牛牧瑶', '牜', '男', '29', '123', '321', '4566789', '222', '2019-01-14', '444', '8789', '12', '63', '15', '35454', null, '1557729069655', null, null, '1558076169993', '牛牧瑶', '1');
+INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', 'lalllll', '116.44355', '39.9219', '牛牧瑶', '牜', '男', '29', '123', '321', '4566789', '222', '2019-01-14', '444', '8789', '12', '63', '15', '35454', null, '1557729069655', null, null, '1558409282123', '牛牧瑶', '1');
 INSERT INTO `user_info` VALUES ('2', 'oXggK49HO_3OYklUcFdMctEhvIY0', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erxDw6qbkP17Zib3RsiaEB5uy9IBKXiaicJquwCOeZ5PPcOTMb18THRApWdCWZptqiaxLXIc1P5icLzl8xA/132', null, '116.53619384765625', '39.92087936401367', '张柏芝', '初相见', '未知', null, '', '', '', '', '', '', '', '', '', '', '', null, '1557729418139', null, null, '1557731152453', '张柏芝', '2');
 INSERT INTO `user_info` VALUES ('3', 'oXggK49HO_3OYklUcFdMctEhvIY01', null, 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erxDw6qbkP17Zib3RsiaEB5uy9IBKXiaicJquwCOeZ5PPcOTMb18THRApWdCWZptqiaxLXIc1P5icLzl8xA/132', null, null, null, '吴彦祖', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
