@@ -40,7 +40,7 @@ public class TeamDao extends CommonDao {
 			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的球队 包括我加入的球队
-			hql.append("AND t.ti_create_user_id = :userId or (t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId))");
+			hql.append("AND (t.ti_create_user_id = :userId or (t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId)))");
 		}
 
         if(parp.get("keyword") != null){
