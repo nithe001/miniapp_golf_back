@@ -71,7 +71,7 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append("ORDER BY m.mi_apply_end_time");
+		hql.append("ORDER BY m.mi_is_end, m.mi_apply_end_time");
 
 		List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
 				pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);

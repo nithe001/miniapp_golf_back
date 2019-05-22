@@ -589,9 +589,14 @@ public class MatchService implements IBaseService {
 	public void addGroupByTeamId(Long matchId) {
 		//获取最大组
 		MatchGroup maxGroup = matchDao.getMaxGroupByMatchId(matchId);
-		String groupName = maxGroup.getMgGroupName();
-		Integer max = Integer.parseInt(groupName.substring(1, groupName.length() - 1));
-		max++;
+		Integer max = 1;
+		String groupName = "";
+		if(maxGroup != null){
+			groupName = maxGroup.getMgGroupName();
+			max = Integer.parseInt(groupName.substring(1, groupName.length() - 1));
+			max++;
+		}
+
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
 		group.setMgGroupName("第" + max + "组");
@@ -699,11 +704,10 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 通过matchid和groupid查询本组记分卡信息
-	 *
+	 * 获取单人比杆赛记分卡
 	 * @return
 	 */
-	public Map<String, Object> getScoreCardInfoByGroupId(Long matchId, Long groupId) {
+	public Map<String, Object> getSingleRodScoreCardInfoByGroupId(Long matchId, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
 		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
@@ -1641,5 +1645,72 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmUpdateUserId(WebUtil.getUserIdBySessionId());
 		matchUserGroupMapping.setMugmUpdateUserName(WebUtil.getUserNameBySessionId());
 		matchDao.update(matchUserGroupMapping);
+	}
+
+
+	/**
+	 * 获取单人比洞赛记分卡 每组2人
+	 * @return
+	 */
+	public Map<String, Object> getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
+		Map<String, Object> result = new HashMap<>();
+		List<MatchGroupUserScoreBean> list = new ArrayList<>();
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		//本组用户
+		List<Map<String, Object>> userList = null;
+		if(matchInfo.getMiType() == 1){
+			userList = matchDao.getUserListById(matchId, groupId);
+		}else{
+			//单练
+			userList = matchDao.getSingleUserListById(matchId, groupId);
+		}
+		result.put("userList", userList);
+
+		//半场球洞
+		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
+
+		//第一条记录（半场分区信息）
+		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
+		thBean.setUserId(0L);
+		thBean.setUserName("球洞球杆");
+		thBean.setUserScoreList(parkHoleList);
+		list.add(thBean);
+
+		//本组用户每个洞得分情况
+		if (userList != null && userList.size() > 0) {
+			for (Map<String, Object> user : userList) {
+				Long uiId = getLongValue(user, "uiId");
+				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+				bean.setUserId(uiId);
+				bean.setUserName(getName(user, "uiRealName"));
+				//本用户得分情况
+				if (uiId != null) {
+					List<Map<String, Object>> uscoreList = matchDao.getScoreByUserId(groupId, uiId, matchInfo);
+					if (uscoreList != null && uscoreList.size() > 0) {
+						bean.setUserScoreList(uscoreList);
+						list.add(bean);
+					}
+				} else {
+					//没有得分，就构造空的list
+					List<Map<String, Object>> uscoreList = new ArrayList<>();
+					for (int i = 0; i < parkHoleList.size(); i++) {
+						Map<String, Object> m = new HashMap<>();
+						uscoreList.add(m);
+					}
+					bean.setUserScoreList(uscoreList);
+					list.add(bean);
+				}
+
+			}
+		}
+		result.put("parkHoleList", list);
+
+		//总杆数
+		Long totalRod = matchDao.getTotalRod(matchInfo);
+		result.put("totalRod", totalRod);
+		//用户总分
+		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId, groupId);
+		result.put("totalScoreList", totalScoreList);
+		return result;
 	}
 }

@@ -108,7 +108,7 @@ public class AdminMatchController {
 			calendar.setMiContent(a);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("新增赛事活动时出错。"+ e );
+			logger.error("后台管理——新增赛事活动时出错。"+ e );
 			return "admin/error";
 		}
 		return "redirect:list";
@@ -134,7 +134,7 @@ public class AdminMatchController {
 			System.out.println(21);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("编辑赛事活动init出错。"+ e );
+			logger.error("后台管理——编辑赛事活动init出错。"+ e );
 			return "admin/error";
 		}
         return "admin/match/edit";
@@ -151,58 +151,11 @@ public class AdminMatchController {
             adminMatchService.editMatch(matchInfo);
         }catch(Exception e){
             e.printStackTrace();
-			logger.error("编辑赛事活动时出错。"+ e );
+			logger.error("后台管理——编辑赛事活动时出错。"+ e );
             return "admin/error";
         }
         return "redirect:calendarList";
     }
-
-    /**
-     * 生成二维码
-     * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
-     * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index, 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
-     * @return
-     */
-    @RequestMapping("createEwm")
-    public String createEwm() {
-        try {
-            String oldFileName = UserUtil.getOpenId() + ".png";//文件名称
-            String QRCodePath = WebUtil.getRealPath("/") + "upload/QRCode";
-//            oldFileName = WebUtil.getRealPath(PropertyConst.prcodeWithPic + "/" + oldFileName);
-            oldFileName = QRCodePath + "/" + oldFileName;
-
-            File oldFile = new File(oldFileName);
-            if (oldFile.exists()) {
-                oldFile.delete();
-            }
-            //生成二维码
-            Long docId= 1L;
-            //		https://mp.weixin.qq.com/wiki?id=mp1443433542&highline=%E4%BA%8C%E7%BB%B4%E7%A0%81
-            WxMpQrCodeTicket qrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateLastTicket(docId + "");
-
-//           String scene, String page, int width, boolean autoColor, WxMaCodeLineColor lineColor, boolean isHyaline
-            File file = new File(QRCodePath,oldFileName);
-//            file = wxMaService.getQrcodeService().createWxaCodeUnlimit();
-            String qrcodeUrl = qrCodeTicket.getUrl();//二维码内容
-            String imagePath = QRCodePath + "/";//二维码保存绝对物理路径
-            String fileName = UserUtil.getOpenId() + ".png";//文件名称
-//            String logoPaht = WebUtil.getRealPath(PropertyConst.userPhoto) + "/"; //用户微信头像保存路径
-//            logoPaht += fileName;
-//            QRCodeUtil.createQRImageWithLogo(qrcodeUrl, logoPaht, imagePath, fileName);//生成带头像的微信二维码
-            QRCodeUtil.createQRImage(qrcodeUrl, imagePath, fileName);//生成不带头像的微信二维码
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "admin/match/add";
-    }
-
-
-
-
-
-
-
-
 
 
 
@@ -258,7 +211,7 @@ public class AdminMatchController {
 			adminMatchService.saveRule(rule);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("新增高球规则时出错。"+ e );
+			logger.error("后台管理——新增高球规则时出错。"+ e );
 			return "admin/error";
 		}
 		return "redirect:ruleList";
@@ -277,7 +230,7 @@ public class AdminMatchController {
 			mm.addAttribute("matchRule",matchRule);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("编辑高球规则init出错。"+ e );
+			logger.error("后台管理——编辑高球规则init出错。"+ e );
 			return "admin/error";
 		}
 		return "admin/matchRule/edit";
@@ -293,9 +246,81 @@ public class AdminMatchController {
 			adminMatchService.editRule(rule);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("编辑高球规则时出错。"+ e );
+			logger.error("后台管理——编辑高球规则时出错。"+ e );
 			return "admin/error";
 		}
 		return "redirect:ruleList";
 	}
+
+	/**
+	 * 比分录入
+	 * @return
+	 */
+	@RequestMapping("updateOrSaveScore")
+	public String updateOrSaveScore(Long userId, Long scoreId, Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
+									Integer pushRod, Integer beforeAfter){
+		try{
+			/*Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
+					Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
+					Integer pushRod, Integer beforeAfter*/
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("后台管理——比分录入时出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:ruleList";
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * 生成二维码
+     * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
+     * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index, 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
+     * @return
+     */
+    @RequestMapping("createEwm")
+    public String createEwm() {
+        try {
+            String oldFileName = UserUtil.getOpenId() + ".png";//文件名称
+            String QRCodePath = WebUtil.getRealPath("/") + "upload/QRCode";
+//            oldFileName = WebUtil.getRealPath(PropertyConst.prcodeWithPic + "/" + oldFileName);
+            oldFileName = QRCodePath + "/" + oldFileName;
+
+            File oldFile = new File(oldFileName);
+            if (oldFile.exists()) {
+                oldFile.delete();
+            }
+            //生成二维码
+            Long docId= 1L;
+            //		https://mp.weixin.qq.com/wiki?id=mp1443433542&highline=%E4%BA%8C%E7%BB%B4%E7%A0%81
+            WxMpQrCodeTicket qrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateLastTicket(docId + "");
+
+//           String scene, String page, int width, boolean autoColor, WxMaCodeLineColor lineColor, boolean isHyaline
+            File file = new File(QRCodePath,oldFileName);
+//            file = wxMaService.getQrcodeService().createWxaCodeUnlimit();
+            String qrcodeUrl = qrCodeTicket.getUrl();//二维码内容
+            String imagePath = QRCodePath + "/";//二维码保存绝对物理路径
+            String fileName = UserUtil.getOpenId() + ".png";//文件名称
+//            String logoPaht = WebUtil.getRealPath(PropertyConst.userPhoto) + "/"; //用户微信头像保存路径
+//            logoPaht += fileName;
+//            QRCodeUtil.createQRImageWithLogo(qrcodeUrl, logoPaht, imagePath, fileName);//生成带头像的微信二维码
+            QRCodeUtil.createQRImage(qrcodeUrl, imagePath, fileName);//生成不带头像的微信二维码
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "admin/match/add";
+    }
+
 }

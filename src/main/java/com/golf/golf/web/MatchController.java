@@ -572,17 +572,35 @@ public class MatchController {
 	}
 
 	/**
-	 * 通过matchid和groupid查询本组记分卡信息
+	 * 通过matchid和groupid查询本组记分卡信息——单人比杆 每组4个人
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("getScoreCardInfoByGroupId")
-	public JsonElement getScoreCardInfoByGroupId(Long matchId, Long groupId) {
+	@RequestMapping("getSingleRodScoreCard")
+	public JsonElement getSingleRodScoreCardInfoByGroupId(Long matchId, Long groupId) {
 		try {
-			Map<String,Object> groupInfoList = matchService.getScoreCardInfoByGroupId(matchId,groupId);
+			Map<String,Object> groupInfoList = matchService.getSingleRodScoreCardInfoByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
-			String errmsg = "前台-比赛—通过matchid和groupid查询本组记分卡信息时出错。";
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比杆记分卡信息时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 通过matchid和groupid查询本组记分卡信息——单人比洞 每组2个人
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getSingleHoleScoreCard")
+	public JsonElement getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
+		try {
+			Map<String,Object> groupInfoList = matchService.getSingleHoleScoreCardByGroupId(matchId,groupId);
+			return JsonWrapper.newDataInstance(groupInfoList);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
