@@ -11,6 +11,7 @@ public class MatchTotalUserScoreBean implements Comparable<MatchTotalUserScoreBe
 	private String holeName;
 	private String holeNum;
 	private Integer rodNum;
+	private Integer rodCha;
 	private Integer holeStandardRod;
 
     private Integer totalRodScore;
@@ -22,6 +23,14 @@ public class MatchTotalUserScoreBean implements Comparable<MatchTotalUserScoreBe
 
 	public void setRodNum(Integer rodNum) {
 		this.rodNum = rodNum;
+	}
+
+	public Integer getRodCha() {
+		return rodCha;
+	}
+
+	public void setRodCha(Integer rodCha) {
+		this.rodCha = rodCha;
 	}
 
 	public Long getUserId() {

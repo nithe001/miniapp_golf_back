@@ -154,7 +154,7 @@ public class TeamDao extends CommonDao {
 					hql.append("GROUP BY tm.tum_user_id ) AS matchInfo ");
 		hql.append("LEFT JOIN ");
 				hql.append("( SELECT AVG(s.ms_rod_num) AS avgRodNum, SUM(s.ms_rod_num) AS sumRodNum, s.ms_user_id as s_user_id " +
-				" FROM match_score AS s,match_info AS m WHERE m.mi_type = 1 and s.ms_team_id = :teamId " +
+				" FROM match_score AS s WHERE s.ms_match_type = 1 and s.ms_team_id = :teamId " +
 						"AND s.ms_create_time >= :startYear " +
 						"AND s.ms_create_time <= :endYear " +
 						"GROUP BY s.ms_user_id ) AS scoreInfo ");

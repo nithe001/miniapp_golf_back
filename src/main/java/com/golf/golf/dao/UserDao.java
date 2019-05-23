@@ -151,8 +151,21 @@ public class UserDao extends CommonDao {
         return (WechatUserInfo)dao.createQuery(hql.toString());
     }
 
+
 	/**
-	 * 年度成绩分析
+	 * 今年参加比赛的场数 不包括单练
+	 */
+	public Long getMatchCountByYear(Map<String, Object> parp) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT count(*) FROM ( SELECT s.ms_match_id FROM match_score AS s " +
+				"WHERE s.ms_match_type = 1 AND s.ms_user_id = 1 " +
+				"GROUP BY s.ms_match_id " +
+				") AS t");
+		return dao.createSQLCountQuery(hql.toString(), parp);
+	}
+
+	/**
+	 * 年度成绩分析 不计算单练的
 	 * 计算一年内平均每18洞分项的数量
 	 * “暴洞”是指+3及以上的洞数总和
 	 * 开球情况对应记分卡 球道滚轮的箭头
@@ -163,15 +176,15 @@ public class UserDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT " +
 				"sum(s.ms_is_par) as par,sum(s.ms_is_bird) as bird,COALESCE(sum(s.ms_is_eagle),0) as eagle,sum(s.ms_push_rod_num) as pushNum, " +
-				"count(s.ms_rod_num - s.ms_hole_standard_rod = 1 or null) as one, " +
-				"count(s.ms_rod_num - s.ms_hole_standard_rod = 2 or null) as two, " +
-				"count(s.ms_rod_num - s.ms_hole_standard_rod >= 3 or null) as baodong, " +
-				"count(s.ms_is_up = \"开球直球\" OR NULL) AS zhi, " +
-				"count(s.ms_is_up = \"开球偏右\" OR NULL) AS you, " +
-				"count(s.ms_is_up = \"开球偏左\" OR NULL) AS zuo, " +
-				"count(s.ms_is_up = \"开球出界\" OR NULL) AS chu, " +
-				"count(s.ms_rod_num - s.ms_push_rod_num = s.ms_hole_standard_rod -2 or null) as biaoOn ");
-		hql.append("FROM match_score AS s WHERE s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
+				"sum(CASE WHEN s.ms_rod_cha = 1 then 1 else 0 end) as one, " +
+				"sum(CASE WHEN s.ms_rod_cha = 2  then 1 else 0 end) as two, " +
+				"count(s.ms_is_bomb or 0) as baodong, " +
+				"sum(CASE WHEN s.ms_is_up = \"开球直球\" then 1 else 0 end) AS zhi, " +
+				"sum(CASE WHEN s.ms_is_up = \"开球偏右\" then 1 else 0 end) AS you, " +
+				"sum(CASE WHEN s.ms_is_up = \"开球偏左\" then 1 else 0 end) AS zuo, " +
+				"sum(CASE WHEN s.ms_is_up = \"开球出界\" then 1 else 0 end) AS chu, " +
+				"count(s.ms_is_on or 0) as biaoOn ");
+		hql.append("FROM match_score AS s WHERE s.ms_match_type = 1 and s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -184,6 +197,7 @@ public class UserDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT sum(s.msRodNum) ");
 		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
+		hql.append("and s.msMatchType = 1 ");
 		hql.append("and s.msCreateTime >= :startTime ");
 		hql.append("and s.msCreateTime <= :endTime ");
 		return dao.createCountQuery(hql.toString(), parp);

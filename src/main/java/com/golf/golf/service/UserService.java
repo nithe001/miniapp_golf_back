@@ -311,9 +311,6 @@ public class UserService implements IBaseService {
 		Map<String, Object> result = new HashMap<>();
 		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 
-		//比赛的所有球场(首列显示)
-		List<String> parkList = new ArrayList<>();
-
 		//所有球洞 18
 		List<String> parkHoleList = new ArrayList<>();
 		for(int i=1;i<=18;i++){
@@ -332,24 +329,22 @@ public class UserService implements IBaseService {
 		thBean.setParkHoleList(parkHoleList);
 		list.add(thBean);
 
-		//获取我参加的所有比赛所在的球场(比赛id，球场id，球场名称,前半场名称，后半场名称)
-		List<Map<String, Object>> matchList = matchDao.getParkListByUserId(userId);
+
+		//获取我参加的所有比赛所在的球场 和总杆差 (比赛id，球场id，球场名称,前半场名称，后半场名称)
+		List<Map<String, Object>> matchList = matchDao.getTotalChaListByUserId(userId);
+		result.put("matchList", matchList);
+
+//		List<Map<String, Object>> matchList = matchDao.getParkListByUserId(userId);
+		//通过球场获取比分
 		if(matchList != null && matchList.size()>0){
 			for(Map<String, Object> match:matchList){
-				String parkName = matchService.getName(match,"parkName");
-				parkList.add(parkName);
-
 				Long matchId = matchService.getLongValue(match,"miId");
 				MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-				result.put("matchInfo", matchInfo);
-
 				//本用户每个洞得分情况
 				createNewUserScoreList(userId,list,matchInfo);
 				result.put("list", list);
 			}
 		}
-
-		result.put("parkList", parkList);
 		return result;
 	}
 
@@ -374,10 +369,10 @@ public class UserService implements IBaseService {
 	private void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
 		Integer totalRod = 0;
 		//杆差
-		Integer totalRodCha = 0;
 		for(Map<String, Object> map:uScoreList){
 			MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
 			Integer rodNum = matchService.getIntegerValue(map,"rod_num");
+			Integer rodCha = matchService.getIntegerValue(map,"rod_cha");
 			totalRod += rodNum;
 			//杆数
 			bean.setRodNum(rodNum);
@@ -392,7 +387,7 @@ public class UserService implements IBaseService {
 
 
 	/**
-	 * 年度成绩分析
+	 * 年度成绩分析 不包括单练
 	 * 计算一年内平均每18洞分项的数量
 	 * “暴洞”是指+3及以上的洞数总和
 	 * 开球情况对应记分卡 球道滚轮的箭头
@@ -406,6 +401,9 @@ public class UserService implements IBaseService {
 		parp.put("userId",userId);
 		parp.put("startTime", TimeUtil.getYearFirst(Integer.parseInt(date)));
 		parp.put("endTime", TimeUtil.getYearLast(Integer.parseInt(date)));
+		//今年参加比赛的场数
+		Long matchCount = dao.getMatchCountByYear(parp);
+		result.put("matchCount",matchCount == null ? 0:matchCount);
 		//总杆数
 		Long sumRod = dao.getSumRod(parp);
 		result.put("sumRod",sumRod);

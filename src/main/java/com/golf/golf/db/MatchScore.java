@@ -20,6 +20,7 @@ public class MatchScore implements java.io.Serializable {
 	private Long msTeamId;
 	private Long msMatchId;
 	private String msMatchTitle;
+	private Integer msMatchType;
 	private Long msGroupId;
 	private String msGroupName;
 	private Long msUserId;
@@ -38,6 +39,8 @@ public class MatchScore implements java.io.Serializable {
 	private Integer msIsBird;
 	private Integer msIsEagle;
 	private Integer msIsOn;
+	private Integer msIsBomb;
+	private Integer msIsBogey;
     private Integer msIsTeamSubmit;
 	private Long msCreateUserId;
 	private String msCreateUserName;
@@ -53,16 +56,17 @@ public class MatchScore implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle,
+	public MatchScore(Long msTeamId, Long msMatchId, String msMatchTitle, Integer msMatchType,
 					  Long msGroupId, String msGroupName, Long msUserId,
 					  String msUserName, Integer msType, Integer msScore, Integer msBeforeAfter, String msHoleName,
 					  Integer msHoleNum, Integer msHoleStandardRod, Integer msRodCha, String msIsUp, Integer msRodNum,
-					  Integer msPushRodNum, Integer msIsPar, Integer msIsBird,Integer msIsEagle,Integer msIsOn,
-					  Integer msIsTeamSubmit, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
+					  Integer msPushRodNum, Integer msIsPar, Integer msIsBird,Integer msIsEagle,Integer msIsOn, Integer msIsBomb,
+					  Integer msIsBogey, Integer msIsTeamSubmit, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
 					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
 		this.msMatchId = msMatchId;
 		this.msMatchTitle = msMatchTitle;
+		this.msMatchType = msMatchType;
 		this.msGroupId = msGroupId;
 		this.msGroupName = msGroupName;
 		this.msUserId = msUserId;
@@ -81,6 +85,8 @@ public class MatchScore implements java.io.Serializable {
 		this.msIsBird = msIsBird;
 		this.msIsEagle = msIsEagle;
 		this.msIsOn = msIsOn;
+		this.msIsBomb = msIsBomb;
+		this.msIsBogey = msIsBogey;
 		this.msIsTeamSubmit = msIsTeamSubmit;
 		this.msCreateUserId = msCreateUserId;
 		this.msCreateUserName = msCreateUserName;
@@ -127,6 +133,15 @@ public class MatchScore implements java.io.Serializable {
 
 	public void setMsMatchTitle(String msMatchTitle) {
 		this.msMatchTitle = msMatchTitle;
+	}
+
+	@Column(name = "ms_match_type")
+	public Integer getMsMatchType() {
+		return msMatchType;
+	}
+
+	public void setMsMatchType(Integer msMatchType) {
+		this.msMatchType = msMatchType;
 	}
 
 	@Column(name = "ms_group_id")
@@ -289,6 +304,24 @@ public class MatchScore implements java.io.Serializable {
 
 	public void setMsIsOn(Integer msIsOn) {
 		this.msIsOn = msIsOn;
+	}
+
+	@Column(name = "ms_is_bomb")
+	public Integer getMsIsBomb() {
+		return msIsBomb;
+	}
+
+	public void setMsIsBomb(Integer msIsBomb) {
+		this.msIsBomb = msIsBomb;
+	}
+
+	@Column(name = "ms_is_bogey")
+	public Integer getMsIsBogey() {
+		return msIsBogey;
+	}
+
+	public void setMsIsBogey(Integer msIsBogey) {
+		this.msIsBogey = msIsBogey;
 	}
 
 	@Column(name = "ms_is_team_submit")

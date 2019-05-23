@@ -798,19 +798,9 @@ public class MatchService implements IBaseService {
 				scoreDb.setMsRodNum(holeStandardRod+gc);
 			}
 			scoreDb.setMsPushRodNum(pushRod);
-			if(scoreDb.getMsRodNum().equals(holeStandardRod)){
-				//与标准杆一样 叫平标准杆
-				scoreDb.setMsIsOn(1);
-			}else if(holeStandardRod - scoreDb.getMsRodNum() == 1){
-				//比标准杆少一杆叫小鸟
-				scoreDb.setMsIsBird(1);
-			}else if(scoreDb.getMsRodNum() - holeStandardRod == 1){
-				//比标准杆多一杆叫Par
-				scoreDb.setMsIsPar(1);
-			}else if(holeStandardRod - scoreDb.getMsRodNum() == 2){
-				//低于标准杆2杆完成该洞叫老鹰
-				scoreDb.setMsIsEagle(1);
-			}
+
+			//计算得分结果
+			getScore(scoreDb,holeStandardRod);
 
 			scoreDb.setMsUpdateTime(System.currentTimeMillis());
 			scoreDb.setMsUpdateUserId(WebUtil.getUserIdBySessionId());
@@ -832,9 +822,11 @@ public class MatchService implements IBaseService {
 			score.setMsTeamId(teamId);
 			score.setMsMatchId(matchId);
 			score.setMsMatchTitle(matchInfo.getMiTitle());
+			score.setMsMatchType(matchInfo.getMiType());
 			score.setMsGroupId(groupId);
 			score.setMsGroupName(matchGroup.getMgGroupName());
 			score.setMsUserId(userId);
+			score.setMsHoleStandardRod(holeStandardRod);
             if(matchInfo.getMiType() == 1){
                 MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, groupId, userId);
                 score.setMsUserName(matchUserGroupMapping.getMugmUserName());
@@ -862,24 +854,39 @@ public class MatchService implements IBaseService {
 			}
 			score.setMsPushRodNum(pushRod);
 
-			if(score.getMsRodNum().equals(holeStandardRod)){
-				//与标准杆一样 叫平标准杆
-				score.setMsIsOn(1);
-			}else if(holeStandardRod - score.getMsRodNum() == 1){
-				//比标准杆少一杆叫小鸟
-				score.setMsIsBird(1);
-			}else if(score.getMsRodNum() - holeStandardRod == 1){
-				//比标准杆多一杆叫Par
-				score.setMsIsPar(1);
-			}else if(holeStandardRod - score.getMsRodNum() == 2){
-				//低于标准杆2杆完成该洞叫老鹰
-				score.setMsIsEagle(1);
-			}
+			//计算得分结果
+			getScore(score,holeStandardRod);
 
 			score.setMsCreateUserId(WebUtil.getUserIdBySessionId());
 			score.setMsCreateUserName(WebUtil.getUserNameBySessionId());
 			score.setMsCreateTime(System.currentTimeMillis());
 			matchDao.save(score);
+		}
+	}
+
+	private void getScore(MatchScore score, Integer holeStandardRod) {
+		if(score.getMsRodNum().equals(holeStandardRod)){
+			//标准杆一样 par
+			score.setMsIsPar(1);
+		}else if(holeStandardRod - score.getMsRodNum() == 1){
+			//比标准杆少一杆叫小鸟
+			score.setMsIsBird(1);
+		}else if(score.getMsRodNum() - holeStandardRod == 1){
+			//比标准杆多一杆叫bogey
+			score.setMsIsBogey(1);
+		}else if(holeStandardRod - score.getMsRodNum() == 2){
+			//比标准杆少2杆 叫老鹰
+			score.setMsIsEagle(1);
+		}
+
+		if(score.getMsRodNum() - holeStandardRod >= 3){
+			//“暴洞”是指+3及以上
+			score.setMsIsBomb(1);
+		}
+
+		if(score.getMsRodNum() - score.getMsPushRodNum() == holeStandardRod - 2){
+			//标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON 3-1=4-2
+			score.setMsIsOn(1);
 		}
 	}
 
