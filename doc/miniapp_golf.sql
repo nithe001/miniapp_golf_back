@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50725
 File Encoding         : 65001
 
-Date: 2019-05-21 11:29:41
+Date: 2019-05-24 18:38:39
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -64,12 +64,11 @@ CREATE TABLE `integral_config` (
   `ic_update_user_id` bigint(20) DEFAULT NULL,
   `ic_update_user_name` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`ic_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COMMENT='积分计算配置';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分计算配置';
 
 -- ----------------------------
 -- Records of integral_config
 -- ----------------------------
-INSERT INTO `integral_config` VALUES ('3', '1', '1', '5', null, '10', '1558078492129', '1', '牛牧瑶', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_group
@@ -86,7 +85,7 @@ CREATE TABLE `match_group` (
   `mg_update_user_name` varchar(128) DEFAULT NULL COMMENT '分组更新人姓名',
   `mg_update_time` bigint(20) DEFAULT NULL COMMENT '分组更新时间',
   PRIMARY KEY (`mg_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COMMENT='比赛分组表';
 
 -- ----------------------------
 -- Records of match_group
@@ -100,6 +99,8 @@ INSERT INTO `match_group` VALUES ('13', '13', '第1组', '1', '牛牧瑶', '1557
 INSERT INTO `match_group` VALUES ('14', '14', '第1组', '1', '牛牧瑶', '1557994034118', null, null, null);
 INSERT INTO `match_group` VALUES ('15', '10', '第2组', '1', '牛牧瑶', '1558064583989', null, null, null);
 INSERT INTO `match_group` VALUES ('16', '15', '第1组', '1', '牛牧瑶', '1558403405447', null, null, null);
+INSERT INTO `match_group` VALUES ('18', '2', '第1组', '1', '牛牧瑶', '1558524099810', null, null, null);
+INSERT INTO `match_group` VALUES ('19', '16', '第1组', '1', '牛牧瑶', '1558596099037', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_info
@@ -135,18 +136,18 @@ CREATE TABLE `match_info` (
   `mi_update_user_id` bigint(20) DEFAULT NULL COMMENT '更新人id',
   `mi_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mi_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COMMENT='赛事活动表';
 
 -- ----------------------------
 -- Records of match_info
 -- ----------------------------
-INSERT INTO `match_info` VALUES ('1', '1', null, '夏季比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '1', null, '1', '0', '1', '1', null, null, '1', '1', null, '1', '1557729367926', '牛牧瑶', '1', '1558071927858');
+INSERT INTO `match_info` VALUES ('1', '1', null, '夏季比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '1', null, '1', '1', '1', '1', null, null, '1', '1', null, '1', '1557729367926', '牛牧瑶', '1', '1558610660471');
 INSERT INTO `match_info` VALUES ('2', '1', null, '别人创建的比赛', 'up/matchLogo/1557729367778.jpg', '6', '北京鸿华国际高尔夫球俱乐部', 'A', 'C', null, '2019-05-13', '比赛说明什么的问题呢？', '3', null, '0', '0', '1', '1', null, null, '0', '1', '', '3', '1557729367926', '吴彦祖', '3', '1557743566167');
 INSERT INTO `match_info` VALUES ('9', '0', '3', '牛牧瑶的单练', null, '38', '北京净山湖体育休闲俱乐部', 'A', 'B', '', '2019-05-13', null, null, '3', '0', '0', null, null, null, null, '1', null, '牛牧瑶', '1', '1557741669486', null, null, null);
 INSERT INTO `match_info` VALUES ('10', '1', null, '达标行比赛', 'up/matchLogo/1557993017567.jpg', '38', '北京净山湖体育休闲俱乐部', 'A', 'B', null, '2019-05-16', '000', '1', '2', '1', '1', '1', '1,', null, null, '0', '1', '牛牧瑶', '1', '1557993019631', null, null, null);
 INSERT INTO `match_info` VALUES ('13', '1', null, '咸鱼大赛', 'up/matchLogo/1557993527520.jpg', '5', '北京清河湾乡村体育俱乐部', 'C', 'D', null, '2019-05-16', '4嗯我热无群', '2', '2', '1', '0', '2,1', '', null, null, '0', '1', '牛牧瑶', '1', '1557993527609', null, null, null);
 INSERT INTO `match_info` VALUES ('14', '0', '3', '牛牧瑶的单练', null, '61', '北京丽宫体育公园高尔夫球俱乐部', 'A', 'B', '666', '2019-05-16', null, null, '3', '0', '0', null, null, null, null, '1', null, '牛牧瑶', '1', '1557994034115', null, null, null);
-INSERT INTO `match_info` VALUES ('15', '1', null, 'uuu', 'up/matchLogo/1558403405179.jpg', '35', '北京红枫湖高尔夫球俱乐部', 'A', 'B', null, '2019-05-21', 'uu878i8iukuy', '2', '2', '0', '0', '2,1', null, null, null, '0', '1', '牛牧瑶', '1', '1558403405409', null, null, null);
+INSERT INTO `match_info` VALUES ('16', '0', '3', '牛牧瑶的单练', null, '38', '北京净山湖体育休闲俱乐部', 'A', 'B', '555', '2019-05-23', null, null, '3', '0', '0', null, null, null, null, '2', null, '牛牧瑶', '1', '1558596099034', '牛牧瑶', '1', '1558598829170');
 
 -- ----------------------------
 -- Table structure for match_join_watch_info
@@ -159,13 +160,12 @@ CREATE TABLE `match_join_watch_info` (
   `mjwi_user_id` bigint(20) DEFAULT NULL COMMENT '用户主键',
   `mjwi_create_time` bigint(20) DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`mjwi_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COMMENT='用户比赛观战、报名 信息  表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COMMENT='用户比赛观战、报名 信息  表';
 
 -- ----------------------------
 -- Records of match_join_watch_info
 -- ----------------------------
-INSERT INTO `match_join_watch_info` VALUES ('1', '0', '1', '3', null);
-INSERT INTO `match_join_watch_info` VALUES ('2', '0', '1', null, '1557900096670');
+INSERT INTO `match_join_watch_info` VALUES ('1', '0', '1', '2', null);
 
 -- ----------------------------
 -- Table structure for match_rule
@@ -212,6 +212,7 @@ CREATE TABLE `match_score` (
   `ms_team_id` bigint(20) DEFAULT NULL COMMENT '球队id',
   `ms_match_id` bigint(20) DEFAULT NULL COMMENT '比赛主键',
   `ms_match_title` varchar(255) DEFAULT NULL COMMENT '比赛名称',
+  `ms_match_type` int(11) DEFAULT NULL COMMENT '比赛类型（1：团队赛  0：单练）',
   `ms_group_id` bigint(20) DEFAULT NULL COMMENT '比赛分组主键',
   `ms_group_name` varchar(255) DEFAULT NULL COMMENT '分组名称',
   `ms_user_id` bigint(20) DEFAULT NULL COMMENT '用户id',
@@ -226,10 +227,12 @@ CREATE TABLE `match_score` (
   `ms_rod_num` int(11) DEFAULT NULL COMMENT '杆数',
   `ms_rod_cha` int(11) DEFAULT NULL COMMENT '杆差=杆数-本洞标准杆数',
   `ms_push_rod_num` int(11) DEFAULT NULL COMMENT '推杆',
-  `ms_is_par` int(11) DEFAULT NULL COMMENT '是否爆洞 （0：否 1：是）',
-  `ms_is_bird` int(11) DEFAULT NULL COMMENT '是否小鸟（0：否  1：是）',
-  `ms_is_eagle` int(11) DEFAULT NULL COMMENT '是否老鹰（0：否  1：是）',
-  `ms_is_on` int(11) DEFAULT NULL COMMENT '是否标ON （0：否  1：是）',
+  `ms_is_par` int(1) DEFAULT '0' COMMENT '是否par （0：否 1：是）比标准杆多一杆或者标准杆完成',
+  `ms_is_bird` int(1) DEFAULT '0' COMMENT '是否小鸟（0：否  1：是）比标准杆少一杆',
+  `ms_is_eagle` int(1) DEFAULT '0' COMMENT '是否老鹰（0：否  1：是）低于标准杆2杆',
+  `ms_is_on` int(1) DEFAULT '0' COMMENT '是否标ON （0：否  1：是）',
+  `ms_is_bomb` int(1) DEFAULT NULL COMMENT '是否爆洞 （0：否  1：是）比标准杆多3杆以上',
+  `ms_is_bogey` int(1) DEFAULT NULL COMMENT '是否BOGEY （0：否  1：是）比标准杆多1杆',
   `ms_is_team_submit` int(11) DEFAULT NULL COMMENT '球队是否确认(0：否  1：是)',
   `ms_create_user_id` bigint(20) DEFAULT NULL COMMENT '创建人id',
   `ms_create_user_name` varchar(128) DEFAULT NULL,
@@ -238,19 +241,15 @@ CREATE TABLE `match_score` (
   `ms_update_user_name` varchar(128) DEFAULT NULL,
   `ms_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`ms_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
 
 -- ----------------------------
 -- Records of match_score
 -- ----------------------------
-INSERT INTO `match_score` VALUES ('1', '1', '1', '夏季比赛', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '1', null, '开球直球', '5', '1', '2', '1', null, null, null, '1', '1', '牛牧瑶', '1557738501623', '1', '牛牧瑶', '1557915219066');
-INSERT INTO `match_score` VALUES ('2', '1', '1', '夏季比赛', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '4', null, '开球直球', '2', '-1', '4', null, '1', null, null, '1', '1', '牛牧瑶', '1557738515799', '1', '牛牧瑶', '1557915236576');
-INSERT INTO `match_score` VALUES ('3', '1', '1', '夏季比赛', '1', '第1组', '2', '张柏芝', null, null, '0', 'A', '1', null, '开球偏左', '3', '-1', '3', null, '1', null, null, '1', '1', '牛牧瑶', '1557738533350', '1', '牛牧瑶', '1557915248011');
-INSERT INTO `match_score` VALUES ('5', '1', '1', '夏季比赛', '1', '第1组', '2', '张柏芝', null, null, '0', 'A', '2', null, '开球偏右', '3', '-2', '2', null, null, '1', null, '1', '1', '牛牧瑶', '1557831679761', '1', '牛牧瑶', '1557915258753');
-INSERT INTO `match_score` VALUES ('6', null, '14', '牛牧瑶的单练', '14', '第1组', '1000008', '吴彦祖', null, null, '0', 'A', '1', null, '开球直球', '8', '4', '2', null, null, null, null, null, '1', '牛牧瑶', '1557998423101', null, null, null);
-INSERT INTO `match_score` VALUES ('7', null, '14', '牛牧瑶的单练', '14', '第1组', '1000010', '莫文蔚', null, null, '0', 'A', '3', null, '开球直球', '5', '2', '3', null, null, null, null, null, '1', '牛牧瑶', '1557998427480', null, null, null);
-INSERT INTO `match_score` VALUES ('8', null, '14', '牛牧瑶的单练', '14', '第1组', '1000013', '李宗盛', null, null, '0', 'A', '1', null, '开球直球', '4', '0', '5', null, null, null, '1', null, '1', '牛牧瑶', '1557998436498', null, null, null);
-INSERT INTO `match_score` VALUES ('9', '1', '1', '夏季比赛', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '3', null, '开球偏左', '2', '-2', '4', null, null, '1', null, null, '1', '牛牧瑶', '1558344909344', null, null, null);
+INSERT INTO `match_score` VALUES ('1', '1', '1', '夏季比赛', '1', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '1', '4', '开球直球', '4', '0', '2', '1', null, null, '1', '1', '1', null, '1', '牛牧瑶', '1558691003185', '1', '牛牧瑶', '1558691018149');
+INSERT INTO `match_score` VALUES ('2', '1', '1', '夏季比赛', '1', '1', '第1组', '2', '张柏芝', null, null, '0', 'A', '1', '4', '开球直球', '5', '1', '2', null, null, null, null, null, '1', null, '1', '牛牧瑶', '1558691009417', null, null, null);
+INSERT INTO `match_score` VALUES ('3', '1', '1', '夏季比赛', '1', '1', '第1组', '1', '牛牧瑶', null, null, '0', 'A', '2', '5', '开球直球', '7', '2', '2', null, null, null, null, null, null, null, '1', '牛牧瑶', '1558691027360', null, null, null);
+INSERT INTO `match_score` VALUES ('4', '1', '1', '夏季比赛', '1', '1', '第1组', '2', '张柏芝', null, null, '0', 'A', '2', '5', '开球直球', '3', '-2', '2', null, null, '1', null, null, null, null, '1', '牛牧瑶', '1558691031145', null, null, null);
 
 -- ----------------------------
 -- Table structure for match_score_user_mapping
@@ -290,13 +289,12 @@ CREATE TABLE `match_user_group_mapping` (
   `mugm_update_user_name` varchar(128) DEFAULT NULL COMMENT '更新人名称',
   `mugm_update_time` bigint(20) DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`mugm_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COMMENT='比赛用户分组mapping记录表';
 
 -- ----------------------------
 -- Records of match_user_group_mapping
 -- ----------------------------
 INSERT INTO `match_user_group_mapping` VALUES ('1', '1', '1', '0', '1', '第1组', '1', '牛牧瑶', '1', '牛牧瑶', '1557729367941', null, null, null);
-INSERT INTO `match_user_group_mapping` VALUES ('2', '1', '1', '0', '1', '第1组', '2', '张柏芝', '2', '张柏芝', '1557729367950', '1', '牛牧瑶', '1558071028855');
 INSERT INTO `match_user_group_mapping` VALUES ('3', '2', '1', '0', '1', '第1组', '2', '张柏芝', null, null, null, null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('31', '9', '1', '0', '9', '第1组', '1', '牛牧瑶', '1', '牛牧瑶', '1557741669496', null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('32', '9', null, '1', '9', '第1组', '1000002', '球友1', '1', '牛牧瑶', '1557741695341', null, null, null);
@@ -312,6 +310,11 @@ INSERT INTO `match_user_group_mapping` VALUES ('41', '14', null, '1', '14', '第
 INSERT INTO `match_user_group_mapping` VALUES ('42', '14', null, '1', '14', '第1组', '1000013', '李宗盛', '1', '牛牧瑶', '1557994034123', null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('43', '15', null, '0', '16', '第1组', '1', '牛牧瑶', '1', '牛牧瑶', '1558403405480', null, null, null);
 INSERT INTO `match_user_group_mapping` VALUES ('44', '15', null, '0', '16', '第1组', '2', '张柏芝', '1', '牛牧瑶', '1558403405504', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('47', '1', '1', '1', '1', '第1组', '2', '张柏芝', null, null, '1558525803013', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('48', '16', null, '0', '19', '第1组', '1', '牛牧瑶', '1', '牛牧瑶', '1558596099039', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('49', '16', null, '1', '19', '第1组', '1000014', '张三', '1', '牛牧瑶', '1558596099041', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('50', '16', null, '1', '19', '第1组', '1000016', '球友2', '1', '牛牧瑶', '1558596099042', null, null, null);
+INSERT INTO `match_user_group_mapping` VALUES ('51', '16', null, '1', '19', '第1组', '1000019', '球友3', '1', '牛牧瑶', '1558596099044', null, null, null);
 
 -- ----------------------------
 -- Table structure for park_info
@@ -13454,7 +13457,7 @@ CREATE TABLE `team_user_mapping` (
 -- ----------------------------
 -- Records of team_user_mapping
 -- ----------------------------
-INSERT INTO `team_user_mapping` VALUES ('1', '1', '1', '0', '5', '1557729151985', '1', null, '1558078509645', '1', '牛牧瑶');
+INSERT INTO `team_user_mapping` VALUES ('1', '1', '1', '0', '0', '1557729151985', '1', null, '1558611081437', '1', '牛牧瑶');
 INSERT INTO `team_user_mapping` VALUES ('2', '1', '2', '0', null, '1557730964749', '1', '牛牧瑶', '1558071014572', '1', '牛牧瑶');
 INSERT INTO `team_user_mapping` VALUES ('3', '2', '1', '0', null, '1557993133185', '1', '牛牧瑶', null, null, null);
 
@@ -13498,7 +13501,7 @@ CREATE TABLE `user_info` (
 -- ----------------------------
 -- Records of user_info
 -- ----------------------------
-INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', 'lalllll', '116.44355', '39.9219', '牛牧瑶', '牜', '男', '29', '123', '321', '4566789', '222', '2019-01-14', '444', '8789', '12', '63', '15', '35454', null, '1557729069655', null, null, '1558409282123', '牛牧瑶', '1');
+INSERT INTO `user_info` VALUES ('1', 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZUMkfjq3KYU8GqE8tibtQBrQ/132', 'lalllll', '116.44355', '39.9219', '牛牧瑶', '牜', '男', '29', '123', '321', '4566789', '222', '2019-01-14', '444', '8789', '12', '63', '15', '35454', null, '1557729069655', null, null, '1558693553341', '牛牧瑶', '1');
 INSERT INTO `user_info` VALUES ('2', 'oXggK49HO_3OYklUcFdMctEhvIY0', '2', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erxDw6qbkP17Zib3RsiaEB5uy9IBKXiaicJquwCOeZ5PPcOTMb18THRApWdCWZptqiaxLXIc1P5icLzl8xA/132', null, '116.53619384765625', '39.92087936401367', '张柏芝', '初相见', '未知', null, '', '', '', '', '', '', '', '', '', '', '', null, '1557729418139', null, null, '1557731152453', '张柏芝', '2');
 INSERT INTO `user_info` VALUES ('3', 'oXggK49HO_3OYklUcFdMctEhvIY01', null, 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erxDw6qbkP17Zib3RsiaEB5uy9IBKXiaicJquwCOeZ5PPcOTMb18THRApWdCWZptqiaxLXIc1P5icLzl8xA/132', null, null, null, '吴彦祖', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
@@ -13535,5 +13538,5 @@ CREATE TABLE `wechat_user_info` (
 -- ----------------------------
 -- Records of wechat_user_info
 -- ----------------------------
-INSERT INTO `wechat_user_info` VALUES ('1', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZvpqJ02aDaOsS5Fnrno3b8Q/132', null, null, null, null, '1', '1557886680735', null, null, null);
+INSERT INTO `wechat_user_info` VALUES ('1', '1', null, 'oXggK4xOgfkhLtHermHfY9VQsE8Q', '牜', null, null, '男', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erSPL40G2Tgv83iclicasdWib0CiazJn9oGjPqibSadPoCdkMibSpXicEJ19icZUMkfjq3KYU8GqE8tibtQBrQ/132', null, null, null, null, '1', '1558496157202', null, null, null);
 INSERT INTO `wechat_user_info` VALUES ('2', '2', null, 'oXggK49HO_3OYklUcFdMctEhvIY0', '初相见', null, null, '未知', '', null, '', 'zh_CN', 'https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83erxDw6qbkP17Zib3RsiaEB5uy9IBKXiaicJquwCOeZ5PPcOTMb18THRApWdCWZptqiaxLXIc1P5icLzl8xA/132', null, null, null, null, '1', '1557730220196', null, null, null);
