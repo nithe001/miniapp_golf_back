@@ -9,7 +9,10 @@ import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.ParkInfo;
+import com.golf.golf.service.MatchDoubleHoleService;
+import com.golf.golf.service.MatchDoubleRodService;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.MatchSingleHoleService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -39,6 +42,19 @@ public class MatchController {
 
 	@Autowired
 	private MatchService matchService;
+
+	//单人比洞记分卡service
+	@Autowired
+	protected MatchSingleHoleService matchSingleHoleService;
+
+	//双人比杆记分卡service
+	@Autowired
+	protected MatchDoubleRodService matchDoubleRodService;
+
+	//双人比洞记分卡service
+	@Autowired
+	protected MatchDoubleHoleService matchDoubleHoleService;
+
 
 
 	/**
@@ -590,6 +606,24 @@ public class MatchController {
 	}
 
 	/**
+	 * 通过matchid和groupid查询本组记分卡信息——双人比杆 每组4个人 每2个人一组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getDoubleRodScoreCard")
+	public JsonElement getDoubleRodScoreCardByGroupId(Long matchId, Long groupId) {
+		try {
+			Map<String,Object> groupInfoList = matchDoubleRodService.getDoubleRodScoreCardByGroupId(matchId,groupId);
+			return JsonWrapper.newDataInstance(groupInfoList);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组双人比杆记分卡信息时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
 	 * 通过matchid和groupid查询本组记分卡信息——单人比洞 每组2个人
 	 * @return
 	 */
@@ -597,7 +631,25 @@ public class MatchController {
 	@RequestMapping("getSingleHoleScoreCard")
 	public JsonElement getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
 		try {
-			Map<String,Object> groupInfoList = matchService.getSingleHoleScoreCardByGroupId(matchId,groupId);
+			Map<String,Object> groupInfoList = matchSingleHoleService.getSingleHoleScoreCardByGroupId(matchId,groupId);
+			return JsonWrapper.newDataInstance(groupInfoList);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 通过matchid和groupid查询本组记分卡信息——双人比洞 每组4个人 每2人一小组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getDoubleHoleScoreCard")
+	public JsonElement getDoubleHoleScoreCard(Long matchId, Long groupId) {
+		try {
+			Map<String,Object> groupInfoList = matchDoubleHoleService.getDoubleHoleScoreCardByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
