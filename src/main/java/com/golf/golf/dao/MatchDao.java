@@ -579,10 +579,10 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTotalScoreWithUser(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT m.mugm_user_id as user_id, sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
-		sql.append("FROM match_user_group_mapping AS m LEFT JOIN match_score AS s ");
-		sql.append("on (m.mugm_user_id = s.ms_user_id and s.ms_match_id = m.mugm_match_id and s.ms_group_id = m.mugm_group_id ) where m.mugm_match_id = "+matchId+" AND m.mugm_group_id = "+groupId);
-		sql.append(" GROUP BY m.mugm_id ORDER BY m.mugm_user_id");
+		sql.append("SELECT s.ms_user_id as user_id, sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
+		sql.append("FROM match_score AS s ");
+		sql.append("where s.ms_match_id = "+matchId+" AND s.ms_group_id = "+groupId);
+		sql.append(" GROUP BY s.ms_user_id ORDER BY s.ms_user_id");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}

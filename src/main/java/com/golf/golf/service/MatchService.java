@@ -1661,60 +1661,78 @@ public class MatchService implements IBaseService {
 	 */
 	public Map<String, Object> getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
-		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		//本组用户
-		List<Map<String, Object>> userList = null;
-		if(matchInfo.getMiType() == 1){
-			userList = matchDao.getUserListById(matchId, groupId);
-		}else{
-			//单练
-			userList = matchDao.getSingleUserListById(matchId, groupId);
-		}
+		//固定的首列：本组用户
+		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, groupId);
 		result.put("userList", userList);
 
-		//半场球洞
+		//第一条记录：半场球洞
 		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
+		result.put("parkHoleList", parkHoleList);
 
-		//第一条记录（半场分区信息）
-		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
-		thBean.setUserId(0L);
-		thBean.setUserName("球洞球杆");
-		thBean.setUserScoreList(parkHoleList);
-		list.add(thBean);
 
+		//第二条记录：用户得分
+		List<Map<String, Object>[]> scoreList = new ArrayList<>();
+		//第3条记录：成绩
+		List<String> resultScoreList = new ArrayList<>();
 		//本组用户每个洞得分情况
 		if (userList != null && userList.size() > 0) {
-			for (Map<String, Object> user : userList) {
-				Long uiId = getLongValue(user, "uiId");
-				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
-				bean.setUserId(uiId);
-				bean.setUserName(getName(user, "uiRealName"));
-				//本用户得分情况
-				if (uiId != null) {
-					List<Map<String, Object>> uscoreList = matchDao.getScoreByUserId(groupId, uiId, matchInfo);
-					if (uscoreList != null && uscoreList.size() > 0) {
-						bean.setUserScoreList(uscoreList);
-						list.add(bean);
-					}
-				} else {
-					//没有得分，就构造空的list
-					List<Map<String, Object>> uscoreList = new ArrayList<>();
-					for (int i = 0; i < parkHoleList.size(); i++) {
-						Map<String, Object> m = new HashMap<>();
-						uscoreList.add(m);
-					}
-					bean.setUserScoreList(uscoreList);
-					list.add(bean);
-				}
+			//第一个用户
+			Long userId0 = getLongValue(userList.get(0), "uiId");
+			List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo);
+			//第二个用户
+			Long userId1 = getLongValue(userList.get(1), "uiId");
+			List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo);
 
+			for(Map<String, Object> map0:uscoreList0){
+				Map<String, Object>[] map = new Map[2];
+				map[0] = map0;
+				//第一个用户本洞击出的杆数
+				Integer rodNum1 = getIntegerValue(map0,"rod_num");
+				//球洞号
+				Integer holeNum = getIntegerValue(map0,"pp_hole_num");
+				//球洞名称
+				String holeName = getName(map0,"pp_name");
+				for(Map<String, Object> map1:uscoreList1){
+					//第二个用户本洞击出的杆数
+					Integer rodNum2 = getIntegerValue(map1,"rod_num");
+					//球洞号
+					Integer holeNum1 = getIntegerValue(map1,"pp_hole_num");
+					//球洞名称
+					String holeName1 = getName(map1,"pp_name");
+					if(holeNum.equals(holeNum1) && holeName.equals(holeName1)){
+						//第二个用户的杆数
+						map[1] = map1;
+						scoreList.add(map);
+
+						//计算两个对手本洞的成绩 逐洞比上下两行当前成绩，用数字表示赢了几洞，上面赢的记UP，下面赢的记DN，数字表示到目前赢几洞，A/S表示平。
+						//比洞赛中使用独特的计分和表述方式。
+						// 假设球员A和球员B参加一对一比赛，在第一洞比赛中，A击出的杆数少于B，于是A赢得了该洞的胜利，这时表述为“A领先1洞”，
+						// 如以B为主语，则表述为“B落后1洞”。
+						// 这样在一轮比赛中，选手在每一个洞决出一个小分，最后当其中一方选手领先优势已不能被逆转(超分)时，这一回合比赛结束。
+						// 这时胜利一方的领先洞数(X)和剩余未比赛的球。
+						String cj = "";
+						if(rodNum1 < rodNum2){
+							cj = rodNum2 - rodNum1+"UP";
+						}else if(rodNum1 > rodNum2){
+							cj = rodNum1 - rodNum2+"DN";
+						}else{
+							cj = "A/S";
+						}
+						resultScoreList.add(cj);
+						break;
+					}
+				}
 			}
 		}
-		result.put("parkHoleList", list);
+		result.put("scoreList", scoreList);
+		result.put("resultScoreList", resultScoreList);
 
-		//总杆数
-		Long totalRod = matchDao.getTotalRod(matchInfo);
-		result.put("totalRod", totalRod);
+		//第三条 成绩
+
+		//固定的尾列：总标准杆数
+		Long totalStandardRod = matchDao.getTotalRod(matchInfo);
+		result.put("totalStandardRod", totalStandardRod);
 		//用户总分
 		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId, groupId);
 		result.put("totalScoreList", totalScoreList);
