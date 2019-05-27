@@ -452,10 +452,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
-	public JsonElement saveSinglePlay(String parkName, String playTime, Integer peopleNum, String digest,
+	public JsonElement saveSinglePlay(Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
 									  String beforeZoneName, String afterZoneName) {
 		try {
-			Map<String,Object> result = matchService.saveSinglePlay(parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
+			Map<String,Object> result = matchService.saveSinglePlay(parkId, parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
@@ -588,7 +588,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 通过matchid和groupid查询本组记分卡信息——单人比杆 每组4个人
+	 * 通过matchid和groupid查询本组记分卡信息——个人比杆 每组4个人
 	 * @return
 	 */
 	@ResponseBody
@@ -695,8 +695,8 @@ public class MatchController {
 	@RequestMapping("updateMatchState")
 	public JsonElement updateMatchState(Long matchId, Integer state) {
 		try {
-			matchService.updateMatchState(matchId, state);
-			return JsonWrapper.newSuccessInstance();
+            String msg = matchService.updateMatchState(matchId, state);
+			return JsonWrapper.newDataInstance(msg);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
 			e.printStackTrace();

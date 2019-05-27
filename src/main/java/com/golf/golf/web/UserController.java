@@ -1,10 +1,8 @@
 package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
-import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.db.MatchRule;
 import com.golf.golf.db.UserInfo;
-import com.golf.golf.service.MatchService;
 import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

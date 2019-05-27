@@ -313,15 +313,16 @@ public class UserService implements IBaseService {
 
 		//所有球洞 18
 		List<String> parkHoleList = new ArrayList<>();
-		for(int i=1;i<=18;i++){
+		for(int i=1;i<=9;i++){
 			parkHoleList.add(i+"");
-			if(i==9){
-				parkHoleList.add("");
-			}
-			if(i==18){
-				parkHoleList.add("");
-			}
 		}
+        parkHoleList.add("A场");
+        for(int i=10;i<=18;i++){
+            parkHoleList.add(i+"");
+        }
+        parkHoleList.add("B场");
+        parkHoleList.add("总杆");
+
 		//第一条记录 所有球洞
 		MatchGroupUserScoreBean thBean = new MatchGroupUserScoreBean();
 		thBean.setUserId(0L);
@@ -330,7 +331,7 @@ public class UserService implements IBaseService {
 		list.add(thBean);
 
 
-		//获取我参加的所有比赛所在的球场 和总杆差 (比赛id，球场id，球场名称,前半场名称，后半场名称)
+		//获取我参加的所有比赛所在的球场 和总杆差 时间 (比赛id，球场id，球场名称,前半场名称，后半场名称,时间)
 		List<Map<String, Object>> matchList = matchDao.getTotalChaListByUserId(userId);
 		result.put("matchList", matchList);
 
@@ -342,9 +343,9 @@ public class UserService implements IBaseService {
 				MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 				//本用户每个洞得分情况
 				createNewUserScoreList(userId,list,matchInfo);
-				result.put("list", list);
 			}
 		}
+        result.put("list", list);
 		return result;
 	}
 
@@ -357,10 +358,14 @@ public class UserService implements IBaseService {
 		//本用户前半场得分情况
 		List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,0);
 		createNewUserScore(userScoreList, uScoreBeforeList);
+		Integer beforeTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
 		//本用户后半场得分情况
 		List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,1);
 		createNewUserScore(userScoreList, uScoreAfterList);
+        Integer afterTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
+
 		bean.setUserScoreTotalList(userScoreList);
+		bean.setTotalRodScore(beforeTotalScore + afterTotalScore);
 		list.add(bean);
 	}
 

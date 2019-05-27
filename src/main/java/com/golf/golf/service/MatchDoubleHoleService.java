@@ -47,9 +47,9 @@ public class MatchDoubleHoleService implements IBaseService {
 			if(i>=userList.size()){
 				break;
 			}
-			i++;
 			//构造用户成绩数据
 			createUserScoreList(userList.get(i) ,userList.get(i+1), groupId, matchInfo, allUserScoreList);
+            i++;
 		}
 
 		//中间滚动表格，用户得分 和成绩
@@ -63,6 +63,7 @@ public class MatchDoubleHoleService implements IBaseService {
 		result.put("totalScoreList", totalScoreList);
 		return result;
 	}
+
 
 	//双人比洞——构造数据
 	private void createUserScoreList(Map<String, Object> user0, Map<String, Object> user1, Long groupId, MatchInfo matchInfo, List<DoubleRodUserScoreBean> allUserScoreList) {

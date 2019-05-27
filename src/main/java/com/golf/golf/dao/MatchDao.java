@@ -579,10 +579,12 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTotalScoreWithUser(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT s.ms_user_id as user_id, sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
-		sql.append("FROM match_score AS s ");
-		sql.append("where s.ms_match_id = "+matchId+" AND s.ms_group_id = "+groupId);
-		sql.append(" GROUP BY s.ms_user_id ORDER BY s.ms_user_id");
+		sql.append("SELECT g.mugm_user_id AS user_id, sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
+		sql.append("FROM match_user_group_mapping as g LEFT JOIN match_score AS s ");
+        sql.append("ON (s.ms_match_id = g.mugm_match_id " +
+                "AND s.ms_user_id = g.mugm_user_id ) ");
+        sql.append("where g.mugm_match_id = "+matchId+" AND g.mugm_group_id = "+groupId);
+		sql.append(" GROUP BY g.mugm_user_id ORDER BY g.mugm_user_id");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -1009,9 +1011,17 @@ public class MatchDao extends CommonDao {
 	public List<Map<String, Object>> getTotalChaListByUserId(Long userId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT s.ms_match_id as miId,m.mi_park_id as parkId,m.mi_park_name as parkName," +
-				"m.mi_zone_before_nine as beforeNine , m.mi_zone_after_nine as afterNine,sum(s.ms_rod_cha) as sumRodCha ");
+				"m.mi_zone_before_nine as beforeNine , m.mi_zone_after_nine as afterNine,sum(s.ms_rod_cha) as sumRodCha,m.mi_match_time as time ");
 		sql.append("FROM match_score AS s,match_info as m " +
-				"WHERE s.ms_match_type = 1 AND s.ms_user_id = "+userId+ " and s.ms_match_id = m.mi_id GROUP BY s.ms_match_id order by m.mi_park_id ");
+				"WHERE s.ms_match_type = 1 AND s.ms_user_id = "+userId+ " and s.ms_match_id = m.mi_id GROUP BY s.ms_match_id order by m.mi_match_time desc ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
+
+	//获取每组人数
+    public List<Map<String,Object>> getCountUserByMatchId(Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select g.mugm_group_name as groupName,count(g.mugm_user_id) as count from match_user_group_mapping as g where g.mugm_match_id =" +matchId+
+                " GROUP BY g.mugm_group_id");
+        return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+    }
 }
