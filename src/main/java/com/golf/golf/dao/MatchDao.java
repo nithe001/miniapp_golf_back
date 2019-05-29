@@ -41,6 +41,7 @@ public class MatchDao extends CommonDao {
 		hql.append("LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
 		hql.append("WHERE 1=1 ");
 		hql.append(" AND m.mi_type = 1 ");
+		hql.append(" AND m.mi_is_valid = 1 ");
 
 		if((Integer)parp.get("type") == 1){
 			//我参加的比赛
@@ -180,8 +181,8 @@ public class MatchDao extends CommonDao {
 		hql.append("from team_info as t LEFT JOIN ( ");
 		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
 		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
-		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_id in(:ids) and t.ti_is_valid = 1 )");
-		hql.append("where 1=1 ");
+		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
+		hql.append("where t.ti_id in(:ids) and t.ti_is_valid = 1 ");
 		String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
 		return dao.createSQLQuery( select + hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 	}
@@ -1024,4 +1025,12 @@ public class MatchDao extends CommonDao {
                 " GROUP BY g.mugm_group_id");
         return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
     }
+
+	//删除比赛 置为不可用
+	public void updateMatchState(Long matchId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE MatchInfo AS m set m.miIsValid = 0");
+		sql.append("WHERE m.miId = " +matchId);
+		dao.executeHql(sql.toString());
+	}
 }

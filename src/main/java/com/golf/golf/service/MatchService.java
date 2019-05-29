@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 学术活动
@@ -66,8 +63,9 @@ public class MatchService implements IBaseService {
 		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
 			for (ParkInfo parkInfo : (List<ParkInfo>) pageInfo.getItems()) {
 				String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
-				parkInfo.setToMyDistance(distance);
+				parkInfo.setToMyDistance(Integer.parseInt(distance));
 			}
+			Collections.sort(pageInfo.getItems());
 		}
 	}
 
@@ -1282,6 +1280,8 @@ public class MatchService implements IBaseService {
 			}else{
 				return true;
 			}
+		}else{
+			return true;
 		}
 		return false;
 	}
@@ -1537,7 +1537,8 @@ public class MatchService implements IBaseService {
 		//判断是否是我创建的
 		Long count = matchDao.getIsMyCreatMatch(matchId, WebUtil.getUserIdBySessionId());
 		if (count != null && count > 0) {
-			matchDao.del(MatchInfo.class, matchId);
+			//删除比赛 逻辑删除 置为不可用
+			matchDao.updateMatchState(matchId);
 			return true;
 		}
 		return false;
@@ -1549,10 +1550,13 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamListByIds(String teamIds) {
-		List<Long> ids = getLongTeamIdList(teamIds);
-		List<Map<String, Object>> list = matchDao.getTeamListByTeamIds(ids);
-		teamService.getCaptain(list);
-		return list;
+		if(StringUtils.isNotEmpty(teamIds)){
+			List<Long> ids = getLongTeamIdList(teamIds);
+			List<Map<String, Object>> list = matchDao.getTeamListByTeamIds(ids);
+			teamService.getCaptain(list);
+			return list;
+		}
+		return new ArrayList<>();
 	}
 
 	/**
@@ -1635,8 +1639,9 @@ public class MatchService implements IBaseService {
 	 * 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
 	 * @return
 	 */
-	public String invitationScore(Long matchId, Long groupId) throws WxErrorException, IOException {
-		String fileName = System.currentTimeMillis()+".png";//文件名称
+	public String invitationScore(Long userId, Long matchId) throws WxErrorException, IOException {
+		Long myUserId = WebUtil.getUserIdBySessionId();
+		String fileName = userId+"_"+matchId+"_"+myUserId+"_"+System.currentTimeMillis()+".png";//文件名称
 		String QRCodePath = WebUtil.getRealPath(PropertyConst.QRCODE_PATH);
 		File file = new File(QRCodePath, fileName);
 		if(!file.exists()){

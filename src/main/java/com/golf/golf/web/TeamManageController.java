@@ -63,7 +63,10 @@ public class TeamManageController {
 			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
-			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds)){
+			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds) && !"[]".equals(joinTeamIds)){
+				joinTeamIds = joinTeamIds.replace("[","");
+				joinTeamIds = joinTeamIds.replace("]","");
+				joinTeamIds = joinTeamIds.replace("\"","");
 				List<Long> teamIds = matchService.getLongTeamIdList(joinTeamIds);
 				searchBean.addParpField("teamIds", teamIds);
 			}
@@ -308,5 +311,24 @@ public class TeamManageController {
 			return JsonWrapper.newErrorInstance("队长指定该用户成为队长时出错");
 		}
 	}
+
+
+	/**
+	 * 查询我是否填写了详细资料
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getHasDetail")
+	public JsonElement getHasDetail() {
+		try {
+			boolean flag = teamService.getHasDetail();
+			return JsonWrapper.newDataInstance(flag);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("查询我是否填写了详细资料时出错。"+ e);
+			return JsonWrapper.newErrorInstance("查询我是否填写了详细资料时出错");
+		}
+	}
+
 
 }

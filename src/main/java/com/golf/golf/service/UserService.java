@@ -45,9 +45,11 @@ public class UserService implements IBaseService {
 	 * 获取“我的”
 	 * @return
 	 */
-	public Map<String,Object> getMyDetail() {
+	public Map<String,Object> getMyDetail(Long userId) {
 		Map<String,Object> result = new HashMap<>();
-		Long userId = WebUtil.getUserIdBySessionId();
+		if(userId == null){
+			userId = WebUtil.getUserIdBySessionId();
+		}
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
 		result.put("userInfo",userInfo);
 		//差点

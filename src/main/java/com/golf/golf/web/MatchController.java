@@ -912,10 +912,10 @@ public class MatchController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("invitationScore")
-	public JsonElement invitationScore(Long matchId, Long groupId) {
+	@RequestMapping("createScoreQRCode")
+	public JsonElement createScoreQRCode(Long userId, Long matchId) {
 		try {
-			String QRCodePath = matchService.invitationScore(matchId, groupId);
+			String QRCodePath = matchService.invitationScore(userId, matchId);
 			return JsonWrapper.newDataInstance(QRCodePath);
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
@@ -942,4 +942,6 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+
 }

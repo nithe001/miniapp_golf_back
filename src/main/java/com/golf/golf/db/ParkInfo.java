@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "park_info")
-public class ParkInfo {
+public class ParkInfo implements Comparable<ParkInfo>{
 
 	// Fields
 
@@ -123,14 +123,20 @@ public class ParkInfo {
 	}
 
 	//到我的距离
-	private String toMyDistance;
+	private Integer toMyDistance;
 	@Transient
 
-	public String getToMyDistance() {
+	public Integer getToMyDistance() {
 		return toMyDistance;
 	}
 
-	public void setToMyDistance(String toMyDistance) {
+	public void setToMyDistance(Integer toMyDistance) {
 		this.toMyDistance = toMyDistance;
+	}
+
+	//距离小的靠前排
+	@Override
+	public int compareTo(ParkInfo parkInfo) {
+		return this.toMyDistance - parkInfo.toMyDistance;
 	}
 }

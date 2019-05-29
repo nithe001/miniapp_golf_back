@@ -9,6 +9,7 @@ import com.golf.common.util.TimeUtil;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
+import com.golf.golf.db.UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -268,5 +269,23 @@ public class TeamService implements IBaseService {
 		teamUserMapping.setTumUpdateUserId(WebUtil.getUserIdBySessionId());
 		teamUserMapping.setTumUpdateUserName(WebUtil.getUserNameBySessionId());
 		teamDao.update(teamUserMapping);
+	}
+
+	/**
+	 * 查询我是否填写了详细资料
+	 * @return
+	 */
+	public boolean getHasDetail() {
+		UserInfo userInfo = teamDao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+		if(StringUtils.isNotEmpty(userInfo.getUiRealName()) && userInfo.getUiAge() != null && StringUtils.isNotEmpty(userInfo.getUiTelNo())
+			&& StringUtils.isNotEmpty(userInfo.getUiEmail()) && StringUtils.isNotEmpty(userInfo.getUiGraduateSchool())
+				&& StringUtils.isNotEmpty(userInfo.getUiGraduateDepartment())
+				&& StringUtils.isNotEmpty(userInfo.getUiGraduateTime())
+				&& StringUtils.isNotEmpty(userInfo.getUiMajor())
+				&& StringUtils.isNotEmpty(userInfo.getUiWorkUnit())
+				&& StringUtils.isNotEmpty(userInfo.getUiPost()) && StringUtils.isNotEmpty(userInfo.getUiAddress())){
+			return true;
+		}
+		return false;
 	}
 }

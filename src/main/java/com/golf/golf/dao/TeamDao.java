@@ -29,15 +29,15 @@ public class TeamDao extends CommonDao {
         hql.append("from team_info as t LEFT JOIN ( ");
 		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
 		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
-		hql.append(")as tum on (t.ti_id = tum.tum_team_id and t.ti_is_valid = 1 )");
-		hql.append("where 1=1 ");
+		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
+		hql.append("where t.ti_is_valid = 1 ");
 
 		if((Integer)parp.get("type") == 1){
 			//我加入的球队
 			hql.append("AND t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
-			//我可以加入的球队
-			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
+			//我可以加入的球队  包括我创建的球队，作为队长可以管理报名
+			hql.append("and (t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) or t.ti_create_user_id = :userId)");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的球队 包括我加入的球队
 			hql.append("AND (t.ti_create_user_id = :userId or (t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId)))");
@@ -119,15 +119,12 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
-	 * 删除球队 和 用户mapping
+	 * 删除球队
 	 * @return
 	 */
 	public void delTeam(Long teamId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("update TeamInfo as t set t.tiIsValid = 0 WHERE t.tiId = "+teamId);
-		dao.executeHql(hql.toString());
-		hql.delete(0, hql.length());
-		hql.append("update TeamUserMapping as m set m.tumIsValid = 0 WHERE m.tumTeamId = "+teamId);
 		dao.executeHql(hql.toString());
 	}
 

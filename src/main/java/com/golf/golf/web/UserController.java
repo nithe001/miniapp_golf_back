@@ -79,9 +79,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement getUserInfo() {
+	public JsonElement getUserInfo(Long userId) {
 		try {
-			Map<String,Object> result = userService.getMyDetail();
+			Map<String,Object> result = userService.getMyDetail(userId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
