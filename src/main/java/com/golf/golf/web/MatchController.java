@@ -465,6 +465,24 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 记分卡 初始化 查询我是否可以记分
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMeCanScore")
+	public JsonElement getMeCanScore(Long matchId, Long groupId) {
+		try {
+			Long count = matchService.getMeCanScore(matchId, groupId);
+			return JsonWrapper.newDataInstance(count);
+		} catch (Exception e) {
+			String errmsg = "前台-单练——开始记分——保存数据时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 
 

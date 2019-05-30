@@ -1033,4 +1033,19 @@ public class MatchDao extends CommonDao {
 		sql.append("WHERE m.miId = " +matchId);
 		dao.executeHql(sql.toString());
 	}
+
+	/**
+	 * 记分卡 初始化 查询我是否可以记分
+	 * 我是否是同组比赛人员或者是被邀请到本组记分的用户
+	 * @return
+	 */
+	public Long getMeCanScore(Long matchId, Long groupId, Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT COUNT(*) FROM  MatchUserGroupMapping as g WHERE g.mugmMatchId = "+matchId);
+		if(groupId != null){
+			hql.append(" and g.mugmGroupId = "+groupId);
+		}
+		hql.append(" and g.mugmUserId = "+myUserId);
+		return dao.createCountQuery(hql.toString());
+	}
 }

@@ -1708,4 +1708,12 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmUpdateUserName(WebUtil.getUserNameBySessionId());
 		matchDao.update(matchUserGroupMapping);
 	}
+
+	/**
+	 * 记分卡 初始化 查询我是否可以记分
+	 * @return
+	 */
+	public Long getMeCanScore(Long matchId, Long groupId) {
+		return matchDao.getMeCanScore(matchId, groupId, WebUtil.getUserIdBySessionId());
+	}
 }
