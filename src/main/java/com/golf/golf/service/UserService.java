@@ -101,6 +101,15 @@ public class UserService implements IBaseService {
 		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
 		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
         dao.update(db);
+        //更新其他表有用到真实姓名的地方
+		//比赛表
+		dao.updateMatchInfo(db.getUiId(),user.getUiRealName());
+		//比赛成绩表
+		dao.updateMatchScore(db.getUiId(),user.getUiRealName());
+		//比赛用户分组表
+		dao.updateMatchUserGroupMapping(db.getUiId(),user.getUiRealName());
+		//球队表
+		dao.updateTeamInfo(db.getUiId(),user.getUiRealName());
     }
 
 	/**

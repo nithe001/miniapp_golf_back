@@ -137,6 +137,9 @@ public class ParkInfo implements Comparable<ParkInfo>{
 	//距离小的靠前排
 	@Override
 	public int compareTo(ParkInfo parkInfo) {
-		return this.toMyDistance - parkInfo.toMyDistance;
+		if(this.toMyDistance != null && parkInfo.toMyDistance != null){
+			return this.toMyDistance - parkInfo.toMyDistance;
+		}
+		return 0;
 	}
 }

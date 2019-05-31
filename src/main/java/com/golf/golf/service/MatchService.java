@@ -62,8 +62,10 @@ public class MatchService implements IBaseService {
 		UserInfo userInfo = matchDao.get(UserInfo.class, WebUtil.getUserIdBySessionId());
 		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
 			for (ParkInfo parkInfo : (List<ParkInfo>) pageInfo.getItems()) {
-				String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
-				parkInfo.setToMyDistance(Integer.parseInt(distance));
+				if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
+					String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
+					parkInfo.setToMyDistance(Integer.parseInt(distance));
+				}
 			}
 			Collections.sort(pageInfo.getItems());
 		}

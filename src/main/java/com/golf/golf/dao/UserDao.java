@@ -216,4 +216,46 @@ public class UserDao extends CommonDao {
 		}
 		return dao.createQuery(hql.toString());
 	}
+
+	/**
+	 * 更新用户真实姓名
+	 * @return
+	 */
+	public void updateMatchInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchInfo AS m set m.miCreateUserName = '"+ uiRealName+"' where m.miCreateUserId = "+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+
+	/**
+	 * 更新用户真实姓名
+	 * @return
+	 */
+	public void updateMatchScore(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchScore AS s set s.msUserName = '"+uiRealName+"' where s.msUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新用户真实姓名
+	 * @return
+	 */
+	public void updateMatchUserGroupMapping(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchUserGroupMapping AS g set g.mugmUserName = '"+uiRealName+"' where g.mugmUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+
+	/**
+	 * 更新用户真实姓名
+	 * @return
+	 */
+	public void updateTeamInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE TeamInfo AS t set t.tiCreateUserName = '"+uiRealName+"' where t.tiCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
 }

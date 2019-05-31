@@ -269,11 +269,12 @@ public class MatchDao extends CommonDao {
 		if(parp.get("city") != null){
 			hql.append("AND p.piCity = :city  ");
 		}
-
-		hql.append("AND p.piLng >= :minlng ");
+		if(parp.get("keyword") == null && parp.get("city") == null){
+			hql.append("AND p.piLng >= :minlng ");
 //		hql.append("AND p.piLng <= :maxlng ");
-		hql.append("AND p.piLat >= :minlat ");
+			hql.append("AND p.piLat >= :minlat ");
 //		hql.append("AND p.piLat <= :maxlat ");
+		}
 
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {

@@ -91,7 +91,7 @@ public class UserController {
 	}
 
 	/**
-	 * 修改个人信息
+	 * 修改个人信息 同时更新其他表中有用到真实姓名的地方
 	 * @return
 	 */
 	@ResponseBody
