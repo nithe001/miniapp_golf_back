@@ -9,6 +9,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.TeamService;
+import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -41,6 +42,8 @@ public class TeamManageController {
     private TeamService teamService;
 	@Autowired
 	private MatchService matchService;
+	@Autowired
+	private UserService userService;
 
 	/**
 	 * 获取球队列表
@@ -52,7 +55,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamList")
-	public JsonElement getTeamList(Integer page, Integer type, String keyword, String joinTeamIds) {
+	public JsonElement getTeamList(Integer page, Integer type, String keyword, String joinTeamIds, String openid) {
 		Integer nowPage = 1;
 		if (page > 0) {
 			nowPage = page;
@@ -71,7 +74,7 @@ public class TeamManageController {
 				searchBean.addParpField("teamIds", teamIds);
 			}
 			searchBean.addParpField("type", type);
-			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
+			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
 			pageInfo = teamService.getTeamList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -89,7 +92,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveTeamInfo")
-	public JsonElement saveTeamInfo(String teamInfo, String logoPath, String signature, String digest) {
+	public JsonElement saveTeamInfo(String teamInfo, String logoPath, String signature, String digest, String openid) {
 		try {
 			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
@@ -97,7 +100,7 @@ public class TeamManageController {
 				teamInfoBean.setTiLogo(logoPath);
 				teamInfoBean.setTiSignature(signature);
 				teamInfoBean.setTiDigest(digest);
-				teamService.saveOrUpdateTeamInfo(teamInfoBean);
+				teamService.saveOrUpdateTeamInfo(teamInfoBean, openid);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -162,11 +165,11 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "delTeamById")
-	public JsonElement delTeamById(Long teamId) {
+	public JsonElement delTeamById(Long teamId, String openid) {
 		try {
 			boolean flag = false;
 			if(teamId != null){
-				flag = teamService.delTeamById(teamId);
+				flag = teamService.delTeamById(teamId,openid);
 			}
 			if(flag){
 				return JsonWrapper.newSuccessInstance();

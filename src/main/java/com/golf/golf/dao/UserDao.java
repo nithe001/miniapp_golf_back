@@ -115,7 +115,7 @@ public class UserDao extends CommonDao {
 	 */
 	public UserInfo getUserByOpenid(String openId) {
 		StringBuffer hql = new StringBuffer();
-		hql.append("FROM UserInfo as u WHERE u.uiOpenId = " +openId);
+		hql.append("FROM UserInfo as u WHERE u.uiOpenId = '" +openId+"'");
 		return dao.findOne(hql.toString(), null);
 	}
 

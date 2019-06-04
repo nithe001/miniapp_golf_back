@@ -59,10 +59,10 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateUserLocation")
-	public JsonElement updateUserLocation(String latitude, String longitude) {
+	public JsonElement updateUserLocation(String latitude, String longitude, String openid) {
 		try {
-			if(StringUtils.isNotEmpty(latitude) && StringUtils.isNotEmpty(longitude)){
-				userService.updateUserLocation(latitude, longitude);
+			if(StringUtils.isNotEmpty(latitude) && StringUtils.isNotEmpty(longitude) && StringUtils.isNotEmpty(openid)){
+				userService.updateUserLocation(latitude, longitude, openid);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -79,9 +79,26 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement getUserInfo(Long userId) {
+	public JsonElement getUserInfo(String openid) {
 		try {
-			Map<String,Object> result = userService.getMyDetail(userId);
+			Map<String,Object> result = userService.getMyDetail(openid);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取用户信息失败。", e);
+			return JsonWrapper.newErrorInstance("获取用户信息失败");
+		}
+	}
+
+	/**
+	 * 获取其他用户的详细资料
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getOthersUserInfo")
+	public JsonElement getOthersUserInfo(Long userId) {
+		try {
+			Map<String,Object> result = userService.getOtherDetail(userId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -96,12 +113,12 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateUserInfo")
-	public JsonElement updateUserInfo(String userInfo) {
+	public JsonElement updateUserInfo(String userInfo, String openid) {
 		try {
-			if(StringUtils.isNotEmpty(userInfo)){
+			if(StringUtils.isNotEmpty(userInfo) && StringUtils.isNotEmpty(openid)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
 				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
-				userService.updateUser(userInfoBean);
+				userService.updateUser(userInfoBean, openid);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -117,10 +134,10 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateUserSignature")
-	public JsonElement updateUserSignature(String signature) {
+	public JsonElement updateUserSignature(String signature, String openid) {
 		try {
-			if(StringUtils.isNotEmpty(signature)){
-				userService.updateUserSignature(signature);
+			if(StringUtils.isNotEmpty(signature) && StringUtils.isNotEmpty(openid)){
+				userService.updateUserSignature(signature, openid);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -138,9 +155,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfoById")
-	public JsonElement getUserInfoById(Long teamId, Long matchId, Long userId) {
+	public JsonElement getUserInfoById(Long teamId, Long matchId, Long userId, String openid) {
 		try {
-			Map<String, Object> result = userService.getUserDetaliInfoById(teamId,matchId,userId);
+			Map<String, Object> result = userService.getUserDetaliInfoById(teamId,matchId,userId,openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -156,9 +173,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyHistoryScoreByUserId")
-	public JsonElement getMyHistoryScoreByUserId() {
+	public JsonElement getMyHistoryScoreByUserId(String openid) {
 		try {
-			Map<String,Object> result = userService.getMyHistoryScoreByUserId();
+			Map<String,Object> result = userService.getMyHistoryScoreByUserId(openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -177,9 +194,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyHistoryScoreByYear")
-	public JsonElement getMyHistoryScoreByYear(String date) {
+	public JsonElement getMyHistoryScoreByYear(String date, String openid) {
 		try {
-			Map<String,Object> result = userService.getMyHistoryScoreByYear(date);
+			Map<String,Object> result = userService.getMyHistoryScoreByYear(date, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();

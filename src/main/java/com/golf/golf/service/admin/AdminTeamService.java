@@ -98,4 +98,18 @@ public class AdminTeamService implements IBaseService {
 		return result;
 	}
 
+	/**
+	 * 修改状态
+	 * @param teamId 球队id
+	 * @return
+	 */
+	public void delTeam(Long teamId) {
+		TeamInfo teamInfo = adminTeamDao.get(TeamInfo.class,teamId);
+		if(teamInfo.getTiIsValid() == 0){
+			teamInfo.setTiIsValid(1);
+		}else{
+			teamInfo.setTiIsValid(0);
+		}
+		adminTeamDao.update(teamInfo);
+	}
 }

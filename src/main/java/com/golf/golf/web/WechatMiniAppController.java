@@ -86,8 +86,8 @@ public class WechatMiniAppController extends GenericController {
 					//回传loginSessionKey
 					Map<String, Object> result = new HashMap<String, Object>();
 					result.put("openid",openid);
-					result.put("loginSessionKey",loginSessionKey);
-					result.put("sessionId",session.getId());
+//					result.put("loginSessionKey",loginSessionKey);
+//					result.put("sessionId",session.getId());
 					return JsonWrapper.newDataInstance(result);
 				}
 			}else{

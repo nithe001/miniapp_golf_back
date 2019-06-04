@@ -22,6 +22,7 @@ public class MatchDao extends CommonDao {
 
 	/**
 	 * 获取比赛列表 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛 3:我创建的比赛
+	 * 比赛按时间最近优先和位置最近优先排序；选“我的比赛”只列我参加的比赛，其他一样
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -58,12 +59,15 @@ public class MatchDao extends CommonDao {
 		}
 
 		//计算我附近的比赛
-		if(parp.get("minlng") != null){
-			hql.append("AND p.pi_lng >= :minlng ");
-		}
-		if(parp.get("minlat") != null){
-			hql.append("AND p.pi_lat >= :minlat ");
-		}
+		/*if((Integer)parp.get("type") != 3){
+			if(parp.get("minlng") != null){
+				hql.append("AND p.pi_lng >= :minlng ");
+			}
+			if(parp.get("minlat") != null){
+				hql.append("AND p.pi_lat >= :minlat ");
+			}
+		}*/
+
 		hql.append("GROUP BY m.mi_id ");
 
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) from ("+hql.toString()+") as t", parp);
@@ -508,12 +512,13 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getSingleUserListById(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT m.mugmUserId as uiId, m.mugmUserName as uiRealName  ");
-		sql.append("FROM MatchUserGroupMapping as m ");
-		sql.append("where m.mugmMatchId = "+matchId);
-		sql.append(" and m.mugmGroupId = "+groupId);
-		sql.append(" order by m.mugmUserId ");
-		List<Map<String, Object>> list = dao.createQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		sql.append("SELECT m.mugm_user_id as uiId, m.mugm_user_name as uiRealName,u.ui_headimg AS uiHeadimg ");
+		sql.append("FROM match_user_group_mapping as m left join user_info as u ");
+		sql.append("on m.mugm_user_id = u.ui_id ");
+		sql.append("where m.mugm_match_id = "+matchId);
+		sql.append(" and m.mugm_group_id = "+groupId);
+		sql.append(" order by m.mugm_user_id ");
+		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
 

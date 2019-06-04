@@ -9,10 +9,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.ParkInfo;
-import com.golf.golf.service.MatchDoubleHoleService;
-import com.golf.golf.service.MatchDoubleRodService;
-import com.golf.golf.service.MatchService;
-import com.golf.golf.service.MatchSingleHoleService;
+import com.golf.golf.service.*;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,6 +39,8 @@ public class MatchController {
 
 	@Autowired
 	private MatchService matchService;
+	@Autowired
+	private UserService userService;
 
 	//单人比洞记分卡service
 	@Autowired
@@ -66,7 +65,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchList")
-	public JsonElement getMatchList(String page, Integer type, String keyword) {
+	public JsonElement getMatchList(String page, Integer type, String keyword,String openid) {
 		Integer nowPage = 1;
 		if (StringUtils.isNotEmpty(page) && Integer.parseInt(page) > 0) {
 			nowPage = Integer.parseInt(page);
@@ -78,7 +77,7 @@ public class MatchController {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
-			searchBean.addParpField("userId", WebUtil.getUserIdBySessionId());
+			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -133,7 +132,7 @@ public class MatchController {
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
 	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
-									 String afterZoneName,String reportTeamIds) {
+									 String afterZoneName, String reportTeamIds, String openid) {
 		try {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
@@ -148,7 +147,7 @@ public class MatchController {
 				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined")){
 					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				}
-				matchService.saveMatchInfo(matchInfoBean,parkName);
+				matchService.saveMatchInfo(matchInfoBean, parkName, openid);
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -167,9 +166,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "setMatchCaptainByUserId")
-	public JsonElement setMatchCaptainByUserId(Long matchId, Long userId) {
+	public JsonElement setMatchCaptainByUserId(Long matchId, Long userId, String openid) {
 		try {
-			matchService.setMatchCaptainByUserId(matchId, userId);
+			matchService.setMatchCaptainByUserId(matchId, userId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -185,9 +184,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "delMatchById")
-	public JsonElement delMatchById(Long matchId) {
+	public JsonElement delMatchById(Long matchId, String openid) {
 		try {
-			boolean flag = matchService.delMatchById(matchId);
+			boolean flag = matchService.delMatchById(matchId, openid);
 			if(flag){
 				return JsonWrapper.newSuccessInstance();
 			}else{
@@ -200,7 +199,6 @@ public class MatchController {
 		}
 	}
 
-
 	/**
 	 * 点击进入比赛详情——获取围观用户列表和比赛分组 如果不是参赛人员，则加入围观用户
 	 * @param count 获取围观显示的个数
@@ -208,17 +206,37 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchDetail")
-	public JsonElement getMatchDetail(Long matchId, Integer count) {
+	public JsonElement getMatchDetail(Long matchId, Integer count, String openid) {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
 			//如果不是参赛人员，则加入围观用户
-			boolean isWatch = matchService.saveOrUpdateWatch(matchInfo);
-			Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count);
+			boolean isWatch = matchService.saveOrUpdateWatch(matchInfo, openid);
+			Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count, openid);
 			matchMap.put("isWatch",isWatch);
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+
+	/**
+	 * 获取比赛详情
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMatchInfoById")
+	public JsonElement getMatchInfoById(Long matchId) {
+		try {
+			//比赛详情
+			MatchInfo matchInfo = matchService.getMatchById(matchId);
+			return JsonWrapper.newDataInstance(matchInfo);
+		} catch (Exception e) {
+			String errmsg = "前台-获取比赛详情时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -231,9 +249,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getIsCaptain")
-	public JsonElement getIsCaptain(Long matchId) {
+	public JsonElement getIsCaptain(Long matchId, String openid) {
 		try {
-			boolean isCaptain = matchService.getIsCaptain(matchId);
+			boolean isCaptain = matchService.getIsCaptain(matchId, openid);
 			return JsonWrapper.newDataInstance(isCaptain);
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取是否是赛长时出错。";
@@ -285,9 +303,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("addGroupByTeamId")
-	public JsonElement addGroupByTeamId(Long matchId) {
+	public JsonElement addGroupByTeamId(Long matchId, String openid) {
 		try {
-			matchService.addGroupByTeamId(matchId);
+			matchService.addGroupByTeamId(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
@@ -328,9 +346,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("addUserToGroupByMatchId")
-	public JsonElement addUserToGroupByMatchId(Long matchId, Long groupId, String userIds) {
+	public JsonElement addUserToGroupByMatchId(Long matchId, Long groupId, String userIds, String openid) {
 		try {
-			matchService.addUserToGroupByMatchId(matchId,groupId,userIds);
+			matchService.addUserToGroupByMatchId(matchId,groupId,userIds,openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长将用户加入该分组时出错。";
@@ -434,9 +452,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMySinglePlay")
-	public JsonElement getMySinglePlay() {
+	public JsonElement getMySinglePlay(String openid) {
 		try {
-			Map<String,Object> result = matchService.getMySinglePlay();
+			Map<String,Object> result = matchService.getMySinglePlay(openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-单练——查询是否有我正在进行的单练时出错。";
@@ -453,9 +471,10 @@ public class MatchController {
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
 	public JsonElement saveSinglePlay(Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
-									  String beforeZoneName, String afterZoneName) {
+									  String beforeZoneName, String afterZoneName, String openid) {
 		try {
-			Map<String,Object> result = matchService.saveSinglePlay(parkId, parkName, playTime, peopleNum, digest, beforeZoneName, afterZoneName);
+			Map<String,Object> result = matchService.saveSinglePlay(parkId, parkName, playTime, peopleNum, digest,
+										beforeZoneName, afterZoneName, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
@@ -471,9 +490,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMeCanScore")
-	public JsonElement getMeCanScore(Long matchId, Long groupId) {
+	public JsonElement getMeCanScore(Long matchId, Long groupId, String openid) {
 		try {
-			Long count = matchService.getMeCanScore(matchId, groupId);
+			Long count = matchService.getMeCanScore(matchId, groupId, openid);
 			return JsonWrapper.newDataInstance(count);
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
@@ -495,7 +514,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getParkList")
-    public JsonElement getParkList(Integer page, String keyword, String city) {
+    public JsonElement getParkList(Integer page, String keyword, String city, String openid) {
         if (page == null || page == 0) {
             page = 1;
         }
@@ -507,6 +526,8 @@ public class MatchController {
 			if(StringUtils.isNotEmpty(city)){
 				searchBean.addParpField("city", city);
 			}
+			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
+
             POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>( Const.ROWSPERPAGE, page);
 			//附近
 			pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
@@ -690,10 +711,10 @@ public class MatchController {
 	@RequestMapping("saveOrUpdateScore")
 	public JsonElement saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
 										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
-										 Integer pushRod, Integer beforeAfter) {
+										 Integer pushRod, Integer beforeAfter, String openid) {
 		try {
 			matchService.saveOrUpdateScore(userId, userName, matchId, groupId,scoreId, holeName, holeNum,
-														holeStandardRod, isUp, rod, rodCha, pushRod, beforeAfter);
+														holeStandardRod, isUp, rod, rodCha, pushRod, beforeAfter, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -711,9 +732,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateMatchState")
-	public JsonElement updateMatchState(Long matchId, Integer state) {
+	public JsonElement updateMatchState(Long matchId, Integer state, String openid) {
 		try {
-            String msg = matchService.updateMatchState(matchId, state);
+            String msg = matchService.updateMatchState(matchId, state, openid);
 			return JsonWrapper.newDataInstance(msg);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
@@ -736,9 +757,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("submitScoreByTeamId")
-	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
+	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
+										   Integer rodScore, Integer winScore, String openid) {
 		try {
-			boolean flag = matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore);
+			boolean flag = matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore, openid);
 			if(flag){
 				return JsonWrapper.newDataInstance(1);
 			}else{
@@ -782,9 +804,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("endSingleMatchById")
-	public JsonElement endSingleMatchById(Long matchId) {
+	public JsonElement endSingleMatchById(Long matchId, String openid) {
 		try {
-			matchService.endSingleMatchById(matchId);
+			matchService.endSingleMatchById(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
@@ -838,9 +860,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamScoreByMatchId")
-	public JsonElement getTeamScoreByMatchId(Long matchId, Long teamId) {
+	public JsonElement getTeamScoreByMatchId(Long matchId, Long teamId, String openid) {
 		try {
-			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId, teamId);
+			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId, teamId, openid);
 			return JsonWrapper.newDataInstance(teamScore);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队比分时出错。matchId="+matchId;
@@ -875,9 +897,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("applyMatch")
-	public JsonElement applyMatch(Long matchId, Long groupId, String groupName) {
+	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, String openid) {
 		try {
-			Integer flag = matchService.applyMatch(matchId, groupId, groupName);
+			Integer flag = matchService.applyMatch(matchId, groupId, groupName, openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
@@ -893,9 +915,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("quitMatch")
-	public JsonElement quitMatch(Long matchId, Long groupId) {
+	public JsonElement quitMatch(Long matchId, Long groupId, String openid) {
 		try {
-			matchService.quitMatch(matchId,groupId);
+			matchService.quitMatch(matchId, groupId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "比赛——退出比赛时出错。matchId="+matchId;
@@ -931,9 +953,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("createScoreQRCode")
-	public JsonElement createScoreQRCode(Long userId, Long matchId) {
+	public JsonElement createScoreQRCode(Long userId, Long matchId, String openid) {
 		try {
-			String QRCodePath = matchService.invitationScore(userId, matchId);
+			String QRCodePath = matchService.invitationScore(userId, matchId, openid);
 			return JsonWrapper.newDataInstance(QRCodePath);
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
@@ -949,9 +971,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("scanScoreQRCode")
-	public JsonElement scanScoreQRCode(Long matchId, Long groupId) {
+	public JsonElement scanScoreQRCode(Long matchId, Long groupId, String openid) {
 		try {
-			String QRCodePath = matchService.invitationScore(matchId, groupId);
+			String QRCodePath = matchService.invitationScore(matchId, groupId, openid);
 			return JsonWrapper.newDataInstance(QRCodePath);
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;

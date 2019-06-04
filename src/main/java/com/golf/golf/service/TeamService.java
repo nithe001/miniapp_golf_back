@@ -29,6 +29,8 @@ public class TeamService implements IBaseService {
     private TeamDao teamDao;
 	@Autowired
 	private MatchService matchService;
+	@Autowired
+	private UserService userService;
 
 	/**
 	 * 获取球队列表
@@ -73,22 +75,23 @@ public class TeamService implements IBaseService {
 	 * 创建更新球队
 	 * @return
 	 */
-	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean) {
+	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if(teamInfoBean.getTiId() == null){
 			teamInfoBean.setTiCreateTime(System.currentTimeMillis());
-			teamInfoBean.setTiCreateUserId(WebUtil.getUserIdBySessionId());
-			teamInfoBean.setTiCreateUserName(WebUtil.getUserNameBySessionId());
+			teamInfoBean.setTiCreateUserId(userInfo.getUiId());
+			teamInfoBean.setTiCreateUserName(userInfo.getUiRealName());
 			teamInfoBean.setTiIsValid(1);
 			Long teamId = teamDao.save(teamInfoBean);
 			//向球队用户表新增一条记录
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
 			teamUserMapping.setTumTeamId(teamId);
-			teamUserMapping.setTumUserId(WebUtil.getUserIdBySessionId());
+			teamUserMapping.setTumUserId(userInfo.getUiId());
 			//设置队长
 			teamUserMapping.setTumUserType(0);
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
-			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
+			teamUserMapping.setTumCreateUserId(userInfo.getUiId());
+			teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
@@ -102,8 +105,8 @@ public class TeamService implements IBaseService {
 			db.setTiUserInfoType(teamInfoBean.getTiUserInfoType());
 			db.setTiMatchResultAuditType(teamInfoBean.getTiMatchResultAuditType());
 			db.setTiUpdateTime(System.currentTimeMillis());
-			db.setTiUpdateUserId(WebUtil.getUserIdBySessionId());
-			db.setTiUpdateUserName(WebUtil.getUserNameBySessionId());
+			db.setTiUpdateUserId(userInfo.getUiId());
+			db.setTiUpdateUserName(userInfo.getUiRealName());
 			teamDao.update(db);
 		}
 
@@ -132,8 +135,8 @@ public class TeamService implements IBaseService {
 	 * 删除球队
 	 * @return
 	 */
-	public boolean delTeamById(Long teamId) {
-		Long userId = WebUtil.getUserIdBySessionId();
+	public boolean delTeamById(Long teamId, String openid) {
+		Long userId = userService.getUserIdByOpenid(openid);
 		//是否是该球队的队长
 		Long count = teamDao.isCaptainIdByTeamId(teamId,userId);
 		if(count >0){

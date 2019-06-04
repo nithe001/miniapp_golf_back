@@ -83,7 +83,7 @@ public class AdminTeamController {
 	 * @return
 	 */
 	@RequestMapping("addTeam")
-	public String addTeam(TeamInfo calendar){
+	public String addTeam(TeamInfo teamInfo){
 		try{
 //			String a = calendar.getMiContent().replace("\"", "\'");
 //			calendar.setMiContent(a);
@@ -96,13 +96,13 @@ public class AdminTeamController {
 	}
 
     /**
-     * 编辑球队init
-     * @param mm
-     * @param teamId 球队id
-     * @return
-     */
-    @RequestMapping("editTeamUI")
-    public String editTeamUI(ModelMap mm, Long teamId){
+	 * 编辑球队init
+	 * @param mm
+	 * @param teamId 球队id
+	 * @return
+	 */
+	@RequestMapping("editTeamUI")
+	public String editTeamUI(ModelMap mm, Long teamId){
 		try{
 			Map<String,Object> teamInfo = adminTeamService.getMatchInfoById(teamId);
 			mm.addAttribute("teamInfo",teamInfo);
@@ -111,6 +111,23 @@ public class AdminTeamController {
 			logger.error("编辑球队init出错。"+ e );
 			return "admin/error";
 		}
-        return "admin/team/edit";
-    }
+		return "admin/team/edit";
+	}
+
+	/**
+	 * 修改状态
+	 * @param teamId 球队id
+	 * @return
+	 */
+	@RequestMapping("delTeam")
+	public String delTeam(Long teamId){
+		try{
+			adminTeamService.delTeam(teamId);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("修改球队状态出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:list";
+	}
 }

@@ -45,15 +45,27 @@ public class UserService implements IBaseService {
 	 * 获取“我的”
 	 * @return
 	 */
-	public Map<String,Object> getMyDetail(Long userId) {
+	public Map<String,Object> getMyDetail(String openid) {
 		Map<String,Object> result = new HashMap<>();
-		if(userId == null){
-			userId = WebUtil.getUserIdBySessionId();
-		}
+		UserInfo userInfo = dao.getUserByOpenid(openid);
+		result.put("userInfo",userInfo);
+		//差点
+		Integer chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
+		result.put("chaPoint",chaPoint);
+		return result;
+	}
+
+
+	/**
+	 * 获取其他用户的详细资料
+	 * @return
+	 */
+	public Map<String, Object> getOtherDetail(Long userId) {
+		Map<String,Object> result = new HashMap<>();
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
 		result.put("userInfo",userInfo);
 		//差点
-		Integer chaPoint = matchService.getUserChaPoint(userId);
+		Integer chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
 		result.put("chaPoint",chaPoint);
 		return result;
 	}
@@ -82,8 +94,8 @@ public class UserService implements IBaseService {
      * 保存用户信息
      * @param user
      */
-    public void updateUser(UserInfo user) throws Exception {
-    	UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+    public void updateUser(UserInfo user, String openid) throws Exception {
+    	UserInfo db = getUserByOpenId(openid);
     	db.setUiRealName(user.getUiRealName());
     	db.setUiAge(user.getUiAge());
     	db.setUiTelNo(user.getUiTelNo());
@@ -98,8 +110,8 @@ public class UserService implements IBaseService {
 		db.setUiAddress(user.getUiAddress());
 		db.setUiHomeCourt(user.getUiHomeCourt());
 		db.setUiUpdateTime(System.currentTimeMillis());
-		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
-		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+		db.setUiUpdateUserId(db.getUiId());
+		db.setUiUpdateUserName(db.getUiRealName());
         dao.update(db);
         //更新其他表有用到真实姓名的地方
 		//比赛表
@@ -116,8 +128,8 @@ public class UserService implements IBaseService {
 	 * 更新签名
 	 * @return
 	 */
-	public void updateUserSignature(String signature) {
-		UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+	public void updateUserSignature(String signature, String openid) {
+		UserInfo db = dao.getUserByOpenid(openid);
 		db.setUiPersonalizedSignature(signature);
 		db.setUiUpdateTime(System.currentTimeMillis());
 		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
@@ -156,23 +168,23 @@ public class UserService implements IBaseService {
 		return userModel;
 	}
 
-	/**
-	 * 获取我的活动
-	 * @return
-	 */
-	public List<MatchInfo> getCalendarListByUserId(Long cuClub) {
-		return dao.getCalendarListByUserId(cuClub);
+	//通过openId获取用户信息
+	public WechatUserInfo getWechatUserInfoByOpenId(String openId) {
+		return dao.getUserInfoByOpenId(openId);
 	}
-
-
+	//通过openId获取用户信息
+	public UserInfo getUserByOpenId(String openId) {
+		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openId);
+		return dao.get(UserInfo.class,wechatUserInfo.getWuiUId());
+	}
 
     /**
      * 详细资料 只有是队友且该球队要求 详细资料时才可见
      * @return
      */
-    public boolean userInfoIsOpen(Long userId) {
+    public boolean userInfoIsOpen(Long userId, String openid) {
         //是否是我的队友
-        Long teamId = dao.getIsMyTeammate(WebUtil.getUserIdBySessionId(),userId);
+        Long teamId = dao.getIsMyTeammate(getUserIdByOpenid(openid),userId);
         if(teamId != null){
             TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
             if(teamInfo != null && teamInfo.getTiUserInfoType() == 1){
@@ -217,13 +229,6 @@ public class UserService implements IBaseService {
 			wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
 			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
 
-			//下载头像
-			/*String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
-			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
-			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
-				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
-			}*/
-//			wechatUserInfo.setWuiHeadimg(headImgPath);
 			wechatUserInfo.setWuiIsValid(1);
 			wechatUserInfo.setCreateTime(System.currentTimeMillis());
 
@@ -301,8 +306,8 @@ public class UserService implements IBaseService {
 	 * 更新用户经纬度信息
 	 * @return
 	 */
-	public void updateUserLocation(String latitude, String longitude) {
-		UserInfo db = dao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+	public void updateUserLocation(String latitude, String longitude, String openid) {
+		UserInfo db = getUserByOpenId(openid);
 		db.setUiLatitude(latitude);
 		db.setUiLongitude(longitude);
 		db.setUiUpdateTime(System.currentTimeMillis());
@@ -317,8 +322,8 @@ public class UserService implements IBaseService {
 	 * 可以横向布局
 	 * @return
 	 */
-	public Map<String, Object> getMyHistoryScoreByUserId() {
-		Long userId = WebUtil.getUserIdBySessionId();
+	public Map<String, Object> getMyHistoryScoreByUserId(String openid) {
+		Long userId = getUserIdByOpenid(openid);
 		Map<String, Object> result = new HashMap<>();
 		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 
@@ -358,6 +363,12 @@ public class UserService implements IBaseService {
 		}
         result.put("list", list);
 		return result;
+	}
+
+	//通过openid获取userid
+	public Long getUserIdByOpenid(String openid) {
+		UserInfo userInfo = dao.getUserByOpenid(openid);
+		return userInfo.getUiId();
 	}
 
 	//获取用户在每个球洞的得分情况
@@ -410,10 +421,10 @@ public class UserService implements IBaseService {
 	 * 标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON
 	 * @return
 	 */
-	public Map<String, Object> getMyHistoryScoreByYear(String date) {
+	public Map<String, Object> getMyHistoryScoreByYear(String date, String openid) {
 		Map<String, Object> result = new HashMap<>();
 		Map<String,Object> parp = new HashMap<>();
-		Long userId = WebUtil.getUserIdBySessionId();
+		Long userId = getUserIdByOpenid(openid);
 		parp.put("userId",userId);
 		parp.put("startTime", TimeUtil.getYearFirst(Integer.parseInt(date)));
 		parp.put("endTime", TimeUtil.getYearLast(Integer.parseInt(date)));
@@ -434,13 +445,13 @@ public class UserService implements IBaseService {
 	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
 	 * @return
 	 */
-	public Map<String, Object> getUserDetaliInfoById(Long teamId, Long matchId, Long userId) {
+	public Map<String, Object> getUserDetaliInfoById(Long teamId, Long matchId, Long userId, String openid) {
 		Map<String, Object> result = new HashMap<>();
 		//资料
 		UserInfo userInfo = getUserById(userId);
 		result.put("userInfo",userInfo);
 		//信息是否公开
-		boolean isOpen = userInfoIsOpen(userId);
+		boolean isOpen = userInfoIsOpen(userId, openid);
 		result.put("isOpen",isOpen);
 		//差点
 		Integer chaPoint = matchService.getUserChaPoint(userId);
@@ -461,8 +472,6 @@ public class UserService implements IBaseService {
 		return result;
 	}
 
-
-
 	/**
 	 * 高球规则
 	 * @return
@@ -470,4 +479,5 @@ public class UserService implements IBaseService {
 	public List<MatchRule> getMatchRuleList() {
 		return dao.getMatchRuleList();
 	}
+
 }

@@ -8,7 +8,6 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.MapUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
-import com.golf.golf.bean.DoubleRodUserScoreBean;
 import com.golf.golf.bean.MatchGroupBean;
 import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
@@ -35,6 +34,8 @@ public class MatchService implements IBaseService {
 	private TeamService teamService;
 	@Autowired
 	protected WxMaService wxMaService;
+	@Autowired
+	protected UserService userService;
 
 
 	/**
@@ -43,7 +44,7 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
-		UserInfo userInfo = matchDao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
 		//用户经纬度存在, 计算我附近10千米的经纬度
 		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
 			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
@@ -52,14 +53,13 @@ public class MatchService implements IBaseService {
 		pageInfo = matchDao.getParkListNearby(searchBean, pageInfo);
 		//计算离我的距离
 		if (pageInfo.getCount() > 0 && pageInfo.getItems() != null && pageInfo.getItems().size() > 0) {
-			getToMyDistance(pageInfo);
+			getToMyDistance(pageInfo,userInfo);
 		}
 		return pageInfo;
 	}
 
 	//计算离我的距离
-	private void getToMyDistance(POJOPageInfo pageInfo) {
-		UserInfo userInfo = matchDao.get(UserInfo.class, WebUtil.getUserIdBySessionId());
+	private void getToMyDistance(POJOPageInfo pageInfo, UserInfo userInfo ) {
 		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
 			for (ParkInfo parkInfo : (List<ParkInfo>) pageInfo.getItems()) {
 				if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
@@ -77,7 +77,7 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		UserInfo userInfo = WebUtil.getUserInfoBySessionId();
+		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
 		//用户经纬度存在, 计算我附近10千米的经纬度
 		if (userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
 			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
@@ -108,7 +108,6 @@ public class MatchService implements IBaseService {
 				matchInfo.setMiIsEnd(getIntegerValue(result, "mi_is_end"));
 				matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
 				//是否是赛长（显示创建比赛列表时用）
-//				matchInfo.setIsCaptain(matchDao.getIsCaptain(matchInfo.getMiId(),WebUtil.getUserIdBySessionId()));
 				matchInfoList.add(matchInfo);
 			}
 			pageInfo.setItems(matchInfoList);
@@ -140,12 +139,13 @@ public class MatchService implements IBaseService {
 	 * @param count 获取围观显示的个数
 	 * @return
 	 */
-	public Map<String, Object> getMatchInfo(MatchInfo matchInfo, Long matchId, Integer count) {
+	public Map<String, Object> getMatchInfo(MatchInfo matchInfo, Long matchId, Integer count, String openid) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		if (count == null) {
 			count = 0;
 		}
 		POJOPageInfo pageInfo = new POJOPageInfo(count, 1);
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//围观
 		List<Map<String, Object>> watchList = matchDao.getUserListByMatchId(matchId, 0, pageInfo);
 
@@ -166,7 +166,7 @@ public class MatchService implements IBaseService {
 		}
 
 		//是否是赛长
-		Long captainCount = matchDao.getIsCaptain(matchId, WebUtil.getUserIdBySessionId());
+		Long captainCount = matchDao.getIsCaptain(matchId, userInfo.getUiId());
 		Boolean isMatchCaptain = false;
 		if (captainCount > 0) {
 			isMatchCaptain = true;
@@ -183,8 +183,9 @@ public class MatchService implements IBaseService {
 	/**
 	 * 当前登录用户是否是赛长
 	 */
-	public boolean getIsCaptain(Long matchId) {
-		Long captainCount = matchDao.getIsCaptain(matchId, WebUtil.getUserIdBySessionId());
+	public boolean getIsCaptain(Long matchId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long captainCount = matchDao.getIsCaptain(matchId, userInfo.getUiId());
 		Boolean isCaptain = false;
 		if (captainCount > 0) {
 			isCaptain = true;
@@ -402,7 +403,8 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void saveMatchInfo(MatchInfo matchInfo, String parkName) {
+	public void saveMatchInfo(MatchInfo matchInfo, String parkName, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if (parkInfo != null) {
 			matchInfo.setMiParkId(parkInfo.getPiId());
@@ -410,8 +412,8 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiType(1);
 		matchInfo.setMiCreateTime(System.currentTimeMillis());
-		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
-		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
+		matchInfo.setMiCreateUserId(userInfo.getUiId());
+		matchInfo.setMiCreateUserName(userInfo.getUiRealName());
 		matchInfo.setMiIsValid(1);
 		//0：报名中  1进行中  2结束
 		matchInfo.setMiIsEnd(0);
@@ -422,8 +424,8 @@ public class MatchService implements IBaseService {
 		matchGroup.setMgMatchId(matchInfo.getMiId());
 		matchGroup.setMgGroupName("第1组");
 		matchGroup.setMgCreateTime(System.currentTimeMillis());
-		matchGroup.setMgCreateUserId(WebUtil.getUserIdBySessionId());
-		matchGroup.setMgCreateUserName(WebUtil.getUserNameBySessionId());
+		matchGroup.setMgCreateUserId(userInfo.getUiId());
+		matchGroup.setMgCreateUserName(userInfo.getUiRealName());
 		matchDao.save(matchGroup);
 
 		//创建用户分组mapping 创建人自动成为赛长
@@ -432,10 +434,10 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
-		matchUserGroupMapping.setMugmUserId(WebUtil.getUserIdBySessionId());
-		matchUserGroupMapping.setMugmUserName(WebUtil.getUserNameBySessionId());
-		matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmUserName(userInfo.getUiRealName());
+		matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmCreateUserName(userInfo.getUiRealName());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
 
@@ -446,7 +448,7 @@ public class MatchService implements IBaseService {
 			if (teamCaptainList != null && teamCaptainList.size() > 0) {
 				for (Long captainUserId : teamCaptainList) {
 					//是否存在
-					if (captainUserId.equals(WebUtil.getUserIdBySessionId())) {
+					if (captainUserId.equals(userInfo.getUiId())) {
 						continue;
 					}
 					MatchUserGroupMapping mugm = new MatchUserGroupMapping();
@@ -455,10 +457,10 @@ public class MatchService implements IBaseService {
 					mugm.setMugmGroupId(matchGroup.getMgId());
 					mugm.setMugmGroupName(matchGroup.getMgGroupName());
 					mugm.setMugmUserId(captainUserId);
-					UserInfo userInfo = matchDao.get(UserInfo.class, captainUserId);
-					mugm.setMugmUserName(userInfo.getUiRealName());
-					mugm.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-					mugm.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+					UserInfo userInfo_ = matchDao.get(UserInfo.class, captainUserId);
+					mugm.setMugmUserName(userInfo_.getUiRealName());
+					mugm.setMugmCreateUserId(userInfo_.getUiId());
+					mugm.setMugmCreateUserName(userInfo_.getUiRealName());
 					mugm.setMugmCreateTime(System.currentTimeMillis());
 					matchDao.save(mugm);
 				}
@@ -485,8 +487,10 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public Map<String, Object> saveSinglePlay(Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
-											  String beforeZoneName, String afterZoneName) {
+											  String beforeZoneName, String afterZoneName, String openid) {
 		Map<String, Object> result = new HashMap<>();
+
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//获取随机用户最大的用户id
 		Long maxOtherUserId = matchDao.getMaxOtherUserId();
 
@@ -496,7 +500,7 @@ public class MatchService implements IBaseService {
 		if (parkInfo != null) {
 			matchInfo.setMiParkId(parkInfo.getPiId());
 		}
-		matchInfo.setMiTitle(WebUtil.getUserNameBySessionId() + "的单练");
+		matchInfo.setMiTitle(userInfo.getUiRealName() + "的单练");
 		matchInfo.setMiParkId(parkId);
 		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiZoneBeforeNine(beforeZoneName);
@@ -512,16 +516,16 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiMatchFormat2(0);
 		matchInfo.setMiIsEnd(1);
 		matchInfo.setMiCreateTime(System.currentTimeMillis());
-		matchInfo.setMiCreateUserId(WebUtil.getUserIdBySessionId());
-		matchInfo.setMiCreateUserName(WebUtil.getUserNameBySessionId());
+		matchInfo.setMiCreateUserId(userInfo.getUiId());
+		matchInfo.setMiCreateUserName(userInfo.getUiRealName());
 		matchDao.save(matchInfo);
 
 		//创建分组
 		MatchGroup matchGroup = new MatchGroup();
 		matchGroup.setMgMatchId(matchInfo.getMiId());
 		matchGroup.setMgGroupName("第1组");
-		matchGroup.setMgCreateUserId(WebUtil.getUserIdBySessionId());
-		matchGroup.setMgCreateUserName(WebUtil.getUserNameBySessionId());
+		matchGroup.setMgCreateUserId(userInfo.getUiId());
+		matchGroup.setMgCreateUserName(userInfo.getUiRealName());
 		matchGroup.setMgCreateTime(System.currentTimeMillis());
 		matchDao.save(matchGroup);
 
@@ -531,10 +535,10 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
-		matchUserGroupMapping.setMugmUserId(WebUtil.getUserIdBySessionId());
-		matchUserGroupMapping.setMugmUserName(WebUtil.getUserNameBySessionId());
-		matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-		matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmUserName(userInfo.getUiRealName());
+		matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmCreateUserName(userInfo.getUiRealName());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchDao.save(matchUserGroupMapping);
 
@@ -554,8 +558,8 @@ public class MatchService implements IBaseService {
 			otherPeople.setMugmGroupId(matchGroup.getMgId());
 			otherPeople.setMugmGroupName(matchGroup.getMgGroupName());
 			otherPeople.setMugmUserName("球友" + i);
-			otherPeople.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-			otherPeople.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+			otherPeople.setMugmCreateUserId(userInfo.getUiId());
+			otherPeople.setMugmCreateUserName(userInfo.getUiRealName());
 			otherPeople.setMugmCreateTime(System.currentTimeMillis());
 			matchDao.save(otherPeople);
 		}
@@ -569,10 +573,11 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> getMySinglePlay() {
+	public Map<String, Object> getMySinglePlay(String openid) {
 		Map<String, Object> result = new HashMap<>();
 		Map<String, Object> parp = TimeUtil.getThisDayTime();
-		Long userId = WebUtil.getUserIdBySessionId();
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long userId = userInfo.getUiId();
 		parp.put("userId", userId);
 		MatchInfo matchInfo = matchDao.getMySinglePlay(parp);
 		result.put("matchInfo", matchInfo);
@@ -589,7 +594,8 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void addGroupByTeamId(Long matchId) {
+	public void addGroupByTeamId(Long matchId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//获取最大组
 		MatchGroup maxGroup = matchDao.getMaxGroupByMatchId(matchId);
 		Integer max = 1;
@@ -603,8 +609,8 @@ public class MatchService implements IBaseService {
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
 		group.setMgGroupName("第" + max + "组");
-		group.setMgCreateUserId(WebUtil.getUserIdBySessionId());
-		group.setMgCreateUserName(WebUtil.getUserNameBySessionId());
+		group.setMgCreateUserId(userInfo.getUiId());
+		group.setMgCreateUserName(userInfo.getUiRealName());
 		group.setMgCreateTime(System.currentTimeMillis());
 		matchDao.save(group);
 	}
@@ -629,7 +635,8 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void addUserToGroupByMatchId(Long matchId, Long groupId, String userIds) {
+	public void addUserToGroupByMatchId(Long matchId, Long groupId, String userIds, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if (StringUtils.isNotEmpty(userIds)) {
 			userIds = userIds.replace("[", "");
 			userIds = userIds.replace("]", "");
@@ -650,13 +657,13 @@ public class MatchService implements IBaseService {
 					matchUserGroupMapping.setMugmUserType(1);
 					matchUserGroupMapping.setMugmUserId(uId);
 					matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
-					matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-					matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
-					UserInfo userInfo = matchDao.get(UserInfo.class, uId);
-					matchUserGroupMapping.setMugmUserName(userInfo.getUiRealName());
+					matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
+					matchUserGroupMapping.setMugmCreateUserName(userInfo.getUiRealName());
+					UserInfo userInfo_ = matchDao.get(UserInfo.class, uId);
+					matchUserGroupMapping.setMugmUserName(userInfo_.getUiRealName());
 					matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
-					matchUserGroupMapping.setMugmCreateUserId(WebUtil.getUserIdBySessionId());
-					matchUserGroupMapping.setMugmCreateUserName(WebUtil.getUserNameBySessionId());
+					matchUserGroupMapping.setMugmCreateUserId(userInfo_.getUiId());
+					matchUserGroupMapping.setMugmCreateUserName(userInfo_.getUiRealName());
 					matchDao.save(matchUserGroupMapping);
 					//将该用户从报名表删除
 					matchDao.delUserFromApply(matchId, uId);
@@ -782,7 +789,8 @@ public class MatchService implements IBaseService {
 	 */
 	public void saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
 								  Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
-								  Integer pushRod, Integer beforeAfter) {
+								  Integer pushRod, Integer beforeAfter, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if (scoreId != null) {
 			MatchScore scoreDb = matchDao.get(MatchScore.class, scoreId);
 			scoreDb.setMsIsUp(isUp);
@@ -808,8 +816,8 @@ public class MatchService implements IBaseService {
 			getScore(scoreDb,holeStandardRod);
 
 			scoreDb.setMsUpdateTime(System.currentTimeMillis());
-			scoreDb.setMsUpdateUserId(WebUtil.getUserIdBySessionId());
-			scoreDb.setMsUpdateUserName(WebUtil.getUserNameBySessionId());
+			scoreDb.setMsUpdateUserId(userInfo.getUiId());
+			scoreDb.setMsUpdateUserName(userInfo.getUiRealName());
 			matchDao.update(scoreDb);
 		} else {
 			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
@@ -862,8 +870,8 @@ public class MatchService implements IBaseService {
 			//计算得分结果
 			getScore(score,holeStandardRod);
 
-			score.setMsCreateUserId(WebUtil.getUserIdBySessionId());
-			score.setMsCreateUserName(WebUtil.getUserNameBySessionId());
+			score.setMsCreateUserId(userInfo.getUiId());
+			score.setMsCreateUserName(userInfo.getUiRealName());
 			score.setMsCreateTime(System.currentTimeMillis());
 			matchDao.save(score);
 		}
@@ -901,7 +909,8 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public String updateMatchState(Long matchId, Integer state) {
+	public String updateMatchState(Long matchId, Integer state, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		List<Map<String,Object>> countList = matchDao.getCountUserByMatchId(matchId);
 		if(countList == null || countList.size() ==0){
@@ -936,8 +945,8 @@ public class MatchService implements IBaseService {
             }
         }
 		matchInfo.setMiIsEnd(state);
-		matchInfo.setMiUpdateUserId(WebUtil.getUserIdBySessionId());
-		matchInfo.setMiUpdateUserName(WebUtil.getUserNameBySessionId());
+		matchInfo.setMiUpdateUserId(userInfo.getUiId());
+		matchInfo.setMiUpdateUserName(userInfo.getUiRealName());
 		matchInfo.setMiUpdateTime(System.currentTimeMillis());
 		matchDao.update(matchInfo);
 		return "true";
@@ -951,9 +960,10 @@ public class MatchService implements IBaseService {
 	 * @param winScore  赢球奖分
 	 * @return
 	 */
-	public boolean submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore, Integer rodScore, Integer winScore) {
+	public boolean submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
+									   Integer rodScore, Integer winScore, String openid) {
 		//更新配置
-		boolean flag = saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore);
+		boolean flag = saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore, openid);
 		if(flag){
 			//计算得分
 			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
@@ -977,7 +987,8 @@ public class MatchService implements IBaseService {
 	}
 
 	//保存成绩提交的积分计算配置
-	private boolean saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore) {
+	private boolean saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId);
 		if(config == null){
 			config = new IntegralConfig();
@@ -987,8 +998,8 @@ public class MatchService implements IBaseService {
 			config.setIcRodCha(rodScore);
 			config.setIcWinScore(winScore);
 			config.setIcCreateTime(System.currentTimeMillis());
-			config.setIcCreateUserId(WebUtil.getUserIdBySessionId());
-			config.setIcCreateUserName(WebUtil.getUserNameBySessionId());
+			config.setIcCreateUserId(userInfo.getUiId());
+			config.setIcCreateUserName(userInfo.getUiRealName());
 			matchDao.save(config);
 			return true;
 		}else{
@@ -1157,6 +1168,7 @@ public class MatchService implements IBaseService {
 	 * type: 0:加积分   1：减积分
 	 */
 	private void updatePointByIds(Long teamId, Long userId, Integer point, Integer type) {
+		UserInfo userInfo = userService.getUserById(userId);
 		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(teamId, userId);
 		if (teamUserMapping.getTumPoint() == null || teamUserMapping.getTumPoint() == 0) {
 			teamUserMapping.setTumPoint(point);
@@ -1168,8 +1180,8 @@ public class MatchService implements IBaseService {
 			}
 		}
 		teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
-		teamUserMapping.setTumUpdateUserId(WebUtil.getUserIdBySessionId());
-		teamUserMapping.setTumUpdateUserName(WebUtil.getUserNameBySessionId());
+		teamUserMapping.setTumUpdateUserId(userInfo.getUiId());
+		teamUserMapping.setTumUpdateUserName(userInfo.getUiRealName());
 		matchDao.update(teamUserMapping);
 	}
 
@@ -1228,12 +1240,13 @@ public class MatchService implements IBaseService {
 	 * 结束单练
 	 * @return
 	 */
-	public void endSingleMatchById(Long matchId) {
+	public void endSingleMatchById(Long matchId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		matchInfo.setMiIsEnd(2);
 		matchInfo.setMiUpdateTime(System.currentTimeMillis());
-		matchInfo.setMiUpdateUserId(WebUtil.getUserIdBySessionId());
-		matchInfo.setMiUpdateUserName(WebUtil.getUserNameBySessionId());
+		matchInfo.setMiUpdateUserId(userInfo.getUiId());
+		matchInfo.setMiUpdateUserName(userInfo.getUiRealName());
 		matchDao.update(matchInfo);
 	}
 
@@ -1241,12 +1254,13 @@ public class MatchService implements IBaseService {
 	 * 如果不是参赛人员，则加入围观用户
 	 * @return
 	 */
-	public boolean saveOrUpdateWatch(MatchInfo matchInfo) {
+	public boolean saveOrUpdateWatch(MatchInfo matchInfo, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//观战范围：3、封闭：参赛队员可见）
 		if(matchInfo.getMiMatchOpenType() == 3){
 			return false;
 		}
-		Long userId = WebUtil.getUserIdBySessionId();
+		Long userId = userInfo.getUiId();
 		Long matchId = matchInfo.getMiId();
 		//是否已经围观
 		Long watchCount = matchDao.getisApplyOrWatch(userId,matchId,0);
@@ -1395,7 +1409,7 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> getTeamScoreByMatchId(Long matchId, Long teamId) {
+	public Map<String, Object> getTeamScoreByMatchId(Long matchId, Long teamId, String openid) {
 		Map<String, Object> result = new HashMap<>();
 		List<MatchGroupUserScoreBean> list = new ArrayList<>();
 		//获取参赛球队
@@ -1444,7 +1458,7 @@ public class MatchService implements IBaseService {
 		result.put("list", list);
 
 		//是否是该球队队长
-		Long isTeamCaptain = teamService.getIsCaptain(WebUtil.getUserIdBySessionId(), teamId);
+		Long isTeamCaptain = teamService.getIsCaptain(userService.getUserIdByOpenid(openid), teamId);
 		result.put("isTeamCaptain", isTeamCaptain);
 		return result;
 	}
@@ -1535,9 +1549,9 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public boolean delMatchById(Long matchId) {
+	public boolean delMatchById(Long matchId, String openid) {
 		//判断是否是我创建的
-		Long count = matchDao.getIsMyCreatMatch(matchId, WebUtil.getUserIdBySessionId());
+		Long count = matchDao.getIsMyCreatMatch(matchId, userService.getUserIdByOpenid(openid));
 		if (count != null && count > 0) {
 			//删除比赛 逻辑删除 置为不可用
 			matchDao.updateMatchState(matchId);
@@ -1578,10 +1592,10 @@ public class MatchService implements IBaseService {
 	 * 比赛——普通用户报名
 	 * @return
 	 */
-	public Integer applyMatch(Long matchId, Long groupId, String groupName) {
+	public Integer applyMatch(Long matchId, Long groupId, String groupName, String openid) {
 		Integer flag = -1;
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		Long userId = WebUtil.getUserIdBySessionId();
+		Long userId = userService.getUserIdByOpenid(openid);
 		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
 		//是否已经报名
 		Long countApply = matchDao.getisApplyOrWatch(userId,matchId,1);
@@ -1629,8 +1643,8 @@ public class MatchService implements IBaseService {
 	 * 比赛——普通用户从一个组退出比赛
 	 * @return
 	 */
-	public void quitMatch(Long matchId, Long groupId) {
-		matchDao.delFromMatch(matchId,groupId,WebUtil.getUserIdBySessionId());
+	public void quitMatch(Long matchId, Long groupId, String openid) {
+		matchDao.delFromMatch(matchId, groupId, userService.getUserIdByOpenid(openid));
 	}
 
 
@@ -1641,8 +1655,8 @@ public class MatchService implements IBaseService {
 	 * 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
 	 * @return
 	 */
-	public String invitationScore(Long userId, Long matchId) throws WxErrorException, IOException {
-		Long myUserId = WebUtil.getUserIdBySessionId();
+	public String invitationScore(Long userId, Long matchId, String openid) throws WxErrorException, IOException {
+		Long myUserId = userService.getUserIdByOpenid(openid);
 		String fileName = userId+"_"+matchId+"_"+myUserId+"_"+System.currentTimeMillis()+".png";//文件名称
 		String QRCodePath = WebUtil.getRealPath(PropertyConst.QRCODE_PATH);
 		File file = new File(QRCodePath, fileName);
@@ -1702,12 +1716,13 @@ public class MatchService implements IBaseService {
 	 * @param userId:被指定人id
 	 * @return
 	 */
-	public void setMatchCaptainByUserId(Long matchId, Long userId) {
+	public void setMatchCaptainByUserId(Long matchId, Long userId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,userId);
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
-		matchUserGroupMapping.setMugmUpdateUserId(WebUtil.getUserIdBySessionId());
-		matchUserGroupMapping.setMugmUpdateUserName(WebUtil.getUserNameBySessionId());
+		matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmUpdateUserName(userInfo.getUiRealName());
 		matchDao.update(matchUserGroupMapping);
 	}
 
@@ -1715,7 +1730,7 @@ public class MatchService implements IBaseService {
 	 * 记分卡 初始化 查询我是否可以记分
 	 * @return
 	 */
-	public Long getMeCanScore(Long matchId, Long groupId) {
-		return matchDao.getMeCanScore(matchId, groupId, WebUtil.getUserIdBySessionId());
+	public Long getMeCanScore(Long matchId, Long groupId, String openid) {
+		return matchDao.getMeCanScore(matchId, groupId, userService.getUserIdByOpenid(openid));
 	}
 }

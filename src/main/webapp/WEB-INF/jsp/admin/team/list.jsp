@@ -89,7 +89,7 @@
                                                 <a class="btn btn-success" href="admin/team/editTeamUI?teamId=${teamInfo.tiId}">
                                                     查看
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" href="admin/team/delTeam?teamId=${teamInfo.tiId}">
+                                                <a class="btn btn-danger" id="" href="admin/team/delTeam?teamId=${teamInfo.tiId}">
                                                     <c:if test="${teamInfo.valid == null || teamInfo.valid == 1}">注销</c:if>
                                                     <c:if test="${teamInfo.valid == 0 }">恢复</c:if>
                                                 </a>
