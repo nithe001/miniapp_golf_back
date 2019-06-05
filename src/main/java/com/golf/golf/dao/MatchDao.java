@@ -546,7 +546,7 @@ public class MatchDao extends CommonDao {
 				"s.ms_is_up AS is_up," +
 				"s.ms_rod_num AS rod_num," +
 				"s.ms_push_rod_num AS push_num, s.ms_rod_cha as rod_cha,0 as before_after,s.ms_is_par as is_par," +
-				"s.ms_is_bird as is_bird,s.ms_is_eagle as is_eagle,s.ms_is_on as is_on " +
+				"s.ms_is_bird as is_bird,s.ms_is_eagle as is_eagle,s.ms_is_bogey as is_bogey,s.ms_is_on as is_on " +
 				"from park_partition as p LEFT JOIN match_score as s on (" +
 				"s.ms_hole_name = p.pp_name and s.ms_hole_num = p.pp_hole_num ");
 		sql.append("and s.ms_match_id = :matchId ");
@@ -565,7 +565,7 @@ public class MatchDao extends CommonDao {
 				"s.ms_is_up AS is_up," +
 				"s.ms_rod_num AS rod_num," +
 				"s.ms_push_rod_num AS push_num, s.ms_rod_cha as rod_cha ,1 as before_after,s.ms_is_par as is_par," +
-				"s.ms_is_bird as is_bird,s.ms_is_eagle as is_eagle,s.ms_is_on as is_on " +
+				"s.ms_is_bird as is_bird,s.ms_is_eagle as is_eagle,s.ms_is_bogey as is_bogey,s.ms_is_on as is_on " +
 				"from park_partition as p LEFT JOIN match_score as s on (" +
 				"s.ms_hole_name = p.pp_name and s.ms_hole_num = p.pp_hole_num ");
 		sql.append("and s.ms_match_id = :matchId ");

@@ -881,20 +881,36 @@ public class MatchService implements IBaseService {
 		if(score.getMsRodNum().equals(holeStandardRod)){
 			//标准杆一样 par
 			score.setMsIsPar(1);
+			score.setMsIsBird(null);
+			score.setMsIsBogey(null);
+			score.setMsIsEagle(null);
 		}else if(holeStandardRod - score.getMsRodNum() == 1){
 			//比标准杆少一杆叫小鸟
+			score.setMsIsPar(null);
 			score.setMsIsBird(1);
+			score.setMsIsBogey(null);
+			score.setMsIsEagle(null);
 		}else if(score.getMsRodNum() - holeStandardRod == 1){
 			//比标准杆多一杆叫bogey
+			score.setMsIsPar(null);
+			score.setMsIsBird(null);
 			score.setMsIsBogey(1);
+			score.setMsIsEagle(null);
 		}else if(holeStandardRod - score.getMsRodNum() == 2){
 			//比标准杆少2杆 叫老鹰
+			score.setMsIsPar(null);
+			score.setMsIsBird(null);
+			score.setMsIsBogey(null);
 			score.setMsIsEagle(1);
 		}
 
 		if(score.getMsRodNum() - holeStandardRod >= 3){
 			//“暴洞”是指+3及以上
 			score.setMsIsBomb(1);
+			score.setMsIsPar(null);
+			score.setMsIsBird(null);
+			score.setMsIsBogey(null);
+			score.setMsIsEagle(null);
 		}
 
 		if(score.getMsRodNum() - score.getMsPushRodNum() == holeStandardRod - 2){

@@ -3,7 +3,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>赛事活动列表</title>
+    <title>比赛列表</title>
     <jsp:include page="../include/commonInclude.jsp"></jsp:include>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -14,7 +14,7 @@
     <div class="content-wrapper">
         <section class="content-header">
             <h1>
-                赛事活动列表
+                比赛列表
             </h1>
         </section>
         <section class="content">
@@ -77,8 +77,9 @@
                                         <th width="8%">赛制</th>
                                         <th width="8%">开球时间</th>
                                         <th width="10%">创建时间</th>
-                                        <th width="6%">创建人</th>
-                                        <th width="8%">状态</th>
+                                        <th width="5%">创建人</th>
+                                        <th width="6%">比赛状态</th>
+                                        <th width="6%">是否有效</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
                                     </thead>
@@ -97,12 +98,15 @@
                                             <td>${matchInfo.createTimeStr}</td>
                                             <td>${matchInfo.miCreateUserName}</td>
                                             <td>${matchInfo.state}</td>
+                                            <td><c:if test="${matchInfo.miIsValid == 0}">无效</c:if>
+                                                <c:if test="${matchInfo.miIsValid == 1}">有效</c:if></td>
                                             <td>
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
                                                     编辑
                                                 </a>&nbsp;
                                                 <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
-                                                    删除
+                                                    <c:if test="${matchInfo.miIsValid == null || matchInfo.miIsValid == 1}">注销</c:if>
+                                                    <c:if test="${matchInfo.miIsValid == 0 }">恢复</c:if>
                                                 </a>
                                             </td>
                                         </tr>

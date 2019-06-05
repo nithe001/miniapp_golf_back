@@ -16,7 +16,7 @@
     <div class="form-group">
         <label for="miLogo" class="col-sm-2 control-label">比赛Logo</label>
         <div class="col-sm-5">
-            <image src="${matchInfo.miLogo}" id="miLogo" style="width:30%;border-radius: 50%;"/>
+            <image src="${matchInfo.miLogo}" id="miLogo" style="width:30%;height:30%;border-radius: 50%;"/>
         </div>
     </div>
 	<div class="form-group">
@@ -40,7 +40,7 @@
     <div class="form-group">
         <label for="miParkName" class="col-sm-2 control-label">比赛球场</label>
         <div class="col-sm-5">
-            <input type="text" class="form-control" id="miParkName" name="miParkName" value="${matchInfo.miParkName}" placeholder="比赛球场">
+            <input type="text" class="form-control" id="miParkName" name="miParkName" readonly value="${matchInfo.miParkName}" placeholder="比赛球场">
         </div>
     </div>
 

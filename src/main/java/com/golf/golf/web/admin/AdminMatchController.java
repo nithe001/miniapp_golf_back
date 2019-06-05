@@ -253,6 +253,23 @@ public class AdminMatchController {
 	}
 
 	/**
+	 * 修改状态
+	 * @param matchId 比赛id
+	 * @return
+	 */
+	@RequestMapping("delMatch")
+	public String delMatch(Long matchId){
+		try{
+			adminMatchService.delMatch(matchId);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("修改比赛状态出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:list";
+	}
+
+	/**
 	 * 比分录入
 	 * @return
 	 */

@@ -147,6 +147,10 @@ public class WebUtil {
 		return p;
 	}
 
+	public static String getPath(){
+		return getRequest().getSession().getServletContext().getRealPath("/");
+	}
+
 	/**
 	 * 取得 session
 	 * 

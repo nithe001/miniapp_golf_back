@@ -124,4 +124,18 @@ public class AdminMatchService implements IBaseService {
 		return null;
 	}
 
+	/**
+	 * 修改状态
+	 * @param matchId 比赛id
+	 * @return
+	 */
+	public void delMatch(Long matchId) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		if(matchInfo.getMiIsValid() == 1){
+			matchInfo.setMiIsValid(0);
+		}else{
+			matchInfo.setMiIsValid(1);
+		}
+		matchDao.update(matchInfo);
+	}
 }
