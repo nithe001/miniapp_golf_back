@@ -27,7 +27,7 @@
 			            <div class="box-header with-border">
 			              <h3 class="box-title">球队详细信息</h3>
 			            </div>
-						<form class="form-horizontal" id="calendarForm" action="admin/activities/calendarEdit" method="post">
+						<form class="form-horizontal" id="calendarForm" action="admin/team/teamEdit" method="post">
 							<jsp:include page="form.jsp"></jsp:include>
 						</form>
           			</div>

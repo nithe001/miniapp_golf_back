@@ -112,4 +112,24 @@ public class AdminTeamService implements IBaseService {
 		}
 		adminTeamDao.update(teamInfo);
 	}
+
+	/**
+	 * 编辑球队-保存
+	 * @return
+	 */
+	public void teamEdit(TeamInfo teamInfo) {
+		TeamInfo db = adminTeamDao.get(TeamInfo.class,teamInfo.getTiId());
+		db.setTiAddress(teamInfo.getTiAddress());
+		db.setTiSignature(teamInfo.getTiSignature());
+		db.setTiDigest(teamInfo.getTiDigest());
+		db.setTiJoinOpenType(teamInfo.getTiJoinOpenType());
+		db.setTiInfoOpenType(teamInfo.getTiInfoOpenType());
+		db.setTiMatchResultAuditType(teamInfo.getTiMatchResultAuditType());
+		db.setTiUserInfoType(teamInfo.getTiUserInfoType());
+		db.setTiIsValid(teamInfo.getTiIsValid());
+		db.setTiUpdateUserName(AdminUserUtil.getShowName());
+		db.setTiUpdateTime(System.currentTimeMillis());
+		db.setTiUpdateUserId(AdminUserUtil.getUserId());
+		adminTeamDao.update(db);
+	}
 }

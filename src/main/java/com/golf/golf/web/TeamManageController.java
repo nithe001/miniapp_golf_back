@@ -75,7 +75,7 @@ public class TeamManageController {
 			}
 			searchBean.addParpField("type", type);
 			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
-			pageInfo = teamService.getTeamList(searchBean, pageInfo);
+			pageInfo = teamService.getTeamList(searchBean, pageInfo, openid);
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取球队列表出错。";
@@ -189,9 +189,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamDetailById")
-	public JsonElement getTeamDetailById(Long teamId) {
+	public JsonElement getTeamDetailById(Long teamId, String openid) {
 		try {
-			Map<String, Object> result = teamService.getTeamInfoById(teamId);
+			Map<String, Object> result = teamService.getTeamInfoById(teamId, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -248,9 +248,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateTeamUserByTeamId")
-	public JsonElement updateTeamUserByTeamId(Long teamId, String userIds, Integer type) {
+	public JsonElement updateTeamUserByTeamId(Long teamId, String userIds, Integer type, String openid) {
 		try {
-			teamService.updateTeamUserByTeamId(teamId, userIds, type);
+			teamService.updateTeamUserByTeamId(teamId, userIds, type, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -285,9 +285,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "joinOrQuitTeamById")
-	public JsonElement joinOrQuitTeamById(Long teamId, Integer type) {
+	public JsonElement joinOrQuitTeamById(Long teamId, Integer type, String openid) {
 		try {
-			teamService.joinOrQuitTeamById(teamId, type);
+			teamService.joinOrQuitTeamById(teamId, type, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -304,9 +304,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "setTeamCaptainByUserId")
-	public JsonElement setTeamCaptainByUserId(Long teamId, Long userId) {
+	public JsonElement setTeamCaptainByUserId(Long teamId, Long userId, String openid) {
 		try {
-			teamService.setTeamCaptainByUserId(teamId, userId);
+			teamService.setTeamCaptainByUserId(teamId, userId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -322,9 +322,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getHasDetail")
-	public JsonElement getHasDetail() {
+	public JsonElement getHasDetail(String openid) {
 		try {
-			boolean flag = teamService.getHasDetail();
+			boolean flag = teamService.getHasDetail(openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			e.printStackTrace();

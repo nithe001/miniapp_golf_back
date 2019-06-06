@@ -114,9 +114,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamListByIds")
-	public JsonElement getTeamListByIds(String joinTeamIds) {
+	public JsonElement getTeamListByIds(String joinTeamIds, String openid) {
 		try {
-			List<Map<String,Object>> list = matchService.getTeamListByIds(joinTeamIds);
+			List<Map<String,Object>> list = matchService.getTeamListByIds(joinTeamIds,openid);
 			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -322,13 +322,15 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getApplyUserByMatchId")
-	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId, Integer type) {
+	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId, Integer type, String openid) {
 		try {
 			Map<String, Object> result = null;
 			if(type == 0){
+				//添加
 				result = matchService.getApplyUserByMatchId(matchId, groupId);
 			}else{
-				result = matchService.getUserListByMatchIdGroupId(matchId, groupId);
+				//删除
+				result = matchService.getUserListByMatchIdGroupId(matchId, groupId, openid);
 			}
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
@@ -949,13 +951,16 @@ public class MatchController {
 
 	/**
 	 * 比赛——邀请记分——邀请记分初始化二维码
+	 * @param matchId 比赛id
+	 * @param groupId 本组id
+	 * @param openid 邀请人openid
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("createScoreQRCode")
-	public JsonElement createScoreQRCode(Long userId, Long matchId, String openid) {
+	public JsonElement createScoreQRCode(Long matchId, Long groupId, String openid) {
 		try {
-			String QRCodePath = matchService.invitationScore(userId, matchId, openid);
+			String QRCodePath = matchService.invitationScore(matchId, groupId, openid);
 			return JsonWrapper.newDataInstance(QRCodePath);
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;

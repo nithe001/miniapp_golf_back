@@ -24,7 +24,7 @@
                         <div class="box-body">
                             <!-- search -->
                             <div class="box-header">
-                                <div style="float:left;margin-right:10px"><a class="btn btn-success" href="admin/activities/addMatchUI">新增</a></div>
+                                <%--<div style="float:left;margin-right:10px"><a class="btn btn-success" href="/admin/match/addMatchIdUI">新增</a></div>--%>
                                 <form class="form-inline" name="searchForm" id="searchForm" style="margin-bottom: 15px;">
                                     <input type="hidden" id="page" name="page" value="${page }"/>
                                     <input type="hidden" id="rowsPerPage" name="rowsPerPage" value="${rowsPerPage }"/>

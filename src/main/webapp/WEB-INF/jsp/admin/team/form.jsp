@@ -1,6 +1,6 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<input type="hidden" name="wcId" id="wcId" value="${matchInfo.wcId }"/>
+<input type="hidden" name="tiId" id="tiId" value="${teamInfo.teamInfo.tiId }"/>
 <div class="box-body">
     <div class="form-group">
         <label for="wcTitle" class="col-sm-2 control-label">球队名称</label>
@@ -103,7 +103,7 @@
                     <td>${userInfo.uiRealName}</td>
                     <td>
                         <c:if test="${userInfo.tumUserType == 0}">
-                            <font color=red>队长</font>
+                            <div style="color:red;">队长</div>
                         </c:if>
                         <c:if test="${userInfo.tumUserType == 1}">
                             普通队员

@@ -10,6 +10,7 @@ import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.admin.AdminMatchDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,14 +60,13 @@ public class AdminMatchService implements IBaseService {
 	 */
 	public void editMatch(MatchInfo matchInfo) {
 		MatchInfo db = dao.get(MatchInfo.class,matchInfo.getMiId());
-		db.setMiTitle(matchInfo.getMiTitle());
 		db.setMiMatchTime(matchInfo.getMiMatchTime());
 		db.setMiDigest(matchInfo.getMiDigest());
 		db.setMiContent(matchInfo.getMiContent());
-		db.setMiParkId(matchInfo.getMiParkId());
-		db.setMiParkName(matchInfo.getMiParkName());
 		db.setMiJoinOpenType(matchInfo.getMiJoinOpenType());
 		db.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
+		db.setMiMatchFormat1(matchInfo.getMiMatchFormat1());
+		db.setMiMatchFormat2(matchInfo.getMiMatchFormat2());
 		db.setMiUpdateTime(System.currentTimeMillis());
 		db.setMiUpdateUserId(AdminUserUtil.getUserId());
 		db.setMiUpdateUserName(AdminUserUtil.getShowName());
@@ -137,5 +137,13 @@ public class AdminMatchService implements IBaseService {
 			matchInfo.setMiIsValid(1);
 		}
 		matchDao.update(matchInfo);
+	}
+
+	/**
+	 * 获取参赛队员列表
+	 * @return
+	 */
+	public List<Object[]> getMatchUserGroupMappingList(Long matchId) {
+		return matchDao.getMatchUserGroupMappingList(matchId);
 	}
 }

@@ -13,12 +13,17 @@ import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -373,7 +378,7 @@ public class MatchService implements IBaseService {
 		MatchScoreUserMapping mapping = new MatchScoreUserMapping();
 		mapping.setMsumMatchId(matchId);
 		mapping.setMsumGroupId(groupId);
-		mapping.setMsumScorerId(scorerId);
+		mapping.setMsumScoreUserId(scorerId);
 		mapping.setMsumCreateTime(System.currentTimeMillis());
 		matchDao.save(mapping);
 	}
@@ -428,9 +433,12 @@ public class MatchService implements IBaseService {
 		matchGroup.setMgCreateUserName(userInfo.getUiRealName());
 		matchDao.save(matchGroup);
 
+		//查询用户所在球队
+		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userInfo.getUiId());
 		//创建用户分组mapping 创建人自动成为赛长
 		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
+		matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
@@ -469,13 +477,14 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 赛长——本组用户列表
-	 *
+	 * 赛长——删除用户——本组用户列表
+	 * 不包括自己
 	 * @return
 	 */
-	public Map<String, Object> getUserListByMatchIdGroupId(Long matchId, Long groupId) {
+	public Map<String, Object> getUserListByMatchIdGroupId(Long matchId, Long groupId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		Map<String, Object> result = new HashMap<>();
-		List<Map<String, Object>> list = matchDao.getUserListByMatchIdGroupId(matchId, groupId);
+		List<Map<String, Object>> list = matchDao.getUserListByMatchIdGroupId(matchId, groupId, userInfo.getUiId());
 		result.put("applyUserList", list);
 		result.put("userCount", list.size());
 		return result;
@@ -1581,11 +1590,11 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public List<Map<String, Object>> getTeamListByIds(String teamIds) {
+	public List<Map<String, Object>> getTeamListByIds(String teamIds, String openid) {
 		if(StringUtils.isNotEmpty(teamIds)){
 			List<Long> ids = getLongTeamIdList(teamIds);
 			List<Map<String, Object>> list = matchDao.getTeamListByTeamIds(ids);
-			teamService.getCaptain(list);
+			teamService.getCaptain(list, openid);
 			return list;
 		}
 		return new ArrayList<>();
@@ -1666,22 +1675,31 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 比赛——邀请记分——生成二维码
+	 * 接口B: 获取小程序码（永久有效、数量暂无限制）.
 	 * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
 	 * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index,
 	 * 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
 	 * @return
 	 */
-	public String invitationScore(Long userId, Long matchId, String openid) throws WxErrorException, IOException {
+	public String invitationScore(Long matchId, Long groupId, String openid) throws WxErrorException, IOException {
+		String path = null;
 		Long myUserId = userService.getUserIdByOpenid(openid);
-		String fileName = userId+"_"+matchId+"_"+myUserId+"_"+System.currentTimeMillis()+".png";//文件名称
-		String QRCodePath = WebUtil.getRealPath(PropertyConst.QRCODE_PATH);
-		File file = new File(QRCodePath, fileName);
-		if(!file.exists()){
-//			file.mkdirs();
-			file.createNewFile();
+		//查询是否有我生成的邀请记分二维码
+		MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, groupId, myUserId);
+		if(matchScoreUserMapping != null){
+			path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + matchId+"_"+groupId+"_"+myUserId+".png";
+			return path;
 		}
-		String scene = "1234567890";//参数
-		String page ="";//要跳转的页面，根路径不能加/  不填默认跳转主页
+		//没有生成过
+		String fileName = matchId+"_"+groupId+"_"+myUserId+".png";//文件名称 比赛id_本组id_邀请人id
+		String QRCodePath = WebUtil.getPath()+PropertyConst.QRCODE_PATH;
+		File file = new File(QRCodePath);
+		if(!file.exists()){
+			file.mkdirs();
+		}
+		String parp = "matchId="+matchId+"&groupId="+groupId;//参数
+		String scene = URLEncoder.encode(parp,"utf-8");
+		String page ="pages/score_card/score_card";//要跳转的页面，根路径不能加/  不填默认跳转主页
 //		file = wxMaService.getQrcodeService().createWxaCodeUnlimit(scene,page); 此方法好像是有包冲突，会报错
 		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(scene,page,300,false,null,false);
 		InputStream inputStream = null;
@@ -1694,7 +1712,23 @@ public class MatchService implements IBaseService {
 			outputStream.write(buf, 0, len);
 		}
 		outputStream.flush();
-		return PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
+
+		//新增一条记录
+		matchScoreUserMapping = new MatchScoreUserMapping();
+		matchScoreUserMapping.setMsumMatchId(matchId);
+		matchScoreUserMapping.setMsumGroupId(groupId);
+		matchScoreUserMapping.setMsumMatchUserId(myUserId);
+		matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
+		matchDao.save(matchScoreUserMapping);
+		path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
+		return path;
+	}
+
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		String scene = "matchId="+1+"&groupId="+2;//参数
+		String a = URLEncoder.encode(scene,"utf-8");
+		System.out.println(a);
+		System.out.println(URLDecoder.decode(a,"utf-8"));
 	}
 
 	/**
@@ -1715,14 +1749,17 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 根据用户id获取用户差点
-	 * 在球场上你需要至少打过五场球，这是计算差点的最低要求
-	 * 1、平均法： 差点=N次比赛的平均成绩-标准杆（假使在一个标准难度的球场，标准杆数是72，而你打了十几场球的平均成绩是100，那么你的差点就是28，如果你的平均成绩是90，那么你的差点就是18。）
-	 * 2、贝利亚计算法：差点 = 12洞杆数总和×1.5—标准杆）×0.8
+	 * 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.8
 	 * @return
 	 */
 	public Integer getUserChaPoint(Long userId) {
-		//判断用户是否至少打了5场比赛
-		Long count = matchDao.getLessFiveMatchByUserId(userId);
+		//获取最近参加的10场比赛的id
+		List<Object> list = matchDao.getLessFiveMatchByUserId(userId);
+		if(list != null && list.size()>0){
+			BigDecimal avg = (BigDecimal)list.get(0);
+			BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(0, BigDecimal.ROUND_HALF_UP);
+			return processClll.intValue();
+		}
 		return 0;
 	}
 

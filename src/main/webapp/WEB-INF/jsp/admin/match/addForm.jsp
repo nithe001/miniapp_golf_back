@@ -9,14 +9,43 @@
             autoclose: true,
             todayHighlight: true
         });
+        $("#uploadBtn").bind("click", function(){
+            $('#uploadModal').modal('show');
+        });
+
+        $('#fileupload').fileupload({
+            type: "POST",
+            cache:false,
+            async: false, //同步，，即此代码执行时，其他的不可执行。
+            dataType: "json",
+            url: 'upload/uploadPicPc',
+            success: function(json) {
+                if (json.success) {
+                    var array = json.data;
+                    $('#myModal').modal('hide');
+                    if(picType == "thumbnail"){
+                        $("#ShowThumbnailPath").attr("src", array);
+                        $("#ShowThumbnailPath").show();
+                        $("#miLogoPath").val(array);
+                    }else{
+                        $("#ShowLnBannerPicPath").attr("src", array);
+                        $("#ShowLnBannerPicPath").show();
+                        $("#miLogoPath").val(array);
+                    }
+                }else{
+                    alert("上传图片过程中有错误发生，请稍后再试。");
+                }
+            }
+        });
     });
 </script>
-<input type="hidden" name="miId" id="miId" value="${matchInfo.miId }"/>
 <div class="box-body">
     <div class="form-group">
-        <label for="miLogo" class="col-sm-2 control-label">比赛Logo</label>
+        <label for="miLogoPath" class="col-sm-2 control-label">比赛Logo</label>
         <div class="col-sm-5">
-            <image src="${matchInfo.miLogo}" id="miLogo" style="width:20%;height:17%;border-radius: 50%;"/>
+            <img style="width:200px;" src="${news.lnThumbnailPath}" id="ShowThumbnailPath"/>
+            <button id="uploadBtn" type="button" class="btn btn-default">上传图片</button>
+            <input type="hidden" name="miLogo" id="miLogoPath" value=""/>
         </div>
     </div>
 	<div class="form-group">
@@ -33,7 +62,7 @@
         <label for="" class="col-sm-2 control-label">参赛球队</label>
         <div class="col-sm-5">
             <c:forEach items="${joinTeamInfoList}" var="joinTeam" varStatus="s">
-                <image src="${joinTeam.tiLogo}" style="width:10%;height:20%;border-radius: 50%;"/> ${joinTeam.tiName}&nbsp;&nbsp;&nbsp;
+                <image src="${joinTeam.tiLogo}" style="width:20%;border-radius: 50%;"/> ${joinTeam.tiName}&nbsp;&nbsp;&nbsp;
             </c:forEach>
         </div>
     </div>
@@ -193,4 +222,23 @@
 	<div class="col-xs-push-4 col-xs-2">
 		<button type="submit" class="btn btn-info pull-right">保存</button>
 	</div>
+</div>
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">图片上传</h4>
+            </div>
+            <div class="modal-body"><input type="file" id="fileupload" name="file" cssClass="form-control"/></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
 </div>

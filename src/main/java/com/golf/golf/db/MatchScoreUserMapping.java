@@ -11,8 +11,8 @@ public class MatchScoreUserMapping {
 	private Long msumId;
 	private Long msumMatchId;
 	private Long msumGroupId;
-	private Long msumCreateUserId;
-	private Long msumScorerId;
+	private Long msumMatchUserId;
+	private Long msumScoreUserId;
 	private Long msumCreateTime;
 
 	// Constructors
@@ -23,11 +23,11 @@ public class MatchScoreUserMapping {
 
 	/** full constructor */
 	public MatchScoreUserMapping(Long msumMatchId, Long msumGroupId,
-								 Long msumCreateUserId, Long msumScorerId, Long msumCreateTime) {
+								 Long msumMatchUserId, Long msumScoreUserId, Long msumCreateTime) {
 		this.msumMatchId = msumMatchId;
 		this.msumGroupId = msumGroupId;
-		this.msumCreateUserId = msumCreateUserId;
-		this.msumScorerId = msumScorerId;
+		this.msumMatchUserId = msumMatchUserId;
+		this.msumScoreUserId = msumScoreUserId;
 		this.msumCreateTime = msumCreateTime;
 	}
 
@@ -61,22 +61,22 @@ public class MatchScoreUserMapping {
 		this.msumGroupId = msumGroupId;
 	}
 
-	@Column(name = "msum_create_user_id")
-	public Long getMsumCreateUserId() {
-		return this.msumCreateUserId;
+	@Column(name = "msum_match_user_id")
+	public Long getMsumMatchUserId() {
+		return this.msumMatchUserId;
 	}
 
-	public void setMsumCreateUserId(Long msumCreateUserId) {
-		this.msumCreateUserId = msumCreateUserId;
+	public void setMsumMatchUserId(Long msumMatchUserId) {
+		this.msumMatchUserId = msumMatchUserId;
 	}
 
-	@Column(name = "msum_scorer_id")
-	public Long getMsumScorerId() {
-		return this.msumScorerId;
+	@Column(name = "msum_score_user_id")
+	public Long getMsumScoreUserId() {
+		return this.msumScoreUserId;
 	}
 
-	public void setMsumScorerId(Long msumScorerId) {
-		this.msumScorerId = msumScorerId;
+	public void setMsumScoreUserId(Long msumScoreUserId) {
+		this.msumScoreUserId = msumScoreUserId;
 	}
 
 	@Column(name = "msum_create_time")

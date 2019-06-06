@@ -389,17 +389,20 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 赛长——本组用户列表
+	 * 赛长——删除用户——本组用户列表
+	 * 不包括自己
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserListByMatchIdGroupId(Long matchId, Long groupId) {
+	public List<Map<String, Object>> getUserListByMatchIdGroupId(Long matchId, Long groupId, Long myUserId) {
 		Map<String, Object> parp = new HashMap<>();
 		parp.put("matchId", matchId);
 		parp.put("groupId", groupId);
+		parp.put("myUserId", myUserId);
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiHeadimg as uiHeadimg ");
 		sql.append("FROM MatchUserGroupMapping AS m,UserInfo as u ");
 		sql.append("WHERE m.mugmUserId = u.uiId ");
+		sql.append("and m.mugmUserId != :myUserId ");
 		sql.append("and m.mugmMatchId = :matchId ");
 		sql.append("and m.mugmGroupId = :groupId ");
 		sql.append("ORDER BY m.mugmCreateTime DESC");
@@ -1004,10 +1007,15 @@ public class MatchDao extends CommonDao {
 
 
 	/**
-	 * 计算差点的最低要求：判断用户是否至少打了5场比赛
+	 * 计算差点 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.8
 	 */
-	public Long getLessFiveMatchByUserId(Long userId) {
-		return 1L;
+	public List<Object> getLessFiveMatchByUserId(Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT AVG(t.sum) FROM ( ");
+		hql.append("SELECT sum(s.ms_rod_num) AS sum FROM match_score AS s" +
+				" WHERE s.ms_user_id = "+userId+" GROUP BY s.ms_match_id ORDER BY s.ms_create_time DESC ");
+		hql.append(" ) as t ");
+		return dao.createSQLQuery(hql.toString(),0,10);
 	}
 
 
@@ -1053,5 +1061,31 @@ public class MatchDao extends CommonDao {
 		}
 		hql.append(" and g.mugmUserId = "+myUserId);
 		return dao.createCountQuery(hql.toString());
+	}
+
+	/**
+	 * 获取参赛队员列表
+	 * @return
+	 */
+	public List<Object[]> getMatchUserGroupMappingList(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("FROM  MatchUserGroupMapping as g,TeamInfo as t WHERE g.mugmTeamId = t.tiId and g.mugmMatchId = "+matchId);
+		hql.append(" order by g.mugmGroupId ");
+		return dao.createQuery(hql.toString());
+	}
+
+	/**
+	 * 查询是否有我生成的邀请记分二维码
+	 * @return
+	 */
+	public MatchScoreUserMapping getMatchScoreUserMapping(Long matchId, Long groupId, Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchScoreUserMapping as t WHERE t.msumMatchId = "+matchId+" and t.msumGroupId = "+groupId);
+		hql.append(" and t.msumMatchUserId = "+myUserId);
+		List<MatchScoreUserMapping> list = dao.createQuery(hql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
 	}
 }

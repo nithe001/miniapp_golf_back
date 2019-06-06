@@ -37,16 +37,17 @@ public class TeamService implements IBaseService {
 	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
 	 * @return
 	 */
-	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
+	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
 		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
-			getCaptain(pageInfo.getItems());
+			getCaptain(pageInfo.getItems(), openid);
 		}
 		return pageInfo;
 	}
 
     //队长
-	public void getCaptain(List<Map<String,Object>> mapList) {
+	public void getCaptain(List<Map<String,Object>> mapList, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		for(Map<String,Object> result : mapList){
 			Integer count = matchService.getIntegerValue(result, "userCount");
 			if(count == 0){
@@ -66,7 +67,7 @@ public class TeamService implements IBaseService {
 			String logo = matchService.getName(result,"logo");
 			result.put("logo", PropertyConst.DOMAIN+logo);
 			//我是否是队长
-			Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
+			Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userInfo.getUiId());
 			result.put("isCaptain", isCaptain);
 		}
     }
@@ -117,16 +118,17 @@ public class TeamService implements IBaseService {
 	 * @param teamId:球队id count 显示的队员人数
 	 * @return
 	 */
-	public Map<String, Object> getTeamInfoById(Long teamId) {
+	public Map<String, Object> getTeamInfoById(Long teamId, String openid) {
 		Map<String, Object> result = new HashMap<>();
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
 		teamInfo.getCreateTimeStr();
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
 		result.put("userList",userList);
-		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, WebUtil.getUserIdBySessionId());
+		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userInfo.getUiId());
 		result.put("isCaptain",isCaptain);
-		Long isInTeam = teamDao.isInTeamById(teamId, WebUtil.getUserIdBySessionId());
+		Long isInTeam = teamDao.isInTeamById(teamId, userInfo.getUiId());
 		result.put("isInTeam",isInTeam);
 		return result;
 	}
@@ -184,7 +186,8 @@ public class TeamService implements IBaseService {
 	 * @param type:0添加已报名的 1删除这些用户
 	 * @return
 	 */
-	public void updateTeamUserByTeamId(Long teamId, String userIds, Integer type) {
+	public void updateTeamUserByTeamId(Long teamId, String userIds, Integer type, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if(StringUtils.isNotEmpty(userIds)){
 			userIds = userIds.replace("[","");
 			userIds = userIds.replace("]","");
@@ -197,8 +200,8 @@ public class TeamService implements IBaseService {
 						//设置为 普通队员
 						teamUserMapping.setTumUserType(1);
 						teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-						teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
-						teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
+						teamUserMapping.setTumCreateUserId(userInfo.getUiId());
+						teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
 						teamDao.update(teamUserMapping);
 					}else{
 						teamDao.del(teamUserMapping);
@@ -225,8 +228,9 @@ public class TeamService implements IBaseService {
 	 * @param type:0加入 1退出
 	 * @return
 	 */
-	public void joinOrQuitTeamById(Long teamId, Integer type) {
-		Long userId = WebUtil.getUserIdBySessionId();
+	public void joinOrQuitTeamById(Long teamId, Integer type, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long userId = userInfo.getUiId();
 		if(type == 0){
 			TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
@@ -241,8 +245,8 @@ public class TeamService implements IBaseService {
 				teamUserMapping.setTumUserType(1);
 			}
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-			teamUserMapping.setTumCreateUserName(WebUtil.getUserNameBySessionId());
-			teamUserMapping.setTumCreateUserId(WebUtil.getUserIdBySessionId());
+			teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+			teamUserMapping.setTumCreateUserId(userId);
 			teamDao.save(teamUserMapping);
 		}else{
 			teamDao.deleteFromTeamUserMapping(teamId, userId);
@@ -265,12 +269,13 @@ public class TeamService implements IBaseService {
 	 * @param userId:被指定人id
 	 * @return
 	 */
-	public void setTeamCaptainByUserId(Long teamId, Long userId) {
+	public void setTeamCaptainByUserId(Long teamId, Long userId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		TeamUserMapping teamUserMapping = teamDao.getTeamUserMapping(teamId,userId);
 		teamUserMapping.setTumUserType(0);
 		teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
-		teamUserMapping.setTumUpdateUserId(WebUtil.getUserIdBySessionId());
-		teamUserMapping.setTumUpdateUserName(WebUtil.getUserNameBySessionId());
+		teamUserMapping.setTumUpdateUserId(userInfo.getUiId());
+		teamUserMapping.setTumUpdateUserName(userInfo.getUiRealName());
 		teamDao.update(teamUserMapping);
 	}
 
@@ -278,8 +283,8 @@ public class TeamService implements IBaseService {
 	 * 查询我是否填写了详细资料
 	 * @return
 	 */
-	public boolean getHasDetail() {
-		UserInfo userInfo = teamDao.get(UserInfo.class,WebUtil.getUserIdBySessionId());
+	public boolean getHasDetail(String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if(StringUtils.isNotEmpty(userInfo.getUiRealName()) && userInfo.getUiAge() != null && StringUtils.isNotEmpty(userInfo.getUiTelNo())
 			&& StringUtils.isNotEmpty(userInfo.getUiEmail()) && StringUtils.isNotEmpty(userInfo.getUiGraduateSchool())
 				&& StringUtils.isNotEmpty(userInfo.getUiGraduateDepartment())

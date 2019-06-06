@@ -9,6 +9,7 @@ import com.golf.common.util.QRCodeUtil;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.admin.AdminMatchService;
@@ -127,10 +128,12 @@ public class AdminMatchController {
 			List<TeamInfo> joinTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiJoinTeamIds());
 			List<TeamInfo> submitTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiReportScoreTeamId());
 			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId);
+			List<Object[]> matchUserGroupMappingList = adminMatchService.getMatchUserGroupMappingList(matchInfo.getMiId());
 			mm.addAttribute("matchInfo",matchInfo);
 			mm.addAttribute("joinTeamInfoList",joinTeamInfoList);
 			mm.addAttribute("submitTeamInfoList",submitTeamInfoList);
 			mm.addAttribute("score",score);
+			mm.addAttribute("matchUserGroupMappingList",matchUserGroupMappingList);
 			System.out.println(21);
 		}catch(Exception e){
 			e.printStackTrace();
@@ -154,7 +157,7 @@ public class AdminMatchController {
 			logger.error("后台管理——编辑赛事活动时出错。"+ e );
             return "admin/error";
         }
-        return "redirect:calendarList";
+        return "redirect:list";
     }
 
 

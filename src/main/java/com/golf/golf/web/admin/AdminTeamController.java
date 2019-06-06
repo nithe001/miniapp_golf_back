@@ -115,6 +115,22 @@ public class AdminTeamController {
 	}
 
 	/**
+	 * 编辑球队-保存
+	 * @return
+	 */
+	@RequestMapping("teamEdit")
+	public String teamEdit(TeamInfo teamInfo){
+		try{
+			adminTeamService.teamEdit(teamInfo);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("后台管理——编辑球队时出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:list";
+	}
+
+	/**
 	 * 修改状态
 	 * @param teamId 球队id
 	 * @return

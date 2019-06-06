@@ -19,7 +19,7 @@
 				  新增
 		      </h1>
 		      <ol class="breadcrumb">
-		        <li><a href="admin/activities/list"><i class="fa fa-dashboard"></i>赛事活动列表</a></li>
+		        <li><a href="admin/team/list"><i class="fa fa-dashboard"></i>球队列表</a></li>
 		        <li class="active">新增</li>
 		      </ol>
 		    </section> 
@@ -31,7 +31,7 @@
 			            <div class="box-header with-border">
 			              <h3 class="box-title">信息</h3>
 			            </div>
-						<form class="form-horizontal" id="calendarForm" action="admin/activities/calendarAdd" method="post">
+						<form class="form-horizontal" id="calendarForm" action="/admin/team/addTeam" method="post">
 							<jsp:include page="form.jsp"></jsp:include>
 						</form>
           			</div>

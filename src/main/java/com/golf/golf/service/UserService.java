@@ -132,8 +132,8 @@ public class UserService implements IBaseService {
 		UserInfo db = dao.getUserByOpenid(openid);
 		db.setUiPersonalizedSignature(signature);
 		db.setUiUpdateTime(System.currentTimeMillis());
-		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
-		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+		db.setUiUpdateUserId(db.getUiId());
+		db.setUiUpdateUserName(db.getUiRealName());
 		dao.update(db);
 	}
 
@@ -290,13 +290,9 @@ public class UserService implements IBaseService {
 			//普通用户
 			userInfo.setUiType(UserTypeEnum.PT.ordinal());
 			userInfo.setUiCreateTime(System.currentTimeMillis());
-			userInfo.setUiCreateUserId(WebUtil.getUserIdBySessionId());
-			userInfo.setUiCreateUserName(WebUtil.getUserNameBySessionId());
 			dao.save(userInfo);
 		}else{
 			userInfo.setUiUpdateTime(System.currentTimeMillis());
-			userInfo.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
-			userInfo.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
 			dao.update(userInfo);
 		}
 		return userInfo;
@@ -311,8 +307,8 @@ public class UserService implements IBaseService {
 		db.setUiLatitude(latitude);
 		db.setUiLongitude(longitude);
 		db.setUiUpdateTime(System.currentTimeMillis());
-		db.setUiUpdateUserId(WebUtil.getUserIdBySessionId());
-		db.setUiUpdateUserName(WebUtil.getUserNameBySessionId());
+		db.setUiUpdateUserId(db.getUiId());
+		db.setUiUpdateUserName(db.getUiRealName());
 		dao.update(db);
 	}
 
@@ -433,7 +429,7 @@ public class UserService implements IBaseService {
 		result.put("matchCount",matchCount == null ? 0:matchCount);
 		//总杆数
 		Long sumRod = dao.getSumRod(parp);
-		result.put("sumRod",sumRod);
+		result.put("sumRod",sumRod==null?0:sumRod);
 		//所有杆数
 		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
 		result.put("scoreList",scoreList);
