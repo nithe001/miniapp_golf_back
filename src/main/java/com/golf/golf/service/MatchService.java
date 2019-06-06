@@ -1757,8 +1757,10 @@ public class MatchService implements IBaseService {
 		List<Object> list = matchDao.getLessFiveMatchByUserId(userId);
 		if(list != null && list.size()>0){
 			BigDecimal avg = (BigDecimal)list.get(0);
-			BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(0, BigDecimal.ROUND_HALF_UP);
-			return processClll.intValue();
+			if(avg != null){
+				BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(0, BigDecimal.ROUND_HALF_UP);
+				return processClll.intValue();
+			}
 		}
 		return 0;
 	}
