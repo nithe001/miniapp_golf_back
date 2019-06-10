@@ -527,6 +527,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiCreateTime(System.currentTimeMillis());
 		matchInfo.setMiCreateUserId(userInfo.getUiId());
 		matchInfo.setMiCreateUserName(userInfo.getUiRealName());
+		matchInfo.setMiIsValid(1);
 		matchDao.save(matchInfo);
 
 		//创建分组

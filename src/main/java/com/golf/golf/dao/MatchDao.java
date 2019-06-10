@@ -59,14 +59,14 @@ public class MatchDao extends CommonDao {
 		}
 
 		//计算我附近的比赛
-		/*if((Integer)parp.get("type") != 3){
+		if((Integer)parp.get("type") != 3){
 			if(parp.get("minlng") != null){
 				hql.append("AND p.pi_lng >= :minlng ");
 			}
 			if(parp.get("minlat") != null){
 				hql.append("AND p.pi_lat >= :minlat ");
 			}
-		}*/
+		}
 
 		hql.append("GROUP BY m.mi_id ");
 

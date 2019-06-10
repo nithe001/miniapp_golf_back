@@ -364,7 +364,10 @@ public class UserService implements IBaseService {
 	//通过openid获取userid
 	public Long getUserIdByOpenid(String openid) {
 		UserInfo userInfo = dao.getUserByOpenid(openid);
-		return userInfo.getUiId();
+		if(userInfo != null){
+			return userInfo.getUiId();
+		}
+		return null;
 	}
 
 	//获取用户在每个球洞的得分情况
