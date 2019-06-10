@@ -6,7 +6,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_group")
-public class MatchGroup {
+public class MatchGroup implements java.io.Serializable {
 
 	// Fields
 

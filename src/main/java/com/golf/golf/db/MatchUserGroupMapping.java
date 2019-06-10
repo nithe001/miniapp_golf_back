@@ -8,7 +8,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_user_group_mapping")
-public class MatchUserGroupMapping {
+public class MatchUserGroupMapping implements java.io.Serializable {
 	// Fields
 
 	private Long mugmId;

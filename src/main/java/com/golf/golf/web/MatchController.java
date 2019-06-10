@@ -581,7 +581,7 @@ public class MatchController {
 
 
 	/**
-	 * 创建球队——上传logo
+	 * 创建比赛——上传logo
 	 * @return
 	 */
 	@ResponseBody
@@ -623,8 +623,8 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(logoPath);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("上传球队logo时出错。" + e);
-			return JsonWrapper.newErrorInstance("上传球队logo时出错");
+			logger.error("上传比赛logo时出错。" + e);
+			return JsonWrapper.newErrorInstance("上传比赛logo时出错");
 		}
 	}
 

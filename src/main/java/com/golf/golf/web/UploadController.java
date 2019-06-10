@@ -10,18 +10,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 /**
  * 上传图片
  * 
- * @author fanyongqian
+ * @author nmy
  * 2016年10月31日
  */
 @Controller
@@ -182,4 +184,59 @@ public class UploadController {
 		}
 		return JsonWrapper.newDataInstance(folderPath + fileName);
 	}
+
+
+
+    /**
+     * 创建球队——上传logo
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = { "uploadTeamLogo" }, method = RequestMethod.POST)
+    public String uploadTeamLogo(MultipartFile file) throws IOException {
+        logger.error("进入上传球队logo请求。");
+        try {
+            String logoPath = null;
+            System.out.println("执行upload");
+            logger.info("执行图片上传");
+            if(!file.isEmpty()) {
+                logger.info("成功获取照片");
+                String fileName = file.getOriginalFilename();
+                String type = null;
+                type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length()) : null;
+                logger.info("图片初始名称为：" + fileName + " 类型为：" + type);
+                if (type != null) {
+                    if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
+                        // 项目在容器中实际发布运行的根路径
+                        String realPath = WebUtil.getRealPath(PropertyConst.TEAM_LOGO_PATH);
+                        // 自定义的文件名称
+                        String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
+
+                        File targetFile = new File(realPath, trueFileName);
+                        if(!targetFile.exists()){
+                            targetFile.mkdirs();
+                        }
+                        file.transferTo(targetFile);
+                        logoPath = PropertyConst.TEAM_LOGO_PATH+trueFileName;
+                        logger.info("文件成功上传到指定目录下");
+                    }else {
+                        logger.info("文件类型不正确");
+                        return "error";
+                    }
+                }else {
+                    logger.info("文件不存在");
+                    return "error";
+                }
+            }else {
+                logger.info("文件不存在");
+                return "error";
+            }
+//            return JsonWrapper.newDataInstance(logoPath);
+            return logoPath;
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("上传球队logo时出错。" + e);
+            return "error";
+        }
+    }
 }

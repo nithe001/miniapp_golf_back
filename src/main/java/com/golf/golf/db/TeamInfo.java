@@ -7,7 +7,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "team_info")
-public class TeamInfo {
+public class TeamInfo implements java.io.Serializable {
 
 	// Fields
 
@@ -22,7 +22,6 @@ public class TeamInfo {
 	private Integer tiUserInfoType;
 	private Integer tiMatchResultAuditType;
 	private Integer tiIsValid;
-	private String tiCreateTimeStr;
 	private Long tiCreateTime;
 	private Long tiCreateUserId;
 	private String tiCreateUserName;
@@ -40,7 +39,7 @@ public class TeamInfo {
 	public TeamInfo(String tiLogo, String tiName, String tiSignature,
 					String tiDigest, String tiAddress,
 					Integer tiJoinOpenType, Integer tiInfoOpenType, Integer tiUserInfoType,
-					Integer tiMatchResultAuditType, Integer tiIsValid, String tiCreateTimeStr, Long tiCreateTime,
+					Integer tiMatchResultAuditType, Integer tiIsValid,Long tiCreateTime,
 					Long tiCreateUserId, String tiCreateUserName, Long tiUpdateTime,
 					Long tiUpdateUserId, String tiUpdateUserName) {
 		this.tiLogo = tiLogo;
@@ -53,7 +52,6 @@ public class TeamInfo {
 		this.tiUserInfoType = tiUserInfoType;
 		this.tiMatchResultAuditType = tiMatchResultAuditType;
 		this.tiIsValid = tiIsValid;
-		this.tiCreateTimeStr = tiCreateTimeStr;
 		this.tiCreateTime = tiCreateTime;
 		this.tiCreateUserId = tiCreateUserId;
 		this.tiCreateUserName = tiCreateUserName;
@@ -164,15 +162,6 @@ public class TeamInfo {
 		this.tiIsValid = tiIsValid;
 	}
 
-	@Column(name = "ti_create_time_str")
-	public String getTiCreateTimeStr() {
-		return tiCreateTimeStr;
-	}
-
-	public void setTiCreateTimeStr(String tiCreateTimeStr) {
-		this.tiCreateTimeStr = tiCreateTimeStr;
-	}
-
 	@Column(name = "ti_create_time")
 	public Long getTiCreateTime() {
 		return this.tiCreateTime;
@@ -249,4 +238,15 @@ public class TeamInfo {
 	public void setShows(Integer shows) {
 		this.shows = shows;
 	}
+
+
+    private String tiCreateTimeStr;
+    @Transient
+    public String getTiCreateTimeStr() {
+        return tiCreateTimeStr;
+    }
+
+    public void setTiCreateTimeStr(String tiCreateTimeStr) {
+        this.tiCreateTimeStr = tiCreateTimeStr;
+    }
 }

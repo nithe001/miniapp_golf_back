@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_score_user_mapping")
-public class MatchScoreUserMapping {
+public class MatchScoreUserMapping implements java.io.Serializable {
 	// Fields
 
 	private Long msumId;

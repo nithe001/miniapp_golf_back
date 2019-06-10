@@ -17,9 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -115,12 +117,14 @@ public class TeamManageController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = "uploadImg")
-	public JsonElement uploadImg(HttpServletRequest request, @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+    @RequestMapping(value = { "uploadTeamLogo" }, method = RequestMethod.POST,produces = "application/json")
+	public String uploadTeamLogo(HttpServletRequest request) throws IOException {
+        MultipartHttpServletRequest req =(MultipartHttpServletRequest)request;
+        MultipartFile file =  req.getFile("file");
+        logger.error("进入上传球队logo请求。");
 		try {
 			String logoPath = null;
 			System.out.println("执行upload");
-			request.setCharacterEncoding("UTF-8");
 			logger.info("执行图片上传");
 			if(!file.isEmpty()) {
 				logger.info("成功获取照片");
@@ -143,19 +147,23 @@ public class TeamManageController {
 						logoPath = PropertyConst.TEAM_LOGO_PATH+trueFileName;
 						logger.info("文件成功上传到指定目录下");
 					}else {
-						return JsonWrapper.newErrorInstance("文件类型不正确");
+                        logger.info("文件类型不正确");
+                        return "error";
 					}
 				}else {
-					return JsonWrapper.newErrorInstance("文件不存在");
+                    logger.info("文件不存在");
+                    return "error";
 				}
 			}else {
-				return JsonWrapper.newErrorInstance("文件不存在");
+                logger.info("文件不存在");
+                return "error";
 			}
-			return JsonWrapper.newDataInstance(logoPath);
+//            return JsonWrapper.newDataInstance(logoPath);
+            return logoPath;
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("上传球队logo时出错。" + e);
-			return JsonWrapper.newErrorInstance("上传球队logo时出错");
+            return "error";
 		}
 	}
 

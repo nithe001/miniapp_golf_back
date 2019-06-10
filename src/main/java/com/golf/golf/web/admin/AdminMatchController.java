@@ -260,10 +260,10 @@ public class AdminMatchController {
 	 * @param matchId 比赛id
 	 * @return
 	 */
-	@RequestMapping("delMatch")
-	public String delMatch(Long matchId){
+	@RequestMapping("updateMatchState")
+	public String updateMatchState(Long matchId){
 		try{
-			adminMatchService.delMatch(matchId);
+			adminMatchService.updateMatchState(matchId);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("修改比赛状态出错。"+ e );
@@ -271,6 +271,23 @@ public class AdminMatchController {
 		}
 		return "redirect:list";
 	}
+
+    /**
+     * 删除比赛
+     * @param matchId 比赛id
+     * @return
+     */
+    @RequestMapping("delMatch")
+    public String delMatch(Long matchId){
+        try{
+            adminMatchService.delMatch(matchId);
+        }catch(Exception e){
+            e.printStackTrace();
+            logger.error("删除比赛出错。"+ e );
+            return "admin/error";
+        }
+        return "redirect:list";
+    }
 
 	/**
 	 * 比分录入

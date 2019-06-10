@@ -89,9 +89,12 @@
                                                 <a class="btn btn-success" href="admin/team/editTeamUI?teamId=${teamInfo.tiId}">
                                                     查看
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" onclick="delTeam(${teamInfo.tiId})" href="javascript:void(0)">
+                                                <a class="btn btn-danger" onclick="updateTeamState(${teamInfo.tiId})" href="javascript:void(0)">
                                                     <c:if test="${teamInfo.valid == null || teamInfo.valid == 1}">注销</c:if>
                                                     <c:if test="${teamInfo.valid == 0 }">恢复</c:if>
+                                                </a>&nbsp;
+                                                <a class="btn btn-danger" onclick="delTeam(${teamInfo.tiId})" href="javascript:void(0)">
+                                                    删除
                                                 </a>
                                             </td>
                                         </tr>
@@ -115,6 +118,28 @@
 </div>
 
 
+<input type="hidden" id="teamId" value=""/>
+
+<!-- Modal -->
+<div class="modal fade" id="updateTeamStateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
+            </div>
+            <div class="modal-body">确定要这么操作吗？</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureUpdateStateBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- Modal -->
 <div class="modal fade" id="delModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
@@ -126,11 +151,10 @@
                         aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">提示</h4>
             </div>
-            <div class="modal-body">确定要这么操作吗？</div>
+            <div class="modal-body">确定要这么操作吗？此操作会删除所有比赛中跟本球队相关的数据！</div>
             <div class="modal-footer">
-                <input type="hidden" id="teamId" value=""/>
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
+                <button type="button" class="btn btn-primary" id="sureDelBtn">确定</button>
             </div>
         </div>
     </div>
@@ -151,10 +175,19 @@
                 $("#searchBtn").click();
             }
         });
-        $("#sureBtn").click(function () {
+
+        $("#sureUpdateStateBtn").click(function () {
+            window.location.href="admin/team/updateTeamState?teamId="+$("#teamId").val();
+        });
+        $("#sureDelBtn").click(function () {
             window.location.href="admin/team/delTeam?teamId="+$("#teamId").val();
         });
     });
+
+    function updateTeamState(teamId) {
+        $("#teamId").val(teamId);
+        $("#updateTeamStateModal").modal("show");
+    }
     function delTeam(teamId) {
         $("#teamId").val(teamId);
         $("#delModal").modal("show");

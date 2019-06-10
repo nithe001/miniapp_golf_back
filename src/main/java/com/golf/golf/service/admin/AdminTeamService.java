@@ -103,7 +103,7 @@ public class AdminTeamService implements IBaseService {
 	 * @param teamId 球队id
 	 * @return
 	 */
-	public void delTeam(Long teamId) {
+	public void updateTeamState(Long teamId) {
 		TeamInfo teamInfo = adminTeamDao.get(TeamInfo.class,teamId);
 		if(teamInfo.getTiIsValid() == 0){
 			teamInfo.setTiIsValid(1);
@@ -132,4 +132,21 @@ public class AdminTeamService implements IBaseService {
 		db.setTiUpdateUserId(AdminUserUtil.getUserId());
 		adminTeamDao.update(db);
 	}
+
+    /**
+     * 删除
+     * @param teamId 球队id
+     * @return
+     */
+    public void delTeam(Long teamId) {
+        adminTeamDao.del(TeamInfo.class,teamId);
+        //删除球队用户配置
+        adminTeamDao.delTeamUserMapping(teamId);
+        //删除比赛用户配置中对应球队信息
+        adminTeamDao.delMatchTeamUserMapping(teamId);
+        //删除比赛成绩表中对应球队的比分
+        adminTeamDao.delMatchScoreByTeamId(teamId);
+        //删除成绩确认配置
+        adminTeamDao.delMatchScoreSubmitConfigByTeamId(teamId);
+    }
 }

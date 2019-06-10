@@ -1,14 +1,12 @@
 package com.golf.golf.db;
 
-import com.golf.common.util.TimeUtil;
-
 import javax.persistence.*;
 
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_rule")
-public class MatchRule {
+public class MatchRule implements java.io.Serializable {
 
 	// Fields
 

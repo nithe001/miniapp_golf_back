@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_join_watch_info")
-public class MatchJoinWatchInfo {
+public class MatchJoinWatchInfo implements java.io.Serializable{
 	// Fields
 
 	private Long mjwiId;

@@ -3,7 +3,9 @@ package com.golf.golf.dao.admin;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
+import com.golf.golf.db.IntegralConfig;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.MatchUserGroupMapping;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -71,4 +73,48 @@ public class AdminTeamDao extends CommonDao {
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 12,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
+
+    /**
+     * 删除球队用户配置
+     * @param teamId 球队id
+     * @return
+     */
+    public void delTeamUserMapping(Long teamId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM TeamUserMapping AS m WHERE m.tumTeamId= "+teamId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除比赛用户配置中对应球队信息
+     * @param teamId 球队id
+     * @return
+     */
+    public void delMatchTeamUserMapping(Long teamId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM MatchUserGroupMapping AS t WHERE t.mugmTeamId= "+teamId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除比赛成绩表中对应球队的比分
+     * @param teamId 球队id
+     * @return
+     */
+    public void delMatchScoreByTeamId(Long teamId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM MatchScore AS t WHERE t.msTeamId= "+teamId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除成绩确认配置
+     * @param teamId 球队id
+     * @return
+     */
+    public void delMatchScoreSubmitConfigByTeamId(Long teamId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM IntegralConfig AS t WHERE t.icTeamId= "+teamId);
+        dao.executeHql(hql.toString());
+    }
 }

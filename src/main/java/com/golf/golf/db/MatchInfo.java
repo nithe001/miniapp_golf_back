@@ -8,7 +8,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "match_info")
-public class MatchInfo {
+public class MatchInfo implements java.io.Serializable {
 
 	// Fields
 

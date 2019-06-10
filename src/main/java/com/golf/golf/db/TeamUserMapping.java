@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "team_user_mapping")
-public class TeamUserMapping {
+public class TeamUserMapping implements java.io.Serializable {
 	// Fields
 
 	private Long tumId;

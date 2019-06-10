@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "wechat_user_info")
-public class WechatUserInfo {
+public class WechatUserInfo implements java.io.Serializable {
 
 	// Fields
 

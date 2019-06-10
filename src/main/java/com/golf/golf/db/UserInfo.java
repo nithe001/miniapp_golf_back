@@ -1,13 +1,12 @@
 package com.golf.golf.db;
 
-import com.golf.common.util.TimeUtil;
-
 import javax.persistence.*;
+
 import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "user_info")
-public class UserInfo {
+public class UserInfo implements java.io.Serializable {
 
 	// Fields
 

@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "park_partition")
-public class ParkPartition {
+public class ParkPartition implements java.io.Serializable {
 	private Long ppId;
 	private Long ppPId;
 	private String ppName;

@@ -8,7 +8,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "admin_user")
-public class AdminUser {
+public class AdminUser implements java.io.Serializable {
 	// Fields
 
 	private Long auId;

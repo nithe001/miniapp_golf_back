@@ -5,7 +5,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Table(name = "park_info")
-public class ParkInfo implements Comparable<ParkInfo>{
+public class ParkInfo implements java.io.Serializable, Comparable<ParkInfo>{
 
 	// Fields
 

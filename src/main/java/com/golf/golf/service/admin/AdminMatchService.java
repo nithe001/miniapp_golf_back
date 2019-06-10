@@ -129,14 +129,14 @@ public class AdminMatchService implements IBaseService {
 	 * @param matchId 比赛id
 	 * @return
 	 */
-	public void delMatch(Long matchId) {
-		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+	public void updateMatchState(Long matchId) {
+		MatchInfo matchInfo = dao.get(MatchInfo.class, matchId);
 		if(matchInfo.getMiIsValid() == 1){
 			matchInfo.setMiIsValid(0);
 		}else{
 			matchInfo.setMiIsValid(1);
 		}
-		matchDao.update(matchInfo);
+        dao.update(matchInfo);
 	}
 
 	/**
@@ -146,4 +146,21 @@ public class AdminMatchService implements IBaseService {
 	public List<Object[]> getMatchUserGroupMappingList(Long matchId) {
 		return matchDao.getMatchUserGroupMappingList(matchId);
 	}
+
+    /**
+     * 删除比赛
+     * @param matchId 比赛id
+     * @return
+     */
+    public void delMatch(Long matchId) {
+        dao.del(MatchInfo.class, matchId);
+        //删除比赛对应的用户mapping
+        dao.delMatchUserMapping(matchId);
+        //删除比赛对应的用户比分
+        dao.delMatchScore(matchId);
+        //删除比赛分组
+        dao.delMatchGroup(matchId);
+        //删除比赛球队确认配置
+        dao.delMatchScoreConfig(matchId);
+    }
 }

@@ -104,9 +104,12 @@
                                                 <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${matchInfo.miId}">
                                                     编辑
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
+                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="updateMatchState(${matchInfo.miId})">
                                                     <c:if test="${matchInfo.miIsValid == null || matchInfo.miIsValid == 1}">注销</c:if>
                                                     <c:if test="${matchInfo.miIsValid == 0 }">恢复</c:if>
+                                                </a>&nbsp;
+                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
+                                                    删除
                                                 </a>
                                             </td>
                                         </tr>
@@ -130,10 +133,11 @@
 </div>
 
 
+<input id="matchId" value="" type="hidden"/>
 
 
 <!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+<div class="modal fade" id="updateMatchStateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
      aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -143,7 +147,6 @@
                 <h4 class="modal-title">提示</h4>
             </div>
             <div class="modal-body">确定要这么操作吗</div>
-            <input id="matchId" value="" type="hidden"/>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
                 <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
@@ -152,6 +155,26 @@
     </div>
 </div>
 
+
+
+<!-- Modal -->
+<div class="modal fade" id="delMatchModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
+            </div>
+            <div class="modal-body">确定要这么操作吗？此操作会删除所有比赛中跟本球队相关的数据！</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureDelBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
 <jsp:include page="../include/adminlteJsInclude.jsp"/>
 <script type="text/javascript">
     $(document).ready(function () {
@@ -169,13 +192,20 @@
             }
         });
 
-        $("#sureBtn").click(function () {
+        $("#sureUpdateStateBtn").click(function () {
+            window.location.href="admin/team/updateMatchState?teamId="+$("#matchId").val();
+        });
+        $("#sureDelBtn").click(function () {
             window.location.href="admin/match/delMatch?matchId="+$("#matchId").val();
         });
     });
+    function updateMatchState(matchId) {
+        $("#matchId").val(matchId);
+        $("#updateMatchStateModal").modal("show");
+    }
     function delMatch(matchId) {
         $("#matchId").val(matchId);
-        $("#myModal").modal("show");
+        $("#delMatchModal").modal("show");
     }
 </script>
 </body>

@@ -79,7 +79,7 @@ public class TeamService implements IBaseService {
 	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		if(teamInfoBean.getTiId() == null){
-			teamInfoBean.setTiCreateTime(System.currentTimeMillis());
+			teamInfoBean.setTiCreateTime(TimeUtil.stringToLong(teamInfoBean.getTiCreateTimeStr(),TimeUtil.FORMAT_DATE));
 			teamInfoBean.setTiCreateUserId(userInfo.getUiId());
 			teamInfoBean.setTiCreateUserName(userInfo.getUiRealName());
 			teamInfoBean.setTiIsValid(1);
@@ -97,7 +97,7 @@ public class TeamService implements IBaseService {
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
 			db.setTiName(teamInfoBean.getTiName());
-			db.setTiCreateTime(System.currentTimeMillis());
+			db.setTiCreateTime(TimeUtil.stringToLong(teamInfoBean.getTiCreateTimeStr(),TimeUtil.FORMAT_DATE));
 			db.setTiAddress(teamInfoBean.getTiAddress());
 			db.setTiDigest(teamInfoBean.getTiDigest());
 			db.setTiSignature(teamInfoBean.getTiSignature());

@@ -135,10 +135,10 @@ public class AdminTeamController {
 	 * @param teamId 球队id
 	 * @return
 	 */
-	@RequestMapping("delTeam")
-	public String delTeam(Long teamId){
+	@RequestMapping("updateTeamState")
+	public String updateTeamState(Long teamId){
 		try{
-			adminTeamService.delTeam(teamId);
+			adminTeamService.updateTeamState(teamId);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("修改球队状态出错。"+ e );
@@ -146,4 +146,21 @@ public class AdminTeamController {
 		}
 		return "redirect:list";
 	}
+
+    /**
+     * 删除
+     * @param teamId 球队id
+     * @return
+     */
+    @RequestMapping("delTeam")
+    public String delTeam(Long teamId){
+        try{
+            adminTeamService.delTeam(teamId);
+        }catch(Exception e){
+            e.printStackTrace();
+            logger.error("删除球队出错。"+ e );
+            return "admin/error";
+        }
+        return "redirect:list";
+    }
 }

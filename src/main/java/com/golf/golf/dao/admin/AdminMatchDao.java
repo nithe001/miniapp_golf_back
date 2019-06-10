@@ -81,4 +81,45 @@ public class AdminMatchDao extends CommonDao {
 		pageInfo.setItems(list);
 		return pageInfo;
 	}
+
+    /**
+     * 删除比赛对应的用户mapping
+     * @return
+     */
+    public void delMatchUserMapping(Long matchId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM MatchUserGroupMapping AS t WHERE " +
+                "t.mugmMatchId= "+matchId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除比赛对应的用户比分
+     * @return
+     */
+    public void delMatchScore(Long matchId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM MatchScore AS t WHERE t.msMatchId= "+matchId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除比赛分组
+     * @return
+     */
+    public void delMatchGroup(Long matchId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM MatchGroup AS t WHERE t.mgMatchId= "+matchId);
+        dao.executeHql(hql.toString());
+    }
+
+    /**
+     * 删除比赛球队确认配置
+     * @return
+     */
+    public void delMatchScoreConfig(Long matchId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("DELETE FROM IntegralConfig AS t WHERE t.icMatchId= "+matchId);
+        dao.executeHql(hql.toString());
+    }
 }
