@@ -1,9 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
 String path = request.getContextPath();
-//String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-//String basePath = request.getHeader("X-Forwarded-Scheme")+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-    String basePath = request.getHeader("X-Forwarded-Scheme")+"://"+request.getServerName()+path+"/";
+//本地用
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+//正式环境用
+//String basePath = request.getHeader("X-Forwarded-Scheme")+"://"+request.getServerName()+path+"/";
 %>
 <base href="<%=basePath%>">
 <meta name="viewport" content="width=device-width, initial-scale=1"><!-- bootstrap -->

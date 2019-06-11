@@ -7,6 +7,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.UserInfo;
+import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.service.admin.AdminUserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
@@ -22,9 +23,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.Map;
 
 /**
- * 用户管理
- * 
- * @author fanyongqian
+ * 管理员用户管理
+ * @author nmy
  * 2016年10月31日
  */
 @Controller
@@ -62,7 +62,7 @@ public class AdminUserController {
             pageInfo = logic.getAdminUserList(searchBean, pageInfo);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("后台管理-获取管理员用户列表信息出错。"+ e );
+            logger.error("后台管理——获取管理员用户列表信息出错。"+ e );
             return "error";
         }
         mm.addAttribute("pageInfo",pageInfo);
@@ -72,47 +72,6 @@ public class AdminUserController {
         mm.addAttribute("rowsPerPage",rowsPerPage);
         return "admin/user/adminuser_list";
     }
-
-	/**
-	 * 微信用户列表
-	 * @param mm
-	 * @param keyword
-	 * @param page
-	 * @param rowsPerPage
-	 * @return
-	 */
-	@RequestMapping("wechatUserList")
-	public String wechatUserList(ModelMap mm, String keyword, String startDate, String endDate, Integer state, Integer page, Integer rowsPerPage){
-		if (page == null || page.intValue() == 0) {
-			page = 1;
-		}
-		if (rowsPerPage == null || rowsPerPage.intValue() == 0) {
-			rowsPerPage = Const.ROWSPERPAGE;
-		}
-		POJOPageInfo pageInfo = new POJOPageInfo<Map<String,Object>>(rowsPerPage , page);
-		try {
-			SearchBean searchBean = new SearchBean();
-			if (StringUtils.isNotEmpty(keyword)) {
-				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
-			}
-			searchBean.addParpField("startDate", TimeUtil.stringToLong(startDate, TimeUtil.FORMAT_DATE));
-			searchBean.addParpField("endDate", TimeUtil.stringToLong(endDate, TimeUtil.FORMAT_DATE));
-			searchBean.addParpField("state", state);
-			pageInfo = logic.getWechatUserList(searchBean, pageInfo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("后台管理-获取微信用户列表信息出错。"+ e );
-			return "error";
-		}
-		mm.addAttribute("pageInfo",pageInfo);
-		mm.addAttribute("keyword",keyword);
-		mm.addAttribute("startDate", startDate);
-		mm.addAttribute("endDate", endDate);
-		mm.addAttribute("page",page);
-		mm.addAttribute("state", state);
-		mm.addAttribute("rowsPerPage",rowsPerPage);
-		return "admin/user/wechatuser_list";
-	}
 
     /**
      * 新增init
@@ -134,10 +93,10 @@ public class AdminUserController {
             logic.save(user);
         }catch(Exception e){
             e.printStackTrace();
-            logger.error("保存用户时出错。"+ e );
+            logger.error("后台管理——保存管理员用户时出错。"+ e );
             return "error";
         }
-        return "redirect:userList";
+        return "redirect:adminUserList";
     }
 
     /**
@@ -154,7 +113,7 @@ public class AdminUserController {
             mm.addAttribute("user",user);
         }catch(Exception e){
             e.printStackTrace();
-            logger.error("获取用户信息时出错。"+ e );
+            logger.error("后台管理——获取管理员用户信息时出错。"+ e );
             return "admin/error";
         }
         return "admin/user/adminuser_edit";
@@ -171,10 +130,10 @@ public class AdminUserController {
             logic.edit(user);
         }catch(Exception e){
             e.printStackTrace();
-            logger.error("编辑用户信息时出错。"+ e );
+            logger.error("后台管理——编辑管理员用户信息时出错。"+ e );
             return "admin/error";
         }
-        return "redirect:userList";
+        return "redirect:adminUserList";
     }
 
     /**
@@ -217,78 +176,10 @@ public class AdminUserController {
             logic.update(user);
         }catch(Exception e){
             e.printStackTrace();
-            logger.error("注销/恢复用户时出错。"+ e );
+            logger.error("后台管理——注销/恢复管理员用户时出错。"+ e );
             return "admin/error";
         }
-        return "redirect:userList";
+        return "redirect:adminUserList";
     }
-
-	/**
-	 * 新增前台用户init
-	 * @return
-	 */
-	@RequestMapping("wechatUserAddUI")
-	public String wechatUserAddUI(){
-		return "admin/user/wechatuser_add";
-	}
-
-	/**
-	 * 新增/编辑 前台用户
-	 * @param user
-	 * @return
-	 */
-	@RequestMapping("wechatUserUpdateOrAdd")
-	public String wechatUserUpdateOrAdd(UserInfo user){
-		try{
-			if(user.getUiId() != null){
-				logic.editWechatUser(user);
-			}else{
-				logic.saveWechatUser(user);
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-			logger.error("保存前台用户时出错。"+ e );
-			return "error";
-		}
-		return "redirect:wechatUserList";
-	}
-
-	/**
-	 * 编辑前台用户init
-	 * @param mm
-	 * @param wechatId
-	 * @return
-	 */
-	@RequestMapping("wechatUserEditUI")
-	public String wechatUserEditUI(ModelMap mm, Long wechatId){
-		try{
-			Map<String, Object> parp = logic.getWechatUserById(wechatId);
-			mm.addAttribute("wechatUser",parp.get("wechatUser"));
-			mm.addAttribute("userInfo",parp.get("userInfo"));
-		}catch(Exception e){
-			e.printStackTrace();
-			logger.error("获取前台用户信息时出错。"+ e );
-			return "admin/error";
-		}
-		return "admin/user/wechatuser_edit";
-	}
-
-	/**
-	 * 设置微信用户为管理员
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping(value = { "setAdmin" })
-	public JsonElement setAdmin(Long userId){
-		try {
-			logic.setAdmin(userId);
-		} catch (Exception e) {
-			e.printStackTrace();
-			String errMsg = "设置微信用户为管理员时出错。userId=" + userId;
-			logger.error(errMsg+ e );
-			return JsonWrapper.newErrorInstance(errMsg);
-		}
-		return JsonWrapper.newSuccessInstance();
-	}
 
 }

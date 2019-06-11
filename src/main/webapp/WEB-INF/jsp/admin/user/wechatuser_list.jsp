@@ -52,6 +52,7 @@
                                         <th>城市</th>
                                         <th>用户类型</th>
                                         <th>关注时间</th>
+                                        <th>状态</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
                                     </thead>
@@ -81,6 +82,9 @@
                                                 </c:if>
                                             </td>
                                             <td>${user.create_time}</td>
+                                            <td><c:if test="${user.wui_is_valid == 0}">无效</c:if>
+                                                <c:if test="${user.wui_is_valid == 1}">有效</c:if>
+                                            </td>
                                             <td>
                                                 <a class="btn btn-success"
                                                    href="admin/user/wechatUserEditUI?wechatId=${user.wui_id}">
@@ -89,6 +93,10 @@
                                                 <a class="btn btn-success"
                                                    href="admin/user/setAdmin?userId=${user.wui_u_id}">
                                                     <span class="glyphicon glyphicon-pencil"></span>设为赛事管理员
+                                                </a>&nbsp;
+                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="updateUserState(${user.wui_id})">
+                                                    <c:if test="${user.wui_is_valid == null || user.wui_is_valid == 1}">注销</c:if>
+                                                    <c:if test="${user.wui_is_valid == 0 }">恢复</c:if>
                                                 </a>
                                             </td>
                                         </tr>
@@ -112,18 +120,20 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="updateStateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabel"></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
             </div>
-            <div class="modal-body" id="fileDiv"><input type="file" id="fileupload" name="file"
-                                                        cssClass="form-control"/></div>
+            <input id="wechatUserId" value="" type="hidden"/>
+            <div class="modal-body">确定要这么操作吗？</div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="closeBtn">关闭</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureUpdateStateBtn">确定</button>
             </div>
         </div>
     </div>
@@ -145,7 +155,16 @@
                 $("#searchBtn").click();
             }
         });
+
+        $("#sureUpdateStateBtn").click(function () {
+            window.location.href="admin/user/updateWechatUserState?wechatUserId="+$("#wechatUserId").val();
+        });
     });
+
+    function updateUserState(wechatUserId) {
+        $("#wechatUserId").val(wechatUserId);
+        $("#updateStateModal").modal("show");
+    }
 </script>
 </body>
 </html>

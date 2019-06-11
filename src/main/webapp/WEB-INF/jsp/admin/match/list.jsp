@@ -149,7 +149,7 @@
             <div class="modal-body">确定要这么操作吗</div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
+                <button type="button" class="btn btn-primary" id="sureUpdateStateBtn">确定</button>
             </div>
         </div>
     </div>

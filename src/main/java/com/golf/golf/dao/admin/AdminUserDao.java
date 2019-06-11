@@ -81,7 +81,7 @@ public class AdminUserDao extends CommonDao {
 		}
 		String select ="select wu.wui_id as wui_id,wu.wui_headimgurl as wui_headimg,wu.wui_nick_name as wui_nick_name,wu.wui_openid as wui_openid," +
 				"u.ui_real_name as ui_real_name,wu.wui_sex as wui_sex,wu.wui_province as wui_province," +
-				"wu.wui_city as wui_city,wu.create_time as create_time, u.ui_type as ui_type ";
+				"wu.wui_city as wui_city,wu.create_time as create_time, u.ui_type as ui_type,wu.wui_is_valid as wui_is_valid ";
 		hql.append("group by wu.wui_id order by wu.create_time ");
 		List<Map<String, Object>> list = dao.createSQLQuery(select+hql.toString(),parp, pageInfo.getStart(),
 														pageInfo.getRowsPerPage(), Transformers.ALIAS_TO_ENTITY_MAP);

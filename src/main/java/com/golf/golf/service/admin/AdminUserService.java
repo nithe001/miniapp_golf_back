@@ -153,14 +153,18 @@ public class AdminUserService implements IBaseService {
 		return dao.getUserByInfo(userName,hospital,telNo);
 	}
 
-	public void saveUser(UserInfo user) {
-		dao.save(user);
-	}
-
 	/**
-	 * 设置微信用户为管理员
+	 * 设置微信用户为赛事管理员
 	 * @return
 	 */
 	public void setAdmin(Long userId) {
+	}
+
+	/**
+	 * 获取微信用户信息
+	 * @return
+	 */
+	public WechatUserInfo getWechatUser(Long wechatUserId) {
+		return dao.get(WechatUserInfo.class, wechatUserId);
 	}
 }
