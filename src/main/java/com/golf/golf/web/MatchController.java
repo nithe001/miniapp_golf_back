@@ -587,8 +587,8 @@ public class MatchController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = { "uploadMatchLogo" }, method = RequestMethod.POST,produces = "application/json")
-	public String uploadTeamLogo(HttpServletRequest request) throws IOException {
+	@RequestMapping(value = "uploadMatchLogo")
+	public String uploadMatchLogo(HttpServletRequest request) throws IOException {
 		MultipartHttpServletRequest req =(MultipartHttpServletRequest)request;
 		MultipartFile file =  req.getFile("file");
 		logger.error("进入上传比赛logo请求。");

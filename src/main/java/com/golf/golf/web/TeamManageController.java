@@ -117,10 +117,10 @@ public class TeamManageController {
 	 * @return
 	 */
 	@ResponseBody
-    @RequestMapping(value = { "uploadTeamLogo" }, method = RequestMethod.POST,produces = "application/json")
-	public String uploadTeamLogo(HttpServletRequest request) throws IOException {
-        MultipartHttpServletRequest req =(MultipartHttpServletRequest)request;
-        MultipartFile file =  req.getFile("file");
+	@RequestMapping(value = "uploadTeamLogo")
+	public String uploadImg(HttpServletRequest request) throws IOException {
+		MultipartHttpServletRequest req =(MultipartHttpServletRequest)request;
+      	MultipartFile file =  req.getFile("file");
         logger.error("进入上传球队logo请求。");
 		try {
 			String logoPath = null;
