@@ -84,10 +84,15 @@ public class MatchService implements IBaseService {
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
 		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
 		//用户经纬度存在, 计算我附近10千米的经纬度
-		if (userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
-			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
-					Double.parseDouble(userInfo.getUiLatitude()), 10);
+//		if (userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
+//			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
+//					Double.parseDouble(userInfo.getUiLatitude()), 10);
+//		}
+		if(userInfo.getUiLatitude() != null && userInfo.getUiLatitude() != null){
+
 		}
+		searchBean.getParps().put("myLat",userInfo.getUiLatitude());
+		searchBean.getParps().put("myLng",userInfo.getUiLongitude());
 		POJOPageInfo pageInfo_ = matchDao.getMatchList(searchBean, pageInfo);
 		if (pageInfo_.getCount() > 0 && pageInfo_.getItems().size() > 0) {
 			List<MatchInfo> matchInfoList = new ArrayList<>();

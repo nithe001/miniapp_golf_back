@@ -36,39 +36,42 @@ public class MatchDao extends CommonDao {
 				"m.mi_apply_end_time AS mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end," +
 				"j.mjwi_type AS type," +
-				"count(j.mjwi_user_id) AS userCount,m.mi_match_format_1 as mi_match_format_1,m.mi_match_format_2 as mi_match_format_2 ");
-		hql.append("FROM match_info AS m ");
-		hql.append("LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
-		hql.append("LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
-		hql.append("WHERE 1=1 ");
+				"count(j.mjwi_user_id) AS userCount," +
+				"m.mi_match_format_1 as mi_match_format_1," +
+				"m.mi_match_format_2 as mi_match_format_2 ");
+		if(parp.get("myLat") != null && parp.get("myLng") != null ){
+
+			hql.append(",( 6371 * acos (" +
+					"      cos ( radians(:myLat) ) " +
+					"      * cos( radians( p.pi_lat ) ) " +
+					"      * cos( radians( p.pi_lng ) - radians(:myLng) ) " +
+					"      + sin ( radians(:myLat) ) " +
+					"      * sin( radians( p.pi_lat ) ) " +
+					"  ) " +
+					"  ) AS distance ");
+		}
+		hql.append(" FROM match_info AS m ");
+		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
+		hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
+		hql.append(" WHERE 1=1 ");
 		hql.append(" AND m.mi_type = 1 ");
 		hql.append(" AND m.mi_is_valid = 1 ");
 
 		if((Integer)parp.get("type") == 1){
 			//我参加的比赛
-			hql.append("AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
+			hql.append(" AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 2){
 			//我可以报名的比赛   包括我创建的正在报名的比赛，作为赛长可以管理报名
-			hql.append("AND m.mi_is_end = 0 AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) or (m.mi_create_user_id = :userId and m.mi_is_end = 0))");
+			hql.append(" AND m.mi_is_end = 0 AND (m.mi_id NOT IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) or (m.mi_create_user_id = :userId and m.mi_is_end = 0))");
 		}else if((Integer)parp.get("type") == 3){
 			//我创建的比赛
-			hql.append("AND m.mi_create_user_id = :userId ");
+			hql.append(" AND m.mi_create_user_id = :userId ");
 		}
 		if(parp.get("keyword") != null){
-			hql.append("AND m.mi_title LIKE :keyword ");
+			hql.append(" AND m.mi_title LIKE :keyword ");
 		}
 
-		//计算我附近的比赛
-		if((Integer)parp.get("type") != 3){
-			if(parp.get("minlng") != null){
-				hql.append("AND p.pi_lng >= :minlng ");
-			}
-			if(parp.get("minlat") != null){
-				hql.append("AND p.pi_lat >= :minlat ");
-			}
-		}
-
-		hql.append("GROUP BY m.mi_id ");
+		hql.append(" GROUP BY m.mi_id ");
 
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) from ("+hql.toString()+") as t", parp);
 		if (count == null || count.intValue() == 0) {
@@ -76,7 +79,7 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append("ORDER BY m.mi_is_end, m.mi_apply_end_time");
+		hql.append(" HAVING distance < 20 ORDER BY m.mi_is_end, m.mi_apply_end_time, distance");
 
 		List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
 				pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
