@@ -80,7 +80,7 @@ public class TeamManageController {
 			pageInfo = teamService.getTeamList(searchBean, pageInfo, openid);
 		} catch (Exception e) {
 			e.printStackTrace();
-			errmsg = "前台-获取球队列表出错。";
+			errmsg = "前台-获取球队列表出错。openid="+openid;
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}

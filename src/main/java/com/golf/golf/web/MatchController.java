@@ -83,7 +83,7 @@ public class MatchController {
 			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
-			String errmsg = "前台-获取比赛列表出错。";
+			String errmsg = "前台-获取比赛列表出错。openid="+openid;
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}

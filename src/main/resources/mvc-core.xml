@@ -65,10 +65,11 @@
 
 	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="10" />
 
-	<bean
-		class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+    <!--p:redirectHttp10Compatible="false" 解决登录时https跳转到http的问题https://blog.csdn.net/flyfeifei66/article/details/84997933-->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"
 		p:order="100" p:viewClass="org.springframework.web.servlet.view.JstlView"
-		p:prefix="/WEB-INF/jsp/" p:suffix=".jsp" />
+		p:prefix="/WEB-INF/jsp/" p:suffix=".jsp"
+        p:redirectHttp10Compatible="false"/>
 
 	<mvc:resources mapping="/static/**" location="/static/" />
 	<mvc:resources mapping="/up/**" location="/up/" />

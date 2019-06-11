@@ -1,14 +1,15 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     String path = request.getContextPath();
-    String basePath = request.getScheme()+"://"+request.getServerName();
-    int port = request.getServerPort();
+//    String basePath = request.getScheme()+"://"+request.getServerName();
+    String basePath = request.getHeader("X-Forwarded-Scheme")+"://"+request.getServerName();
+    basePath = basePath + path + "/";
+    /*int port = request.getServerPort();
     if(port == 80){
         basePath = basePath + path + "/";
     }else{
         basePath = basePath + ":" + request.getServerPort() + path + "/";
-    }
-
+    }*/
 %>
 <base href="<%=basePath%>">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
