@@ -35,19 +35,15 @@
     <div class="form-group">
         <label for="cuUserName" class="col-sm-2 control-label">用户名</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="cuUserName" name="cuUserName" value="${userInfo.uiRealName }"
-                   placeholder="用户名"
-                <c:if test='${userInfo.uiId != null}'>
-                       readonly
-                </c:if>
-            />
+            <input type="text" class="form-control" id="uiRealName" name="uiRealName" value="${userInfo.uiRealName }"
+                   placeholder="用户名"/>
         </div>
     </div>
     <div class="form-group">
         <label for="se" class="col-sm-2 control-label">性别</label>
         <div class="col-sm-3">
-            <input type="radio" name="cuSex" value="男" <c:if test="${userInfo.uiSex =='男' }">checked</c:if> />男
-            <input type="radio" name="cuSex" value="女" <c:if test="${userInfo.uiSex =='女' }">checked</c:if> />女
+            <input type="radio" name="uiSex" value="男" <c:if test="${userInfo.uiSex =='男' }">checked</c:if> />男
+            <input type="radio" name="uiSex" value="女" <c:if test="${userInfo.uiSex =='女' }">checked</c:if> />女
         </div>
     </div>
     <div class="form-group">

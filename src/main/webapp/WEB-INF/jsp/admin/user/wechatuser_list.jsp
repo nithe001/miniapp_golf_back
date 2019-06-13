@@ -11,7 +11,6 @@
 <div class="wrapper">
     <jsp:include page="../include/header.jsp">
         <jsp:param value="nav_wechatUser" name="navId"></jsp:param>
-        <jsp:param value="user" name="navParentId"/>
     </jsp:include>
 
     <div class="content-wrapper">
@@ -87,11 +86,11 @@
                                             </td>
                                             <td>
                                                 <a class="btn btn-success"
-                                                   href="admin/user/wechatUserEditUI?wechatId=${user.wui_id}">
+                                                   href="admin/wechatUser/wechatUserEditUI?wechatId=${user.wui_id}">
                                                     <span class="glyphicon glyphicon-pencil"></span>查看
                                                 </a>&nbsp;|
                                                 <a class="btn btn-success"
-                                                   href="admin/user/setAdmin?userId=${user.wui_u_id}">
+                                                   href="admin/wechatUser/setAdmin?userId=${user.wui_u_id}">
                                                     <span class="glyphicon glyphicon-pencil"></span>设为赛事管理员
                                                 </a>&nbsp;
                                                 <a class="btn btn-danger" href="javascript:void(0);" onclick="updateUserState(${user.wui_id})">
@@ -144,7 +143,7 @@
         //检索
         $("#searchBtn").bind("click", function () {
             var form = document.forms[0];
-            form.action = "admin/user/wechatUserList";
+            form.action = "admin/wechatUser/wechatUserList";
             $("#page").val(1);
             form.submit();
         });
@@ -157,7 +156,7 @@
         });
 
         $("#sureUpdateStateBtn").click(function () {
-            window.location.href="admin/user/updateWechatUserState?wechatUserId="+$("#wechatUserId").val();
+            window.location.href="admin/wechatUser/updateWechatUserState?wechatUserId="+$("#wechatUserId").val();
         });
     });
 

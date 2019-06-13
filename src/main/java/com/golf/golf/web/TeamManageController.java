@@ -217,9 +217,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamPointByYear")
-	public JsonElement getTeamPointByYear(Integer type, String date, Long teamId) {
+	public JsonElement getTeamPointByYear(Integer type, String date, Long teamId, Integer changci) {
 		try {
-			List<Map<String, Object>> result = teamService.getTeamPointByYear(type, date, teamId);
+			Map<String, Object> result = teamService.getTeamPointByYear(type, date, teamId, changci);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();

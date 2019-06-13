@@ -13,8 +13,6 @@ import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.*;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,18 +40,29 @@ public class MatchService implements IBaseService {
 	@Autowired
 	protected UserService userService;
 
+	/**
+	 * 查询球场列表——区域
+	 * @return
+	 */
+	public POJOPageInfo getParkListByCity(SearchBean searchBean, POJOPageInfo pageInfo) {
+		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
+		pageInfo = matchDao.getParkListByRegionName(searchBean, pageInfo);
+		//计算离我的距离
+		if (pageInfo.getCount() > 0 && pageInfo.getItems() != null && pageInfo.getItems().size() > 0) {
+			getToMyDistance(pageInfo,userInfo);
+		}
+		return pageInfo;
+	}
 
 	/**
-	 * 查询球场列表——附近的球场
-	 *
+	 * 查询球场列表——附近
 	 * @return
 	 */
 	public POJOPageInfo getParkListNearby(SearchBean searchBean, POJOPageInfo pageInfo) {
 		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
-		//用户经纬度存在, 计算我附近10千米的经纬度
-		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
-			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
-					Double.parseDouble(userInfo.getUiLatitude()), 10);
+		if(userInfo.getUiLatitude() != null && userInfo.getUiLatitude() != null){
+			searchBean.addParpField("myLat", userInfo.getUiLatitude());
+			searchBean.addParpField("myLng", userInfo.getUiLongitude());
 		}
 		pageInfo = matchDao.getParkListNearby(searchBean, pageInfo);
 		//计算离我的距离
@@ -66,13 +75,24 @@ public class MatchService implements IBaseService {
 	//计算离我的距离
 	private void getToMyDistance(POJOPageInfo pageInfo, UserInfo userInfo ) {
 		if (StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
-			for (ParkInfo parkInfo : (List<ParkInfo>) pageInfo.getItems()) {
-				if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
-					String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
-					parkInfo.setToMyDistance(Integer.parseInt(distance));
+			for (Map<String, Object> parkInfo : (List<Map<String, Object>>) pageInfo.getItems()) {
+				if (parkInfo.get("pi_lat") != null && parkInfo.get("pi_lng") != null) {
+					String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(),
+													parkInfo.get("pi_lat").toString(), parkInfo.get("pi_lng").toString());
+					parkInfo.put("toMyDistance", Integer.parseInt(distance));
 				}
 			}
-			Collections.sort(pageInfo.getItems());
+//			Collections.sort(pageInfo.getItems());
+			Collections.sort(pageInfo.getItems(), new Comparator<Map<String, Object>>() {
+				public int compare(Map<String, Object> o1, Map<String, Object> o2) {
+					if(o1.get("toMyDistance") != null && o2.get("toMyDistance") != null){
+						int map1value = (Integer) o1.get("toMyDistance");
+						int map2value = (Integer) o2.get("toMyDistance");
+						return map1value - map2value;
+					}
+					return 0;
+				}
+			});
 		}
 	}
 
@@ -83,21 +103,16 @@ public class MatchService implements IBaseService {
 	 */
 	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
 		UserInfo userInfo = userService.getUserById((Long)searchBean.getParps().get("userId"));
-		//用户经纬度存在, 计算我附近10千米的经纬度
-//		if (userInfo != null && StringUtils.isNotEmpty(userInfo.getUiLatitude()) && StringUtils.isNotEmpty(userInfo.getUiLongitude())) {
-//			searchBean = MapUtil.findNeighPosition(searchBean, Double.parseDouble(userInfo.getUiLongitude()),
-//					Double.parseDouble(userInfo.getUiLatitude()), 10);
-//		}
 		if(userInfo.getUiLatitude() != null && userInfo.getUiLatitude() != null){
-
+			searchBean.getParps().put("myLat",userInfo.getUiLatitude());
+			searchBean.getParps().put("myLng",userInfo.getUiLongitude());
 		}
-		searchBean.getParps().put("myLat",userInfo.getUiLatitude());
-		searchBean.getParps().put("myLng",userInfo.getUiLongitude());
 		POJOPageInfo pageInfo_ = matchDao.getMatchList(searchBean, pageInfo);
 		if (pageInfo_.getCount() > 0 && pageInfo_.getItems().size() > 0) {
 			List<MatchInfo> matchInfoList = new ArrayList<>();
 			for (Map<String, Object> result : (List<Map<String, Object>>) pageInfo_.getItems()) {
 				MatchInfo matchInfo = new MatchInfo();
+				matchInfo.setMiType(getIntegerValue(result, "mi_type"));
 				matchInfo.setMiId(getLongValue(result, "mi_id"));
 				matchInfo.setMiLogo(getName(result, "mi_logo"));
 				matchInfo.setMiTitle(getName(result, "mi_title"));
@@ -116,7 +131,9 @@ public class MatchService implements IBaseService {
 				}
 				matchInfo.setMiHit(getIntegerValue(result, "userCount"));
 				matchInfo.setMiIsEnd(getIntegerValue(result, "mi_is_end"));
-				matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+				if(matchInfo.getMiType() == 1){
+					matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+				}
 				//是否是赛长（显示创建比赛列表时用）
 				matchInfoList.add(matchInfo);
 			}
@@ -276,21 +293,38 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> getMatchDetailInfo(Long matchId) {
+	public Map<String, Object> getMatchDetailInfo(Long matchId, String openid) {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
 		result.put("matchInfo", matchInfo);
+		if(matchInfo.getMiParkName().length()>11){
+			result.put("parkNameShow", matchInfo.getMiParkName().substring(0,9)+"...");
+		}else{
+			result.put("parkNameShow", matchInfo.getMiParkName());
+		}
+		//球场信息
+		ParkInfo parkInfo = matchDao.get(ParkInfo.class, matchInfo.getMiParkId());
+		result.put("parkInfo", parkInfo);
+		if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
+			UserInfo userInfo = userService.getUserByOpenId(openid);
+			String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
+			result.put("toMyDistance", Integer.parseInt(distance));
+		}
 		//获取比赛球队信息
 		String teamIds = matchInfo.getMiJoinTeamIds();
 		if (StringUtils.isNotEmpty(teamIds)) {
 			List<Long> teamIdList = getLongTeamIdList(teamIds);
 			List<TeamInfo> teamList = matchDao.getTeamListByIds(teamIdList);
+			String joinTeamNames = "";
 			if (teamList != null && teamList.size() > 0) {
 				for (TeamInfo teamInfo : teamList) {
 					teamInfo.setTiLogo(PropertyConst.DOMAIN + teamInfo.getTiLogo());
+					joinTeamNames += ","+teamInfo.getTiName();
 				}
 			}
 			result.put("teamList", teamList);
+			result.put("joinTeamNames", joinTeamNames);
 		}
 		//获取成绩上报球队信息
 		if (StringUtils.isNotEmpty(matchInfo.getMiReportScoreTeamId()) && !matchInfo.getMiReportScoreTeamId().equals("undefined")) {
@@ -364,14 +398,6 @@ public class MatchService implements IBaseService {
 		return matchDao.getParkListByRegion(searchBean, pageInfo);
 	}
 
-	/**
-	 * 查询该区域下的球场
-	 *
-	 * @return
-	 */
-	public POJOPageInfo getParkListByRegionName(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return matchDao.getParkListByRegionName(searchBean, pageInfo);
-	}
 
 
 	/**
@@ -500,7 +526,7 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> saveSinglePlay(Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
+	public Map<String, Object> saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
 											  String beforeZoneName, String afterZoneName, String openid) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -508,13 +534,12 @@ public class MatchService implements IBaseService {
 		//获取随机用户最大的用户id
 		Long maxOtherUserId = matchDao.getMaxOtherUserId();
 
-
 		MatchInfo matchInfo = new MatchInfo();
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if (parkInfo != null) {
 			matchInfo.setMiParkId(parkInfo.getPiId());
 		}
-		matchInfo.setMiTitle(userInfo.getUiRealName() + "的单练");
+		matchInfo.setMiTitle(matchTitle);
 		matchInfo.setMiParkId(parkId);
 		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiZoneBeforeNine(beforeZoneName);
@@ -563,7 +588,7 @@ public class MatchService implements IBaseService {
 		}
 
 		//随机生成几个用户队友
-		for (int i = 1; i <= peopleNum; i++) {
+		for (int i = 1; i < peopleNum; i++) {
 			MatchUserGroupMapping otherPeople = new MatchUserGroupMapping();
 			otherPeople.setMugmMatchId(matchInfo.getMiId());
 			Long i_ = Long.valueOf(i);
@@ -641,6 +666,18 @@ public class MatchService implements IBaseService {
 		Long count = matchDao.getGroupUserCountById(matchId, groupId);
 		result.put("userCount", count);
 		List<Map<String, Object>> applyUserList = matchDao.getApplyUserByMatchId(matchId);
+		//获取用户所在球队的简称
+		if(applyUserList != null && applyUserList.size()>0){
+			for(Map<String, Object> parp :applyUserList){
+				Long userId = (Long)parp.get("uiId");
+				String teamAbbrev = matchDao.getTeamAbbrevByUserId(userId);
+				if(StringUtils.isNotEmpty(teamAbbrev)){
+					parp.put("teamAbbrev",teamAbbrev);
+				}else{
+					parp.put("teamAbbrev","暂无");
+				}
+			}
+		}
 		result.put("applyUserList", applyUserList);
 		return result;
 	}
@@ -1363,7 +1400,7 @@ public class MatchService implements IBaseService {
 		thBean.setUserScoreTotalList(parkHoleList);
 		list.add(thBean);
 
-		//第二条记录（杆数）
+		//第二条记录（总杆）
 		MatchGroupUserScoreBean thBean2 = new MatchGroupUserScoreBean();
 		thBean2.setUserId(0L);
 		thBean2.setUserName("杆差");
@@ -1468,7 +1505,7 @@ public class MatchService implements IBaseService {
 		//第二条记录（杆数）
 		MatchGroupUserScoreBean thBean2 = new MatchGroupUserScoreBean();
 		thBean2.setUserId(0L);
-		thBean2.setUserName("杆差");
+		thBean2.setUserName("总杆");
 		thBean2.setUserScoreTotalList(parkHoleList);
 		list.add(thBean2);
 
@@ -1524,11 +1561,13 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public List<Map<String, Object>> getTeamTotalScoreByMatchId(Long matchId) {
+	public Map<String, Object> getTeamTotalScoreByMatchId(Long matchId, Integer mingci) {
+		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 //		赛制1( 0:比杆 、1:比洞)
 		if (matchInfo.getMiMatchFormat1() == 0) {
-			return matchDao.getMatchRodTotalScore(matchId);
+			List<Map<String, Object>> scoreList = matchDao.getMatchRodTotalScore(matchId);
+			result.put("scoreList",scoreList);
 		} else {
 			List<Map<String, Object>> list = new ArrayList<>();
 			List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
@@ -1571,8 +1610,12 @@ public class MatchService implements IBaseService {
 					list.add(bean);
 				}
 			}
-			return list;
+			result.put("scoreList",list);
 		}
+		//获取前N名成绩统计 每个队排前n名的人的杆数和排名
+		List<Map<String, Object>> mingciList = matchDao.getMatchRodScoreByMingci(matchId,mingci);
+		result.put("mingciList",mingciList);
+		return result;
 	}
 
 	/**
@@ -1754,7 +1797,7 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 根据用户id获取用户差点
+	 * 根据用户id获取用户差点 不包括单练
 	 * 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.8
 	 * @return
 	 */
@@ -1793,5 +1836,21 @@ public class MatchService implements IBaseService {
 	 */
 	public Long getMeCanScore(Long matchId, Long groupId, String openid) {
 		return matchDao.getMeCanScore(matchId, groupId, userService.getUserIdByOpenid(openid));
+	}
+
+	/**
+	 * 获取单练的groupId
+	 * @return
+	 */
+	public Long getSingleMatchGroupIdByMatchId(Long matchId) {
+		return matchDao.getSingleMatchGroupIdByMatchId(matchId);
+	}
+
+	/**
+	 * 删除比赛分组
+	 * @return
+	 */
+	public void delMatchGroupByGroupId(Long groupId) {
+		matchDao.del(MatchGroup.class, groupId);
 	}
 }

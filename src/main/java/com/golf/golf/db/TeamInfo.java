@@ -14,6 +14,7 @@ public class TeamInfo implements java.io.Serializable {
 	private Long tiId;
 	private String tiLogo;
 	private String tiName;
+	private String tiAbbrev;
 	private String tiSignature;
 	private String tiDigest;
 	private String tiAddress;
@@ -36,7 +37,7 @@ public class TeamInfo implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public TeamInfo(String tiLogo, String tiName, String tiSignature,
+	public TeamInfo(String tiLogo, String tiName, String tiAbbrev, String tiSignature,
 					String tiDigest, String tiAddress,
 					Integer tiJoinOpenType, Integer tiInfoOpenType, Integer tiUserInfoType,
 					Integer tiMatchResultAuditType, Integer tiIsValid,Long tiCreateTime,
@@ -44,6 +45,7 @@ public class TeamInfo implements java.io.Serializable {
 					Long tiUpdateUserId, String tiUpdateUserName) {
 		this.tiLogo = tiLogo;
 		this.tiName = tiName;
+		this.tiAbbrev = tiAbbrev;
 		this.tiSignature = tiSignature;
 		this.tiDigest = tiDigest;
 		this.tiAddress = tiAddress;
@@ -88,6 +90,15 @@ public class TeamInfo implements java.io.Serializable {
 
 	public void setTiName(String tiName) {
 		this.tiName = tiName;
+	}
+
+	@Column(name = "ti_abbrev")
+	public String getTiAbbrev() {
+		return tiAbbrev;
+	}
+
+	public void setTiAbbrev(String tiAbbrev) {
+		this.tiAbbrev = tiAbbrev;
 	}
 
 	@Column(name = "ti_signature", length = 512)

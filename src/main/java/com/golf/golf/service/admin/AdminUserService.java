@@ -124,10 +124,6 @@ public class AdminUserService implements IBaseService {
     	return dao.checkName(name);
     }
 
-    //新增前台用户
-	public void saveWechatUser(UserInfo user) {
-		dao.save(user);
-	}
 
 	//获取前台用户微信信息 + 个人信息
 	public Map<String, Object> getWechatUserById(Long wechatId) {
@@ -139,13 +135,6 @@ public class AdminUserService implements IBaseService {
 		}
 		parp.put("wechatUser",wechatUser);
 		return parp;
-	}
-
-	//编辑-保存
-	public void editWechatUser(UserInfo user) {
-		UserInfo db = dao.get(UserInfo.class,user.getUiId());
-		db.setUiType(user.getUiType());
-		dao.update(db);
 	}
 
 	//导入用户-根据信息查询用户是否存在
@@ -166,5 +155,41 @@ public class AdminUserService implements IBaseService {
 	 */
 	public WechatUserInfo getWechatUser(Long wechatUserId) {
 		return dao.get(WechatUserInfo.class, wechatUserId);
+	}
+
+	/**
+	 * 编辑——更新微信用户详细信息
+	 * @param user
+	 * @return
+	 */
+	public void updateUserInfo(WechatUserInfo wechatUserInfo, UserInfo user) {
+		if(user.getUiId() != null){
+			UserInfo db = dao.get(UserInfo.class,user.getUiId());
+			db.setUiRealName(user.getUiRealName());
+			db.setUiOpenId(wechatUserInfo.getWuiOpenid());
+			db.setUiType(user.getUiType());
+			db.setUiSex(user.getUiSex());
+			db.setUiTelNo(user.getUiTelNo());
+			db.setUiEmail(user.getUiEmail());
+			db.setUiGraduateSchool(user.getUiGraduateSchool());
+			db.setUiGraduateDepartment(user.getUiGraduateDepartment());
+			db.setUiGraduateTime(user.getUiGraduateTime());
+			db.setUiMajor(user.getUiMajor());
+			db.setUiStudentId(user.getUiStudentId());
+			db.setUiWorkUnit(user.getUiWorkUnit());
+			db.setUiPost(user.getUiPost());
+			db.setUiAddress(user.getUiAddress());
+			db.setUiHomeCourt(user.getUiHomeCourt());
+			db.setUiType(user.getUiType());
+			user.setUiUpdateUserName(AdminUserUtil.getShowName());
+			user.setUiUpdateUserId(AdminUserUtil.getUserId());
+			user.setUiUpdateTime(System.currentTimeMillis());
+			dao.update(db);
+		}else{
+			user.setUiCreateUserName(AdminUserUtil.getShowName());
+			user.setUiCreateUserId(AdminUserUtil.getUserId());
+			user.setUiCreateTime(System.currentTimeMillis());
+			dao.save(user);
+		}
 	}
 }

@@ -38,17 +38,8 @@
 <aside class="main-sidebar">
 <section class="sidebar">
 <ul class="sidebar-menu">
-    <li id="user" class="treeview"><a href="#"><i class="fa fa-user"></i> 用户管理
-        <span></span> <span class="pull-right-container">
-				<i class="fa fa-angle-left pull-right"></i>
-		</span> </a>
-        <ul class="treeview-menu">
-            <li id="nav_adminUser"><a href="admin/user/adminUserList"><i class="fa fa-user"></i> <span>后台用户</span></a></li>
-            <li id="nav_wechatUser"><a href="admin/user/wechatUserList"><i class="fa fa-user"></i> <span>小程序用户</span></a></li>
-        </ul>
-    </li>
-    <li id="nav_adminUser"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>后台用户</span></a></li>
-    <li id="nav_wechatUser"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>小程序用户</span></a></li>
+    <li id="nav_adminUser"><a href="admin/user/adminUserList"><i class="fa fa-bookmark"></i> <span>后台用户</span></a></li>
+    <li id="nav_wechatUser"><a href="admin/wechatUser/wechatUserList"><i class="fa fa-bookmark"></i> <span>小程序用户</span></a></li>
     <li id="nav_rule"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>高球规则</span></a></li>
 	<li id="nav_park"><a href="admin/park/list"><i class="fa fa-bookmark"></i> <span>球场管理</span></a></li>
     <li id="nav_match"><a href="admin/match/list"><i class="fa fa-bookmark"></i> <span>比赛管理</span></a></li>

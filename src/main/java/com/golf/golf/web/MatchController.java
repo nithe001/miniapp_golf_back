@@ -225,6 +225,25 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 删除比赛分组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("delMatchGroupByGroupId")
+	public JsonElement delMatchGroupByGroupId(Long groupId) {
+		try {
+			matchService.delMatchGroupByGroupId(groupId);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "前台-删除比赛分组时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+
 
 	/**
 	 * 获取比赛详情
@@ -244,6 +263,24 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+	/**
+	 * 获取单练的groupId
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getSingleMatchGroupIdByMatchId")
+	public JsonElement getSingleMatchGroupIdByMatchId(Long matchId) {
+		try {
+			Long groupId = matchService.getSingleMatchGroupIdByMatchId(matchId);
+			return JsonWrapper.newDataInstance(groupId);
+		} catch (Exception e) {
+			String errmsg = "前台-获取单练的groupId时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 	/**
 	 * 点击进入比赛详情——获取是否是赛长
@@ -287,9 +324,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchDetailInfo")
-	public JsonElement getMatchDetailInfo(Long matchId) {
+	public JsonElement getMatchDetailInfo(Long matchId, String openid) {
 		try {
-			Map<String, Object> matchDetailInfo = matchService.getMatchDetailInfo(matchId);
+			Map<String, Object> matchDetailInfo = matchService.getMatchDetailInfo(matchId, openid);
 			return JsonWrapper.newDataInstance(matchDetailInfo);
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
@@ -474,10 +511,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
-	public JsonElement saveSinglePlay(Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
+	public JsonElement saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
 									  String beforeZoneName, String afterZoneName, String openid) {
 		try {
-			Map<String,Object> result = matchService.saveSinglePlay(parkId, parkName, playTime, peopleNum, digest,
+			Map<String,Object> result = matchService.saveSinglePlay(matchTitle, parkId, parkName, playTime, peopleNum, digest,
 										beforeZoneName, afterZoneName, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
@@ -523,18 +560,20 @@ public class MatchController {
             page = 1;
         }
         try {
+			POJOPageInfo pageInfo = new POJOPageInfo<Map<String,Object>>( Const.ROWSPERPAGE, page);
             SearchBean searchBean = new SearchBean();
             if(StringUtils.isNotEmpty(keyword)){
                 searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
             }
+			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
 			if(StringUtils.isNotEmpty(city)){
 				searchBean.addParpField("city", city);
+				//区域
+				pageInfo = matchService.getParkListByCity(searchBean, pageInfo);
+			}else{
+				//附近
+				pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
 			}
-			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
-
-            POJOPageInfo pageInfo = new POJOPageInfo<ParkInfo>( Const.ROWSPERPAGE, page);
-			//附近
-			pageInfo = matchService.getParkListNearby(searchBean, pageInfo);
             return JsonWrapper.newDataInstance(pageInfo);
         } catch (Exception e) {
             String errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
@@ -890,10 +929,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamTotalScoreByMatchId")
-	public JsonElement getTeamTotalScoreByMatchId(Long matchId) {
+	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer mingci) {
 		try {
-			List<Map<String, Object>> scoreList = matchService.getTeamTotalScoreByMatchId(matchId);
-			return JsonWrapper.newDataInstance(scoreList);
+			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, mingci);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队统计时出错。matchId="+matchId;
 			e.printStackTrace();

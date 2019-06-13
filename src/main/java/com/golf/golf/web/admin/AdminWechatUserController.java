@@ -83,14 +83,10 @@ public class AdminWechatUserController {
 	 * @param user
 	 * @return
 	 */
-	@RequestMapping("wechatUserUpdateOrAdd")
-	public String wechatUserUpdateOrAdd(UserInfo user){
+	@RequestMapping("wechatUserUpdate")
+	public String wechatUserUpdate(WechatUserInfo wechatUserInfo, UserInfo user){
 		try{
-			if(user.getUiId() != null){
-				logic.editWechatUser(user);
-			}else{
-				logic.saveWechatUser(user);
-			}
+			logic.updateUserInfo(wechatUserInfo, user);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("后台管理——编辑——更新微信用户详细信息时出错。"+ e );

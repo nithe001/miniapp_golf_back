@@ -10,14 +10,13 @@
 	<div class="wrapper">
 		<jsp:include page="../include/header.jsp">
             <jsp:param value="nav_wechatUser" name="navId"></jsp:param>
-            <jsp:param value="user" name="navParentId"/>
 		</jsp:include>
 		
 		<div class="content-wrapper">
 			<section class="content-header">
 				<h1>编辑小程序用户信息</h1>
 		        <ol class="breadcrumb">
-		           <li><a href="admin/user/wechatUserList"><i class="fa fa-dashboard"></i>小程序用户列表</a></li>
+		           <li><a href="admin/wechatUser/wechatUserUpdate"><i class="fa fa-dashboard"></i>小程序用户列表</a></li>
 		           <li class="active">编辑小程序用户信息</li>
 		        </ol>
 		    </section>

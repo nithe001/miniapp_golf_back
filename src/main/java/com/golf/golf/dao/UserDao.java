@@ -153,19 +153,19 @@ public class UserDao extends CommonDao {
 
 
 	/**
-	 * 今年参加比赛的场数 不包括单练
+	 * 今年参加比赛的场数 包括单练
 	 */
 	public Long getMatchCountByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT count(*) FROM ( SELECT s.ms_match_id FROM match_score AS s " +
-				"WHERE s.ms_match_type = 1 AND s.ms_user_id = 1 " +
+				"WHERE s.ms_user_id = 1 " +
 				"GROUP BY s.ms_match_id " +
 				") AS t");
 		return dao.createSQLCountQuery(hql.toString(), parp);
 	}
 
 	/**
-	 * 年度成绩分析 不计算单练的
+	 * 年度成绩分析 计算单练
 	 * 计算一年内平均每18洞分项的数量
 	 * “暴洞”是指+3及以上的洞数总和
 	 * 开球情况对应记分卡 球道滚轮的箭头
@@ -184,7 +184,7 @@ public class UserDao extends CommonDao {
 				"sum(CASE WHEN s.ms_is_up = \"开球偏左\" then 1 else 0 end) AS zuo, " +
 				"sum(CASE WHEN s.ms_is_up = \"开球出界\" then 1 else 0 end) AS chu, " +
 				"count(s.ms_is_on or 0) as biaoOn ");
-		hql.append("FROM match_score AS s WHERE s.ms_match_type = 1 and s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
+		hql.append("FROM match_score AS s WHERE s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}

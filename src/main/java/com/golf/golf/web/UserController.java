@@ -168,7 +168,7 @@ public class UserController {
 
 
 	/**
-	 * 历史成绩
+	 * 历史成绩-包括单练成绩
 	 * @return
 	 */
 	@ResponseBody
@@ -185,7 +185,7 @@ public class UserController {
 	}
 
 	/**
-	 * 年度成绩分析
+	 * 年度成绩分析 包括单练
 	 * 计算一年内平均每18洞分项的数量
 	 * “暴洞”是指+3及以上的洞数总和
 	 * 开球情况对应记分卡 球道滚轮的箭头

@@ -10,7 +10,6 @@
 	<div class="wrapper">
 		<jsp:include page="../include/header.jsp">
 			<jsp:param value="nav_adminUser" name="navId"></jsp:param>
-            <jsp:param value="user" name="navParentId"/>
 		</jsp:include>
 		
 		<div class="content-wrapper">
