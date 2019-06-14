@@ -65,10 +65,10 @@ public class TeamManageController {
 		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
 		try {
 			SearchBean searchBean = new SearchBean();
-			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword) && !"null".equals(keyword)){
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
-			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds) && !"[]".equals(joinTeamIds)){
+			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds) && !"[]".equals(joinTeamIds) && !"null".equals(joinTeamIds)){
 				joinTeamIds = joinTeamIds.replace("[","");
 				joinTeamIds = joinTeamIds.replace("]","");
 				joinTeamIds = joinTeamIds.replace("\"","");
@@ -81,6 +81,43 @@ public class TeamManageController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取球队列表出错。openid="+openid;
+			logger.error(errmsg+ e );
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newDataInstance(pageInfo);
+	}
+
+	/**
+	 * 获取已选球队列表
+	 * @param page 分页
+	 * @param keyword 球队名称
+	 * @param joinTeamIds 用于创建比赛时添加球队，如果不为空，就查询除去这些球队的列表
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getJoinTeamList")
+	public JsonElement getJoinTeamList(Integer page, String keyword, String joinTeamIds, String openid) {
+		Integer nowPage = 1;
+		if (page > 0) {
+			nowPage = page;
+		}
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+		try {
+			SearchBean searchBean = new SearchBean();
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			if(StringUtils.isNotEmpty(joinTeamIds) && !"undefined".equals(joinTeamIds) && !"[]".equals(joinTeamIds)){
+				joinTeamIds = joinTeamIds.replace("[","");
+				joinTeamIds = joinTeamIds.replace("]","");
+				joinTeamIds = joinTeamIds.replace("\"","");
+				List<Long> teamIds = matchService.getLongTeamIdList(joinTeamIds);
+				searchBean.addParpField("chooseTeamIds", teamIds);
+				pageInfo = teamService.getChooseTeamList(searchBean, pageInfo, openid);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			errmsg = "前台-获取已选球队列表出错。openid="+openid;
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}

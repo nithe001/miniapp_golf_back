@@ -45,6 +45,18 @@ public class TeamService implements IBaseService {
 		return pageInfo;
 	}
 
+	/**
+	 * 比赛——获取已经选中的球队列表
+	 * @return
+	 */
+	public POJOPageInfo getChooseTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
+		pageInfo = teamDao.getChooseTeamList(searchBean,pageInfo);
+		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
+			getCaptain(pageInfo.getItems(), openid);
+		}
+		return pageInfo;
+	}
+
     //队长
 	public void getCaptain(List<Map<String,Object>> mapList, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
@@ -304,4 +316,6 @@ public class TeamService implements IBaseService {
 		}
 		return false;
 	}
+
+
 }

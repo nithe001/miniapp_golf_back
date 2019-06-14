@@ -674,7 +674,7 @@ public class MatchService implements IBaseService {
 				if(StringUtils.isNotEmpty(teamAbbrev)){
 					parp.put("teamAbbrev",teamAbbrev);
 				}else{
-					parp.put("teamAbbrev","暂无");
+					parp.put("teamAbbrev","暂无球队");
 				}
 			}
 		}
@@ -725,11 +725,15 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 比赛详情——保存——将用户从该分组删除
-	 *
+	 * 比赛详情——更新用户分组——删除的用户再次进入报名列表
+	 * 注意赛长不能删
 	 * @return
 	 */
-	public void delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+	public void updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String userIds, String openid) {
+		//赛长
+		Long captainUserId = userService.getUserIdByOpenid(openid);
+		//获取除赛长以外的本组用户id
+		List<Map<String, Object>> userIdList = matchDao.getUserListByMatchIdGroupId(matchId,groupId,captainUserId);
 		if (StringUtils.isNotEmpty(userIds)) {
 			userIds = userIds.replace("[", "");
 			userIds = userIds.replace("]", "");
@@ -738,15 +742,21 @@ public class MatchService implements IBaseService {
 			for (String userId : uIds) {
 				if (StringUtils.isNotEmpty(userId)) {
 					Long uid = Long.parseLong(userId);
+					for(Map<String, Object> map:userIdList){
+						Long applyUserId = (Long)map.get("uiId");
+						if(!uid.equals(applyUserId)){
+							MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+							//类型：0：观战 1：比赛报名
+							matchJoinWatchInfo.setMjwiType(1);
+							matchJoinWatchInfo.setMjwiMatchId(matchId);
+							matchJoinWatchInfo.setMjwiUserId(uid);
+							matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+							matchDao.save(matchJoinWatchInfo);
+						}
+					}
 					matchDao.delUserByMatchIdGroupId(matchId, groupId, uid);
 					//将该球友再放入临时分组
-					MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-					//类型：0：观战 1：比赛报名
-					matchJoinWatchInfo.setMjwiType(1);
-					matchJoinWatchInfo.setMjwiMatchId(matchId);
-					matchJoinWatchInfo.setMjwiUserId(uid);
-					matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-					matchDao.save(matchJoinWatchInfo);
+
 				}
 			}
 		}
@@ -1632,21 +1642,6 @@ public class MatchService implements IBaseService {
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * 创建比赛——获取选中的参赛球队的详情
-	 *
-	 * @return
-	 */
-	public List<Map<String, Object>> getTeamListByIds(String teamIds, String openid) {
-		if(StringUtils.isNotEmpty(teamIds)){
-			List<Long> ids = getLongTeamIdList(teamIds);
-			List<Map<String, Object>> list = matchDao.getTeamListByTeamIds(ids);
-			teamService.getCaptain(list, openid);
-			return list;
-		}
-		return new ArrayList<>();
 	}
 
 	/**

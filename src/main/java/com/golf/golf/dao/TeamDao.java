@@ -46,10 +46,10 @@ public class TeamDao extends CommonDao {
         if(parp.get("keyword") != null){
             hql.append("AND t.ti_name LIKE :keyword ");
         }
+        //去掉已经选中的队伍
 		if(parp.get("teamIds") != null){
 			hql.append("AND t.ti_id not in (:teamIds) ");
 		}
-
 
         Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
         if (count == null || count.intValue() == 0) {
@@ -65,6 +65,32 @@ public class TeamDao extends CommonDao {
         pageInfo.setItems(list);
         return pageInfo;
     }
+
+	/**
+	 * 比赛——获取已经选中的球队列表
+	 * @return
+	 */
+	public POJOPageInfo getChooseTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		hql.append("from team_info as t LEFT JOIN ( ");
+		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
+		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
+		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
+		hql.append("where t.ti_id in(:chooseTeamIds) and t.ti_is_valid = 1 ");
+		String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
+
+		Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+		if (count == null || count.intValue() == 0) {
+			pageInfo.setItems(new ArrayList<>());
+			pageInfo.setCount(0);
+			return pageInfo;
+		}
+		List<Map<String, Object>> list = dao.createSQLQuery(select+ hql.toString(),parp,Transformers.ALIAS_TO_ENTITY_MAP);
+		pageInfo.setCount(count.intValue());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
 
 	/**
 	 * 通过球队id获取队长

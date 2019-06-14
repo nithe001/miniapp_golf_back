@@ -109,24 +109,6 @@ public class MatchController {
 		}
 	}
 
-
-	/**
-	 * 创建比赛——获取选中的参赛球队列表的详情
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping(value = "getTeamListByIds")
-	public JsonElement getTeamListByIds(String joinTeamIds, String openid) {
-		try {
-			List<Map<String,Object>> list = matchService.getTeamListByIds(joinTeamIds,openid);
-			return JsonWrapper.newDataInstance(list);
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("获取选中的参赛球队的详情时出错。球队id="+joinTeamIds + e);
-			return JsonWrapper.newErrorInstance("获取选中的参赛球队的详情时出错");
-		}
-	}
-
 	/**
 	 * 创建比赛
 	 * @return
@@ -356,21 +338,31 @@ public class MatchController {
 
 	/**
 	 * 比赛详情——赛长获取已经报名的用户
-	 * @param type 0:添加组员（获取已经报名的用户）  1 删除组员（获取本组用户）
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getApplyUserByMatchId")
-	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId, Integer type, String openid) {
+	public JsonElement getApplyUserByMatchId(Long matchId, Long groupId) {
 		try {
-			Map<String, Object> result = null;
-			if(type == 0){
-				//添加
-				result = matchService.getApplyUserByMatchId(matchId, groupId);
-			}else{
-				//删除
-				result = matchService.getUserListByMatchIdGroupId(matchId, groupId, openid);
-			}
+			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, groupId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛详情——赛长——获取备选球友，赛长所在队的球友或者其搜索的结果
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMyTeamUserList")
+	public JsonElement getMyTeamUserList(Long matchId, Long groupId, String keyword, String openid) {
+		try {
+			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, groupId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
@@ -400,14 +392,14 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——保存——将用户从该分组删除，用户再次进入临时分组
+	 * 比赛详情——更新用户分组——删除的用户再次进入报名列表
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("delUserByMatchIdGroupId")
-	public JsonElement delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+	@RequestMapping("updateGroupUserByMatchIdGroupId")
+	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String userIds, String openid) {
 		try {
-			matchService.delUserByMatchIdGroupId(matchId,groupId,userIds);
+			matchService.updateGroupUserByMatchIdGroupId(matchId,groupId,userIds,openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";

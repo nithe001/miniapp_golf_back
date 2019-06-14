@@ -180,25 +180,6 @@ public class MatchDao extends CommonDao {
         return dao.createCountQuery("SELECT COUNT(*) "+hql.toString(),parp);
     }
 
-
-	/**
-	 * 创建比赛——获取选中的参赛球队的详情
-	 * @return
-	 */
-	public List<Map<String, Object>> getTeamListByTeamIds(List<Long> ids) {
-		Map<String, Object> parp = new HashMap<>();
-		parp.put("ids",ids);
-		StringBuilder hql = new StringBuilder();
-		hql.append("from team_info as t LEFT JOIN ( ");
-		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
-		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
-		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
-		hql.append("where t.ti_id in(:ids) and t.ti_is_valid = 1 ");
-		String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
-		return dao.createSQLQuery( select + hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
-	}
-
-
     /**
      * 获取参赛球队
      * @return
@@ -1169,4 +1150,5 @@ public class MatchDao extends CommonDao {
 		}
 		return null;
 	}
+
 }
