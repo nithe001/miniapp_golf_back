@@ -34,7 +34,7 @@ public class TeamService implements IBaseService {
 
 	/**
 	 * 获取球队列表
-	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
+	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队
 	 * @return
 	 */
 	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {

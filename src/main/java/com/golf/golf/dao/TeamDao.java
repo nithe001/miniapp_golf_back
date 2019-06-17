@@ -20,7 +20,7 @@ public class TeamDao extends CommonDao {
 
 	/**
 	 * 获取球队列表
-	 * type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
+	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队
 	 * @return
 	 */
     public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -33,14 +33,14 @@ public class TeamDao extends CommonDao {
 		hql.append("where t.ti_is_valid = 1 ");
 
 		if((Integer)parp.get("type") == 1){
-			//我加入的球队
-			hql.append("AND t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId) ");
+			//已加入球队 包括我创建的球队，作为队长可以管理报名
+			hql.append("and (t.ti_id in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) or t.ti_create_user_id = :userId)");
 		}else if((Integer)parp.get("type") == 2){
-			//我可以加入的球队  包括我创建的球队，作为队长可以管理报名
-			hql.append("and (t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) or t.ti_create_user_id = :userId)");
+			//可加入球队
+			hql.append("and t.ti_id not in (SELECT tum.tum_team_id FROM team_user_mapping AS tum WHERE tum.tum_user_id = :userId) ");
 		}else if((Integer)parp.get("type") == 3){
-			//我创建的球队 包括我加入的球队
-			hql.append("AND (t.ti_create_user_id = :userId or (t.ti_id in (select tum.tum_team_id from team_user_mapping as tum where tum.tum_user_id = :userId)))");
+			//只显示我创建的球队
+			hql.append("AND t.ti_create_user_id = :userId ");
 		}
 
         if(parp.get("keyword") != null){
@@ -168,8 +168,8 @@ public class TeamDao extends CommonDao {
 					"mgm.mugm_user_id AS userId, " +
 					"count(mgm.mugm_id) AS totalMatchNum " +
 					"FROM " +
-					"match_user_group_mapping AS mgm " +
-					"where mgm.mugm_team_id = :teamId " +
+					"match_user_group_mapping AS mgm,match_info as m " +
+					"where mgm.mugm_match_id = m.mi_id and m.mi_type = 1 and mgm.mugm_team_id = :teamId " +
 					"and mgm.mugm_create_time >= :startYear " +
 					"AND mgm.mugm_create_time <= :endYear " +
 					"GROUP BY mgm.mugm_user_id " +
@@ -191,6 +191,7 @@ public class TeamDao extends CommonDao {
 					" )as avgData on u.ui_id = avgData.s_user_id ");
 		hql.append(")as a,team_user_mapping as tum  ");
 		hql.append("where a.userId = tum.tum_user_id and tum.tum_user_type != 2 ");
+		hql.append("GROUP by a.userId ");
 		hql.append("ORDER BY IF(ISNULL(a.avgRodNum),1,0),a.avgRodNum ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;

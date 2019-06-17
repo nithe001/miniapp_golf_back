@@ -439,7 +439,7 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void saveMatchInfo(MatchInfo matchInfo, String parkName, String openid) {
+	public void saveMatchInfo(MatchInfo matchInfo, String parkName, Long chooseTeamId, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if (parkInfo != null) {
@@ -465,11 +465,16 @@ public class MatchService implements IBaseService {
 		matchDao.save(matchGroup);
 
 		//查询用户所在球队
-		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userInfo.getUiId());
+		/*if(chooseTeamId != null){
+			//获取赛长所在的球队
+			TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userInfo.getUiId());
+			chooseTeamId = teamUserMapping.getTumTeamId();
+		}*/
+
 		//创建用户分组mapping 创建人自动成为赛长
 		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
-		matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
+		matchUserGroupMapping.setMugmTeamId(chooseTeamId);
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
@@ -660,15 +665,31 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> getApplyUserByMatchId(Long matchId, Long groupId) {
+	public Map<String, Object> getApplyUserByMatchId(Long matchId,String keyword, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
 		//本组人数
 		Long count = matchDao.getGroupUserCountById(matchId, groupId);
 		result.put("userCount", count);
-		List<Map<String, Object>> applyUserList = matchDao.getApplyUserByMatchId(matchId);
+		List<Map<String, Object>> applyUserList = matchDao.getApplyUserByMatchId(matchId, keyword);
+		result.put("applyUserList", applyUserList);
+		return result;
+	}
+
+	/**
+	 * 比赛详情——赛长获取本组用户
+	 *
+	 * @return
+	 */
+	public Map<String, Object> getUserListByGroupId(Long matchId, Long groupId,String openid) {
+		Map<String, Object> result = new HashMap<>();
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		//本组人数
+		Long count = matchDao.getGroupUserCountById(matchId, groupId);
+		result.put("userCount", count);
+		List<Map<String, Object>> userList = matchDao.getUserListByGroupId(matchId,groupId,userInfo.getUiId());
 		//获取用户所在球队的简称
-		if(applyUserList != null && applyUserList.size()>0){
-			for(Map<String, Object> parp :applyUserList){
+		if(userList != null && userList.size()>0){
+			for(Map<String, Object> parp :userList){
 				Long userId = (Long)parp.get("uiId");
 				String teamAbbrev = matchDao.getTeamAbbrevByUserId(userId);
 				if(StringUtils.isNotEmpty(teamAbbrev)){
@@ -678,7 +699,7 @@ public class MatchService implements IBaseService {
 				}
 			}
 		}
-		result.put("applyUserList", applyUserList);
+		result.put("userList", userList);
 		return result;
 	}
 
@@ -727,36 +748,41 @@ public class MatchService implements IBaseService {
 	/**
 	 * 比赛详情——更新用户分组——删除的用户再次进入报名列表
 	 * 注意赛长不能删
+	 * type 0: 已报名点击确定  1：备选 点击确定
 	 * @return
 	 */
-	public void updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String userIds, String openid) {
+	public void updateGroupUserByMatchIdGroupId(Long matchId, Long myTeamId, Long groupId, String userIds, String openid) {
 		//赛长
-		Long captainUserId = userService.getUserIdByOpenid(openid);
-		//获取除赛长以外的本组用户id
-		List<Map<String, Object>> userIdList = matchDao.getUserListByMatchIdGroupId(matchId,groupId,captainUserId);
-		if (StringUtils.isNotEmpty(userIds)) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long captainUserId = userInfo.getUiId();
+		//将用户加入比赛分组
+		if(StringUtils.isNotEmpty(userIds)){
 			userIds = userIds.replace("[", "");
 			userIds = userIds.replace("]", "");
 			userIds = userIds.replace("\"", "");
-			String[] uIds = userIds.split(",");
-			for (String userId : uIds) {
-				if (StringUtils.isNotEmpty(userId)) {
-					Long uid = Long.parseLong(userId);
-					for(Map<String, Object> map:userIdList){
-						Long applyUserId = (Long)map.get("uiId");
-						if(!uid.equals(applyUserId)){
-							MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-							//类型：0：观战 1：比赛报名
-							matchJoinWatchInfo.setMjwiType(1);
-							matchJoinWatchInfo.setMjwiMatchId(matchId);
-							matchJoinWatchInfo.setMjwiUserId(uid);
-							matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-							matchDao.save(matchJoinWatchInfo);
-						}
+			String[] uids = userIds.split(",");
+			for(String uid : uids){
+				if(StringUtils.isNotEmpty(uid)){
+					MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+					matchUserGroupMapping.setMugmMatchId(matchId);
+					if(myTeamId == null){
+						//获取用户的参赛代表队
+						Long teamId = matchDao.getTeamIdByMIdAndUId(matchId,Long.parseLong(uid));
+						matchUserGroupMapping.setMugmTeamId(teamId);
+					}else{
+						matchUserGroupMapping.setMugmTeamId(myTeamId);
 					}
-					matchDao.delUserByMatchIdGroupId(matchId, groupId, uid);
-					//将该球友再放入临时分组
-
+					matchUserGroupMapping.setMugmUserType(1);
+					matchUserGroupMapping.setMugmGroupId(groupId);
+					MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
+					matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+					matchUserGroupMapping.setMugmUserId(Long.parseLong(uid));
+					matchUserGroupMapping.setMugmCreateUserId(captainUserId);
+					matchUserGroupMapping.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+					matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+					matchDao.save(matchUserGroupMapping);
+					//从报名表删除
+					matchDao.delUserFromApply(matchId,Long.parseLong(uid));
 				}
 			}
 		}
@@ -1661,7 +1687,7 @@ public class MatchService implements IBaseService {
 	 * 比赛——普通用户报名
 	 * @return
 	 */
-	public Integer applyMatch(Long matchId, Long groupId, String groupName, String openid) {
+	public Integer applyMatch(Long matchId, Long groupId, String groupName, Long chooseTeamId, String openid) {
 		Integer flag = -1;
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		Long userId = userService.getUserIdByOpenid(openid);
@@ -1678,6 +1704,7 @@ public class MatchService implements IBaseService {
             //类型：0：观战 1：比赛报名
             matchJoinWatchInfo.setMjwiType(1);
             matchJoinWatchInfo.setMjwiMatchId(matchId);
+            matchJoinWatchInfo.setMjwiTeamId(chooseTeamId);
             matchJoinWatchInfo.setMjwiUserId(userId);
             matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
             matchDao.save(matchJoinWatchInfo);
@@ -1687,11 +1714,11 @@ public class MatchService implements IBaseService {
             Long count = matchDao.getIsJoinTeamsUser(userId,teamIdList);
             if(count >0){
                 //获取用户所在球队id
-                TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userId);
+//                TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userId);
                 //是 直接加入比赛 不用审核
                 MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
                 matchUserGroupMapping.setMugmMatchId(matchId);
-                matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
+                matchUserGroupMapping.setMugmTeamId(chooseTeamId);
                 matchUserGroupMapping.setMugmUserType(1);
                 matchUserGroupMapping.setMugmGroupId(groupId);
                 matchUserGroupMapping.setMugmGroupName(groupName);
@@ -1847,5 +1874,74 @@ public class MatchService implements IBaseService {
 	 */
 	public void delMatchGroupByGroupId(Long groupId) {
 		matchDao.del(MatchGroup.class, groupId);
+	}
+
+	/**
+	 * 比赛详情——赛长——获取备选球友(除去已经报名的)，赛长所在队的球友或者其搜索的结果
+	 * @return
+	 */
+	public Map<String,Object> getMyTeamUserList(Long matchId,Long groupId, String keyword, String openid) {
+		Map<String,Object> result = new HashMap<>();
+		Long captainUserId = userService.getUserIdByOpenid(openid);
+		//查询赛长代表哪个球队比赛
+		Long teamId = matchDao.getTeamIdByMatchIdAndUserId(matchId,captainUserId);
+		result.put("myTeamId",teamId);
+		List<Map<String,Object>> userList = null;
+		if(teamId != null){
+			//查询和赛长代表参赛队的同队的队友，不包括自己和已经参赛的，和已经报名的球友
+			List<Long> userIdList = matchDao.getUserListByIds(matchId);
+			//已经报名的球友
+			List<Map<String, Object>> applyUserList = matchDao.getApplyUserByMatchId(matchId,null);
+			if(applyUserList != null && applyUserList.size()>0){
+				for(Map<String, Object> map:applyUserList){
+					userIdList.add((Long)map.get("uiId"));
+				}
+			}
+			userIdList.add(captainUserId);
+			userList = matchDao.getUserListByTeamId(teamId, keyword, userIdList);
+		}
+		result.put("userList",userList);
+		return result;
+	}
+
+	/**
+	 * 创建比赛——获取赛长所在球队，如果有多个球队，让用户选择一个做代表队
+	 * @return
+	 */
+	public List<Map<String,Object>> getCaptainTeamIdList(String openid) {
+		Long captainUserId = userService.getUserIdByOpenid(openid);
+		return matchDao.getCaptainTeamIdList(captainUserId);
+	}
+
+
+	/**
+	 * 比赛详情——保存——将用户从该分组删除
+	 *
+	 * @return
+	 */
+	public void delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+		if (StringUtils.isNotEmpty(userIds)) {
+			userIds = userIds.replace("[", "");
+			userIds = userIds.replace("]", "");
+			userIds = userIds.replace("\"", "");
+			String[] uIds = userIds.split(",");
+			for (String userId : uIds) {
+				if (StringUtils.isNotEmpty(userId)) {
+					Long uid = Long.parseLong(userId);
+					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, groupId, uid);
+					//将该球友从该分组删除
+					matchDao.delUserByMatchIdGroupId(matchId, groupId, uid);
+					//将该球友再放入临时分组
+					MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+					//类型：0：观战 1：比赛报名
+					matchJoinWatchInfo.setMjwiType(1);
+					matchJoinWatchInfo.setMjwiMatchId(matchId);
+					matchJoinWatchInfo.setMjwiTeamId(matchUserGroupMapping.getMugmTeamId());
+					matchJoinWatchInfo.setMjwiUserId(uid);
+					matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+					matchDao.save(matchJoinWatchInfo);
+				}
+			}
+		}
 	}
 }

@@ -50,7 +50,7 @@ public class TeamManageController {
 	/**
 	 * 获取球队列表
 	 * @param page 分页
-	 * @param type 0：所有球队 1：我加入的球队 2：我可以加入的球队   3：我创建的球队
+	 * @param type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队
 	 * @param keyword 球队名称
 	 * @param joinTeamIds 用于创建比赛时添加球队，如果不为空，就查询除去这些球队的列表
 	 * @return
