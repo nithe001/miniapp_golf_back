@@ -480,4 +480,16 @@ public class MatchInfo implements java.io.Serializable {
 	public void setShows(Integer shows) {
 		this.shows = shows;
 	}
+
+	//报名——参赛人数
+	private Integer userCount;
+	@Transient
+
+	public Integer getUserCount() {
+		return userCount;
+	}
+
+	public void setUserCount(Integer userCount) {
+		this.userCount = userCount;
+	}
 }

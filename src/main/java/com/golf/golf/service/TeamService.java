@@ -108,7 +108,11 @@ public class TeamService implements IBaseService {
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
+			if(!teamInfoBean.getTiLogo().contains(db.getTiLogo())){
+				db.setTiLogo(teamInfoBean.getTiLogo());
+			}
 			db.setTiName(teamInfoBean.getTiName());
+			db.setTiAbbrev(teamInfoBean.getTiAbbrev());
 			db.setTiCreateTime(TimeUtil.stringToLong(teamInfoBean.getTiCreateTimeStr(),TimeUtil.FORMAT_DATE));
 			db.setTiAddress(teamInfoBean.getTiAddress());
 			db.setTiDigest(teamInfoBean.getTiDigest());
@@ -135,6 +139,7 @@ public class TeamService implements IBaseService {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
 		teamInfo.getCreateTimeStr();
+		teamInfo.setTiLogo(PropertyConst.DOMAIN+teamInfo.getTiLogo());
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
 		result.put("userList",userList);

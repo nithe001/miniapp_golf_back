@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +96,7 @@ public class MatchController {
 	 * 获取参赛球队列表
 	 * @return
 	 */
-	@ResponseBody
+	/*@ResponseBody
 	@RequestMapping("getJoinTeamList")
 	public JsonElement getJoinTeamList(Long matchId) {
 		try {
@@ -107,7 +108,7 @@ public class MatchController {
 			logger.error(errmsg+ e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
-	}
+	}*/
 
 	/**
 	 * 创建比赛——获取赛长所在球队，如果有多个球队，让用户选择一个做代表队
@@ -127,36 +128,28 @@ public class MatchController {
 	}
 
 	/**
-	 * 创建比赛——选择上报球队——获取参赛用户所在的球队
+	 * 创建比赛——选择上报的上级球队——获取参赛用户所在的上级球队
+	 * 参赛球队自动在各自球队记分，不需要设置上报球队，
+	 * 但是这两个球队的球友都有来自北大队的，就需要设置上报球队为北大队，
 	 * @return
-	 *//*
+	 */
 	@ResponseBody
 	@RequestMapping(value = "getJoinTeamListByMatchId")
-	public JsonElement getJoinTeamListByMatchId(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
-									 String afterZoneName, String reportTeamIds, Long chooseTeamId, String openid) {
+	public JsonElement getJoinTeamListByMatchId(String joinTeamIds) {
 		try {
-			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
-				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
-				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
-				matchInfoBean.setMiLogo(logoPath);
-				matchInfoBean.setMiJoinTeamIds(joinTeamIds);
-				if(StringUtils.isNotEmpty(joinTeamIds)){
-					matchInfoBean.setMiJoinOpenType(2);
-				}
-				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
-				matchInfoBean.setMiZoneAfterNine(afterZoneName);
-				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined")){
-					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
-				}
-				matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+			List<Map<String,Object>> list = null;
+			if(StringUtils.isNotEmpty(joinTeamIds)){
+				list = matchService.getJoinTeamListByMatchId(joinTeamIds);
+			}else{
+				list = new ArrayList<>();
 			}
-			return JsonWrapper.newSuccessInstance();
+			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("创建比赛时出错。" + e);
-			return JsonWrapper.newErrorInstance("创建比赛时出错");
+			logger.error("创建比赛——获取上报球队时出错。" + e);
+			return JsonWrapper.newErrorInstance("创建比赛——获取上报球队时出错");
 		}
-	}*/
+	}
 
 	/**
 	 * 创建比赛
