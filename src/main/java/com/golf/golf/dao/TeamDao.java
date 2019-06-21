@@ -160,7 +160,19 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select a.*,ifnull(tum.tum_point,0) as point from ( ");
+		hql.append("SELECT u.ui_id as userId,u.ui_real_name as realName,u.ui_nick_name as nickName," +
+				"count(DISTINCT(m.mugm_match_id)) AS totalMatchNum," +
+				"sum(s.ms_rod_num) AS sumRodNum,round(AVG(s.ms_rod_num),2) AS avgRodNum,ifnull(tum.tum_point,0) as point ");
+		hql.append("FROM team_user_mapping AS tum ");
+		hql.append("LEFT JOIN match_user_group_mapping AS m ON tum.tum_user_id = m.mugm_user_id ");
+		hql.append("LEFT JOIN match_score as s on( tum.tum_team_id = s.ms_team_id and tum.tum_user_id = s.ms_user_id) ");
+		hql.append("LEFT JOIN user_info as u on tum.tum_user_id = u.ui_id ");
+		hql.append("where tum.tum_team_id = :teamId ");
+		hql.append("and m.mugm_create_time >= :startYear ");
+		hql.append("AND m.mugm_create_time <= :endYear ");
+		hql.append("GROUP BY tum.tum_user_id ");
+		hql.append("ORDER BY IF(ISNULL(AVG(s.ms_rod_num)),1,0),AVG(s.ms_rod_num) ");
+		/*hql.append("select a.*,ifnull(tum.tum_point,0) as point from ( ");
 		hql.append("select u.ui_id as userId,u.ui_real_name as realName,u.ui_nick_name as nickName," +
 				"totalMatch.totalMatchNum,avgData.avgRodNum,avgData.sumRodNum ");
 		hql.append(" from user_info as u LEFT join ");
@@ -192,7 +204,7 @@ public class TeamDao extends CommonDao {
 		hql.append(")as a,team_user_mapping as tum  ");
 		hql.append("where a.userId = tum.tum_user_id and tum.tum_user_type != 2 ");
 		hql.append("GROUP by a.userId ");
-		hql.append("ORDER BY IF(ISNULL(a.avgRodNum),1,0),a.avgRodNum ");
+		hql.append("ORDER BY IF(ISNULL(a.avgRodNum),1,0),a.avgRodNum ");*/
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -204,7 +216,7 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>> getTeamPointByChangci(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("select t.userId,t.nickName,t.realName,round(SUM(t.rodNum)/sum(t.count),2) AS avgRodNum," +
-				"SUM(t.rodNum) as sumRodNum,ifnull(tum.tum_point,0) as point,sum(t.count) as totalHoleNum ");
+				"t.rodNum as sumRodNum,ifnull(tum.tum_point,0) as point,sum(t.count) as totalHoleNum ");
 		hql.append(" from ( ");
 		hql.append("SELECT " +
 				"s.ms_user_id AS userId, " +
@@ -233,7 +245,7 @@ public class TeamDao extends CommonDao {
 					"GROUP BY ts.matchId " +
 					"HAVING COUNT(*) <= :changCi ");
 		hql.append(") and tum.tum_user_type != 2 and t.userId = tum.tum_user_id ");
-		hql.append(" GROUP BY t.userId ORDER BY SUM(t.rodNum)/sum(t.count) ");
+		hql.append(" GROUP BY t.userId ORDER BY avgRodNum ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}

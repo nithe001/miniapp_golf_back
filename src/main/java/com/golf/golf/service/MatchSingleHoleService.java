@@ -33,7 +33,8 @@ public class MatchSingleHoleService implements IBaseService {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		//固定的首列：本组用户
-		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, groupId);
+//		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, groupId,null,0);
+		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
 		result.put("userList", userList);
 
 		//第一条记录：半场球洞
@@ -49,10 +50,12 @@ public class MatchSingleHoleService implements IBaseService {
 		if (userList != null && userList.size() > 0) {
 			//第一个用户
 			Long userId0 = matchService.getLongValue(userList.get(0), "uiId");
-			List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo);
+			Long teamId0 = matchService.getLongValue(userList.get(0),"team_id");
+			List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo, teamId0);
 			//第二个用户
 			Long userId1 = matchService.getLongValue(userList.get(1), "uiId");
-			List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo);
+			Long teamId1 = matchService.getLongValue(userList.get(1),"team_id");
+			List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
 
 			for(Map<String, Object> map0:uscoreList0){
 				Map<String, Object>[] map = new Map[2];

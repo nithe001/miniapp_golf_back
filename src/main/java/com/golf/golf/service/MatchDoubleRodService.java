@@ -26,14 +26,14 @@ public class MatchDoubleRodService implements IBaseService {
 	protected MatchService matchService;
 
 	/**
-	 * 双人比杆赛记分卡 每组4人 每2人一个小组
+	 * 双人比杆赛记分卡 每组4人 每2人一个小组 同一个球队的放一行
 	 * @return
 	 */
 	public Map<String, Object> getDoubleRodScoreCardByGroupId(Long matchId, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		//固定的首列：本组用户
-		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, groupId);
+		//固定的首列：本组用户 4人 按照球队分组并按照参赛范围的球队顺序来排序
+		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
 		result.put("userList", userList);
 
 		//第一条记录：半场球洞
@@ -43,16 +43,18 @@ public class MatchDoubleRodService implements IBaseService {
 
 		//第二条和第三条记录：用户得分
 		List<DoubleRodUserScoreBean> scoreTotalList = new ArrayList<>();
+		Long tempTeamId = 0L;
+		Long tempUserId = 0L;
 		for(int i=0;i<userList.size();i++){
-			if(i>=userList.size()){
-				break;
+			Long userId = matchService.getLongValue(userList.get(i), "uiId");
+			Long teamId = matchService.getLongValue(userList.get(i), "team_id");
+			if(teamId.equals(tempTeamId)){
+				//构造用户成绩数据 同一个队的放一起
+				DoubleRodUserScoreBean bean = createUserScoreList(tempUserId,userId,teamId, groupId, matchInfo);
+				scoreTotalList.add(bean);
 			}
-			Long userId0 = matchService.getLongValue(userList.get(i), "uiId");
-			Long userId1 = matchService.getLongValue(userList.get(i+1), "uiId");
-			i++;
-			//构造用户成绩数据
-			DoubleRodUserScoreBean bean = createUserScoreList(userId0,userId1, groupId, matchInfo);
-			scoreTotalList.add(bean);
+			tempTeamId = teamId;
+			tempUserId = userId;
 		}
 		//第二条和第三条，用户得分list
 		result.put("allUserScoreList", scoreTotalList);
@@ -67,14 +69,14 @@ public class MatchDoubleRodService implements IBaseService {
 	}
 
 	//双人比杆——构造数据
-	private DoubleRodUserScoreBean createUserScoreList(Long userId0, Long userId1, Long groupId, MatchInfo matchInfo) {
+	private DoubleRodUserScoreBean createUserScoreList(Long userId0, Long userId1, Long teamId, Long groupId, MatchInfo matchInfo) {
 		DoubleRodUserScoreBean bean = new DoubleRodUserScoreBean();
 		//第二条记录：用户得分
 		List<Map<String, Object>[]> scoreList = new ArrayList<>();
 		//第一个用户的得分情况
-		List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo);
+		List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo, teamId);
 		//第二个用户的得分情况
-		List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo);
+		List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId);
 
 		for(Map<String, Object> map0:uscoreList0){
 			Map<String, Object>[] map = new Map[2];

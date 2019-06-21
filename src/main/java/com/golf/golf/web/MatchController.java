@@ -8,7 +8,7 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.ParkInfo;
+import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.*;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -45,15 +43,15 @@ public class MatchController {
 	@Autowired
 	private UserService userService;
 
-	//单人比洞记分卡service
+	//个人比洞记分卡service
 	@Autowired
 	protected MatchSingleHoleService matchSingleHoleService;
 
-	//双人比杆记分卡service
+	//双人比杆记分卡service 同一个球队的放一行
 	@Autowired
 	protected MatchDoubleRodService matchDoubleRodService;
 
-	//双人比洞记分卡service
+	//双人比洞记分卡service 同一个球队的放一行
 	@Autowired
 	protected MatchDoubleHoleService matchDoubleHoleService;
 
@@ -62,7 +60,7 @@ public class MatchController {
 	/**
 	 * 比赛列表
 	 * @param page 翻页
-	 * @param type 0：全部比赛  1：我参加的比赛  2：我可以报名的比赛(包括我创建的比赛，用于审核其他球友的报名)  3:我创建的比赛
+	 * @param type 0：全部比赛 1：我参加的比赛  2：可报名的比赛 3:已报名的比赛  4：我创建的比赛
 	 * @param keyword 搜索内容
 	 * @return
 	 */
@@ -93,32 +91,16 @@ public class MatchController {
 	}
 
 	/**
-	 * 获取参赛球队列表
-	 * @return
-	 */
-	/*@ResponseBody
-	@RequestMapping("getJoinTeamList")
-	public JsonElement getJoinTeamList(Long matchId) {
-		try {
-			List<Map<String, Object>> teamList = matchService.getTeamListByMatchId(matchId);
-			return JsonWrapper.newDataInstance(teamList);
-		} catch (Exception e) {
-			e.printStackTrace();
-			String errmsg = "前台-获取参赛球队列表出错。";
-			logger.error(errmsg+ e );
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}*/
-
-	/**
-	 * 创建比赛——获取赛长所在球队，如果有多个球队，让用户选择一个做代表队
+	 * 创建比赛——获取赛长用户所在球队，是否同时是参赛球队的队长 如果是让用户选择一个做代表队
+	 * @param joinTeamIds:创建比赛时选择的参赛球队
+	 * 选了参赛球队，才会进此方法
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getCaptainTeamIdList")
-	public JsonElement getCaptainTeamIdList(String openid) {
+	public JsonElement getCaptainTeamIdList(String joinTeamIds,String openid) {
 		try {
-			List<Map<String,Object>> list = matchService.getCaptainTeamIdList(openid);
+			List<TeamInfo> list = matchService.getCaptainTeamIdList(joinTeamIds,openid);
 			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -152,7 +134,8 @@ public class MatchController {
 	}
 
 	/**
-	 * 创建比赛
+	 * 创建比赛 更新比赛
+	 * 报名期间都可以改，但比赛开始后，就只能改 观战范围，成绩上报 和 比赛说明。
 	 * @param chooseTeamId 如果赛长加入了两个以上的球队，选择一个球队为代表
 	 * @return
 	 */
@@ -171,7 +154,7 @@ public class MatchController {
 				}
 				matchInfoBean.setMiZoneBeforeNine(beforeZoneName);
 				matchInfoBean.setMiZoneAfterNine(afterZoneName);
-				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined")){
+				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined") && !reportTeamIds.equals("null")){
 					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				}
 				matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
@@ -474,7 +457,8 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——添加用户至分组
+	 * 比赛详情——赛长 添加用户至分组
+	 * @param myTeamId 赛长所在球队id，也就是这些用户的代表球队id
 	 * @return
 	 */
 	@ResponseBody
@@ -825,7 +809,7 @@ public class MatchController {
 
 
 	/**
-	 * 保存或更新计分数据
+	 * 保存或更新计分数据  如果有上报球队，同时向上报球队记分
 	 * 与标准杆一样 叫平标准杆
 	 * 比标准杆少一杆叫小鸟
 	 * 比标准杆多一杆或者标准杆完成该洞叫Par
@@ -1015,6 +999,25 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 比赛—球友报名—普通用户选一个组报名——获取球友所在球队
+	 *  获取用户是否在参赛球队中，如果是多队比赛，并且同时都在参赛队中，让用户选择一个做代表队
+	 *  如果是队式比赛，一个人报名的时候如果还不是任何一个参赛队成员，就让他先选一个，但只是在参赛队里选。
+	 *        （这种情况只会有人把比赛报名链接分享到微信群后，通过微信群进入才会有，在小程序里，一个人应该看不到他不在任何一个参赛队中的比赛报名）
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "getMyJoinTeamList")
+	public JsonElement getMyJoinTeamList(Long matchId, String openid) {
+		try {
+			List<TeamInfo> list = matchService.getMyJoinTeamList(matchId,openid);
+			return JsonWrapper.newDataInstance(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("球友报名——获取球友所在球队时出错。" + e);
+			return JsonWrapper.newErrorInstance("球友报名——获取球友所在球队时出错。");
+		}
+	}
 
 	/**
 	 * 比赛——普通用户选一个组报名
@@ -1026,6 +1029,24 @@ public class MatchController {
 	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, Long chooseTeamId, String openid) {
 		try {
 			Integer flag = matchService.applyMatch(matchId, groupId, groupName, chooseTeamId, openid);
+			return JsonWrapper.newDataInstance(flag);
+		} catch (Exception e) {
+			String errmsg = "比赛——报名时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg + e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——报名——查询是否已经报名
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("checkIsApplyMatch")
+	public JsonElement checkIsApplyMatch(Long matchId, String openid) {
+		try {
+			boolean flag = matchService.checkIsApplyMatch(matchId, openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
