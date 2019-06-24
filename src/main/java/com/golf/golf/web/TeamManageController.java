@@ -248,6 +248,7 @@ public class TeamManageController {
 	 * 获取球队记分详情
 	 * @param teamId:球队id
 	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
+	 *            注意计算成绩时，看该球友在球队是否是审核通过的
 	 * @return
 	 */
 	@ResponseBody

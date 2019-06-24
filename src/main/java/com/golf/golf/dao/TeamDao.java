@@ -167,7 +167,7 @@ public class TeamDao extends CommonDao {
 		hql.append("LEFT JOIN match_user_group_mapping AS m ON tum.tum_user_id = m.mugm_user_id ");
 		hql.append("LEFT JOIN match_score as s on( tum.tum_team_id = s.ms_team_id and tum.tum_user_id = s.ms_user_id) ");
 		hql.append("LEFT JOIN user_info as u on tum.tum_user_id = u.ui_id ");
-		hql.append("where tum.tum_team_id = :teamId ");
+		hql.append("where tum.tum_team_id = :teamId and tum.tum_user_type != 2 ");
 		hql.append("and m.mugm_create_time >= :startYear ");
 		hql.append("AND m.mugm_create_time <= :endYear ");
 		hql.append("GROUP BY tum.tum_user_id ");

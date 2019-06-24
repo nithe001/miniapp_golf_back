@@ -1875,12 +1875,27 @@ public class MatchService implements IBaseService {
 	public Integer applyMatch(Long matchId, Long groupId, String groupName, Long chooseTeamId, String openid) {
 		Integer flag = -1;
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		Long userId = userService.getUserIdByOpenid(openid);
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long userId = userInfo.getUiId();
 		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
 		//是否已经报名
 		Long countApply = matchDao.getIsApply(userId,matchId);
 		if(countApply >0){
 			return -2;
+		}
+		//查看是否是该球队的队员，如果不是，自动生成一条入队申请
+		if(chooseTeamId != null){
+			TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(chooseTeamId,userId);
+			if(teamUserMapping == null){
+				teamUserMapping = new TeamUserMapping();
+				teamUserMapping.setTumTeamId(chooseTeamId);
+				teamUserMapping.setTumUserId(userId);
+				teamUserMapping.setTumUserType(2);
+				teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+				teamUserMapping.setTumCreateUserId(userId);
+				teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+				matchDao.save(teamUserMapping);
+			}
 		}
 
 		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
@@ -1888,7 +1903,6 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmGroupId(groupId);
 		matchUserGroupMapping.setMugmGroupName(groupName);
 		matchUserGroupMapping.setMugmUserId(userId);
-		UserInfo userInfo = matchDao.get(UserInfo.class,userId);
 		matchUserGroupMapping.setMugmUserName(userInfo.getUiRealName());
 		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 		matchUserGroupMapping.setMugmCreateUserId(userId);

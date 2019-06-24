@@ -222,7 +222,7 @@ public class MatchController {
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
 			Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count, openid);
 			//如果比赛状态是进行中，如果不是参赛人员，则加入围观用户
-			if(matchInfo.getMiIsEnd() == 1){
+			if(matchInfo.getMiIsEnd() != 0){
 				boolean isWatch = matchService.saveOrUpdateWatch(matchInfo, openid);
 				matchMap.put("isWatch",isWatch);
 			}
