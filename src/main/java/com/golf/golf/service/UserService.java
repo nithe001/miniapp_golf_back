@@ -49,6 +49,9 @@ public class UserService implements IBaseService {
 		Map<String,Object> result = new HashMap<>();
 		UserInfo userInfo = dao.getUserByOpenid(openid);
 		result.put("userInfo",userInfo);
+		if(userInfo != null){
+
+		}
 		//差点
 		Integer chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
 		result.put("chaPoint",chaPoint);
@@ -199,14 +202,6 @@ public class UserService implements IBaseService {
 	 * @return
 	 */
 	public void saveOrUpdateWechatUserInfo(String openid, String userDataStr) throws IOException {
-//		Session登录
-		HttpSession session = WebUtil.getSessionById();
-		UserModel userModel = WebUtil.getUserModelBySessionId();
-		if(userModel == null){
-			userModel = new UserModel();
-		}
-		userModel.setOpenId(openid);
-
 		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openid);
 		UserInfo userInfo = null;
 		if(wechatUserInfo != null && wechatUserInfo.getWuiUId() != null){
@@ -234,10 +229,8 @@ public class UserService implements IBaseService {
 
 			//创建一条用户信息
 			saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
-			userModel.setUser(userInfo);
 			wechatUserInfo.setWuiUId(userInfo.getUiId());
 			dao.update(wechatUserInfo);
-			userModel.setWechatUser(wechatUserInfo);
 		}else{
 			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
 			wechatUserInfo = new WechatUserInfo();
@@ -268,14 +261,9 @@ public class UserService implements IBaseService {
 
 			//创建一条用户信息
 			userInfo = saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
-			userModel.setUser(userInfo);
 			wechatUserInfo.setWuiUId(userInfo.getUiId());
 			dao.save(wechatUserInfo);
-
-			userModel.setWechatUser(wechatUserInfo);
 		}
-		//登录
-		session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
 	}
 
 	private UserInfo saveOrUpdateUserInfo(UserInfo userInfo, String openid, WechatUserInfo wechatUserInfo) {

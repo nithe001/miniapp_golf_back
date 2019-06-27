@@ -142,7 +142,7 @@ public class MatchController {
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
 	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
-									 String afterZoneName, String reportTeamIds, Long chooseTeamId, String openid) {
+									 String afterZoneName, String reportTeamIds, String chooseTeamId, String openid) {
 		try {
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
@@ -418,25 +418,6 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
-
-
-	/**
-	 * 比赛详情——保存——赛长将用户加入该分组
-	 * @return
-	 */
-	/*@ResponseBody
-	@RequestMapping("addUserToGroupByMatchId")
-	public JsonElement addUserToGroupByMatchId(Long matchId, Long groupId, String userIds, String openid) {
-		try {
-			matchService.addUserToGroupByMatchId(matchId,groupId,userIds,openid);
-			return JsonWrapper.newSuccessInstance();
-		} catch (Exception e) {
-			String errmsg = "前台-比赛详情——赛长将用户加入该分组时出错。";
-			e.printStackTrace();
-			logger.error(errmsg + e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}*/
 
 	/**
 	 * 比赛详情——保存——将用户从该分组删除，用户再次进入临时分组
@@ -855,7 +836,7 @@ public class MatchController {
 
 
 	/**
-	 * 成绩上报 计算积分
+	 * 成绩上报 计算积分（注意球友加入球队是否成功）
 	 * @param matchId 比赛id,
 	 * @param teamId 上报球队id,
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,

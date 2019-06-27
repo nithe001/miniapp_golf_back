@@ -11,7 +11,6 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 	private Long mjwiId;
 	private Integer mjwiType;
 	private Long mjwiMatchId;
-	private Long mjwiTeamId;
 	private Long mjwiUserId;
 	private Long mjwiCreateTime;
 
@@ -22,11 +21,10 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 	}
 
 	/** full constructor */
-	public MatchJoinWatchInfo(Integer mjwiType, Long mjwiMatchId, Long mjwiTeamId,
+	public MatchJoinWatchInfo(Integer mjwiType, Long mjwiMatchId,
 							  Long mjwiUserId, Long mjwiCreateTime) {
 		this.mjwiType = mjwiType;
 		this.mjwiMatchId = mjwiMatchId;
-		this.mjwiTeamId = mjwiTeamId;
 		this.mjwiUserId = mjwiUserId;
 		this.mjwiCreateTime = mjwiCreateTime;
 	}
@@ -59,15 +57,6 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 
 	public void setMjwiMatchId(Long mjwiMatchId) {
 		this.mjwiMatchId = mjwiMatchId;
-	}
-
-	@Column(name = "mjwi_team_id")
-	public Long getMjwiTeamId() {
-		return mjwiTeamId;
-	}
-
-	public void setMjwiTeamId(Long mjwiTeamId) {
-		this.mjwiTeamId = mjwiTeamId;
 	}
 
 	@Column(name = "mjwi_user_id")
