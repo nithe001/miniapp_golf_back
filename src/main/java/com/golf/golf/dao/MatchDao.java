@@ -753,8 +753,7 @@ public class MatchDao extends CommonDao {
                 "AND s.ms_user_id = g.mugm_user_id and g.mugm_team_id = s.ms_team_id ) ");
         sql.append("where g.mugm_match_id = "+matchId+" AND g.mugm_group_id = "+groupId);
 		sql.append(" GROUP BY g.mugm_user_id ORDER BY g.mugm_user_id,g.mugm_team_id");
-		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
-		return list;
+		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
 	/**
@@ -1681,5 +1680,17 @@ public class MatchDao extends CommonDao {
 					"LIMIT 0,"+mingci);
 		hql.append(") as t");
 		return dao.createSQLQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+	}
+
+	/**
+	 * 获取单练记分卡的总计
+	 */
+	public List<Map<String, Object>> getSingleTotalScoreWithUser(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT s.ms_user_id AS user_id,sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
+		sql.append("FROM match_score AS s ");
+		sql.append("where s.ms_match_id = "+matchId+" AND s.ms_group_id = "+groupId);
+		sql.append(" GROUP BY s.ms_user_id ORDER BY s.ms_user_id ");
+		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 }

@@ -48,7 +48,7 @@ public class UserController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("保存微信用户信息时出错。" + e);
-			return JsonWrapper.newErrorInstance("保存微信用户信息时出错");
+			return JsonWrapper.newErrorInstance("保存微信用户信息时出错"+e);
 		}
 	}
 

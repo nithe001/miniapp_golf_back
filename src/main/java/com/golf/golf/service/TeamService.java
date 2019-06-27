@@ -188,6 +188,8 @@ public class TeamService implements IBaseService {
 			result.put("changCiList",changCiList);
 		}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计
+			parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
+			parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
 			List<Map<String, Object>> yearList = teamDao.getTeamMatchByYear(parp);
 			result.put("yearList",yearList);
 		}

@@ -172,10 +172,6 @@ public class UserService implements IBaseService {
 	}
 
 	//通过openId获取用户信息
-	public WechatUserInfo getWechatUserInfoByOpenId(String openId) {
-		return dao.getUserInfoByOpenId(openId);
-	}
-	//通过openId获取用户信息
 	public UserInfo getUserByOpenId(String openId) {
 		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openId);
 		return dao.get(UserInfo.class,wechatUserInfo.getWuiUId());

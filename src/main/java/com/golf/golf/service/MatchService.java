@@ -1001,7 +1001,13 @@ public class MatchService implements IBaseService {
 		Long totalRod = matchDao.getTotalRod(matchInfo);
 		result.put("totalRod", totalRod);
 		//用户总分
-		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId, groupId);
+		List<Map<String, Object>> totalScoreList = null;
+		if(matchInfo.getMiType() == 1){
+			totalScoreList = matchDao.getTotalScoreWithUser(matchId, groupId);
+		}else{
+			//单练的总分
+			totalScoreList = matchDao.getSingleTotalScoreWithUser(matchId, groupId);
+		}
 		result.put("totalScoreList", totalScoreList);
 		return result;
 	}

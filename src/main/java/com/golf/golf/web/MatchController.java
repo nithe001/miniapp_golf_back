@@ -78,8 +78,11 @@ public class MatchController {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
 			searchBean.addParpField("type", type);
-			searchBean.addParpField("userId", userService.getUserIdByOpenid(openid));
-			pageInfo = matchService.getMatchList(searchBean, pageInfo);
+			Long userId = userService.getUserIdByOpenid(openid);
+			searchBean.addParpField("userId", userId);
+			if(userId != null){
+				pageInfo = matchService.getMatchList(searchBean, pageInfo);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			String errmsg = "前台-获取比赛列表出错。openid="+openid;

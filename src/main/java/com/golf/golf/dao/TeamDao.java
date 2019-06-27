@@ -317,19 +317,13 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select m.mi_title as matchTitle,m.mi_match_time as applyTime," +
-				"userC.*," +
-				"c.ic_match_id as matchId2,c.ic_base_score as baseScore,c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
-				"from match_info as m LEFT JOIN ( " +
-					"select count(t.userId) as userCount,t.* from( " +
-						"select DISTINCT(gm.mugm_user_id) as userId,gm.mugm_match_id as matchId1,gm.mugm_team_id as teamId " +
-						"from match_user_group_mapping as gm where gm.mugm_match_id in( " +
-							"select mm.mi_id as miId from match_info as mm where FIND_IN_SET(:teamId,mm.mi_join_team_ids)" +
-						") " +
-					" ) as t GROUP BY t.matchId1 " +
-				")as userC on (m.mi_id = userC.matchId1) " +
-				"LEFT join integral_config as c on c.ic_match_id = userC.matchId1  " +
-				"where m.mi_create_time >= :startYear and m.mi_create_time <= :endYear ");
+		hql.append("select t.*,c.ic_base_score as baseScore,c.ic_rod_cha as rodCha,c.ic_win_score as winScore from (" +
+				"SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
+				"count(mugm.mugm_user_id) as userCount " +
+					"FROM match_user_group_mapping AS mugm, match_info AS m " +
+						"WHERE mugm.mugm_match_id = m.mi_id and mugm.mugm_team_id = :teamId " +
+					" ) as t LEFT JOIN integral_config as c on t.matchId = c.ic_match_id " +
+				"where t.applyTime >= :startYear and t.applyTime <= :endYear ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
