@@ -1,6 +1,6 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<input type="hidden" name="wcId" id="wcId" value="${rule.mrId }"/>
+<input type="hidden" name="mrId" id="mrId" value="${rule.mrId }"/>
 <div class="box-body">
 	<div class="form-group">
 	  <label for="mrTitle" class="col-sm-2 control-label">标题</label>

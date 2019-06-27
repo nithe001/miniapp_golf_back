@@ -1991,8 +1991,8 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmCreateUserName(userInfo.getUiRealName());
 //        参赛范围(1、公开 球友均可报名；2、队内：某几个球队队员可报名；3:不公开)
 		if(matchInfo.getMiJoinOpenType() == 1){
-			//type = 2 待审核
-			matchUserGroupMapping.setMugmUserType(2);
+			//type = 1 比赛报名不需要审核
+			matchUserGroupMapping.setMugmUserType(1);
 			matchDao.save(matchUserGroupMapping);
             flag = 0;
         }else if(matchInfo.getMiJoinOpenType() == 2){
@@ -2001,7 +2001,7 @@ public class MatchService implements IBaseService {
             Long count = matchDao.getIsJoinTeamsUser(userId,teamIdList);
             if(count >0){
 				//type = 2 待审核
-                matchUserGroupMapping.setMugmUserType(2);
+                matchUserGroupMapping.setMugmUserType(1);
 				matchDao.save(matchUserGroupMapping);
                 flag = 0;
             }

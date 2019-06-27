@@ -163,4 +163,12 @@ public class AdminMatchService implements IBaseService {
         //删除比赛球队确认配置
         dao.delMatchScoreConfig(matchId);
     }
+	/**
+	 * 删除高球规则
+	 * @param ruleId 规则id
+	 * @return
+	 */
+	public void delMatchRule(Long ruleId) {
+		dao.del(MatchRule.class,ruleId);
+	}
 }

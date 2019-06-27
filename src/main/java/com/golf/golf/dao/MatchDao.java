@@ -104,9 +104,8 @@ public class MatchDao extends CommonDao {
 				"m.mi_match_format_2 as mi_match_format_2 ");
 		hql.append(" FROM match_info AS m ");
 		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
-		hql.append(" WHERE m.mi_is_valid = 1 AND m.mi_type = 1 ");
-		hql.append(" AND ((m.mi_create_user_id = 1 AND m.mi_is_end = 0) " +
-							"or mugm.mugm_user_id = 1) ");
+		hql.append(" WHERE m.mi_is_valid = 1 AND m.mi_type = 1 AND m.mi_is_end = 0 ");
+		hql.append(" AND (m.mi_create_user_id = 1 or mugm.mugm_user_id = 1) ");
 		if(parp.get("keyword") != null){
 			hql.append(" AND m.mi_title LIKE :keyword ");
 		}

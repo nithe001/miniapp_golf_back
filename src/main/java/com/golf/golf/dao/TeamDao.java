@@ -156,56 +156,88 @@ public class TeamDao extends CommonDao {
 
 	/**
 	 * 获取球队记分详情 按平均杆排名 单练的不算入内
+	 *
+	 * 只计算比赛结束并且球队确认过的场次成绩
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.ui_id as userId,u.ui_real_name as realName,u.ui_nick_name as nickName," +
-				"count(DISTINCT(m.mugm_match_id)) AS totalMatchNum," +
-				"sum(s.ms_rod_num) AS sumRodNum,round(AVG(s.ms_rod_num),2) AS avgRodNum,ifnull(tum.tum_point,0) as point ");
-		hql.append("FROM team_user_mapping AS tum ");
-		hql.append("LEFT JOIN match_user_group_mapping AS m ON tum.tum_user_id = m.mugm_user_id ");
-		hql.append("LEFT JOIN match_score as s on( tum.tum_team_id = s.ms_team_id and tum.tum_user_id = s.ms_user_id) ");
-		hql.append("LEFT JOIN user_info as u on tum.tum_user_id = u.ui_id ");
-		hql.append("where tum.tum_team_id = :teamId and tum.tum_user_type != 2 ");
-		hql.append("and m.mugm_create_time >= :startYear ");
-		hql.append("AND m.mugm_create_time <= :endYear ");
-		hql.append("GROUP BY tum.tum_user_id ");
-		hql.append("ORDER BY IF(ISNULL(AVG(s.ms_rod_num)),1,0),AVG(s.ms_rod_num) ");
-		/*hql.append("select a.*,ifnull(tum.tum_point,0) as point from ( ");
-		hql.append("select u.ui_id as userId,u.ui_real_name as realName,u.ui_nick_name as nickName," +
-				"totalMatch.totalMatchNum,avgData.avgRodNum,avgData.sumRodNum ");
-		hql.append(" from user_info as u LEFT join ");
-		hql.append("(SELECT " +
-					"mgm.mugm_user_id AS userId, " +
-					"count(mgm.mugm_id) AS totalMatchNum " +
-					"FROM " +
-					"match_user_group_mapping AS mgm,match_info as m " +
-					"where mgm.mugm_match_id = m.mi_id and m.mi_type = 1 and mgm.mugm_team_id = :teamId " +
-					"and mgm.mugm_create_time >= :startYear " +
-					"AND mgm.mugm_create_time <= :endYear " +
-					"GROUP BY mgm.mugm_user_id " +
-					") as totalMatch on u.ui_id = totalMatch.userId ");
-		hql.append(" LEFT JOIN ");
-		hql.append(" (SELECT " +
-					"round(AVG(s.ms_rod_num),2) AS avgRodNum, " +
-					"SUM(s.ms_rod_num) AS sumRodNum, " +
-					"s.ms_user_id AS s_user_id " +
-					"FROM " +
-					" match_score AS s, " +
-					" match_info AS m " +
-					" WHERE  m.mi_type = 1 " +
-					" and s.ms_team_id = :teamId " +
-					" AND m.mi_id = s.ms_match_id " +
-					" AND s.ms_create_time >= :startYear " +
-					" AND s.ms_create_time <= :endYear " +
-					" GROUP BY s.ms_user_id " +
-					" )as avgData on u.ui_id = avgData.s_user_id ");
-		hql.append(")as a,team_user_mapping as tum  ");
-		hql.append("where a.userId = tum.tum_user_id and tum.tum_user_type != 2 ");
-		hql.append("GROUP by a.userId ");
-		hql.append("ORDER BY IF(ISNULL(a.avgRodNum),1,0),a.avgRodNum ");*/
-		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		StringBuilder allHql = new StringBuilder();
+		StringBuilder countHhql = new StringBuilder();
+		StringBuilder changciHql = new StringBuilder();
+		//获取用户的总参赛场次
+		countHhql.append("select t.user_id,count(t.match_id)as totalMatchNum,t.point from (" +
+						"select tum.tum_user_id as user_id,s.ms_match_id as match_id,tum.tum_point as point from team_user_mapping as tum LEFT JOIN match_score as s " +
+						"on (tum.tum_user_id = s.ms_user_id and s.ms_is_team_submit = 1 " +
+						"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear )" +
+						"GROUP BY tum.tum_user_id ,s.ms_match_id)" +
+						"as t group by t.user_id");
+		//获取用户前n场的总杆数和平均杆数
+		changciHql.append(" SELECT  " +
+					" tt.user_id,  " +
+					" sum(tt.sum_rod_num) as sumRodNum,  " +
+					" round((sum(tt.sum_rod_num) /:changCi),2) AS avgRodNum  " +
+					"FROM  " +
+						" (  " +
+						"  SELECT *  FROM  " +
+						"   (  " +
+						"    SELECT  " +
+						"     tum.tum_user_id AS user_id,  " +
+						"     s.ms_match_id AS match_id,  " +
+						"     sum(s.ms_rod_num) AS sum_rod_num  " +
+						"    FROM  " +
+						"     team_user_mapping AS tum  " +
+						"    LEFT JOIN match_score AS s ON (  " +
+						"     tum.tum_user_id = s.ms_user_id  " +
+						"     AND s.ms_is_team_submit = 1 and s.ms_create_time >=:startYear AND s.ms_create_time <=:endYear " +
+						"    )  " +
+						"    WHERE  " +
+						"     tum.tum_user_type != 2 " +
+						"    GROUP BY  " +
+						"     s.ms_match_id  " +
+						"    ORDER BY  " +
+						"    IF (ISNULL(sum(s.ms_rod_num)),1,0),  " +
+						"    sum(s.ms_rod_num)  " +
+						"   ) AS t  " +
+						"  WHERE  " +
+						"   (  " +
+						"    SELECT  " +
+						"     count(1) + 1  " +
+						"    FROM  " +
+						"     (  " +
+						"      SELECT  " +
+						"       tum.tum_user_id AS user_id,  " +
+						"       s.ms_match_id AS match_id,  " +
+						"       sum(s.ms_rod_num) AS sum_rod_num  " +
+						"      FROM  " +
+						"       team_user_mapping AS tum  " +
+						"      LEFT JOIN match_score AS s ON (  " +
+						"       tum.tum_user_id = s.ms_user_id  " +
+						"       AND s.ms_is_team_submit = 1 and s.ms_create_time >=:startYear AND s.ms_create_time <=:endYear " +
+						"      )  " +
+						"      WHERE  " +
+						"       tum.tum_user_type != 2 " +
+						"      GROUP BY  " +
+						"       s.ms_match_id  " +
+						"      ORDER BY  " +
+						"  " +
+						"      IF (ISNULL(sum(s.ms_rod_num)),1,0),  " +
+						"      sum(s.ms_rod_num)  " +
+						"     ) AS ts  " +
+						"    WHERE  " +
+						"     ts.user_id = t.user_id  " +
+						"    AND ts.sum_rod_num < t.sum_rod_num  " +
+						"   ) <= :changCi  " +
+						" ) AS tt  " +
+						"GROUP BY tt.user_id ");
+
+
+		allHql.append("select u.ui_id as uid,u.ui_nick_name as nickName,u.ui_real_name as realName,count.totalMatchNum,count.point,changci.sumRodNum,changci.avgRodNum ");
+		allHql.append("from ("+countHhql.toString()+") as count ");
+		allHql.append(" left join ");
+		allHql.append("("+changciHql.toString()+") as changci");
+		allHql.append(" on count.user_id = changci.user_id ");
+		allHql.append(" left join user_info as u on u.ui_id = count.user_id ");
+		List<Map<String, Object>> list = dao.createSQLQuery(allHql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
 

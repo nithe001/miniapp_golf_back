@@ -167,7 +167,7 @@ public class TeamService implements IBaseService {
 	}
 
 	/**
-	 * 获取球队记分详情
+	 * 获取球队记分详情 只计算比赛结束并且球队确认过的场次成绩
 	 * @param teamId:球队id
 	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
 	 * @return
@@ -180,12 +180,12 @@ public class TeamService implements IBaseService {
 		parp.put("teamId", teamId);
 		parp.put("changCi", changCi);
 		if(type <= 1){
-			//比分榜 or 积分榜
+			//比分榜 or 积分榜 场次
 			List<Map<String, Object>> yearList = teamDao.getTeamPointByYear(parp);
 			result.put("yearList",yearList);
 			//按场次统计
-			List<Map<String, Object>> changCiList = teamDao.getTeamPointByChangci(parp);
-			result.put("changCiList",changCiList);
+//			List<Map<String, Object>> changCiList = teamDao.getTeamPointByChangci(parp);
+//			result.put("changCiList",changCiList.get(0).get(""));
 		}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计
 			parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));

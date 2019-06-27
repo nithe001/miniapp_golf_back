@@ -54,10 +54,10 @@
                                             <td>${rule.mrUrl}</td>
                                             <td>${rule.mrSort}</td>
                                             <td>
-                                                <a class="btn btn-success" href="admin/match/editMatchUI?matchId=${rule.mrId}">
+                                                <a class="btn btn-success" href="admin/match/editRuleUI?ruleId=${rule.mrId}">
                                                     编辑
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${rule.mrId})">
+                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatchRul(${rule.mrId})">
                                                     删除
                                                 </a>
                                             </td>
@@ -95,7 +95,7 @@
                 <h4 class="modal-title">提示</h4>
             </div>
             <div class="modal-body">确定要这么操作吗</div>
-            <input id="parkId" value="" type="hidden"/>
+            <input id="ruleId" value="" type="hidden"/>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
                 <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
@@ -120,8 +120,12 @@
                 $("#searchBtn").click();
             }
         });
+        $("#sureBtn").click(function () {
+            window.location.href="admin/match/delMatch?matchId="+$("#matchId").val();
+        });
     });
-    function delMatch(matchId) {
+    function delMatchRul(ruleId) {
+        $("#ruleId").val(ruleId);
         $("#myModal").modal("show");
     }
 </script>

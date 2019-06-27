@@ -230,7 +230,7 @@ public class AdminMatchController {
 	public String editRuleUI(ModelMap mm, Long ruleId){
 		try{
 			MatchRule matchRule = adminMatchService.getRuleById(ruleId);
-			mm.addAttribute("matchRule",matchRule);
+			mm.addAttribute("rule",matchRule);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("后台管理——编辑高球规则init出错。"+ e );
@@ -250,6 +250,23 @@ public class AdminMatchController {
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("后台管理——编辑高球规则时出错。"+ e );
+			return "admin/error";
+		}
+		return "redirect:ruleList";
+	}
+
+	/**
+	 * 删除高球规则
+	 * @param ruleId 规则id
+	 * @return
+	 */
+	@RequestMapping("delMatchRule")
+	public String delMatchRule(Long ruleId){
+		try{
+			adminMatchService.delMatchRule(ruleId);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("删除比赛规则出错。"+ e );
 			return "admin/error";
 		}
 		return "redirect:ruleList";
