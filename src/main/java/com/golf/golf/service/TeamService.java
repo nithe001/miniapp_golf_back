@@ -208,6 +208,8 @@ public class TeamService implements IBaseService {
 					List<Map<String, Object>> sumList = teamDao.getUserSumScore(userId,parp);
 					Map<String, Object> sum = sumList.get(0);
 					uc.putAll(sum);
+					//排序
+					//TODO
 				}
 			}
 
