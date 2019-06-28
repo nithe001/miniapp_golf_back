@@ -386,7 +386,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——赛长获取已经报名的用户
+	 * 比赛详情——赛长获取待分组人员
 	 * @return
 	 */
 	@ResponseBody
@@ -396,7 +396,7 @@ public class MatchController {
 			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, keyword, groupId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
-			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
+			String errmsg = "前台-比赛详情——赛长获取待分组人员时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);

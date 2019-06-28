@@ -5,6 +5,7 @@ import com.golf.golf.bean.DoubleRodUserScoreBean;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -97,7 +98,11 @@ public class MatchDoubleHoleService implements IBaseService {
 			if(matchService.getLongValue(map0,"ms_user_id") == null){
 				UserInfo userInfo = matchDao.get(UserInfo.class,userId0);
 				map0.put("ms_user_id",userId0);
-				map0.put("ms_user_name",userInfo.getUiRealName());
+				String userName = userInfo.getUiRealName();
+				if(StringUtils.isEmpty(userName)){
+					userName = userInfo.getUiNickName();
+				}
+				map0.put("ms_user_name",userName);
 			}
 			for(Map<String, Object> map1:uscoreList1){
 				//第二个用户本洞击出的杆数
@@ -110,7 +115,11 @@ public class MatchDoubleHoleService implements IBaseService {
 					if(matchService.getLongValue(map1,"ms_user_id") == null){
 						UserInfo userInfo = matchDao.get(UserInfo.class,userId1);
 						map1.put("ms_user_id",userId1);
-						map1.put("ms_user_name",userInfo.getUiRealName());
+						String userName = userInfo.getUiRealName();
+						if(StringUtils.isEmpty(userName)){
+							userName = userInfo.getUiNickName();
+						}
+						map1.put("ms_user_name",userName);
 					}
 					//第二个用户的杆数
 					map[1] = map1;

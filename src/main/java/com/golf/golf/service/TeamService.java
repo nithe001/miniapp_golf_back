@@ -34,11 +34,16 @@ public class TeamService implements IBaseService {
 
 	/**
 	 * 获取球队列表
-	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队
+	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队(显示待审核人数)
 	 * @return
 	 */
 	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
-		pageInfo = teamDao.getTeamList(searchBean,pageInfo);
+		if((Integer)searchBean.getParps().get("type") <3){
+			pageInfo = teamDao.getTeamList(searchBean,pageInfo);
+		}else if((Integer)searchBean.getParps().get("type") ==3){
+			//我创建的球队，包括待审核人数
+			pageInfo = teamDao.getMyCreateTeamList(searchBean,pageInfo);
+		}
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
 			getCaptain(pageInfo.getItems(), openid);
 		}
@@ -142,6 +147,18 @@ public class TeamService implements IBaseService {
 		teamInfo.setTiLogo(PropertyConst.DOMAIN+teamInfo.getTiLogo());
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
+		if(userList!= null && userList.size()>0){
+			for(Map<String, Object> user:userList){
+				String realName = matchService.getName(user,"uiRealName");
+				if(StringUtils.isNotEmpty(realName) && realName.length() >5){
+					user.put("uiRealName",realName.substring(0,5)+"...");
+				}
+				String nickName = matchService.getName(user,"uiNickName");
+				if(StringUtils.isNotEmpty(nickName) && nickName.length() >5){
+					user.put("uiNickName",nickName.substring(0,5)+"...");
+				}
+			}
+		}
 		result.put("userList",userList);
 		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userInfo.getUiId());
 		result.put("isCaptain",isCaptain);
@@ -181,13 +198,23 @@ public class TeamService implements IBaseService {
 		parp.put("changCi", changCi);
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-			List<Map<String, Object>> yearList = teamDao.getTeamPointByYear(parp);
+
+			//1.计算球友的参赛场次
+			List<Map<String, Object>> yearList = teamDao.getTeamUserChangCiListByYear(parp);
+			if(yearList != null && yearList.size()>0){
+				//2.计算每个球友的前n场的成绩 计算每个球友前n场的平均杆和总杆
+				for(Map<String, Object> uc:yearList){
+					Long userId = matchService.getLongValue(uc,"user_id");
+					List<Map<String, Object>> sumList = teamDao.getUserSumScore(userId,parp);
+					Map<String, Object> sum = sumList.get(0);
+					uc.putAll(sum);
+				}
+			}
+
+//			List<Map<String, Object>> yearList = teamDao.getTeamPointByYear(parp);
 			result.put("yearList",yearList);
-			//按场次统计
-//			List<Map<String, Object>> changCiList = teamDao.getTeamPointByChangci(parp);
-//			result.put("changCiList",changCiList.get(0).get(""));
 		}else{
-			//比赛榜 列出当年所有本球队相关的比赛情况统计
+			//比赛榜 列出当年所有本球队相关的比赛情况统计  只列比赛结束且球队确认过的比赛
 			parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
 			parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
 			List<Map<String, Object>> yearList = teamDao.getTeamMatchByYear(parp);
@@ -246,7 +273,20 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public List<Map<String, Object>> getAllUserListByTeamId(Long teamId) {
-		return teamDao.getUserListByTeamId(teamId, 2);
+		List<Map<String, Object>> userList = teamDao.getUserListByTeamId(teamId, 2);
+		if(userList!= null && userList.size()>0){
+			for(Map<String, Object> user:userList){
+				String realName = matchService.getName(user,"uiRealName");
+				if(StringUtils.isNotEmpty(realName) && realName.length() >5){
+					user.put("uiRealName",realName.substring(0,5)+"...");
+				}
+				String nickName = matchService.getName(user,"uiNickName");
+				if(StringUtils.isNotEmpty(nickName) && nickName.length() >5){
+					user.put("uiNickName",nickName.substring(0,5)+"...");
+				}
+			}
+		}
+		return userList;
 	}
 
 	/**

@@ -441,19 +441,25 @@ public class UserService implements IBaseService {
 		//差点
 		Integer chaPoint = matchService.getUserChaPoint(userId);
 		result.put("chaPoint",chaPoint);
-		//是否是本队队长
+		Long myUserId = getUserIdByOpenid(openid);
 		if(teamId != null){
-			Long isTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
-			result.put("isTeamCaptain",isTeamCaptain >0 ?true:false);
-			result.put("isMatchCaptain",true);
+			//被查看用户是否是本队队长
+			Long elseIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
+			//我是否是本队队长
+			Long meIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,myUserId);
+			result.put("elseIsTeamCaptain",elseIsTeamCaptain >0 ?true:false);
+			result.put("meIsTeamCaptain",meIsTeamCaptain >0 ?true:false);
 		}
 
-		//是否是本比赛的赛长
 		if(matchId != null){
-			Long isMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
-			result.put("isMatchCaptain",isMatchCaptain >0 ?true:false);
-			result.put("isTeamCaptain",true);
+			//被查看用户是否是本比赛的赛长
+			Long elseIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
+			//我是否是本比赛的赛长
+			Long meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
+			result.put("elseIsMatchCaptain",elseIsMatchCaptain >0 ?true:false);
+			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
 		}
+
 		return result;
 	}
 

@@ -246,6 +246,18 @@ public class MatchService implements IBaseService {
 				MatchGroupBean matchGroupBean = new MatchGroupBean();
 				matchGroupBean.setMatchGroup(matchGroup);
 				List<Map<String, Object>> groupUserList = matchDao.getMatchGroupListByGroupId(matchId, matchGroup.getMgId());
+				if(groupUserList != null && groupUserList.size()>0){
+					for(Map<String, Object> user:groupUserList){
+						String realName = getName(user,"uiRealName");
+						if(StringUtils.isNotEmpty(realName) && realName.length() >3){
+							user.put("uiRealName",realName.substring(0,3)+"...");
+						}
+						String nickName = getName(user,"uiNickName");
+						if(StringUtils.isNotEmpty(nickName) && nickName.length() >3){
+							user.put("uiNickName",nickName.substring(0,3)+"...");
+						}
+					}
+				}
 				matchGroupBean.setUserInfoList(groupUserList);
 				groupList.add(matchGroupBean);
 			}
@@ -257,12 +269,15 @@ public class MatchService implements IBaseService {
 		if (captainCount > 0) {
 			isMatchCaptain = true;
 		}
+		//报名人数
+		Long userCount = matchDao.getMatchUserCount(matchId);
 
 		result.put("matchInfo", matchInfo);
 		result.put("watchList", watchList);
 		result.put("captainList", captainList);
 		result.put("groupList", groupList);
 		result.put("isMatchCaptain", isMatchCaptain);
+		result.put("userCount", userCount);
 		return result;
 	}
 
@@ -635,6 +650,7 @@ public class MatchService implements IBaseService {
 
 			//创建用户分组mapping 创建人自动成为赛长
 			MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+			String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
 			matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
 			if(StringUtils.isNotEmpty(chooseTeamId) && !chooseTeamId.equals("0") && !chooseTeamId.equals("null") && !chooseTeamId.equals("undefined")){
 				matchUserGroupMapping.setMugmTeamId(Long.parseLong(chooseTeamId));
@@ -643,9 +659,9 @@ public class MatchService implements IBaseService {
 			matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 			matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
 			matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
-			matchUserGroupMapping.setMugmUserName(userInfo.getUiRealName());
+			matchUserGroupMapping.setMugmUserName(userName);
 			matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
-			matchUserGroupMapping.setMugmCreateUserName(userInfo.getUiRealName());
+			matchUserGroupMapping.setMugmCreateUserName(userName);
 			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 			matchDao.save(matchUserGroupMapping);
 
@@ -857,7 +873,7 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 比赛详情——赛长获取已经报名的用户
+	 * 比赛详情——赛长获取待分组人员
 	 *
 	 * @return
 	 */
@@ -957,6 +973,18 @@ public class MatchService implements IBaseService {
 			//单练
 			userList = matchDao.getSingleUserListById(matchId, groupId);
 		}
+		if(userList != null && userList.size()>0){
+			for(Map<String, Object> user:userList){
+				String realName = getName(user,"uiRealName");
+				if(realName != null && realName.length() >5){
+					user.put("uiRealName",realName.substring(0,5)+"...");
+				}
+				String nickName = getName(user,"uiNickName");
+				if(nickName != null && nickName.length() >5){
+					user.put("uiNickName",nickName.substring(0,5)+"...");
+				}
+			}
+		}
 		result.put("userList", userList);
 
 		//半场球洞
@@ -976,7 +1004,11 @@ public class MatchService implements IBaseService {
 				Long teamId = getLongValue(user, "team_id");
 				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
 				bean.setUserId(uiId);
-				bean.setUserName(getName(user, "uiRealName"));
+				String userName = getName(user, "uiRealName");
+				if(StringUtils.isEmpty(userName)){
+					userName = getName(user, "uiNickName");
+				}
+				bean.setUserName(userName);
 				//本用户得分情况
 				if (uiId != null) {
 					List<Map<String, Object>> uscoreList = matchDao.getScoreByUserId(groupId, uiId, matchInfo, teamId);
@@ -1262,7 +1294,9 @@ public class MatchService implements IBaseService {
 				updatePointByHoleScore(matchId, teamId, baseScore, winScore);
 			}
 			//将该组的得分成绩标为已确认
-			matchDao.updateMatchScoreById(matchId,teamId);
+			//获取本球队中以入队成功的球友
+			List<Long> userList = matchDao.getTeamUserList(teamId);
+			matchDao.updateMatchScoreById(matchId,teamId,userList);
 			return true;
 		}
 		return false;
@@ -1624,6 +1658,18 @@ public class MatchService implements IBaseService {
 
 		//比赛的所有用户(首列显示)
 		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,null,0);
+		if(userList!= null && userList.size()>0){
+			for(Map<String, Object> user:userList){
+				String realName = getName(user,"uiRealName");
+				if(StringUtils.isNotEmpty(realName) && realName.length() >7){
+					user.put("uiRealName",realName.substring(0,7)+"...");
+				}
+				String nickName = getName(user,"uiNickName");
+				if(StringUtils.isNotEmpty(nickName) && nickName.length() >7){
+					user.put("uiNickName",nickName.substring(0,7)+"...");
+				}
+			}
+		}
 		result.put("userList", userList);
 
 		//本组用户每个洞得分情况
@@ -1756,6 +1802,18 @@ public class MatchService implements IBaseService {
 			scoreType = 1;
 		}
 		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,teamId,scoreType);
+		if(userList!= null && userList.size()>0){
+			for(Map<String, Object> user:userList){
+				String realName = getName(user,"uiRealName");
+				if(StringUtils.isNotEmpty(realName) && realName.length() >7){
+					user.put("uiRealName",realName.substring(0,7)+"...");
+				}
+				String nickName = getName(user,"uiNickName");
+				if(StringUtils.isNotEmpty(nickName) && nickName.length() >7){
+					user.put("uiNickName",nickName.substring(0,7)+"...");
+				}
+			}
+		}
 		result.put("userList", userList);
 
 		//本组用户每个洞得分情况
