@@ -18,5 +18,7 @@ public class Const {
 	public static Integer ROWSPERPAGE = 20;
 	/** 列表页每页记录数-前台 */
 	public static Integer ROWSPERPAGE_FRONT = 10;
+	/** 默认杆数（默认球友得分） */
+	public static Integer DEFAULT_ROD_NUM = 110;
 
 }

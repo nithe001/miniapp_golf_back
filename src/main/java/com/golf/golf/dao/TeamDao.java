@@ -224,12 +224,14 @@ public class TeamDao extends CommonDao {
 
 	/**
 	 * 计算每个球友前n场的平均杆和总杆 按平均杆排名 单练的不算入内
+	 * 积分榜那里的平均杆数是指每场（18洞）的平均杆数，不是每洞的。
+	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 	 * @return
 	 */
 	public List<Map<String, Object>> getUserSumScore(Long userId, Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		//获取用户的总参赛场次
-		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /(:changCi * 18),2) AS avgRodNum FROM ");
+		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /:changCi,2) AS avgRodNum FROM ");
 		hql.append(" (");
 		hql.append(" SELECT " +
 				"s.ms_user_id AS userId, " +
@@ -247,96 +249,6 @@ public class TeamDao extends CommonDao {
 		hql.append(") AS t ");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
-
-
-	/**
-	 * 获取球队记分详情 按平均杆排名 单练的不算入内
-	 *
-	 * 只计算比赛结束并且球队确认过的场次成绩
-	 * @return
-	 */
-	public List<Map<String, Object>> getTeamPointByYear_notuse(Map<String, Object> parp) {
-		StringBuilder allHql = new StringBuilder();
-		StringBuilder countHhql = new StringBuilder();
-		StringBuilder changciHql = new StringBuilder();
-		//获取用户的总参赛场次
-		countHhql.append("select t.user_id,count(t.match_id)as totalMatchNum,t.point from (" +
-						"select tum.tum_user_id as user_id,s.ms_match_id as match_id,tum.tum_point as point from team_user_mapping as tum LEFT JOIN match_score as s " +
-						"on (tum.tum_user_id = s.ms_user_id and s.ms_is_team_submit = 1 " +
-						"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear )" +
-						"GROUP BY tum.tum_user_id ,s.ms_match_id)" +
-						"as t group by t.user_id");
-		//获取用户前n场的总杆数和平均杆数
-		changciHql.append(" SELECT  " +
-					" tt.user_id,  " +
-					" sum(tt.sum_rod_num) as sumRodNum,  " +
-					" round((sum(tt.sum_rod_num) /(:changCi*18)),2) AS avgRodNum  " +
-					"FROM  " +
-						" (  " +
-						"  SELECT *  FROM  " +
-						"   (  " +
-						"    SELECT  " +
-						"     tum.tum_user_id AS user_id,  " +
-						"     s.ms_match_id AS match_id,  " +
-						"     sum(s.ms_rod_num) AS sum_rod_num  " +
-						"    FROM  " +
-						"     team_user_mapping AS tum  " +
-						"    LEFT JOIN match_score AS s ON (  " +
-						"     tum.tum_user_id = s.ms_user_id  " +
-						"     AND s.ms_is_team_submit = 1 and s.ms_create_time >=:startYear AND s.ms_create_time <=:endYear " +
-						"    )  " +
-						"    WHERE  " +
-						"     tum.tum_user_type != 2 " +
-						"    GROUP BY  " +
-						"     s.ms_match_id ,s.ms_user_id " +
-						"    ORDER BY  " +
-						"    IF (ISNULL(sum(s.ms_rod_num)),1,0),  " +
-						"    sum(s.ms_rod_num)  " +
-						"   ) AS t  " +
-						"  WHERE  " +
-						"   (  " +
-						"    SELECT  " +
-						"     count(1) + 1  " +
-						"    FROM  " +
-						"     (  " +
-						"      SELECT  " +
-						"       tum.tum_user_id AS user_id,  " +
-						"       s.ms_match_id AS match_id,  " +
-						"       sum(s.ms_rod_num) AS sum_rod_num  " +
-						"      FROM  " +
-						"       team_user_mapping AS tum  " +
-						"      LEFT JOIN match_score AS s ON (  " +
-						"       tum.tum_user_id = s.ms_user_id  " +
-						"       AND s.ms_is_team_submit = 1 and s.ms_create_time >=:startYear AND s.ms_create_time <=:endYear " +
-						"      )  " +
-						"      WHERE  " +
-						"       tum.tum_user_type != 2 " +
-						"      GROUP BY  " +
-						"       s.ms_match_id,s.ms_user_id  " +
-						"      ORDER BY  " +
-						"  " +
-						"      IF (ISNULL(sum(s.ms_rod_num)),1,0),  " +
-						"      sum(s.ms_rod_num)  " +
-						"     ) AS ts  " +
-						"    WHERE  " +
-						"     ts.user_id = t.user_id  " +
-						"    AND ts.sum_rod_num < t.sum_rod_num  " +
-						"   ) <= :changCi  " +
-						" ) AS tt  " +
-						"GROUP BY tt.user_id ");
-
-
-		allHql.append("select u.ui_id as uid,u.ui_nick_name as nickName,u.ui_real_name as realName,count.totalMatchNum,count.point,changci.sumRodNum,changci.avgRodNum ");
-		allHql.append("from ("+countHhql.toString()+") as count ");
-		allHql.append(" left join ");
-		allHql.append("("+changciHql.toString()+") as changci");
-		allHql.append(" on count.user_id = changci.user_id ");
-		allHql.append(" left join user_info as u on u.ui_id = count.user_id ");
-		allHql.append(" order by IF(ISNULL(avgRodNum),1,0),avgRodNum ");
-		List<Map<String, Object>> list = dao.createSQLQuery(allHql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
-		return list;
-	}
-
 
 	/**
 	 * 获取球队已报名的用户

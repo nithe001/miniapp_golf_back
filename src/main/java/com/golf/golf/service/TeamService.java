@@ -6,6 +6,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
+import com.golf.golf.bean.TeamPointBean;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
@@ -14,9 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 球队管理
@@ -185,6 +184,8 @@ public class TeamService implements IBaseService {
 
 	/**
 	 * 获取球队记分详情 只计算比赛结束并且球队确认过的场次成绩
+	 * 积分榜那里的平均杆数是指每场（18洞）的平均杆数，不是每洞的。
+	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 	 * @param teamId:球队id
 	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
 	 * @return
@@ -198,23 +199,47 @@ public class TeamService implements IBaseService {
 		parp.put("changCi", changCi);
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-
 			//1.计算球友的参赛场次
+			List<TeamPointBean> list = new ArrayList<>();
 			List<Map<String, Object>> yearList = teamDao.getTeamUserChangCiListByYear(parp);
 			if(yearList != null && yearList.size()>0){
 				//2.计算每个球友的前n场的成绩 计算每个球友前n场的平均杆和总杆
 				for(Map<String, Object> uc:yearList){
+					TeamPointBean teamPointBean = new TeamPointBean();
 					Long userId = matchService.getLongValue(uc,"user_id");
+
+					teamPointBean.setUserId(userId);
+					teamPointBean.setRealName(matchService.getName(uc,"realName"));
+					teamPointBean.setNickName(matchService.getName(uc,"nickName"));
+					teamPointBean.setTotalMatchNum(matchService.getIntegerValue(uc,"totalMatchNum"));
+					teamPointBean.setPoint(matchService.getIntegerValue(uc,"point"));
+
+					//查每个用户的得分
 					List<Map<String, Object>> sumList = teamDao.getUserSumScore(userId,parp);
 					Map<String, Object> sum = sumList.get(0);
-					uc.putAll(sum);
-					//排序
-					//TODO
+					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
+					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
+					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
+//					uc.putAll(sum);
+					list.add(teamPointBean);
+				}
+				//排序
+//				Collections.sort(list);
+				if(type == 0){
+					//比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
+					Collections.sort(list,new Comparator<TeamPointBean>(){ public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2)
+					{
+						return new Double(teamPointBean1.getAvgRodNum()).compareTo(new Double(teamPointBean2.getAvgRodNum()));}
+					});
+				}else{
+					//积分榜是积分多的排前面
+					Collections.sort(list,new Comparator<TeamPointBean>(){ public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2)
+					{
+						return teamPointBean1.getSumRodNum().compareTo(teamPointBean2.getSumRodNum());}
+					});
 				}
 			}
-
-//			List<Map<String, Object>> yearList = teamDao.getTeamPointByYear(parp);
-			result.put("yearList",yearList);
+			result.put("yearList",list);
 		}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计  只列比赛结束且球队确认过的比赛
 			parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));

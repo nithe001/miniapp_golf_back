@@ -19,6 +19,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 	private String mugmGroupName;
 	private Long mugmUserId;
 	private String mugmUserName;
+	private Integer mugmIsDel;
 	private Long mugmCreateUserId;
 	private String mugmCreateUserName;
 	private Long mugmCreateTime;
@@ -35,7 +36,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 	/** full constructor */
 	public MatchUserGroupMapping(Long mugmMatchId, Long mugmTeamId, Integer mugmUserType,
 								 Long mugmGroupId, String mugmGroupName, Long mugmUserId,
-								 String mugmUserName, Long mugmCreateUserId,
+								 String mugmUserName, Integer mugmIsDel,Long mugmCreateUserId,
 								 String mugmCreateUserName, Long mugmCreateTime,Long mugmUpdateUserId,
 								 String mugmUpdateUserName,Long mugmUpdateTime) {
 		this.mugmMatchId = mugmMatchId;
@@ -45,6 +46,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 		this.mugmGroupName = mugmGroupName;
 		this.mugmUserId = mugmUserId;
 		this.mugmUserName = mugmUserName;
+		this.mugmIsDel = mugmIsDel;
 		this.mugmCreateUserId = mugmCreateUserId;
 		this.mugmCreateUserName = mugmCreateUserName;
 		this.mugmCreateTime = mugmCreateTime;
@@ -126,6 +128,16 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 
 	public void setMugmUserName(String mugmUserName) {
 		this.mugmUserName = mugmUserName;
+	}
+
+
+	@Column(name = "mugm_is_del")
+	public Integer getMugmIsDel() {
+		return mugmIsDel;
+	}
+
+	public void setMugmIsDel(Integer mugmIsDel) {
+		this.mugmIsDel = mugmIsDel;
 	}
 
 	@Column(name = "mugm_create_user_id")

@@ -80,9 +80,7 @@ public class MatchController {
 			searchBean.addParpField("type", type);
 			Long userId = userService.getUserIdByOpenid(openid);
 			searchBean.addParpField("userId", userId);
-			if(userId != null){
-				pageInfo = matchService.getMatchList(searchBean, pageInfo);
-			}
+			pageInfo = matchService.getMatchList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
 			String errmsg = "前台-获取比赛列表出错。openid="+openid;
@@ -967,6 +965,11 @@ public class MatchController {
 
 	/**
 	 * 比赛——group——分队统计
+	 * 分队统计的前n名，就是指每个队排前n名的人的杆数和排名
+	 * 比杆赛：如果是比杆赛，名次就取每队成绩最好（杆数最少）的前n人（如果是双人，就是前5组）计算
+	 * 					按创建比赛时“参赛范围”选择的球队统计成绩并按平均杆数排名，（球队、参赛人数、平均杆数、总杆数、排名）
+	 * 	如果是比洞赛，n就按按分组顺序取前n组，还按原来的表头计算
+	 * 比洞赛：用不同的表。（球队、获胜组、打平组、得分、排名）
 	 * @return
 	 */
 	@ResponseBody
