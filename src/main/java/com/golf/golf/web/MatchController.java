@@ -43,15 +43,15 @@ public class MatchController {
 	@Autowired
 	private UserService userService;
 
-	//个人比洞记分卡service
+	//个人比洞记分卡service  每组2人
 	@Autowired
 	protected MatchSingleHoleService matchSingleHoleService;
 
-	//双人比杆记分卡service 同一个球队的放一行
+	//双人比杆记分卡service 每组4人  同一个球队的放一行
 	@Autowired
 	protected MatchDoubleRodService matchDoubleRodService;
 
-	//双人比洞记分卡service 同一个球队的放一行
+	//双人比洞记分卡service 每组4人 同一个球队的放一行
 	@Autowired
 	protected MatchDoubleHoleService matchDoubleHoleService;
 
@@ -114,6 +114,7 @@ public class MatchController {
 	 * 创建比赛——选择上报的上级球队——获取参赛用户所在的上级球队
 	 * 参赛球队自动在各自球队记分，不需要设置上报球队，
 	 * 但是这两个球队的球友都有来自北大队的，就需要设置上报球队为北大队，
+	 * 反正就按某个上报球队和所有参赛球队的交集筛选队员成绩并算积分就行
 	 * @return
 	 */
 	@ResponseBody
@@ -873,9 +874,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("cancelScoreByTeamId")
-	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId) {
+	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId, String openid) {
 		try {
-			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId);
+			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,openid);
 			if(flag){
 				return JsonWrapper.newDataInstance(1);
 			}else{

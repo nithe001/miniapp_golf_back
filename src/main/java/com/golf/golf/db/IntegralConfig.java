@@ -18,6 +18,7 @@ public class IntegralConfig implements java.io.Serializable {
 
 	private Long icId;
 	private Long icMatchId;
+	private Long icReportTeamId;
 	private Long icTeamId;
 	private Integer icBaseScore;
 	private Integer icRodCha;
@@ -36,11 +37,12 @@ public class IntegralConfig implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public IntegralConfig(Long icMatchId, Long icTeamId, Integer icBaseScore,
+	public IntegralConfig(Long icMatchId, Long icReportTeamId,Long icTeamId, Integer icBaseScore,
 			Integer icRodCha, Integer icWinScore, Long icCreateTime,
 			Long icCreateUserId, String icCreateUserName, Long icUpdateTime,
 			Long icUpdateUserId, String icUpdateUserName) {
 		this.icMatchId = icMatchId;
+		this.icReportTeamId = icReportTeamId;
 		this.icTeamId = icTeamId;
 		this.icBaseScore = icBaseScore;
 		this.icRodCha = icRodCha;
@@ -72,6 +74,15 @@ public class IntegralConfig implements java.io.Serializable {
 
 	public void setIcMatchId(Long icMatchId) {
 		this.icMatchId = icMatchId;
+	}
+
+	@Column(name = "ic_report_team_id")
+	public Long getIcReportTeamId() {
+		return icReportTeamId;
+	}
+
+	public void setIcReportTeamId(Long icReportTeamId) {
+		this.icReportTeamId = icReportTeamId;
 	}
 
 	@Column(name = "ic_team_id")

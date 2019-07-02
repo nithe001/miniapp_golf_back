@@ -199,8 +199,8 @@ public class TeamService implements IBaseService {
 		parp.put("changCi", changCi);
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-			//1.计算球友的参赛场次
 			List<TeamPointBean> list = new ArrayList<>();
+			//1.计算球友的总参赛场次和总积分
 			List<Map<String, Object>> yearList = teamDao.getTeamUserChangCiListByYear(parp);
 			if(yearList != null && yearList.size()>0){
 				//2.计算每个球友的前n场的成绩 计算每个球友前n场的平均杆和总杆
@@ -220,22 +220,24 @@ public class TeamService implements IBaseService {
 					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
-//					uc.putAll(sum);
 					list.add(teamPointBean);
 				}
 				//排序
-//				Collections.sort(list);
 				if(type == 0){
 					//比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
-					Collections.sort(list,new Comparator<TeamPointBean>(){ public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2)
-					{
-						return new Double(teamPointBean1.getAvgRodNum()).compareTo(new Double(teamPointBean2.getAvgRodNum()));}
+					Collections.sort(list,new Comparator<TeamPointBean>(){
+						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
+							if(teamPointBean1.getAvgRodNum() != 0 && teamPointBean2.getAvgRodNum() != 0){
+								return new Double(teamPointBean1.getAvgRodNum()).compareTo(new Double(teamPointBean2.getAvgRodNum()));
+							}
+							return 0;
+						}
 					});
 				}else{
 					//积分榜是积分多的排前面
 					Collections.sort(list,new Comparator<TeamPointBean>(){ public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2)
 					{
-						return teamPointBean1.getSumRodNum().compareTo(teamPointBean2.getSumRodNum());}
+						return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());}
 					});
 				}
 			}
@@ -355,6 +357,16 @@ public class TeamService implements IBaseService {
 	 */
 	public Long getIsCaptain(Long userId, Long teamId) {
 		return teamDao.getIsCaptain(userId, teamId);
+	}
+
+	/**
+	 * 是否是上报球队队长
+	 * @param userId:用户id
+	 * @param reportTeamIdList:球队id
+	 * @return
+	 */
+	public Long getIsReportTeamCaptain(Long userId, List<Long> reportTeamIdList) {
+		return teamDao.getIsReportTeamCaptain(userId, reportTeamIdList);
 	}
 
 	/**

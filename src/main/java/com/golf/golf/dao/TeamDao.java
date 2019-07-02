@@ -8,6 +8,7 @@ import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -206,12 +207,11 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
-	 * 计算球友的参赛场次
+	 * 计算球友的总参赛场次和总积分
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamUserChangCiListByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		//获取用户的总参赛场次
 		hql.append("select t.user_id,u.ui_real_name as realName,u.ui_nick_name as nickName,count(t.match_id)as totalMatchNum,t.point from (" +
 				"select tum.tum_user_id as user_id,s.ms_match_id as match_id,tum.tum_point as point from team_user_mapping as tum LEFT JOIN match_score as s " +
 				"on (tum.tum_user_id = s.ms_user_id and s.ms_is_team_submit = 1 " +
@@ -341,6 +341,22 @@ public class TeamDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT COUNT(*) FROM TeamUserMapping as tum where tum.tumUserType = 0 and tum.tumTeamId = "+teamId+ " and tum.tumUserId = "+userId);
 		return dao.createCountQuery(hql.toString());
+	}
+
+	/**
+	 * 是否是上报球队队长
+	 * @param userId:用户id
+	 * @param reportTeamIdList:球队id
+	 * @return
+	 */
+	public Long getIsReportTeamCaptain(Long userId, List<Long> reportTeamIdList) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("userId",userId);
+		parp.put("reportTeamIdList",reportTeamIdList);
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT COUNT(*) FROM TeamUserMapping as tum where tum.tumUserType = 0 " +
+				"and tum.tumTeamId in (:reportTeamIdList) and tum.tumUserId = :userId ");
+		return dao.createCountQuery(hql.toString(),parp);
 	}
 
 
