@@ -732,6 +732,7 @@ public class MatchService implements IBaseService {
 				matchUserGroupMapping.setMugmTeamId(Long.parseLong(chooseTeamId));
 			}
 			matchUserGroupMapping.setMugmUserType(0);
+			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 			matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
 			matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
