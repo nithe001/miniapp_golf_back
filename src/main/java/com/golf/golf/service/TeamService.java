@@ -199,22 +199,33 @@ public class TeamService implements IBaseService {
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
 			List<TeamPointBean> list = new ArrayList<>();
-			//1.计算球友的总参赛场次和总积分
-			List<Map<String, Object>> yearList = teamDao.getTeamUserChangCiListByYear(parp);
-			if(yearList != null && yearList.size()>0){
-				//2.计算每个球友的前n场的成绩 计算每个球友前n场的平均杆和总杆
-				for(Map<String, Object> uc:yearList){
+			//获取本球队所有的球友
+			List<TeamUserMapping> userList = teamDao.getTeamUserList(parp);
+			if(userList != null && userList.size()>0){
+				for(TeamUserMapping user:userList){
 					TeamPointBean teamPointBean = new TeamPointBean();
-					Long userId = matchService.getLongValue(uc,"user_id");
-
+					Long userId = user.getTumUserId();
+					UserInfo userInfo = teamDao.get(UserInfo.class,userId);
 					teamPointBean.setUserId(userId);
-					teamPointBean.setRealName(matchService.getName(uc,"realName"));
-					teamPointBean.setNickName(matchService.getName(uc,"nickName"));
-					teamPointBean.setTotalMatchNum(matchService.getIntegerValue(uc,"totalMatchNum"));
+					teamPointBean.setRealName(userInfo.getUiRealName());
+					teamPointBean.setNickName(userInfo.getUiNickName());
 
-					//查每个用户的得分 和 场次下的总积分
+					//获取本球友代表此球队的参赛场次
 					parp.put("userId",userId);
-					List<Map<String, Object>> sumList = teamDao.getUserSumScore(parp);
+					List<Map<String, Object>> joinList = teamDao.getJoinMatchChangCiByYear(parp);
+					if(joinList!=null&& joinList.size()>0){
+						teamPointBean.setTotalMatchNum(matchService.getIntegerValue(joinList.get(0),"count"));
+					}else{
+						teamPointBean.setTotalMatchNum(joinList.size());
+					}
+					//查每个用户的得分 和 场次下的总积分
+					List<Map<String, Object>> sumList = null;
+					if(type == 0){
+						//计算每个用户的总杆数
+						sumList = teamDao.getUserSumRodScore(parp);
+					}else {
+						sumList = teamDao.getUserSumPointScore(parp);
+					}
 					Map<String, Object> sum = sumList.get(0);
 					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));

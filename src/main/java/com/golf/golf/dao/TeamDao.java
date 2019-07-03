@@ -206,19 +206,57 @@ public class TeamDao extends CommonDao {
 		dao.executeHql(hql.toString());
 	}
 
+
 	/**
-	 * 计算球友的总参赛场次和总积分
+	 * 获取本球友代表此球队的参赛场次
 	 * @return
 	 */
-	public List<Map<String, Object>> getTeamUserChangCiListByYear(Map<String, Object> parp) {
+	public List<Map<String, Object>> getJoinMatchChangCiByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select t.user_id,u.ui_real_name as realName,u.ui_nick_name as nickName,count(t.match_id)as totalMatchNum,t.point from (" +
-				"select tum.tum_user_id as user_id,s.ms_match_id as match_id,tum.tum_point as point from team_user_mapping as tum LEFT JOIN match_score as s " +
-				"on (tum.tum_user_id = s.ms_user_id and s.ms_is_team_submit = 1 " +
-				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear )" +
-				"where tum.tum_team_id = :teamId " +
-				"GROUP BY tum.tum_user_id ,s.ms_match_id " +
-				")as t,user_info as u where t.user_id = u.ui_id group by t.user_id");
+		hql.append("select count(t.matchId) as count from (select s.ms_match_id as matchId from match_score as s " +
+				"where s.ms_team_id = :teamId and s.ms_user_id = :userId " +
+				"and s.ms_is_team_submit = 1 and s.ms_match_type = 1 " +
+				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
+				" GROUP BY s.ms_match_id) as t ");
+		 return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+	}
+
+
+	/**
+	 * 获取本球队所有的球友
+	 * @return
+	 */
+	public List<TeamUserMapping> getTeamUserList(Map<String, Object> parp) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" from TeamUserMapping as t where t.tumTeamId = :teamId and t.tumUserType != 2 ");
+		return dao.createQuery(hql.toString(), parp);
+	}
+
+	/**
+	 * 计算每个球友前n场的平均杆和总杆 按平均杆排名 单练的不算入内
+	 * 积分榜那里的平均杆数是指每场（18洞）的平均杆数，不是每洞的。
+	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserSumRodScore(Map<String, Object> parp) {
+		StringBuilder hql = new StringBuilder();
+		//获取用户的总参赛场次
+		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /:changCi,2) AS avgRodNum FROM ");
+		hql.append(" (");
+		hql.append(" SELECT " +
+				"s.ms_user_id AS userId, " +
+				"s.ms_match_id AS matchId, " +
+				"sum(s.ms_rod_num) AS sumRod " +
+				"FROM match_score AS s " +
+				"WHERE s.ms_user_id = :userId "+
+				"and s.ms_team_id = :teamId "+
+				"and s.ms_type = 0 " +
+				"and s.ms_is_team_submit = 1 " +
+				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
+				"GROUP BY s.ms_match_id " +
+				"ORDER BY sumRod " +
+				"LIMIT 0,:changCi");
+		hql.append(") AS t ");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
@@ -228,7 +266,7 @@ public class TeamDao extends CommonDao {
 	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserSumScore(Map<String, Object> parp) {
+	public List<Map<String, Object>> getUserSumPointScore(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		//获取用户的总参赛场次
 		hql.append("SELECT t1.userId,sum(t1.sumRod) as sumRodNum,ROUND(sum(t1.sumRod) /:changCi,2) AS avgRodNum,t1.sumPoint FROM ");

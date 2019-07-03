@@ -1319,7 +1319,7 @@ public class MatchService implements IBaseService {
             //单人比洞 必须每组2人
             for(Map<String,Object> map: countList){
                 Long count = getLongValue(map,"count");
-                if(count != 2){
+                if(count > 2){
                     String groupName = getName(map,"groupName");
                     return groupName+" 参赛人数不符合要求，无法开始比赛。";
                 }
@@ -1328,7 +1328,7 @@ public class MatchService implements IBaseService {
 		    //双人比杆 每组4人
             for(Map<String,Object> map: countList){
                 Long count = getLongValue(map,"count");
-                if(count != 4 && count != 2){
+                if(count > 4){
                     String groupName = getName(map,"groupName");
                     return groupName+" 参赛人数不符合要求，无法开始比赛。";
                 }
@@ -1337,7 +1337,7 @@ public class MatchService implements IBaseService {
             //双人比洞 每组4人
             for(Map<String,Object> map: countList){
                 Long count = getLongValue(map,"count");
-                if(count != 4 && count != 2){
+                if(count > 4){
                     String groupName = getName(map,"groupName");
                     return groupName+" 参赛人数不符合要求，无法开始比赛。";
                 }
