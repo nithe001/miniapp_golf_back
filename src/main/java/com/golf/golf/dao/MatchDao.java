@@ -1346,7 +1346,7 @@ public class MatchDao extends CommonDao {
 				" and s.ms_user_id = "+userId +
 				" and s.ms_rod_num != 0 "+
 				" and s.ms_type = 0 "+
-				" GROUP BY s.ms_match_id HAVING count(s.ms_id)=2 ORDER BY sum limit 0,10 ");
+				" GROUP BY s.ms_match_id HAVING count(s.ms_id)=18 ORDER BY sum limit 0,10 ");
 		hql.append(" ) as t ");
 		return dao.createSQLQuery(hql.toString(),0,10);
 	}
