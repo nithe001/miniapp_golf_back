@@ -2557,17 +2557,17 @@ public class MatchService implements IBaseService {
 	 * 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.8
 	 * @return
 	 */
-	public Integer getUserChaPoint(Long userId) {
+	public Double getUserChaPoint(Long userId) {
 		//获取最近参加的10场比赛的id
 		List<Object> list = matchDao.getLessFiveMatchByUserId(userId);
 		if(list != null && list.size()>0){
 			BigDecimal avg = (BigDecimal)list.get(0);
 			if(avg != null){
-				BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(0, BigDecimal.ROUND_HALF_UP);
-				return processClll.intValue();
+				BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(1, BigDecimal.ROUND_HALF_UP);
+				return processClll.doubleValue();
 			}
 		}
-		return 0;
+		return 0.0;
 	}
 
 	/**

@@ -1339,7 +1339,7 @@ public class MatchDao extends CommonDao {
 	 */
 	public List<Object> getLessFiveMatchByUserId(Long userId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT AVG(t.sum) as avg FROM ( ");
+		hql.append("SELECT ROUND(AVG(t.sum),1) as avg FROM ( ");
 		hql.append("SELECT sum(s.ms_rod_num) AS sum FROM match_score AS s, match_info as m" +
 				" WHERE m.mi_type = 1 AND m.mi_is_end = 2 " +
 				" and m.mi_id = s.ms_match_id " +

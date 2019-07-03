@@ -53,7 +53,7 @@ public class UserService implements IBaseService {
 
 		}
 		//差点
-		Integer chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
+		Double chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
 		result.put("chaPoint",chaPoint);
 		return result;
 	}
@@ -68,7 +68,7 @@ public class UserService implements IBaseService {
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
 		result.put("userInfo",userInfo);
 		//差点
-		Integer chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
+		Double chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
 		result.put("chaPoint",chaPoint);
 		return result;
 	}
@@ -439,7 +439,7 @@ public class UserService implements IBaseService {
 		boolean isOpen = userInfoIsOpen(userId, openid);
 		result.put("isOpen",isOpen);
 		//差点
-		Integer chaPoint = matchService.getUserChaPoint(userId);
+		Double chaPoint = matchService.getUserChaPoint(userId);
 		result.put("chaPoint",chaPoint);
 		Long myUserId = getUserIdByOpenid(openid);
 		if(teamId != null){
