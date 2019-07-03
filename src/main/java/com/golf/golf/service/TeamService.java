@@ -3,7 +3,6 @@ package com.golf.golf.service;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.TeamPointBean;

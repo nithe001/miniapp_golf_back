@@ -316,18 +316,13 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select t.*,sum(s.ms_rod_num) as sumRodNum from ( ");
 		hql.append("SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
-					"count(mugm.mugm_user_id) as userCount,c.ic_base_score as baseScore," +
+					"team.ti_name as teamName,c.ic_base_score as baseScore," +
 					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
-					"FROM match_user_group_mapping AS mugm, match_info AS m,integral_config AS c " +
-					"WHERE mugm.mugm_match_id = m.mi_id and mugm.mugm_team_id = :teamId " +
-					"and m.mi_id = c.ic_match_id and m.mi_type = 1 " +
+					"FROM integral_config AS c,match_info as m,team_info as team " +
+					"WHERE c.ic_match_id = m.mi_id and (c.ic_team_id = :teamId or c.ic_report_team_id = :teamId) and c.ic_team_id = team.ti_id " +
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
-		hql.append(")as t,match_score as s ");
-		hql.append("where t.matchId = s.ms_match_id order by sumRodNum ");
-		Integer changCi = (Integer)parp.get("changCi");
-		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,0, changCi, Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
 
