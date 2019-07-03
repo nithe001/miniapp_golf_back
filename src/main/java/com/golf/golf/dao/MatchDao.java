@@ -1341,11 +1341,12 @@ public class MatchDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT AVG(t.sum) as avg FROM ( ");
 		hql.append("SELECT sum(s.ms_rod_num) AS sum FROM match_score AS s, match_info as m" +
-				" WHERE m.mi_type = 1 " +
-				"and m.mi_id = s.ms_match_id " +
-				"and s.ms_user_id = "+userId +
+				" WHERE m.mi_type = 1 AND m.mi_is_end = 2 " +
+				" and m.mi_id = s.ms_match_id " +
+				" and s.ms_user_id = "+userId +
 				" and s.ms_rod_num != 0 "+
-				"GROUP BY s.ms_match_id HAVING count(s.ms_id)>18 ORDER BY s.ms_create_time DESC ");
+				" and s.ms_type = 0 "+
+				" GROUP BY s.ms_match_id HAVING count(s.ms_id)=2 ORDER BY sum limit 0,10 ");
 		hql.append(" ) as t ");
 		return dao.createSQLQuery(hql.toString(),0,10);
 	}

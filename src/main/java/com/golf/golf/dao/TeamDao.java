@@ -317,7 +317,7 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
-					"team.ti_name as teamName,c.ic_base_score as baseScore," +
+					"team.ti_abbrev as teamAbbrev,c.ic_base_score as baseScore," +
 					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
 					"FROM integral_config AS c,match_info as m,team_info as team " +
 					"WHERE c.ic_match_id = m.mi_id and (c.ic_team_id = :teamId or c.ic_report_team_id = :teamId) and c.ic_team_id = team.ti_id " +
