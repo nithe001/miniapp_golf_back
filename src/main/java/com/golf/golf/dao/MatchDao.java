@@ -1896,4 +1896,15 @@ public class MatchDao extends CommonDao {
 		sql.append(" GROUP BY s.msUserId " );
 		return dao.createQuery(sql.toString());
 	}
+
+	//获取球友本次比赛的积分
+	public TeamUserPoint getTeamUserPoint(Long matchId, Long teamId, Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("FROM TeamUserPoint AS t where t.tupMatchId = "+matchId+" and t.tupTeamId ="+teamId+" and t.tupUserId = "+userId);
+		List<TeamUserPoint> list = dao.createQuery(sql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
 }

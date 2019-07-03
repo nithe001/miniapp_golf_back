@@ -838,7 +838,7 @@ public class MatchController {
 
 
 	/**
-	 * 成绩上报 计算积分（注意球友加入球队是否成功）
+	 * 成绩上报 计算积分（注意球友加入球队是否成功） 允许重复上报
 	 * @param matchId 比赛id,
 	 * @param teamId 上报球队id,
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
@@ -852,18 +852,14 @@ public class MatchController {
 	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
 										   Integer rodScore, Integer winScore, String openid) {
 		try {
-			boolean flag = matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore, openid);
-			if(flag){
-				return JsonWrapper.newDataInstance(1);
-			}else{
-				return JsonWrapper.newDataInstance(0);
-			}
+			matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore, openid);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
+		return JsonWrapper.newSuccessInstance();
 	}
 
 	/**

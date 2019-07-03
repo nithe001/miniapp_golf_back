@@ -228,25 +228,31 @@ public class TeamDao extends CommonDao {
 	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserSumScore(Long userId, Map<String, Object> parp) {
+	public List<Map<String, Object>> getUserSumScore(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		//获取用户的总参赛场次
-		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /:changCi,2) AS avgRodNum FROM ");
+		hql.append("SELECT t1.userId,sum(t1.sumRod) as sumRodNum,ROUND(sum(t1.sumRod) /:changCi,2) AS avgRodNum,t1.sumPoint FROM ");
 		hql.append(" (");
-		hql.append(" SELECT " +
-				"s.ms_user_id AS userId, " +
-				"s.ms_match_id AS matchId, " +
-				"sum(s.ms_rod_num) AS sumRod, " +
-				"avg(s.ms_rod_num) AS avgSumRod " +
-				"FROM match_score AS s ,match_info as m " +
-				"WHERE s.ms_user_id = " +userId+
-				" and s.ms_match_id = m.mi_id and m.mi_type = 1 " +
-				"and m.mi_is_end = 2  and s.ms_is_team_submit = 1 " +
-				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
-				" GROUP BY s.ms_match_id " +
-				"ORDER BY avgSumRod " +
-				"LIMIT 0,:changCi");
-		hql.append(") AS t ");
+		hql.append(" SELECT t.*, sum(p.tup_match_point) AS sumPoint FROM " +
+						"(");
+				hql.append(" SELECT " +
+						"s.ms_user_id AS userId, " +
+						"s.ms_match_id AS matchId, " +
+						"sum(s.ms_rod_num) AS sumRod " +
+						"FROM match_score AS s ,match_info as m " +
+						"WHERE s.ms_user_id = :userId " +
+						" and s.ms_match_id = m.mi_id and m.mi_type = 1 " +
+						"and m.mi_is_end = 2  and s.ms_is_team_submit = 1 " +
+						"AND s.ms_type = 0 AND s.ms_team_id = :teamId "+
+						" and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
+						" GROUP BY s.ms_match_id " +
+						"ORDER BY sumRod " +
+						"LIMIT 0,:changCi");
+				hql.append(") AS t,team_user_point AS p ");
+		hql.append("WHERE p.tup_match_id = t.matchId ");
+		hql.append("AND p.tup_user_id = :userId ");
+		hql.append("AND p.tup_team_id = :teamId ");
+		hql.append(" ) AS t1 ");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 

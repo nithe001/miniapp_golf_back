@@ -34,7 +34,6 @@ public class MatchSingleHoleService implements IBaseService {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		//固定的首列：本组用户
-//		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, groupId,null,0);
 		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
 		result.put("userList", userList);
 

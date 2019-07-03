@@ -1359,9 +1359,8 @@ public class MatchService implements IBaseService {
 	 * @param winScore  赢球奖分
 	 * @return
 	 */
-	public boolean submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
+	public void submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
 									   Integer rodScore, Integer winScore, String openid) {
-		boolean flag = false;
 		Long userId = userService.getUserIdByOpenid(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		String reportTeamIds = matchInfo.getMiReportScoreTeamId();
@@ -1375,15 +1374,11 @@ public class MatchService implements IBaseService {
 				isReportTeamCaptain = teamService.getIsCaptain(userId, reportTeamId);
 				if(isReportTeamCaptain >0){
 					//是上报球队队长
-					//新增、更新 上报球队——积分配置
-					flag = saveOrUpdateReportConfig(matchId, reportTeamId, teamId, baseScore, rodScore, winScore, openid);
-					if(!flag){
-						//已经上报过
-						return false;
-					}
+					//新增、更新 上报球队——积分配置 允许重复上报（修改）
+					saveOrUpdateReportConfig(matchId, reportTeamId, teamId, baseScore, rodScore, winScore, openid);
 					//获取本球队上报的球友
 					List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
-					//计算球友积分
+					//计算球友积分（一场比赛对应一次积分）
 					calculateScore(matchInfo,reportTeamId, userIdList, scoreType, baseScore, rodScore, winScore);
 				}
 			}
@@ -1391,19 +1386,15 @@ public class MatchService implements IBaseService {
 		//我是否是本球队队长，页面上其实已经做过判断，为了保险，此处再校验一次
 		Long isTeamCaptain = teamService.getIsCaptain(userId, teamId);
 		if(isTeamCaptain >0){
-			//更新配置
-			flag = saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore, openid);
-			if(!flag){
-				//已经上报过
-				return false;
-			}
-			//计算球友积分
+			//更新配置 允许重复上报（修改）
+			saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore, openid);
+			//计算球友积分（一场比赛对应一次积分）
 			calculateScore(matchInfo,teamId, null, scoreType, baseScore, rodScore, winScore);
 		}
-		return true;
 	}
 
 	//计算球友积分 teamId 球队id,上报球队id
+	//（一场比赛对应一次积分）
 	private void calculateScore(MatchInfo matchInfo, Long teamId, List<Long> userIdList, Integer scoreType, Integer baseScore,
 								Integer rodScore, Integer winScore) {
 		Integer format = matchInfo.getMiMatchFormat1();
@@ -1422,9 +1413,10 @@ public class MatchService implements IBaseService {
 		matchDao.updateMatchScoreById(matchInfo.getMiId(),teamId,userIdList);
 	}
 
-	//保存成绩提交的积分计算配置
-	private boolean saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore, String openid) {
+	//保存成绩提交的积分计算配置 允许重复上报（修改）
+	private void saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
+		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
 		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,null,teamId,0);
 		if(config == null){
 			config = new IntegralConfig();
@@ -1437,14 +1429,20 @@ public class MatchService implements IBaseService {
 			config.setIcCreateUserId(userInfo.getUiId());
 			config.setIcCreateUserName(userInfo.getUiRealName());
 			matchDao.save(config);
-			return true;
 		}else{
-			return false;
+			config.setIcBaseScore(baseScore);
+			config.setIcRodCha(rodScore);
+			config.setIcWinScore(winScore);
+			config.setIcUpdateTime(System.currentTimeMillis());
+			config.setIcUpdateUserId(userInfo.getUiId());
+			config.setIcUpdateUserName(userName);
+			matchDao.update(config);
 		}
 	}
-	//保存成绩提交的积分计算配置
-	private boolean saveOrUpdateReportConfig(Long matchId, Long reportTeamId, Long teamId, Integer baseScore, Integer rodScore, Integer winScore, String openid) {
+	//保存成绩提交的积分计算配置 允许重复上报（修改）
+	private void saveOrUpdateReportConfig(Long matchId, Long reportTeamId, Long teamId, Integer baseScore, Integer rodScore, Integer winScore, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
+		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
 		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,reportTeamId,teamId,1);
 		if(config == null){
 			config = new IntegralConfig();
@@ -1458,21 +1456,27 @@ public class MatchService implements IBaseService {
 			config.setIcWinScore(winScore);
 			config.setIcCreateTime(System.currentTimeMillis());
 			config.setIcCreateUserId(userInfo.getUiId());
-			config.setIcCreateUserName(userInfo.getUiRealName());
+			config.setIcCreateUserName(userName);
 			matchDao.save(config);
-			return true;
 		}else{
-			return false;
+			config.setIcBaseScore(baseScore);
+			config.setIcRodCha(rodScore);
+			config.setIcWinScore(winScore);
+			config.setIcUpdateTime(System.currentTimeMillis());
+			config.setIcUpdateUserId(userInfo.getUiId());
+			config.setIcUpdateUserName(userName);
+			matchDao.update(config);
 		}
 	}
 
 	/**
-	 * 成绩上报 比杆赛
+	 * 成绩上报 比杆赛   （一场比赛对应一次积分）
 	 * 积分“杆差倍数”和“赢球奖分”只能二选
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param teamId 上报球队id或者本球队id
 	 * 杆差倍数 ：球友积分=基础积分+（110-球友比分）*杆差倍数
 	 * 赢球奖分 ：球友积分=基础积分+赢球奖分/比赛排名
+	 *
 	 */
 	private void updatePointByRodScore(Long matchId, Long teamId, List<Long> userIdList,Integer scoreType, Integer baseScore,
 									   Integer rodScore, Integer winScore) {
@@ -1486,8 +1490,8 @@ public class MatchService implements IBaseService {
 					Integer score = getIntegerValue(scoreMap, "sumRodNum");
 					Long userId = getLongValue(scoreMap, "userId");
 					Integer point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodScore;
-					//更新该球友原先的积分情况
-					updatePointByIds(teamId, userId, point, 0);
+					//更新该球友原先的积分情况  （一场比赛对应一次积分）
+					updatePointByIds(matchId, teamId, userId, point, 0);
 				}
 			}
 		} else {
@@ -1510,7 +1514,7 @@ public class MatchService implements IBaseService {
 						BigDecimal c = a.add(b);
 						Double point = c.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();*/
 						//更新该球友原先的积分情况
-						updatePointByIds(teamIdByScore, userId, point, 0);
+						updatePointByIds(matchId, teamIdByScore, userId, point, 0);
 
 					}
 				}
@@ -1584,7 +1588,7 @@ public class MatchService implements IBaseService {
 						Long userId = getLongValue(scoreMap, "userId");
 						Integer point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodCha;
 						//更新该球友的积分情况
-						updatePointByIds(teamId, userId, point, 1);
+						updatePointByIds(matchInfo.getMiId(), teamId, userId, point, 1);
 					}
 				}
 			}else if(winScore != null){
@@ -1602,7 +1606,7 @@ public class MatchService implements IBaseService {
 							//计算得分
 							Integer point = baseScore + winScore/rank;
 							//更新该球友原先的积分情况
-							updatePointByIds(teamIdByScore, userId, point, 1);
+							updatePointByIds(matchInfo.getMiId(), teamIdByScore, userId, point, 1);
 						}
 					}
 				}
@@ -1650,7 +1654,7 @@ public class MatchService implements IBaseService {
 						}
 					}
 					//更新该球友的积分情况
-					updatePointByIds(teamId, userForTeam, point, 1);
+					updatePointByIds(matchInfo.getMiId(), teamId, userForTeam, point, 1);
 				}
 			}
 		}
@@ -1662,11 +1666,12 @@ public class MatchService implements IBaseService {
 
 
 	/**
-	 * 更新该球友原先的积分情况
+	 * 更新该球友原先的积分情况  （一场比赛对应一次积分）
 	 * type: 0:加积分   1：减积分
 	 */
-	private void updatePointByIds(Long teamId, Long userId, Integer point, Integer type) {
+	private void updatePointByIds(Long matchId, Long teamId, Long userId, Integer point, Integer type) {
 		UserInfo userInfo = userService.getUserById(userId);
+		//总积分
 		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(teamId, userId);
 		if (teamUserMapping.getTumPoint() == null || teamUserMapping.getTumPoint() == 0) {
 			teamUserMapping.setTumPoint(point);
@@ -1681,6 +1686,34 @@ public class MatchService implements IBaseService {
 		teamUserMapping.setTumUpdateUserId(userInfo.getUiId());
 		teamUserMapping.setTumUpdateUserName(userInfo.getUiRealName());
 		matchDao.update(teamUserMapping);
+		//比赛积分
+
+		TeamUserPoint teamUserPoint = matchDao.getTeamUserPoint(matchId, teamId, userId);
+		if(type == 0){
+			//加积分 或者 修改积分
+			if(teamUserPoint == null){
+				teamUserPoint = new TeamUserPoint();
+				teamUserPoint.setTupMatchId(matchId);
+				teamUserPoint.setTupTeamId(teamId);
+				teamUserPoint.setTupUserId(userId);
+				teamUserPoint.setTupMatchPoint(point);
+				teamUserPoint.setTupCreateUserId(userId);
+				teamUserPoint.setTupCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+				teamUserPoint.setTupCreateTime(System.currentTimeMillis());
+				matchDao.save(teamUserPoint);
+			}else{
+				teamUserPoint.setTupMatchPoint(point);
+				teamUserPoint.setTupUpdateUserId(userId);
+				teamUserPoint.setTupUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+				teamUserPoint.setTupUpdateTime(System.currentTimeMillis());
+				matchDao.update(teamUserPoint);
+			}
+		}else{
+			//撤销上报，删除球友比赛积分对应关系
+			if(teamUserPoint != null){
+				matchDao.del(teamUserPoint);
+			}
+		}
 	}
 
 
@@ -1729,7 +1762,7 @@ public class MatchService implements IBaseService {
 					}
 				}
 				//更新该球友的积分情况
-				updatePointByIds(teamId, userForTeam, point, 0);
+				updatePointByIds(matchId, teamId, userForTeam, point, 0);
 			}
 		}
 	}

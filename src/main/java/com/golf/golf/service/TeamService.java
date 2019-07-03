@@ -211,14 +211,15 @@ public class TeamService implements IBaseService {
 					teamPointBean.setRealName(matchService.getName(uc,"realName"));
 					teamPointBean.setNickName(matchService.getName(uc,"nickName"));
 					teamPointBean.setTotalMatchNum(matchService.getIntegerValue(uc,"totalMatchNum"));
-					teamPointBean.setPoint(matchService.getIntegerValue(uc,"point"));
 
-					//查每个用户的得分
-					List<Map<String, Object>> sumList = teamDao.getUserSumScore(userId,parp);
+					//查每个用户的得分 和 场次下的总积分
+					parp.put("userId",userId);
+					List<Map<String, Object>> sumList = teamDao.getUserSumScore(parp);
 					Map<String, Object> sum = sumList.get(0);
 					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
+					teamPointBean.setPoint(matchService.getIntegerValue(sum,"sumPoint"));
 					list.add(teamPointBean);
 				}
 				//排序
