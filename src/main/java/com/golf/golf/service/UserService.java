@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -415,10 +416,18 @@ public class UserService implements IBaseService {
 		parp.put("endTime", TimeUtil.getYearLast(Integer.parseInt(date)));
 		//今年参加比赛的场数
 		Long matchCount = dao.getMatchCountByYear(parp);
-		result.put("matchCount",matchCount == null ? 0:matchCount);
+		matchCount = matchCount==null?0:matchCount;
+		result.put("matchCount",matchCount);
 		//总杆数
 		Long sumRod = dao.getSumRod(parp);
-		result.put("sumRod",sumRod==null?0:sumRod);
+		sumRod = sumRod==null?0:sumRod;
+		result.put("sumRod",sumRod);
+		Double avgRod = 0.0;
+		if(sumRod > 0){
+			BigDecimal b = new BigDecimal((float)(sumRod / matchCount));
+			avgRod = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
+		}
+		result.put("avgRod",avgRod);
 		//所有杆数
 		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
 		result.put("scoreList",scoreList);

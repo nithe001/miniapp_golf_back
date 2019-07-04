@@ -341,6 +341,20 @@ public class MatchService implements IBaseService {
 	 * @param map
 	 * @param key
 	 */
+	public Integer getIntegerValueWithNull(Map<String, Object> map, String key) {
+		if (map == null || map.get(key) == null) {
+			return null;
+		} else {
+			return Integer.parseInt(map.get(key).toString());
+		}
+	}
+
+	/**
+	 * Integer
+	 *
+	 * @param map
+	 * @param key
+	 */
 	public Integer getIntegerDoubleValue(Map<String, Object> map, String key) {
 		if (map == null || map.get(key) == null) {
 			return 0;
@@ -437,10 +451,12 @@ public class MatchService implements IBaseService {
 
 	public List<Long> getLongTeamIdList(String teamIds) {
 		List<Long> teamIdList = new ArrayList<>();
-		String[] ids = teamIds.split(",");
-		for (String id : ids) {
-			if (StringUtils.isNotEmpty(id)) {
-				teamIdList.add(Long.parseLong(id));
+		if(StringUtils.isNotEmpty(teamIds)){
+			String[] ids = teamIds.split(",");
+			for (String id : ids) {
+				if (StringUtils.isNotEmpty(id)) {
+					teamIdList.add(Long.parseLong(id));
+				}
 			}
 		}
 		return teamIdList;
@@ -1305,44 +1321,78 @@ public class MatchService implements IBaseService {
 	/**
 	 * 保存或更新比赛状态
 	 * state   0：报名中  1进行中  2结束
-	 *
+	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
+	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+	 * 3、单人比杆赛分组不用有任何限制。
+	 * 4、一个队队内，及多个队之间没法进行比洞赛
 	 * @return
 	 */
 	public String updateMatchState(Long matchId, Integer state, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		List<Map<String,Object>> countList = matchDao.getCountUserByMatchId(matchId);
-		if(countList == null || countList.size() ==0){
+		String joinTeamIds = matchInfo.getMiJoinTeamIds();
+		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
+		//如果是队内或者队际赛，获取每个组的队伍个数情况
+		List<Map<String,Object>> teamCountList = null;
+		if(joinTeamIdList != null && joinTeamIdList.size()>0){
+			teamCountList = matchDao.getTeamCountByMatchId(matchId,null);
+			if(teamCountList == null || teamCountList.size() == 0){
+				return "没有参赛队无法开始比赛。";
+			}
+		}
+		//获取每个组的每队人数情况
+		List<Map<String,Object>> userCountListByTeam = matchDao.getUserCountByMatchId(matchId,null);
+		if(userCountListByTeam == null || userCountListByTeam.size() ==0){
             return "没有参赛队员无法开始比赛。";
         }
-        if(matchInfo.getMiMatchFormat1() ==1 && matchInfo.getMiMatchFormat2() == 0){
-            //单人比洞 必须每组2人
-            for(Map<String,Object> map: countList){
-                Long count = getLongValue(map,"count");
-                if(count > 2){
-                    String groupName = getName(map,"groupName");
-                    return groupName+" 参赛人数不符合要求，无法开始比赛。";
-                }
-            }
-        }else if(matchInfo.getMiMatchFormat1() == 0 && matchInfo.getMiMatchFormat2() == 1){
-		    //双人比杆 每组4人
-            for(Map<String,Object> map: countList){
-                Long count = getLongValue(map,"count");
-                if(count > 4){
-                    String groupName = getName(map,"groupName");
-                    return groupName+" 参赛人数不符合要求，无法开始比赛。";
-                }
-            }
-        } if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 1){
-            //双人比洞 每组4人
-            for(Map<String,Object> map: countList){
-                Long count = getLongValue(map,"count");
-                if(count > 4){
-                    String groupName = getName(map,"groupName");
-                    return groupName+" 参赛人数不符合要求，无法开始比赛。";
-                }
-            }
-        }
+
+		//2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+		// 3、单人比杆赛分组不用有任何限制。
+		if(joinTeamIdList != null){
+			//单人比洞
+			if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 0){
+				//每组只能两个人
+				//获取每组人数
+				List<Map<String,Object>> userCountByEveGroup = matchDao.getUserCountWithEveGroupByMatchId(matchId);
+				for(Map<String,Object> userCount:userCountByEveGroup){
+					Long groupId = getLongValue(userCount,"groupId");
+					String groupName = getName(userCount,"groupName");
+					Integer countEveGroup = getIntegerValue(userCount,"count");
+					if(countEveGroup != 2){
+						return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
+					}
+					if(joinTeamIdList.size()>1){
+						//队际赛，一组的两个人要是两个球队的 就判断每一组的球队个数，如果为1 说明这俩人是一队，不能开始比赛
+						//获取本组的球队个数
+						List<Map<String,Object>> teamCountByGroup = matchDao.getTeamCountByMatchId(matchId,groupId);
+						if(getIntegerValue(teamCountByGroup.get(0),"count") !=2){
+							return groupName+" 球队数不符合比赛要求，无法开始比赛。";
+						}
+					}
+				}
+			}else if(matchInfo.getMiMatchFormat2() == 1){
+				//1、如果是多队双人比赛，不管比杆比洞，每组最多两个队，每个队不超过两人，也可以是一人。生成记分卡时，只有一个队的两个人才能放入一行。
+				if(joinTeamIdList.size() == 2){
+					//所有组球队个数
+					for(Map<String,Object> teamCount :teamCountList){
+						Long groupId = getLongValue(teamCount,"groupId");
+						String groupName = getName(teamCount,"groupName");
+						Integer tCount = getIntegerValue(teamCount,"count");
+						if(tCount >2){
+							return groupName+" 球队数不符合比赛要求，无法开始比赛。";
+						}
+						//获取本组每个球队的人数
+						userCountListByTeam = matchDao.getUserCountByMatchId(matchId,groupId);
+						for(Map<String,Object> userCount:userCountListByTeam){
+							Integer c = getIntegerValue(userCount,"count");
+							if(c >2){
+								return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
+							}
+						}
+					}
+				}
+			}
+		}
 		matchInfo.setMiIsEnd(state);
 		matchInfo.setMiUpdateUserId(userInfo.getUiId());
 		matchInfo.setMiUpdateUserName(userInfo.getUiRealName());
@@ -2095,7 +2145,7 @@ public class MatchService implements IBaseService {
 			rodMatch(joinTeamIdList,mingci,matchId,matchInfo,result);
 		} else {
 			//比洞赛 n就按按分组顺序取前n组，还按原来的表头计算
-			holeMatch(joinTeamIdList,mingci,matchId,matchInfo,result);
+			holeMatch(mingci,matchId,result);
 		}
 		return result;
 	}
@@ -2207,10 +2257,7 @@ public class MatchService implements IBaseService {
 	 * 如果是比洞赛，n就按按分组顺序取前n组，还按原来的表头计算
 	 * 比洞赛：用不同的表。（球队、获胜组、打平组、得分、排名）
 	 */
-	private void holeMatch(List<Long> joinTeamIdList, Integer mingci, Long matchId,
-						   MatchInfo matchInfo, Map<String, Object> result) {
-		//显示的list
-		List<TeamPointHoleBean> teamPointHoleBeanList = new ArrayList<>();
+	private void holeMatch(Integer mingci, Long matchId,Map<String, Object> result) {
 		//N的list
 		List<Map<String,Object>> nList = new ArrayList<>();
 		//本比赛的组数(也就是最大组)
@@ -2236,104 +2283,41 @@ public class MatchService implements IBaseService {
 				groupIdList.add(groupId);
 			}
 		}
-
-		if(matchInfo.getMiMatchFormat2() == 0){
-			//单人比洞
-			if(joinTeamIdList != null && joinTeamIdList.size()>0){
-				if(joinTeamIdList.size() == 1){
-					//队内赛——计算每一组赢了多少洞
-
-					//队内赛——获取本次比赛的分组，和前n组中每个用户的总分
-					List<Map<String,Object>> holeScoreList = matchDao.getEveUserScoreListByGroup(matchId,groupIdList);
-					if(holeScoreList != null && holeScoreList.size() >0 && holeScoreList.size()%2 ==0){
-						TeamInfo teamInfo = matchDao.get(TeamInfo.class,joinTeamIdList.get(0));
-						for(int i = 0;i<holeScoreList.size();i++){
-							TeamPointHoleBean teamPointHoleBean = new TeamPointHoleBean();
-							teamPointHoleBean.setTeamId(teamInfo.getTiId());
-							teamPointHoleBean.setTeamName(teamInfo.getTiName());
-
-							Map<String,Object> team1 = holeScoreList.get(i);
-							Map<String,Object> team2 = holeScoreList.get(i+1);
-							i += 1;
-							if(getIntegerValue(team1,"sumRod") < getIntegerValue(team2,"sumRod")){
-								//赢球组
-								teamPointHoleBean.setWinGroupName(getName(team1,"groupName"));
-								//得分
-								teamPointHoleBean.setScore(getIntegerValue(team1,"sumRod"));
-							}else if(getIntegerValue(team1,"sumRod") > getIntegerValue(team2,"sumRod")){
-								//赢球组
-								teamPointHoleBean.setWinGroupName(getName(team2,"groupName"));
-								//得分
-								teamPointHoleBean.setScore(getIntegerValue(team2,"sumRod"));
-							}else if(getIntegerValue(team1,"sumRod").equals(getIntegerValue(team2,"sumRod"))){
-								//打平组
-								teamPointHoleBean.setDrewGroupName(getName(team1,"groupName"));
-								//得分
-								teamPointHoleBean.setScore(getIntegerValue(team1,"sumRod"));
-							}
-							teamPointHoleBeanList.add(teamPointHoleBean);
-						}
+		//按分组顺序，获取前n组的比赛输赢情况
+		List<Map<String, Object>> winOrLoseList = matchDao.getWinOrLoseList(matchId,groupIdList);
+		List<MatchTotalTeamBean> beanList = new ArrayList<>();
+		if(winOrLoseList != null && winOrLoseList.size() >0){
+			MatchTotalTeamBean matchTotalTeamBean = null;
+			for(Map<String, Object> map:winOrLoseList){
+				Long teamId = getLongValue(map,"teamId");
+				String teamName = getName(map,"teamName");
+				Integer winResult = getIntegerValue(map,"result");
+				String groupName = getName(map,"groupName");
+				if(matchTotalTeamBean == null ||
+						!teamId.equals(matchTotalTeamBean.getTeamId()) ||
+						(teamId.equals(matchTotalTeamBean.getTeamId()) && winResult.equals(matchTotalTeamBean.getType()))){
+					matchTotalTeamBean = new MatchTotalTeamBean();
+					matchTotalTeamBean.setTeamId(teamId);
+					matchTotalTeamBean.setTeamName(teamName);
+					matchTotalTeamBean.setType(winResult);
+					if(winResult == 0){
+						matchTotalTeamBean.setPingGroupName(groupName);
+					}else{
+						matchTotalTeamBean.setWinGroupName(groupName);
 					}
-				}else if(joinTeamIdList.size() > 1){
-
+					beanList.add(matchTotalTeamBean);
+				}else{
+					matchTotalTeamBean.setType(winResult);
+					if(winResult == 0){
+						matchTotalTeamBean.setPingGroupName(groupName);
+					}else{
+						matchTotalTeamBean.setWinGroupName(groupName);
+					}
 				}
 			}
-		}else{
-			//双人比洞
-
 		}
-
-		result.put("scoreList",teamPointHoleBeanList);
+		result.put("scoreList",beanList);
 		result.put("mingciArray",nList);
-
-		/*List<Map<String, Object>> list = new ArrayList<>();
-		List<Long> teamIds = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-		//获取本次比赛的分组，和每组中每个球队的总分
-		List<Map<String,Object>> holeScoreList = matchDao.getEveGroupScoreList(matchId);
-		if(holeScoreList != null && holeScoreList.size()>0){
-			for(Long teamId :teamIds){
-				TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
-				Map<String, Object> bean = new HashMap<>();
-				bean.put("teamId",teamId);
-				bean.put("teamName",teamInfo.getTiName());
-				for(int i = 0;i<holeScoreList.size();i++){
-					Map<String,Object> team1 = holeScoreList.get(i);
-					Map<String,Object> team2 = holeScoreList.get(i+1);
-					i += 1;
-					Long team1Id = getLongValue(team1,"teamId");
-					Long team2Id = getLongValue(team2,"teamId");
-					Integer team1SumRod = getIntegerValue(team1,"sumRod");
-					Integer team2SumRod = getIntegerValue(team2,"sumRod");
-					if(teamId.equals(team1Id)){
-						if(team1SumRod < team2SumRod){
-							//第一队赢球
-							bean.put("winGroupName",getName(team1,"groupName"));
-						}else if(team1SumRod.equals(team2SumRod)){
-							//打平
-							bean.put("drewGroupName",getName(team1,"groupName"));
-						}
-						bean.put("score",team1SumRod);
-					}else if(teamId.equals(team2Id)){
-						if(team2SumRod < team1SumRod){
-							//第二队赢球
-							bean.put("winGroupName",getName(team2,"groupName"));
-						}else if(team2SumRod.equals(team1SumRod)){
-							//打平
-							bean.put("drewGroupName",getName(team2,"groupName"));
-						}
-						bean.put("score",team2SumRod);
-					}
-				}
-				list.add(bean);
-			}
-		}*/
-//		result.put("scoreList",list);
-		//获取前N名成绩统计 每个队排前n名的人的杆数和排名
-//		List<Map<String, Object>> mingciList = matchDao.getMatchRodScoreByMingci(matchId,mingci);
-//		List<Map<String, Object>> mingciList = matchDao.getMatchRodScoreByMingci(matchId,mingci);
-
-//		result.put("mingciList",mingciList);
-//		result.put("mingciArray",nList);
 	}
 
 	//取前N名 N的list

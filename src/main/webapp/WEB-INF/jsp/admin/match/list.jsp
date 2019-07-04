@@ -197,7 +197,7 @@
         });
 
         $("#sureUpdateStateBtn").click(function () {
-            window.location.href="admin/team/updateMatchState?teamId="+$("#matchId").val();
+            window.location.href="admin/match/updateMatchState?matchId="+$("#matchId").val();
         });
         $("#sureDelBtn").click(function () {
             window.location.href="admin/match/delMatch?matchId="+$("#matchId").val();

@@ -213,9 +213,10 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getJoinMatchChangCiByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select count(t.matchId) as count from (select s.ms_match_id as matchId from match_score as s " +
+		hql.append("select count(t.matchId) as count from (select s.ms_match_id as matchId from match_score as s,match_info as m " +
 				"where s.ms_team_id = :teamId and s.ms_user_id = :userId " +
 				"and s.ms_is_team_submit = 1 and s.ms_match_type = 1 " +
+				"and m.mi_is_valid = 1 " +
 				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
 				" GROUP BY s.ms_match_id) as t ");
 		 return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
@@ -240,7 +241,6 @@ public class TeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getUserSumRodScore(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		//获取用户的总参赛场次
 		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /:changCi,2) AS avgRodNum FROM ");
 		hql.append(" (");
 		hql.append(" SELECT " +
@@ -261,36 +261,31 @@ public class TeamDao extends CommonDao {
 	}
 
 	/**
-	 * 计算每个球友前n场的平均杆和总杆 按平均杆排名 单练的不算入内
+	 * 计算每个球友前n场的总积分，按照积分排名 单练的不算入内
 	 * 积分榜那里的平均杆数是指每场（18洞）的平均杆数，不是每洞的。
-	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
+	 * 积分榜是积分多的排前面
 	 * @return
 	 */
 	public List<Map<String, Object>> getUserSumPointScore(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		//获取用户的总参赛场次
-		hql.append("SELECT t1.userId,sum(t1.sumRod) as sumRodNum,ROUND(sum(t1.sumRod) /:changCi,2) AS avgRodNum,t1.sumPoint FROM ");
-		hql.append(" (");
-		hql.append(" SELECT t.*, sum(p.tup_match_point) AS sumPoint FROM " +
-						"(");
+		hql.append("SELECT t.userId,sum(t.sumRod) as sumRodNum,ROUND(sum(t.sumRod) /:changCi,2) AS avgRodNum,sum(p.tup_match_point) AS sumPoint ");
+		hql.append(" FROM (");
 				hql.append(" SELECT " +
 						"s.ms_user_id AS userId, " +
 						"s.ms_match_id AS matchId, " +
 						"sum(s.ms_rod_num) AS sumRod " +
-						"FROM match_score AS s ,match_info as m " +
+						"FROM match_score AS s " +
 						"WHERE s.ms_user_id = :userId " +
-						" and s.ms_match_id = m.mi_id and m.mi_type = 1 " +
-						"and m.mi_is_end = 2  and s.ms_is_team_submit = 1 " +
-						"AND s.ms_type = 0 AND s.ms_team_id = :teamId "+
-						" and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
-						" GROUP BY s.ms_match_id " +
-						"ORDER BY sumRod " +
-						"LIMIT 0,:changCi");
+						"AND s.ms_team_id = :teamId "+
+						"AND s.ms_type = 0 " +
+						"and s.ms_is_team_submit = 1 " +
+						"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
+						"GROUP BY s.ms_match_id ");
 				hql.append(") AS t,team_user_point AS p ");
 		hql.append("WHERE p.tup_match_id = t.matchId ");
 		hql.append("AND p.tup_user_id = :userId ");
 		hql.append("AND p.tup_team_id = :teamId ");
-		hql.append(" ) AS t1 ");
+		hql.append("ORDER BY sumPoint DESC LIMIT 0,:changCi");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
@@ -365,6 +360,7 @@ public class TeamDao extends CommonDao {
 					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
 					"FROM integral_config AS c,match_info as m,team_info as team " +
 					"WHERE c.ic_match_id = m.mi_id and (c.ic_team_id = :teamId or c.ic_report_team_id = :teamId) and c.ic_team_id = team.ti_id " +
+					"and m.mi_is_valid = 1 " +
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;

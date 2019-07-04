@@ -157,8 +157,10 @@ public class UserDao extends CommonDao {
 	 */
 	public Long getMatchCountByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT count(*) FROM ( SELECT s.ms_match_id FROM match_score AS s " +
+		hql.append("SELECT count(*) FROM ( SELECT s.ms_match_id FROM match_score AS s,match_info as m " +
 				"WHERE s.ms_user_id = :userId " +
+				"and s.ms_match_id = m.mi_id " +
+				"and m.mi_is_valid = 1 " +
 				"GROUP BY s.ms_match_id " +
 				") AS t");
 		return dao.createSQLCountQuery(hql.toString(), parp);

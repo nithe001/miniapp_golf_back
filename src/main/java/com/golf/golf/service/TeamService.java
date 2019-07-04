@@ -210,7 +210,7 @@ public class TeamService implements IBaseService {
 					teamPointBean.setRealName(userInfo.getUiRealName());
 					teamPointBean.setNickName(userInfo.getUiNickName());
 
-					//获取本球友代表此球队的参赛场次
+					//获取本球友代表此球队的参赛场次（有效的比赛）
 					parp.put("userId",userId);
 					List<Map<String, Object>> joinList = teamDao.getJoinMatchChangCiByYear(parp);
 					if(joinList!=null&& joinList.size()>0){
@@ -221,9 +221,10 @@ public class TeamService implements IBaseService {
 					//查每个用户的得分 和 场次下的总积分
 					List<Map<String, Object>> sumList = null;
 					if(type == 0){
-						//计算每个用户的总杆数
+						//比分榜 计算每个用户的总杆数
 						sumList = teamDao.getUserSumRodScore(parp);
 					}else {
+						//积分榜 按照积分排名
 						sumList = teamDao.getUserSumPointScore(parp);
 					}
 					Map<String, Object> sum = sumList.get(0);

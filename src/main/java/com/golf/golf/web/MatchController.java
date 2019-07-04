@@ -762,7 +762,7 @@ public class MatchController {
 	@RequestMapping("getSingleHoleScoreCard")
 	public JsonElement getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
 		try {
-			Map<String,Object> groupInfoList = matchSingleHoleService.getSingleHoleScoreCardByGroupId(matchId,groupId);
+			Map<String,Object> groupInfoList = matchSingleHoleService.updateOrGetSingleHoleScoreCardByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";

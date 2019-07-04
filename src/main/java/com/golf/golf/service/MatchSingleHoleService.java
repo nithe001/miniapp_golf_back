@@ -1,10 +1,15 @@
 package com.golf.golf.service;
 
+import com.golf.common.Const;
 import com.golf.common.IBaseService;
+import com.golf.golf.bean.HoleMatchScoreResultBean;
 import com.golf.golf.dao.MatchDao;
+import com.golf.golf.db.MatchHoleResult;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
+import com.golf.golf.enums.MatchResultEnum;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +33,16 @@ public class MatchSingleHoleService implements IBaseService {
 
 	/**
 	 * 获取单人比洞赛记分卡 每组2人
+	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
+	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+	 * 3、单人比杆赛分组不用有任何限制。
+	 * 4、一个队队内，及多个队之间没法进行比洞赛
 	 * @return
 	 */
-	public Map<String, Object> getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
+	public Map<String, Object> updateOrGetSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		result.put("matchInfo", matchInfo);
 		//固定的首列：本组用户
 		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
 		result.put("userList", userList);
@@ -41,96 +51,116 @@ public class MatchSingleHoleService implements IBaseService {
 		List<Map<String, Object>> parkHoleList = matchDao.getParkPartitionList(matchId);
 		result.put("parkHoleList", parkHoleList);
 
+		//获取每个用户得分，并计算成绩
 
-		//第二条记录：用户得分
-		List<Map<String, Object>[]> scoreList = new ArrayList<>();
-		//第3条记录：成绩
-		List<String> resultScoreList = new ArrayList<>();
-		//本组用户每个洞得分情况
+		List<HoleMatchScoreResultBean> chengjiList = new ArrayList<>();
+		HoleMatchScoreResultBean endTrChengji = new HoleMatchScoreResultBean();
 		if (userList != null && userList.size() > 0) {
-			//第一个用户
+			//第一个用户 得分
 			Long userId0 = matchService.getLongValue(userList.get(0), "uiId");
 			Long teamId0 = matchService.getLongValue(userList.get(0),"team_id");
 			List<Map<String, Object>> uscoreList0 = matchDao.getScoreByUserId(groupId, userId0, matchInfo, teamId0);
-			//第二个用户
+			result.put("uscoreList0", uscoreList0);
+			//第二个用户 得分
 			Long userId1 = matchService.getLongValue(userList.get(1), "uiId");
 			Long teamId1 = matchService.getLongValue(userList.get(1),"team_id");
 			List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
+			result.put("uscoreList1", uscoreList1);
 
+			Integer score = 0;
 			for(Map<String, Object> map0:uscoreList0){
-				Map<String, Object>[] map = new Map[2];
-				map[0] = map0;
-				//第一个用户本洞击出的杆数
-				Integer rodNum1 = matchService.getIntegerValue(map0,"rod_num");
+				map0.put("userId",userId0);
+				UserInfo userInfo0 = matchDao.get(UserInfo.class,userId0);
+				map0.put("userName",StringUtils.isNotEmpty(userInfo0.getUiRealName())?userInfo0.getUiRealName():userInfo0.getUiNickName());
+				//第二个用户 杆数
+				Integer rodNum0 = matchService.getIntegerValueWithNull(map0,"rod_num");
 				//球洞号
-				Integer holeNum = matchService.getIntegerValue(map0,"pp_hole_num");
+				Integer holeNum0 = matchService.getIntegerValue(map0,"pp_hole_num");
 				//球洞名称
-				String holeName = matchService.getName(map0,"pp_name");
-				if(matchService.getLongValue(map0,"ms_user_id") == null){
-					UserInfo userInfo = matchDao.get(UserInfo.class,userId0);
-					map0.put("ms_user_id",userId0);
-					String userName = userInfo.getUiRealName();
-					if(StringUtils.isEmpty(userName)){
-						userName = userInfo.getUiNickName();
-					}
-					map0.put("ms_user_name",userName);
-				}
+				String holeName0 = matchService.getName(map0,"pp_name");
 				for(Map<String, Object> map1:uscoreList1){
-					//第二个用户本洞击出的杆数
-					Integer rodNum2 = matchService.getIntegerValue(map1,"rod_num");
+					map1.put("userId",userId1);
+					UserInfo userInfo1 = matchDao.get(UserInfo.class,userId1);
+					map1.put("userName",StringUtils.isNotEmpty(userInfo1.getUiRealName())?userInfo1.getUiRealName():userInfo1.getUiNickName());
+					//第二个用户 杆数
+					Integer rodNum1 = matchService.getIntegerValueWithNull(map1,"rod_num");
 					//球洞号
 					Integer holeNum1 = matchService.getIntegerValue(map1,"pp_hole_num");
 					//球洞名称
 					String holeName1 = matchService.getName(map1,"pp_name");
-					if(holeNum.equals(holeNum1) && holeName.equals(holeName1)){
-						if(matchService.getLongValue(map1,"ms_user_id") == null){
-							UserInfo userInfo = matchDao.get(UserInfo.class,userId1);
-							map1.put("ms_user_id",userId1);
-							String userName = userInfo.getUiRealName();
-							if(StringUtils.isEmpty(userName)){
-								userName = userInfo.getUiNickName();
-							}
-							map1.put("ms_user_name",userName);
-						}
-						//第二个用户的杆数
-						map[1] = map1;
-						scoreList.add(map);
-
-						//计算两个对手本洞的成绩 逐洞比上下两行当前成绩，用数字表示赢了几洞，上面赢的记UP，下面赢的记DN，数字表示到目前赢几洞，A/S表示平。
-						//比洞赛中使用独特的计分和表述方式。
-						// 假设球员A和球员B参加一对一比赛，在第一洞比赛中，A击出的杆数少于B，于是A赢得了该洞的胜利，这时表述为“A领先1洞”，
-						// 如以B为主语，则表述为“B落后1洞”。
-						// 这样在一轮比赛中，选手在每一个洞决出一个小分，最后当其中一方选手领先优势已不能被逆转(超分)时，这一回合比赛结束。
-						// 这时胜利一方的领先洞数(X)和剩余未比赛的球。
-						String cj = "";
-						if(rodNum1 != 0 && rodNum2 != 0){
-							if(rodNum1 < rodNum2){
-								cj = rodNum2 - rodNum1+"UP";
-							}else if(rodNum1 > rodNum2){
-								cj = rodNum1 - rodNum2+"DN";
+					if(holeNum0.equals(holeNum1) && holeName0.equals(holeName1)){
+						HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
+						if(rodNum0 != null && rodNum1 != null){
+							Integer chengji = rodNum1 - rodNum0;
+							score = score + chengji;
+							bean.setNum(Math.abs(score));
+							if(score == 0){
+								bean.setNum(null);
+								bean.setUpDnAs(MatchResultEnum.AS.text());
+							}else if(score >0){
+								bean.setUpDnAs(MatchResultEnum.UP.text());
 							}else{
-								cj = "A/S";
+								bean.setUpDnAs(MatchResultEnum.DN.text());
 							}
+							BeanUtils.copyProperties(bean,endTrChengji);
+							//同时更新比洞赛输赢表
+							saveOrUpdateMatchHoleResult(bean,matchId,groupId,teamId0,0);
+							saveOrUpdateMatchHoleResult(bean,matchId,groupId,teamId1,1);
 						}
-						resultScoreList.add(cj);
+						chengjiList.add(bean);
 						break;
 					}
 				}
 			}
 		}
-		//第二条，用户得分
-		result.put("scoreList", scoreList);
-
-		//第三条 成绩
-		result.put("resultScoreList", resultScoreList);
+		//成绩行
+		result.put("chengjiList", chengjiList);
 
 		//固定的尾列：总标准杆数
 		Long totalStandardRod = matchDao.getTotalRod(matchInfo);
 		result.put("totalStandardRod", totalStandardRod);
+
+		//固定的尾列：成绩行(一个数据)
+		result.put("chengjiResult", endTrChengji);
+
 		//用户总分
 		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUser(matchId, groupId);
 		result.put("totalScoreList", totalScoreList);
 		return result;
+	}
+
+	//更新比洞赛结果输赢表 n:0:第一个用户  1：第二个用户
+	private void saveOrUpdateMatchHoleResult(HoleMatchScoreResultBean bean,Long matchId, Long groupId, Long teamId,Integer n) {
+		MatchHoleResult matchHoleResult = matchDao.getMatchHoleResult(matchId,groupId,teamId);
+		if(matchHoleResult == null) {
+			matchHoleResult = new MatchHoleResult();
+			matchHoleResult.setMhrMatchId(matchId);
+			matchHoleResult.setMhrGroupId(groupId);
+			matchHoleResult.setMhrTeamId(teamId);
+		}
+		//比赛结果（0：打平 1：打赢  2：打输）
+		if(bean.getUpDnAs().equals(MatchResultEnum.AS.text())){
+			matchHoleResult.setMhrResult(0);
+		}else if(bean.getUpDnAs().equals(MatchResultEnum.UP.text())){
+			if(n == 0){
+				//第一个赢，第二个就记输
+				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.UP.value()));
+			}else{
+				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.DN.value()));
+			}
+		}else if(bean.getUpDnAs().equals(MatchResultEnum.DN.text())){
+			if(n == 0){
+				//第一个输，第二个就记赢
+				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.DN.value()));
+			}else{
+				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.UP.value()));
+			}
+		}
+		if(matchHoleResult.getMhrId() == null) {
+			matchDao.save(matchHoleResult);
+		}else{
+			matchDao.update(matchHoleResult);
+		}
 	}
 
 
