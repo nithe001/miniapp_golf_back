@@ -222,12 +222,14 @@ public class MatchController {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
-			Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count, openid);
+
 			//如果比赛状态是进行中，如果不是参赛人员，则加入围观用户
+            boolean isWatch = false;
 			if(matchInfo.getMiIsEnd() != 0){
-				boolean isWatch = matchService.saveOrUpdateWatch(matchInfo, openid);
-				matchMap.put("isWatch",isWatch);
+				isWatch = matchService.saveOrUpdateWatch(matchInfo, openid);
 			}
+            Map<String, Object> matchMap = matchService.getMatchInfo(matchInfo, matchId, count, openid);
+            matchMap.put("isWatch",isWatch);
 			return JsonWrapper.newDataInstance(matchMap);
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
@@ -1118,5 +1120,21 @@ public class MatchController {
 		}
 	}
 
-
+    /**
+     * 比赛——退出观战
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("delWatchMatch")
+    public JsonElement delWatchMatch(Long matchId, String openid) {
+        try {
+            matchService.delWatchMatch(matchId, openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "比赛——退出观战时出错。matchId="+matchId+"  openid="+openid;
+            e.printStackTrace();
+            logger.error(errmsg + e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 }

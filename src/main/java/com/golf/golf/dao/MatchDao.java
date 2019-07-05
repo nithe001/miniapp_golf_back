@@ -2039,4 +2039,17 @@ public class MatchDao extends CommonDao {
                 " and mhr.mhrTeamId = "+teamId);
         return dao.createQuery(sql.toString());
     }
+
+    //查询我的观战数据
+    public MatchJoinWatchInfo getMatchWatchInfo(Long matchId, Long userId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("from MatchJoinWatchInfo as t " +
+                "where t.mjwiMatchId = " +matchId+
+                " and t.mjwiUserId = "+userId);
+        List<MatchJoinWatchInfo> list = dao.createQuery(sql.toString());
+        if(list != null && list.size()>0){
+            return list.get(0);
+        }
+        return null;
+    }
 }

@@ -451,7 +451,7 @@ public class MatchService implements IBaseService {
 
 	public List<Long> getLongTeamIdList(String teamIds) {
 		List<Long> teamIdList = new ArrayList<>();
-		if(StringUtils.isNotEmpty(teamIds.trim())){
+		if(StringUtils.isNotEmpty(teamIds) && StringUtils.isNotEmpty(teamIds.trim())){
 			String[] ids = teamIds.split(",");
 			for (String id : ids) {
 				if (StringUtils.isNotEmpty(id)) {
@@ -1919,17 +1919,19 @@ public class MatchService implements IBaseService {
 				}else if(matchInfo.getMiMatchOpenType() == 2){
 					//2、队内公开：参赛者的队友可见 查询是否是参赛球队的队员
 					List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-					Long joinCount = matchDao.getIsJoinTeamsUser(userId,teamIdList);
-					if(joinCount > 0){
-						//是参赛队的队员，加入围观用户
-						MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
-						matchJoinWatchInfo.setMjwiUserId(userId);
-						matchJoinWatchInfo.setMjwiMatchId(matchId);
-						matchJoinWatchInfo.setMjwiType(0);
-						matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
-						matchDao.save(matchJoinWatchInfo);
-						return true;
-					}
+					if(teamIdList != null && teamIdList.size()>0){
+                        Long joinCount = matchDao.getIsJoinTeamsUser(userId,teamIdList);
+                        if(joinCount > 0){
+                            //是参赛队的队员，加入围观用户
+                            MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
+                            matchJoinWatchInfo.setMjwiUserId(userId);
+                            matchJoinWatchInfo.setMjwiMatchId(matchId);
+                            matchJoinWatchInfo.setMjwiType(0);
+                            matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
+                            matchDao.save(matchJoinWatchInfo);
+                            return true;
+                        }
+                    }
 				}
 			}else{
 				return true;
@@ -2800,4 +2802,15 @@ public class MatchService implements IBaseService {
 		}
 		return false;
 	}
+
+    /**
+     * 比赛——退出观战
+     * @return
+     */
+    public void delWatchMatch(Long matchId, String openid) {
+        MatchJoinWatchInfo matchJoinWatchInfo = matchDao.getMatchWatchInfo(matchId,userService.getUserIdByOpenid(openid));
+        if(matchJoinWatchInfo != null){
+            matchDao.del(matchJoinWatchInfo);
+        }
+    }
 }
