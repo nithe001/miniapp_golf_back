@@ -359,7 +359,7 @@ public class MatchController {
 			matchService.addGroupByTeamId(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
+			String errmsg = "前台-添加分组 添加组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg + e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -839,6 +839,7 @@ public class MatchController {
 
 	/**
 	 * 成绩上报 计算积分（注意球友加入球队是否成功） 允许重复上报
+     * **********注意比洞赛的积分公式和比杆赛不一样
 	 * @param matchId 比赛id,
 	 * @param teamId 上报球队id,
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,

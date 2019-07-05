@@ -285,6 +285,7 @@ public class TeamDao extends CommonDao {
 		hql.append("WHERE p.tup_match_id = t.matchId ");
 		hql.append("AND p.tup_user_id = :userId ");
 		hql.append("AND p.tup_team_id = :teamId ");
+        hql.append("GROUP BY p.tup_match_id ");
 		hql.append("ORDER BY sumPoint DESC LIMIT 0,:changCi");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
@@ -395,4 +396,16 @@ public class TeamDao extends CommonDao {
 	}
 
 
+    public List<Map<String, Object>> getUserPointByChangci(Map<String, Object> parp) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT sum(t.point) AS sumPoint ");
+        hql.append("FROM ( SELECT tup.tup_match_point AS point ");
+        hql.append("FROM team_user_point AS tup " +
+                "WHERE tup.tup_user_id = :userId " +
+                "AND tup.tup_team_id = :teamId " +
+                "ORDER BY tup.tup_match_point DESC " +
+                "LIMIT 0, :changCi ");
+        hql.append(" ) AS t");
+        return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
 }

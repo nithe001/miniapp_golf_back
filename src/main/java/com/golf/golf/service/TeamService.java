@@ -219,19 +219,16 @@ public class TeamService implements IBaseService {
 						teamPointBean.setTotalMatchNum(joinList.size());
 					}
 					//查每个用户的得分 和 场次下的总积分
-					List<Map<String, Object>> sumList = null;
-					if(type == 0){
-						//比分榜 计算每个用户的总杆数
-						sumList = teamDao.getUserSumRodScore(parp);
-					}else {
-						//积分榜 按照积分排名
-						sumList = teamDao.getUserSumPointScore(parp);
+					List<Map<String, Object>> sumList = teamDao.getUserSumRodScore(parp);
+                    if(type == 1){
+						//积分榜 获取本用户的前n场总积分 按照积分排名
+                        List<Map<String, Object>> point = teamDao.getUserPointByChangci(parp);
+                        teamPointBean.setPoint(matchService.getIntegerValue(point.get(0),"sumPoint"));
 					}
 					Map<String, Object> sum = sumList.get(0);
 					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
-					teamPointBean.setPoint(matchService.getIntegerValue(sum,"sumPoint"));
 					list.add(teamPointBean);
 				}
 				//排序

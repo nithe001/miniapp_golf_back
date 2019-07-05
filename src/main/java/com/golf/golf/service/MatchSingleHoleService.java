@@ -1,6 +1,5 @@
 package com.golf.golf.service;
 
-import com.golf.common.Const;
 import com.golf.common.IBaseService;
 import com.golf.golf.bean.HoleMatchScoreResultBean;
 import com.golf.golf.dao.MatchDao;
@@ -52,7 +51,6 @@ public class MatchSingleHoleService implements IBaseService {
 		result.put("parkHoleList", parkHoleList);
 
 		//获取每个用户得分，并计算成绩
-
 		List<HoleMatchScoreResultBean> chengjiList = new ArrayList<>();
 		HoleMatchScoreResultBean endTrChengji = new HoleMatchScoreResultBean();
 		if (userList != null && userList.size() > 0) {
@@ -67,6 +65,7 @@ public class MatchSingleHoleService implements IBaseService {
 			List<Map<String, Object>> uscoreList1 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
 			result.put("uscoreList1", uscoreList1);
 
+			//最终成绩
 			Integer score = 0;
 			for(Map<String, Object> map0:uscoreList0){
 				map0.put("userId",userId0);
@@ -91,17 +90,32 @@ public class MatchSingleHoleService implements IBaseService {
 					if(holeNum0.equals(holeNum1) && holeName0.equals(holeName1)){
 						HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
 						if(rodNum0 != null && rodNum1 != null){
-							Integer chengji = rodNum1 - rodNum0;
-							score = score + chengji;
-							bean.setNum(Math.abs(score));
-							if(score == 0){
-								bean.setNum(null);
-								bean.setUpDnAs(MatchResultEnum.AS.text());
-							}else if(score >0){
-								bean.setUpDnAs(MatchResultEnum.UP.text());
-							}else{
-								bean.setUpDnAs(MatchResultEnum.DN.text());
-							}
+//                你设一个“得分”变量，初始值为0，
+//                A1洞，双方平，则得分=等分+0，
+//                A2洞，上方赢，则得分=得分+1=1，
+//                A3洞，下方赢，则得分=得分-1=0，
+//                A4洞，上方赢，则得分=得分+1=1，
+//                依次类推，得分是个计数，不是杆差。
+                            if(rodNum0.equals(rodNum1)){
+                                //打平
+                                score = score + 0;
+                            }else if(rodNum0 < rodNum1){
+							    //上赢
+                                score = score + 1;
+                            }else if(rodNum0 > rodNum1){
+							    //下赢
+                                score = score - 1;
+                            }
+                            if(score == 0){
+                                bean.setNum(null);
+                                bean.setUpDnAs(MatchResultEnum.AS.text());
+                            }else if(score > 0){
+                                bean.setNum(score);
+                                bean.setUpDnAs(MatchResultEnum.UP.text());
+                            }else if(score < 0){
+                                bean.setNum(Math.abs(score));
+                                bean.setUpDnAs(MatchResultEnum.DN.text());
+                            }
 							BeanUtils.copyProperties(bean,endTrChengji);
 							//同时更新比洞赛输赢表
 							saveOrUpdateMatchHoleResult(bean,matchId,groupId,teamId0,0);

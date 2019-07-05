@@ -173,7 +173,7 @@ public class MatchService implements IBaseService {
 			Map<String,Object> map = teamIterator.next();
 			String joinTeamIds = getName(map,"mi_join_team_ids");
 			List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
-			if(StringUtils.isNotEmpty(joinTeamIds)){
+			if(joinTeamIdList != null && joinTeamIdList.size() >0){
 				//获取我的参赛球队
 				List<Long> myTeamIdList = matchDao.getMyJoinTeamList(userId);
 				if(myTeamIdList != null && myTeamIdList.size()>0){
@@ -418,8 +418,8 @@ public class MatchService implements IBaseService {
 		}
 		//获取比赛球队信息
 		String teamIds = matchInfo.getMiJoinTeamIds();
-		if (StringUtils.isNotEmpty(teamIds)) {
-			List<Long> teamIdList = getLongTeamIdList(teamIds);
+        List<Long> teamIdList = getLongTeamIdList(teamIds);
+		if (teamIdList != null && teamIdList.size()>0) {
 			List<TeamInfo> teamList = matchDao.getTeamListByIds(teamIdList);
 			String joinTeamNames = "";
 			if (teamList != null && teamList.size() > 0) {
@@ -445,13 +445,13 @@ public class MatchService implements IBaseService {
 		}
 		//获取我的参赛代表球队
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, null, userInfo.getUiId());
-		result.put("myChooseTeamId", matchUserGroupMapping.getMugmTeamId());
+		result.put("myChooseTeamId", matchUserGroupMapping != null?matchUserGroupMapping.getMugmTeamId():null);
 		return result;
 	}
 
 	public List<Long> getLongTeamIdList(String teamIds) {
 		List<Long> teamIdList = new ArrayList<>();
-		if(StringUtils.isNotEmpty(teamIds)){
+		if(StringUtils.isNotEmpty(teamIds.trim())){
 			String[] ids = teamIds.split(",");
 			for (String id : ids) {
 				if (StringUtils.isNotEmpty(id)) {
@@ -773,6 +773,7 @@ public class MatchService implements IBaseService {
 						mugm.setMugmMatchId(matchInfo.getMiId());
 						mugm.setMugmTeamId((Long) map.get("teamId"));
 						mugm.setMugmUserType(0);
+						mugm.setMugmIsDel(0);
 						mugm.setMugmGroupId(matchGroup.getMgId());
 						mugm.setMugmGroupName(matchGroup.getMgGroupName());
 						mugm.setMugmUserId(captainUserId);
@@ -1160,123 +1161,195 @@ public class MatchService implements IBaseService {
 		//如果有上报球队，同时将比分记录到上报球队中
 		String reportTeamIds = matchInfo.getMiReportScoreTeamId();
 		if (scoreId != null) {
-			MatchScore scoreDb = matchDao.get(MatchScore.class, scoreId);
-			scoreDb.setMsIsUp(isUp);
-			//杆差=杆数-本洞标准杆数
-			if(rod != null){
-				scoreDb.setMsRodNum(rod);
-				scoreDb.setMsRodCha(rod - holeStandardRod);
-			}else{
-				Integer gc = 0;
-				if(rodCha.contains("+")){
-					gc = Integer.parseInt(rodCha.substring(1));
-					scoreDb.setMsRodCha(gc);
-				}else{
-					gc = Integer.parseInt(rodCha);
-					scoreDb.setMsRodCha(gc);
-				}
-				//杆数=标准杆+杆差
-				scoreDb.setMsRodNum(holeStandardRod+gc);
-			}
-			scoreDb.setMsPushRodNum(pushRod);
-			//计算得分结果
-			getScore(scoreDb,holeStandardRod);
-			scoreDb.setMsUpdateTime(System.currentTimeMillis());
-			scoreDb.setMsUpdateUserId(userInfo.getUiId());
-			scoreDb.setMsUpdateUserName(userInfo.getUiRealName());
-			matchDao.update(scoreDb);
-			//如果有上报球队，同时将比分记录到上报球队中
-			if(StringUtils.isNotEmpty(reportTeamIds)){
-				List<Long> reportTeamIdList = getLongTeamIdList(reportTeamIds);
-				for(Long reportTeamId :reportTeamIdList){
-					//获取上报球队记分详情
-					MatchScore scoreByReportTeam = matchDao.getScoreByReportTeam(reportTeamId,matchId,groupId,userId,
-							scoreDb.getMsBeforeAfter(),scoreDb.getMsHoleName(),scoreDb.getMsHoleNum(),scoreDb.getMsHoleStandardRod());
-					if(scoreByReportTeam != null){
-						scoreByReportTeam.setMsIsUp(scoreDb.getMsIsUp());
-						scoreByReportTeam.setMsRodNum(scoreDb.getMsRodNum());
-						scoreByReportTeam.setMsRodCha(scoreDb.getMsRodCha());
-						scoreByReportTeam.setMsPushRodNum(scoreDb.getMsPushRodNum());
-						scoreByReportTeam.setMsIsPar(scoreDb.getMsIsPar());
-						scoreByReportTeam.setMsIsBird(scoreDb.getMsIsBird());
-						scoreByReportTeam.setMsIsEagle(scoreDb.getMsIsEagle());
-						scoreByReportTeam.setMsIsOn(scoreDb.getMsIsOn());
-						scoreByReportTeam.setMsIsBomb(scoreDb.getMsIsBomb());
-						scoreByReportTeam.setMsIsBogey(scoreDb.getMsIsBogey());
-						scoreByReportTeam.setMsUpdateTime(System.currentTimeMillis());
-						scoreByReportTeam.setMsUpdateUserId(userInfo.getUiId());
-						scoreByReportTeam.setMsUpdateUserName(userInfo.getUiRealName());
-						matchDao.update(scoreByReportTeam);
-					}
-				}
-			}
+            if(matchInfo.getMiMatchFormat2() == 1){
+                //如果是双人赛，同时更新本队的球友
+                //获取本组本球队的用户list
+                List<Map<String,Object>> userListByTeam = matchDao.getUserListByTeamId(matchId,groupId,teamId);
+                if(userListByTeam != null && userListByTeam.size()>0){
+                    for(Map<String,Object> user:userListByTeam){
+                        Long userId_ = getLongValue(user,"uiId");
+                        //更新记分
+                        MatchScore scoreDb = updateScoreByUserTeam(null,userInfo,userId_,matchId,groupId,teamId,
+                                beforeAfter,holeName,holeNum,isUp,rod,holeStandardRod,rodCha,pushRod);
+                        //更新在上报球队中的比分
+                        updateReportTeamScore(reportTeamIds,scoreDb,userInfo,matchId,groupId,userId_);
+                    }
+                }
+            }else{
+                //更新记分
+                MatchScore scoreDb = updateScoreByUserTeam(scoreId,userInfo,userId,matchId,groupId,teamId,
+                                beforeAfter,holeName,holeNum,isUp,rod,holeStandardRod,rodCha,pushRod);
+                //更新在上报球队中的比分
+                updateReportTeamScore(reportTeamIds,scoreDb,userInfo,matchId,groupId,userId);
+            }
 		} else {
 			MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
-			MatchScore score = new MatchScore();
-			//type=0 比赛球队记分
-			score.setMsType(0);
-			score.setMsTeamId(teamId);
-			score.setMsMatchId(matchId);
-			score.setMsMatchTitle(matchInfo.getMiTitle());
-			score.setMsMatchType(matchInfo.getMiType());
-			score.setMsGroupId(groupId);
-			score.setMsGroupName(matchGroup.getMgGroupName());
-			score.setMsUserId(userId);
-			score.setMsHoleStandardRod(holeStandardRod);
-            if(matchInfo.getMiType() == 1){
-                score.setMsUserName(matchUserGroupMapping.getMugmUserName());
+			MatchScore score = null;
+			if(matchInfo.getMiMatchFormat2() == 1){
+			    //如果是双人赛，将比分同时记给本组本球队的两个人
+                //获取本组本球队的用户list
+                List<Map<String,Object>> userListByTeam = matchDao.getUserListByTeamId(matchId,groupId,teamId);
+                if(userListByTeam != null && userListByTeam.size()>0){
+                    for(Map<String,Object> user:userListByTeam){
+                        Long userId_ = getLongValue(user,"uiId");
+                        String userName_ = getName(user,"uiRealName");
+                        if(StringUtils.isEmpty(userName_)){
+                            userName_ = getName(user,"uiNickName");
+                        }
+                        //保存记分
+                        score = saveScore(matchInfo,teamId,groupId, matchGroup.getMgGroupName(),
+                                userId_,userName_,userInfo,holeStandardRod,matchUserGroupMapping,
+                                beforeAfter,holeName,holeNum,isUp,rod,rodCha,pushRod);
+                        //如果有上报球队，同时将比分记录到上报球队中
+                        saveReportTeamScore(reportTeamIds,userId_,teamId, score);
+                    }
+                }
             }else{
-                score.setMsUserName(userName);
+                //保存记分
+                score = saveScore(matchInfo,teamId,groupId,matchGroup.getMgGroupName(),
+                        userId,matchUserGroupMapping.getMugmUserName(),userInfo,holeStandardRod,matchUserGroupMapping,
+                        beforeAfter,holeName,holeNum,isUp,rod,rodCha,pushRod);
+                //如果有上报球队，同时将比分记录到上报球队中
+                saveReportTeamScore(reportTeamIds,userId,teamId, score);
             }
-			score.setMsBeforeAfter(beforeAfter);
-			score.setMsHoleName(holeName);
-			score.setMsHoleNum(holeNum);
-			score.setMsIsUp(isUp);
-			if(rod != null){
-				score.setMsRodNum(rod);
-				score.setMsRodCha(rod - holeStandardRod);
-			}else{
-				Integer gc = 0;
-				if(rodCha.contains("+")){
-					gc = Integer.parseInt(rodCha.substring(1));
-					score.setMsRodCha(gc);
-				}else{
-					gc = Integer.parseInt(rodCha);
-					score.setMsRodCha(gc);
-				}
-				//杆数=标准杆+杆差
-				score.setMsRodNum(holeStandardRod+gc);
-			}
-			score.setMsPushRodNum(pushRod);
 
-			//计算得分结果
-			getScore(score,holeStandardRod);
 
-			score.setMsCreateUserId(userInfo.getUiId());
-			score.setMsCreateUserName(userInfo.getUiRealName());
-			score.setMsCreateTime(System.currentTimeMillis());
-			matchDao.save(score);
-			//如果有上报球队，同时将比分记录到上报球队中
-			if(StringUtils.isNotEmpty(reportTeamIds)){
-				List<Long> reportTeamIdList = getLongTeamIdList(reportTeamIds);
-				for(Long reportTeamId :reportTeamIdList){
-					//如果上报球队和参赛球队一样，就不计了
-					//获取本用户是否在上报球队中
-					Long count = matchDao.getIsInTeam(userId,reportTeamId);
-					if(!reportTeamId.equals(teamId) && count >0){
-						MatchScore scoreByReportTeam = new MatchScore();
-						BeanUtils.copyProperties(score,scoreByReportTeam);
-						//type=1 上报球队记分
-						scoreByReportTeam.setMsType(1);
-						scoreByReportTeam.setMsTeamId(reportTeamId);
-						matchDao.save(scoreByReportTeam);
-					}
-				}
-			}
 		}
 	}
+    //更新在上报球队中的比分
+    private void updateReportTeamScore(String reportTeamIds, MatchScore scoreDb, UserInfo userInfo,
+                                       Long matchId,Long groupId,Long userId) {
+        if(StringUtils.isNotEmpty(reportTeamIds)){
+            List<Long> reportTeamIdList = getLongTeamIdList(reportTeamIds);
+            for(Long reportTeamId :reportTeamIdList){
+                //获取上报球队记分详情
+                MatchScore scoreByReportTeam = matchDao.getScoreByReportTeam(reportTeamId,matchId,groupId,userId,
+                        scoreDb.getMsBeforeAfter(),scoreDb.getMsHoleName(),scoreDb.getMsHoleNum(),scoreDb.getMsHoleStandardRod());
+                if(scoreByReportTeam != null){
+                    scoreByReportTeam.setMsIsUp(scoreDb.getMsIsUp());
+                    scoreByReportTeam.setMsRodNum(scoreDb.getMsRodNum());
+                    scoreByReportTeam.setMsRodCha(scoreDb.getMsRodCha());
+                    scoreByReportTeam.setMsPushRodNum(scoreDb.getMsPushRodNum());
+                    scoreByReportTeam.setMsIsPar(scoreDb.getMsIsPar());
+                    scoreByReportTeam.setMsIsBird(scoreDb.getMsIsBird());
+                    scoreByReportTeam.setMsIsEagle(scoreDb.getMsIsEagle());
+                    scoreByReportTeam.setMsIsOn(scoreDb.getMsIsOn());
+                    scoreByReportTeam.setMsIsBomb(scoreDb.getMsIsBomb());
+                    scoreByReportTeam.setMsIsBogey(scoreDb.getMsIsBogey());
+                    scoreByReportTeam.setMsUpdateTime(System.currentTimeMillis());
+                    scoreByReportTeam.setMsUpdateUserId(userInfo.getUiId());
+                    scoreByReportTeam.setMsUpdateUserName(userInfo.getUiRealName());
+                    matchDao.update(scoreByReportTeam);
+                }
+            }
+        }
+    }
 
-	private void getScore(MatchScore score, Integer holeStandardRod) {
+    //将比分记录到上报球队中
+    private void saveReportTeamScore(String reportTeamIds, Long userId, Long teamId, MatchScore score) {
+        //如果有上报球队，同时将比分记录到上报球队中
+        if(StringUtils.isNotEmpty(reportTeamIds)){
+            List<Long> reportTeamIdList = getLongTeamIdList(reportTeamIds);
+            for(Long reportTeamId :reportTeamIdList){
+                //如果上报球队和参赛球队一样，就不计了
+                //获取本用户是否在上报球队中
+                Long count = matchDao.getIsInTeam(userId,reportTeamId);
+                if(!reportTeamId.equals(teamId) && count >0){
+                    MatchScore scoreByReportTeam = new MatchScore();
+                    BeanUtils.copyProperties(score,scoreByReportTeam);
+                    //type=1 上报球队记分
+                    scoreByReportTeam.setMsType(1);
+                    scoreByReportTeam.setMsTeamId(reportTeamId);
+                    matchDao.save(scoreByReportTeam);
+                }
+            }
+        }
+    }
+
+    //更新球友记分卡的得分
+    private MatchScore updateScoreByUserTeam(Long scoreId,UserInfo userInfo, Long userId_, Long matchId,
+                                       Long groupId, Long teamId, Integer beforeAfter, String holeName,
+                                             Integer holeNum,
+                                       String isUp, Integer rod, Integer holeStandardRod,
+                                       String rodCha, Integer pushRod) {
+        MatchScore scoreDb = null;
+        if(scoreId != null){
+            scoreDb = matchDao.get(MatchScore.class, scoreId);
+        }else{
+            scoreDb = matchDao.getMatchScoreByIds(userId_,matchId,groupId,teamId,beforeAfter,holeName,holeNum);
+        }
+        scoreDb.setMsIsUp(isUp);
+        //杆差=杆数-本洞标准杆数
+        if(rod != null){
+            scoreDb.setMsRodNum(rod);
+            scoreDb.setMsRodCha(rod - holeStandardRod);
+        }else{
+            Integer gc = 0;
+            if(rodCha.contains("+")){
+                gc = Integer.parseInt(rodCha.substring(1));
+                scoreDb.setMsRodCha(gc);
+            }else{
+                gc = Integer.parseInt(rodCha);
+                scoreDb.setMsRodCha(gc);
+            }
+            //杆数=标准杆+杆差
+            scoreDb.setMsRodNum(holeStandardRod+gc);
+        }
+        scoreDb.setMsPushRodNum(pushRod);
+        //计算得分结果
+        getScore(scoreDb,holeStandardRod);
+        scoreDb.setMsUpdateTime(System.currentTimeMillis());
+        scoreDb.setMsUpdateUserId(userInfo.getUiId());
+        scoreDb.setMsUpdateUserName(userInfo.getUiRealName());
+        matchDao.update(scoreDb);
+        return scoreDb;
+    }
+
+    //新增球友记分卡的得分
+    private MatchScore saveScore(MatchInfo matchInfo, Long teamId, Long groupId, String groupName,
+                                 Long userId, String userName, UserInfo userInfo, Integer holeStandardRod, MatchUserGroupMapping matchUserGroupMapping, Integer beforeAfter, String holeName, Integer holeNum, String isUp, Integer rod, String rodCha, Integer pushRod) {
+        MatchScore score = new MatchScore();
+        //type=0 比赛球队记分
+        score.setMsType(0);
+        score.setMsTeamId(teamId);
+        score.setMsMatchId(matchInfo.getMiId());
+        score.setMsMatchTitle(matchInfo.getMiTitle());
+        score.setMsMatchType(matchInfo.getMiType());
+        score.setMsGroupId(groupId);
+        score.setMsGroupName(groupName);
+        score.setMsUserId(userId);
+        score.setMsHoleStandardRod(holeStandardRod);
+        score.setMsUserName(userName);
+        score.setMsBeforeAfter(beforeAfter);
+        score.setMsHoleName(holeName);
+        score.setMsHoleNum(holeNum);
+        score.setMsIsUp(isUp);
+        if(rod != null){
+            score.setMsRodNum(rod);
+            score.setMsRodCha(rod - holeStandardRod);
+        }else{
+            Integer gc = 0;
+            if(rodCha.contains("+")){
+                gc = Integer.parseInt(rodCha.substring(1));
+                score.setMsRodCha(gc);
+            }else{
+                gc = Integer.parseInt(rodCha);
+                score.setMsRodCha(gc);
+            }
+            //杆数=标准杆+杆差
+            score.setMsRodNum(holeStandardRod+gc);
+        }
+        score.setMsPushRodNum(pushRod);
+        //计算得分结果
+        getScore(score,holeStandardRod);
+        score.setMsCreateUserId(userInfo.getUiId());
+        score.setMsCreateUserName(userInfo.getUiRealName());
+        score.setMsCreateTime(System.currentTimeMillis());
+        matchDao.save(score);
+        return score;
+    }
+
+    private void getScore(MatchScore score, Integer holeStandardRod) {
 		if(score.getMsRodNum().equals(holeStandardRod)){
 			//标准杆一样 par
 			score.setMsIsPar(1);
@@ -1549,13 +1622,13 @@ public class MatchService implements IBaseService {
 			//计算杆数的总排名
 			List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchId, teamId,userIdList);
 			if (matchScoreList != null && matchScoreList.size() > 0) {
-				for (Map<String, Object> scoreMap : matchScoreList) {
+				for (int i=0;i<matchScoreList.size();i++) {
+                    Map<String, Object> scoreMap = matchScoreList.get(i);
 					Long teamIdByScore = getLongValue(scoreMap, "teamId");
 					if(teamId.equals(teamIdByScore)){
 						Long userId = getLongValue(scoreMap, "userId");
 						//排名
-						Double rankd = (Double)scoreMap.get("rank");
-						Integer rank = rankd.intValue();
+						Integer rank = i+1;
 						//计算得分
 						Integer point = baseScore + winScore/rank;
 						//计算得分(有小数)
@@ -1646,13 +1719,13 @@ public class MatchService implements IBaseService {
 				//计算杆数的总排名
 				List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchInfo.getMiId(),teamId,userIdList);
 				if (matchScoreList != null && matchScoreList.size() > 0) {
-					for (Map<String, Object> scoreMap : matchScoreList) {
+                    for (int i=0;i<matchScoreList.size();i++) {
+                        Map<String, Object> scoreMap = matchScoreList.get(i);
 						Long teamIdByScore = getLongValue(scoreMap, "teamId");
 						if(teamId.equals(teamIdByScore)){
 							Long userId = getLongValue(scoreMap, "userId");
 							//排名
-							Double rankd = (Double)scoreMap.get("rank");
-							Integer rank = rankd.intValue();
+							Integer rank = i+1;
 							//计算得分
 							Integer point = baseScore + winScore/rank;
 							//更新该球友原先的积分情况
@@ -1773,48 +1846,32 @@ public class MatchService implements IBaseService {
 	 * 计算公式为：球友积分=基础积分+赢球奖分
 	 */
 	private void updatePointByHoleScore(Long matchId, Long teamId, Integer baseScore, Integer winScore) {
-		//获取本次比赛中的分组和每组用户的总分
-		List<Map<String,Object>> holeScoreList = matchDao.getMatchHoleScoreList(matchId);
-		if(holeScoreList != null && holeScoreList.size()>0){
-			for(int i = 0;i<holeScoreList.size();i++){
-				Map<String,Object> team1 = holeScoreList.get(i);
-				Map<String,Object> team2 = holeScoreList.get(i+1);
-				i += 1;
-				Long team1Id = getLongValue(team1,"teamId");
-				Long team2Id = getLongValue(team2,"teamId");
-				Integer team1SumRod = getIntegerValue(team1,"sumRod");
-				Integer team2SumRod = getIntegerValue(team2,"sumRod");
-				Long userForTeam = null;
-				Integer point = 0;
-				if(teamId.equals(team1Id)){
-					userForTeam = getLongValue(team1,"userId");
-					if(team1SumRod < team2SumRod){
-						//第一队赢球 球友积分=基础积分+赢球奖分
-						point = baseScore + winScore;
-					}else if(team1SumRod > team2SumRod){
-						//第一队输球 球友积分=基础积分+赢球奖分0
-						point = baseScore;
-					}else if(team1SumRod.equals(team2SumRod)){
-						//打平 球友积分=基础积分+赢球奖分的一半
-						 point = baseScore + winScore/2;
-					}
-				}else if(teamId.equals(team2Id)){
-					userForTeam = getLongValue(team2,"userId");
-					if(team2SumRod < team1SumRod){
-						//第二队赢球 球友积分=基础积分+赢球奖分
-						point = baseScore + winScore;
-					}else if(team2SumRod > team1SumRod){
-						//第二队输球 球友积分=基础积分+赢球奖分0
-						point = baseScore;
-					}else if(team2SumRod.equals(team1SumRod)){
-						//打平 球友积分=基础积分+赢球奖分的一半
-						point = baseScore + winScore/2;
-					}
-				}
-				//更新该球友的积分情况
-				updatePointByIds(matchId, teamId, userForTeam, point, 0);
-			}
-		}
+		//获取本队的输球组和赢球组
+        List<MatchHoleResult> matchHoleResultList = matchDao.getMatchHoleWinOrLoseList(matchId,teamId);
+        if(matchHoleResultList != null && matchHoleResultList.size()>0){
+            Integer point = 0;
+            for(MatchHoleResult matchHoleResult:matchHoleResultList){
+                if(matchHoleResult.getMhrResult() == 1){
+                    //赢球组 球友积分=基础积分+赢球奖分
+                    point = baseScore + winScore;
+                }else if(matchHoleResult.getMhrResult() == 2){
+                    //输球组 奖分为0 球友积分=基础积分+0
+                    point = baseScore;
+                }else if(matchHoleResult.getMhrResult() == 0){
+                    //打平 球友积分=基础积分+赢球奖分的一半
+                    point = baseScore + winScore/2;
+                }
+                //获取本组本球队的用户列表
+                List<Map<String,Object>> userList = matchDao.getUserListByTeamId(matchId,teamId,matchHoleResult.getMhrGroupId());
+                if(userList != null && userList.size() >0){
+                    for(Map<String,Object> user:userList){
+                        Long userId = getLongValue(user,"uiId");
+                        //更新该球友的积分情况
+                        updatePointByIds(matchId, teamId, userId, point, 0);
+                    }
+                }
+            }
+        }
 	}
 
 	/**
@@ -2274,48 +2331,26 @@ public class MatchService implements IBaseService {
 			nList.add(n);
 		}
 
-		//按分组顺序，获取前n组的组id
-		List<Map<String, Object>> groupIdListByMingci = matchDao.getTotalGroupCountByMatchId(matchId,mingci);
-		List<Long> groupIdList = new ArrayList<>();
-		if(groupIdListByMingci != null && groupIdListByMingci.size() >0){
-			for(Map<String, Object> map:groupIdListByMingci){
-				Long groupId = getLongValue(map,"groupId");
-				groupIdList.add(groupId);
-			}
-		}
-		//按分组顺序，获取前n组的比赛输赢情况
-		List<Map<String, Object>> winOrLoseList = matchDao.getWinOrLoseList(matchId,groupIdList);
-		List<MatchTotalTeamBean> beanList = new ArrayList<>();
-		if(winOrLoseList != null && winOrLoseList.size() >0){
-			MatchTotalTeamBean matchTotalTeamBean = null;
-			for(Map<String, Object> map:winOrLoseList){
-				Long teamId = getLongValue(map,"teamId");
-				String teamName = getName(map,"teamName");
-				Integer winResult = getIntegerValue(map,"result");
-				String groupName = getName(map,"groupName");
-				if(matchTotalTeamBean == null ||
-						!teamId.equals(matchTotalTeamBean.getTeamId()) ||
-						(teamId.equals(matchTotalTeamBean.getTeamId()) && winResult.equals(matchTotalTeamBean.getType()))){
-					matchTotalTeamBean = new MatchTotalTeamBean();
-					matchTotalTeamBean.setTeamId(teamId);
-					matchTotalTeamBean.setTeamName(teamName);
-					matchTotalTeamBean.setType(winResult);
-					if(winResult == 0){
-						matchTotalTeamBean.setPingGroupName(groupName);
-					}else{
-						matchTotalTeamBean.setWinGroupName(groupName);
-					}
-					beanList.add(matchTotalTeamBean);
-				}else{
-					matchTotalTeamBean.setType(winResult);
-					if(winResult == 0){
-						matchTotalTeamBean.setPingGroupName(groupName);
-					}else{
-						matchTotalTeamBean.setWinGroupName(groupName);
-					}
-				}
-			}
-		}
+		//获取参赛队(有可能是公开赛，所以要从matchuserMapping表中获取参赛队)
+        List<Long> teamInfoList = matchDao.getJoinTeamMappingList(matchId);
+        //要显示的列表
+        List<MatchTotalTeamBean> beanList = new ArrayList<>();
+        if(teamInfoList != null && teamInfoList.size()>0){
+            for(Long teamId:teamInfoList){
+                //每个球队的平、赢组个数
+                MatchTotalTeamBean matchTotalTeamBean = new MatchTotalTeamBean();
+                matchTotalTeamBean.setTeamId(teamId);
+                TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
+                matchTotalTeamBean.setTeamName(teamInfo.getTiName());
+                List<Map<String, Object>> numList = matchDao.getPingWinNumList(matchId,teamId);
+                if(numList != null && numList.size() >0){
+                    Map<String, Object> map = numList.get(0);
+                    matchTotalTeamBean.setWinNum(getIntegerValue(map,"winNum"));
+                    matchTotalTeamBean.setPingNum(getIntegerValue(map,"pingNum"));
+                }
+                beanList.add(matchTotalTeamBean);
+            }
+        }
 		result.put("scoreList",beanList);
 		result.put("mingciArray",nList);
 	}
