@@ -56,15 +56,15 @@ public class UploadController {
             targetFile.delete();*/
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("pc端上传图片时出错。"+ e );
+            logger.error("pc端上传图片时出错。",e );
             return JsonWrapper.newErrorInstance("pc端上传图片时出错。");
         }
         return JsonWrapper.newDataInstance(folderPath + File.separator +  fileName);
     }
-    
+
 	/**
 	 * 上传头像缩略图(调整手机上传图片横向的问题)
-	 * 
+	 *
 	 * @return
 	 */
 	@ResponseBody
@@ -86,7 +86,7 @@ public class UploadController {
 			file.transferTo(targetFile);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("上传图片时出错。" + e);
+			logger.error("上传图片时出错。" ,e);
 			return JsonWrapper.newErrorInstance("上传图片时出错。");
 		}
 		return JsonWrapper.newDataInstance(PropertyConst.HEADIMG_PATH + File.separator+fileName);
@@ -105,7 +105,7 @@ public class UploadController {
 
 	/**
 	 * 使用插件上传缩略图
-	 * 
+	 *
 	 * @return
 	 */
 	@ResponseBody
@@ -179,7 +179,7 @@ public class UploadController {
 			file.transferTo(targetFile);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("上传PPT时出错。"+ e );
+			logger.error("上传PPT时出错。",e );
 			return JsonWrapper.newErrorInstance("上传PPT时出错。");
 		}
 		return JsonWrapper.newDataInstance(folderPath + fileName);
@@ -235,7 +235,7 @@ public class UploadController {
             return logoPath;
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("上传球队logo时出错。" + e);
+            logger.error("上传球队logo时出错。" ,e);
             return "error";
         }
     }

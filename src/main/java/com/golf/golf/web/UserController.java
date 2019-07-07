@@ -47,7 +47,7 @@ public class UserController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("保存微信用户信息时出错。" + e);
+			logger.error("保存微信用户信息时出错。" ,e);
 			return JsonWrapper.newErrorInstance("保存微信用户信息时出错"+e);
 		}
 	}
@@ -67,7 +67,7 @@ public class UserController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("保存微信用户信息时出错。" + e);
+			logger.error("保存微信用户信息时出错。" ,e);
 			return JsonWrapper.newErrorInstance("保存微信用户信息时出错");
 		}
 	}
@@ -161,7 +161,7 @@ public class UserController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("前台-根据用户id获取用户信息失败。" + e);
+			logger.error("前台-根据用户id获取用户信息失败。" ,e);
 			return JsonWrapper.newErrorInstance("根据用户id获取用户信息失败。");
 		}
 	}
@@ -179,7 +179,7 @@ public class UserController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("前台-根据用户id获取历史成绩息失败。" + e);
+			logger.error("前台-根据用户id获取历史成绩息失败。" ,e);
 			return JsonWrapper.newErrorInstance("根据用户id获取历史成绩息失败。");
 		}
 	}
@@ -200,7 +200,7 @@ public class UserController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("前台-根据用户id获取历史成绩信息失败。" + e);
+			logger.error("前台-根据用户id获取历史成绩信息失败。" ,e);
 			return JsonWrapper.newErrorInstance("根据用户id获取历史成绩信息失败。");
 		}
 	}
@@ -217,7 +217,7 @@ public class UserController {
 			return JsonWrapper.newDataInstance(ruleList);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("前台-根据用户id获取高球规则失败。" + e);
+			logger.error("前台-根据用户id获取高球规则失败。" ,e);
 			return JsonWrapper.newErrorInstance("根据用户id获取高球规则失败。");
 		}
 	}

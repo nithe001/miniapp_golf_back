@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +85,7 @@ public class MatchController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			String errmsg = "前台-获取比赛列表出错。openid="+openid;
-			logger.error(errmsg+ e );
+			logger.error(errmsg,e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 
@@ -105,7 +106,7 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("创建比赛——获取赛长所在球队时出错。" + e);
+			logger.error("创建比赛——获取赛长所在球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建比赛——获取赛长所在球队时出错。");
 		}
 	}
@@ -132,7 +133,7 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("创建比赛——获取上报球队时出错。" + e);
+			logger.error("创建比赛——获取上报球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建比赛——获取上报球队时出错");
 		}
 	}
@@ -166,7 +167,7 @@ public class MatchController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("创建比赛时出错。" + e);
+			logger.error("创建比赛时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建比赛时出错");
 		}
 	}
@@ -186,7 +187,7 @@ public class MatchController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("赛长指定该用户成为赛长时出错。比赛id="+matchId +" 用户id="+userId+ e);
+			logger.error("赛长指定该用户成为赛长时出错。比赛id="+matchId +" 用户id="+userId,e);
 			return JsonWrapper.newErrorInstance("赛长指定该用户成为赛长时出错");
 		}
 	}
@@ -208,7 +209,7 @@ public class MatchController {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("删除比赛时出错。" + e);
+			logger.error("删除比赛时出错。" ,e);
 			return JsonWrapper.newErrorInstance("删除比赛时出错");
 		}
 	}
@@ -236,7 +237,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取围观用户列表和比赛分组时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -254,7 +255,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-删除比赛分组时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -267,15 +268,20 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchInfoById")
-	public JsonElement getMatchInfoById(Long matchId) {
+	public JsonElement getMatchInfoById(Long matchId,Long groupId,String openid) {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
+			/*//我是否是参赛人员(显示邀请记分按钮)
+            Long isJoin = matchService.getIsJoinMatch(matchId,groupId,openid);
+            Map<String,Object> map = new HashMap<>();
+            map.put("matchInfo",matchInfo);
+            map.put("isJoin",isJoin);*/
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
 			String errmsg = "前台-获取比赛详情时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -292,7 +298,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-获取单练的groupId时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -311,7 +317,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取是否是赛长时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -329,7 +335,7 @@ public class MatchController {
         } catch (Exception e) {
 			String errmsg = "前台-获取更多围观用户时出错。matchId="+matchId;
             e.printStackTrace();
-            logger.error(errmsg + e);
+            logger.error(errmsg ,e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
@@ -347,7 +353,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-点击进入比赛详情-获取参赛球队信息和比赛详情时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -365,7 +371,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-添加分组 添加组时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -383,7 +389,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -401,7 +407,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取待分组人员时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -420,7 +426,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取备选球友时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -438,7 +444,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -457,7 +463,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -482,7 +488,7 @@ public class MatchController {
         } catch (Exception e) {
 			String errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
             e.printStackTrace();
-            logger.error(errmsg + e);
+            logger.error(errmsg ,e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
@@ -501,7 +507,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-获取本组比赛结果详情出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -519,7 +525,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-获取整组比赛结果详情出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -545,7 +551,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-单练——查询是否有我正在进行的单练时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -565,7 +571,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -583,7 +589,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -623,7 +629,7 @@ public class MatchController {
         } catch (Exception e) {
             String errmsg = "前台-创建比赛—选择球场—查询球场列表时出错。";
             e.printStackTrace();
-            logger.error(errmsg + e);
+            logger.error(errmsg ,e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
@@ -641,7 +647,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-创建比赛—获取球场城市列表时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -660,7 +666,7 @@ public class MatchController {
         } catch (Exception e) {
             String errmsg = "前台-创建比赛—获取球场分区时出错。球场ID="+parkId;
             e.printStackTrace();
-            logger.error(errmsg + e);
+            logger.error(errmsg ,e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
@@ -716,7 +722,7 @@ public class MatchController {
 			return logoPath;
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("上传比赛logo时出错。" + e);
+			logger.error("上传比赛logo时出错。" ,e);
 //			return JsonWrapper.newErrorInstance("上传比赛logo时出错");
 			return "error";
 		}
@@ -735,7 +741,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比杆记分卡信息时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -753,7 +759,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组双人比杆记分卡信息时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -771,7 +777,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -789,7 +795,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -805,17 +811,19 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
-	public JsonElement saveOrUpdateScore(Long userId, String userName, Long matchId, Long groupId, Long scoreId, String holeName,
-										 Integer holeNum, Integer holeStandardRod, String isUp, Integer rod, String rodCha,
+	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId,
+                                         Long scoreId, Long holeId,
+                                         String isUp, Integer rod, String rodCha,
 										 Integer pushRod, Integer beforeAfter, String openid) {
 		try {
-			matchService.saveOrUpdateScore(userId, userName, matchId, groupId,scoreId, holeName, holeNum,
-														holeStandardRod, isUp, rod, rodCha, pushRod, beforeAfter, openid);
+			matchService.saveOrUpdateScore(userId, matchId, groupId,
+                    scoreId, holeId,
+                    isUp, rod, rodCha, pushRod, beforeAfter, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -835,7 +843,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新比赛状态时出错。";
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -861,7 +869,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 		return JsonWrapper.newSuccessInstance();
@@ -886,7 +894,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—撤销成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -904,7 +912,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—结束单练时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -922,7 +930,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-单练——更新临时用户姓名时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -940,7 +948,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取总比分时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -960,7 +968,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队比分时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -983,7 +991,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队统计时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1003,7 +1011,7 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(list);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("球友报名——获取球友所在球队时出错。" + e);
+			logger.error("球友报名——获取球友所在球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("球友报名——获取球友所在球队时出错。");
 		}
 	}
@@ -1022,7 +1030,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1040,7 +1048,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1058,7 +1066,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——退出比赛时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1078,7 +1086,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1099,7 +1107,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1117,7 +1125,7 @@ public class MatchController {
 		} catch (Exception e) {
 			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
 			e.printStackTrace();
-			logger.error(errmsg + e);
+			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
@@ -1135,7 +1143,7 @@ public class MatchController {
         } catch (Exception e) {
             String errmsg = "比赛——退出观战时出错。matchId="+matchId+"  openid="+openid;
             e.printStackTrace();
-            logger.error(errmsg + e);
+            logger.error(errmsg ,e);
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }

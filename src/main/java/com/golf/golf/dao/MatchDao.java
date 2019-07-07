@@ -2095,5 +2095,16 @@ public class MatchDao extends CommonDao {
         return null;
     }
 
-
+    //我是否是参赛人员(显示邀请记分按钮)
+    /*public Long getIsJoinMatchUser(Long matchId, Long groupId, Long userId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("from MatchJoinWatchInfo as t " +
+                "where t.mjwiMatchId = " +matchId+
+                " and t.mjwiUserId = "+userId);
+        List<MatchJoinWatchInfo> list = dao.createQuery(sql.toString());
+        if(list != null && list.size()>0){
+            return list.get(0);
+        }
+        return null;
+    }*/
 }

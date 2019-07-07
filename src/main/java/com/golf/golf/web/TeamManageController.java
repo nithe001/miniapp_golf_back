@@ -79,7 +79,7 @@ public class TeamManageController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取球队列表出错。openid="+openid;
-			logger.error(errmsg+ e );
+			logger.error(errmsg,e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 		return JsonWrapper.newDataInstance(pageInfo);
@@ -116,7 +116,7 @@ public class TeamManageController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取已选球队列表出错。openid="+openid;
-			logger.error(errmsg+ e );
+			logger.error(errmsg,e );
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 		return JsonWrapper.newDataInstance(pageInfo);
@@ -142,7 +142,7 @@ public class TeamManageController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("创建球队时出错。" + e);
+			logger.error("创建球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建球队时出错");
 		}
 	}
@@ -197,7 +197,7 @@ public class TeamManageController {
             return logoPath;
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("上传球队logo时出错。" + e);
+			logger.error("上传球队logo时出错。" ,e);
             return "error";
 		}
 	}
@@ -220,7 +220,7 @@ public class TeamManageController {
 			return JsonWrapper.newErrorInstance("无权删除该球队");
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("删除球队时出错。" + e);
+			logger.error("删除球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("删除球队时出错");
 		}
 	}
@@ -238,7 +238,7 @@ public class TeamManageController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取球队详情时出错。球队id="+teamId + e);
+			logger.error("获取球队详情时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("获取球队详情时出错");
 		}
 	}
@@ -262,7 +262,7 @@ public class TeamManageController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取球队记分详情时出错。球队id="+teamId + e);
+			logger.error("获取球队记分详情时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("获取球队记分详情时出错");
 		}
 	}
@@ -281,7 +281,7 @@ public class TeamManageController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取球队球友列表时出错。球队id="+teamId + e);
+			logger.error("获取球队球友列表时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("获取球队球友列表时出错");
 		}
 	}
@@ -301,7 +301,7 @@ public class TeamManageController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("更新球队用户时出错。球队id="+teamId + e);
+			logger.error("更新球队用户时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("更新球队用户时出错");
 		}
 	}
@@ -319,7 +319,7 @@ public class TeamManageController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("获取本球队所有用户时出错。球队id="+teamId + e);
+			logger.error("获取本球队所有用户时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("获取本球队所有用户时出错");
 		}
 	}
@@ -338,7 +338,7 @@ public class TeamManageController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("加入或退出该球队时出错。球队id="+teamId + e);
+			logger.error("加入或退出该球队时出错。球队id="+teamId ,e);
 			return JsonWrapper.newErrorInstance("加入或退出该球队时出错");
 		}
 	}
@@ -357,7 +357,7 @@ public class TeamManageController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("队长指定该用户成为队长时出错。球队id="+teamId +" 用户id="+userId+ e);
+			logger.error("队长指定该用户成为队长时出错。球队id="+teamId +" 用户id="+userId,e);
 			return JsonWrapper.newErrorInstance("队长指定该用户成为队长时出错");
 		}
 	}
@@ -375,7 +375,7 @@ public class TeamManageController {
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("查询我是否填写了详细资料时出错。"+ e);
+			logger.error("查询我是否填写了详细资料时出错。",e);
 			return JsonWrapper.newErrorInstance("查询我是否填写了详细资料时出错");
 		}
 	}
