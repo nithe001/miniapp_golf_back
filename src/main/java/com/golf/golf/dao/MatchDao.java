@@ -770,11 +770,16 @@ public class MatchDao extends CommonDao {
 	 * 获取总计
 	 */
 	public List<Map<String, Object>> getTotalScoreWithUser(Long matchId, Long groupId) {
+	        MatchInfo matchInfo = get(MatchInfo.class,matchId);
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT g.mugm_user_id AS user_id, sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
 		sql.append("FROM match_user_group_mapping as g LEFT JOIN match_score AS s ");
         sql.append("ON (s.ms_match_id = g.mugm_match_id " +
-                "AND s.ms_user_id = g.mugm_user_id and g.mugm_team_id = s.ms_team_id ) ");
+                "AND s.ms_user_id = g.mugm_user_id ");
+        if(matchInfo.getMiMatchOpenType() != 1){
+            sql.append(" and g.mugm_team_id = s.ms_team_id  ");
+        }
+        sql.append(" ) ");
         sql.append("where g.mugm_match_id = "+matchId+" AND g.mugm_group_id = "+groupId);
 		sql.append(" AND g.mugm_is_del != 1 ");
 		sql.append(" GROUP BY g.mugm_user_id ORDER BY g.mugm_user_id,g.mugm_team_id");
