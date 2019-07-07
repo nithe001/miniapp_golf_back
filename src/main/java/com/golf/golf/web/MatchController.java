@@ -115,15 +115,17 @@ public class MatchController {
 	 * 参赛球队自动在各自球队记分，不需要设置上报球队，
 	 * 但是这两个球队的球友都有来自北大队的，就需要设置上报球队为北大队，
 	 * 反正就按某个上报球队和所有参赛球队的交集筛选队员成绩并算积分就行
+     * type:0 所有上报球队
+     * type:1 已选择的上报球队
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getJoinTeamListByMatchId")
-	public JsonElement getJoinTeamListByMatchId(String joinTeamIds) {
+	public JsonElement getJoinTeamListByMatchId(String joinTeamIds,Integer type) {
 		try {
 			List<Map<String,Object>> list = null;
 			if(StringUtils.isNotEmpty(joinTeamIds)){
-				list = matchService.getJoinTeamListByMatchId(joinTeamIds);
+				list = matchService.getJoinTeamListByMatchId(joinTeamIds,type);
 			}else{
 				list = new ArrayList<>();
 			}

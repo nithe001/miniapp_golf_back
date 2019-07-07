@@ -11,6 +11,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.*;
 import com.golf.golf.dao.MatchDao;
+import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,8 @@ public class MatchService implements IBaseService {
 
 	@Autowired
 	private MatchDao matchDao;
+    @Autowired
+    private TeamDao teamDao;
 	@Autowired
 	private TeamService teamService;
 	@Autowired
@@ -2755,24 +2758,40 @@ public class MatchService implements IBaseService {
 	 * 创建比赛——选择上报的上级球队——获取参赛用户所在的上级球队
 	 * @return
 	 */
-	public List<Map<String,Object>> getJoinTeamListByMatchId(String joinTeamIds) {
-		String[] ids = joinTeamIds.split(",");
-		List<Long> idList = new ArrayList<>();
-		for(String id:ids){
-			if(StringUtils.isNotEmpty(id)){
-				idList.add(Long.parseLong(id));
-			}
-		}
+	public List<Map<String,Object>> getJoinTeamListByMatchId(String joinTeamIds,Integer type) {
+		List<Long> idList = getLongTeamIdList(joinTeamIds);
 		//获取参赛用户所在的上级球队
-		List<Map<String,Object>> list = matchDao.getJoinTeamListByMatchId(idList);
-		if(list != null && list.size()>0){
-			for(Map<String,Object> map :list){
-				//logo
-				String logo = (String)map.get("teamLogo");
-				map.put("teamLogo", PropertyConst.DOMAIN+logo);
-			}
-		}
-		return list;
+        //获取参赛球队的所有有交集的球队的用户
+		List<Map<String,Object>> userList = matchDao.getJoinTeamUserListByMatchId(idList);
+		//筛选上级球队
+        List<Long> userIdList = new ArrayList<>();
+        List<Map<String,Object>> reportTeamList = new ArrayList<>();
+        if(userList != null && userList.size()>0){
+            for(Map<String,Object> map :userList){
+                Long userId = getLongValue(map,"userId");
+                userIdList.add(userId);
+            }
+            //获取所有上报球队信息
+            reportTeamList = matchDao.getReportTeamList(idList,userIdList);
+            if(reportTeamList != null && reportTeamList.size()>0){
+                for(Map<String,Object> map :reportTeamList){
+                    String logo = getName(map,"logo");
+                    map.put("logo", PropertyConst.DOMAIN+logo);
+                    Long teamId = getLongValue(map,"tiId");
+                    //获取队长
+                    List<String> captainList = teamDao.getCaptainByTeamId(teamId);
+                    if(captainList == null || captainList.size() ==0){
+                        map.put("captain", "未知");
+                    }else{
+                        map.put("captain", captainList.get(0));
+                    }
+                    //获取用户个数
+                    Long userCount = teamDao.getUserCountByTeamId(teamId);
+                    map.put("userCount",userCount);
+                }
+            }
+        }
+		return reportTeamList;
 	}
 
 	/**

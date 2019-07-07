@@ -408,4 +408,12 @@ public class TeamDao extends CommonDao {
         hql.append(" ) AS t");
         return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
+
+    //获取球队的用户个数
+    public Long getUserCountByTeamId(Long teamId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append(" FROM TeamUserMapping as t ");
+        sql.append("WHERE t.tumTeamId = "+teamId);
+        return dao.createCountQuery("select count(*) "+sql.toString());
+    }
 }

@@ -1636,7 +1636,44 @@ public class MatchDao extends CommonDao {
 		return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
-	/**
+    /**
+     * 创建比赛——选择上报球队——获取参赛用户所在的上级球队
+     * @return
+     */
+    public List<Map<String,Object>> getJoinTeamUserListByMatchId(List<Long> idList) {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("idList",idList);
+        StringBuilder sql = new StringBuilder();
+        sql.append("select tum.tum_user_id as userId,COUNT(tum.tum_user_id) as count " +
+                "from team_user_mapping as tum where tum.tum_team_id in(:idList) " +
+                "GROUP BY tum.tum_user_id " +
+                "having count>1 " +
+                " ORDER BY tum.tum_user_id ");
+        return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
+    //获取上报球队信息
+    public List<Map<String, Object>> getReportTeamList(List<Long> joinTeamIdList,List<Long> userIdList) {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("joinTeamIdList",joinTeamIdList);
+        parp.put("userIdList",userIdList);
+        StringBuilder hql = new StringBuilder();
+        hql.append("select t.ti_id as tiId,t.ti_name as tiName," +
+                "tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ");
+        hql.append("from ( ");
+        hql.append("select * from team_user_mapping as tum1 where tum1.tum_team_id not in(:joinTeamIdList) " +
+                    "and tum1.tum_user_id  in(:userIdList) ");
+        hql.append(")as tum LEFT JOIN team_info AS t ");
+        hql.append("on t.ti_id = tum.tum_team_id ");
+        hql.append("where t.ti_is_valid = 1 ");
+        if(parp.get("keyword") != null){
+            hql.append("AND t.ti_name LIKE :keyword ");
+        }
+        hql.append("ORDER BY t.ti_create_time desc ");
+        List<Map<String, Object>> list = dao.createSQLQuery( hql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+        return list;
+    }
+
+    /**
 	 * 更新比赛——如果参赛球队有改变，删除比赛mapping表该球队的信息 除了自己
 	 * @return
 	 */
@@ -2057,4 +2094,6 @@ public class MatchDao extends CommonDao {
         }
         return null;
     }
+
+
 }
