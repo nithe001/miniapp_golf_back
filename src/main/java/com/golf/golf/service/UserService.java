@@ -13,6 +13,7 @@ import com.golf.golf.db.*;
 import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -439,11 +440,11 @@ public class UserService implements IBaseService {
 	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
 	 * @return
 	 */
-	public Map<String, Object> getUserDetaliInfoById(Long teamId, Long matchId, Long userId, String openid) {
+	public Map<String, Object> getUserDetaliInfoById(String teamIdStr, String matchIdStr, Long userId, String openid) {
 		Map<String, Object> result = new HashMap<>();
-		//资料
-		UserInfo userInfo = getUserById(userId);
-		result.put("userInfo",userInfo);
+		//被查看用户资料
+		UserInfo otherUserInfo = getUserById(userId);
+		result.put("userInfo",otherUserInfo);
 		//信息是否公开
 		boolean isOpen = userInfoIsOpen(userId, openid);
 		result.put("isOpen",isOpen);
@@ -451,24 +452,58 @@ public class UserService implements IBaseService {
 		Double chaPoint = matchService.getUserChaPoint(userId);
 		result.put("chaPoint",chaPoint);
 		Long myUserId = getUserIdByOpenid(openid);
-		if(teamId != null){
+		if(StringUtils.isNotEmpty(teamIdStr)){
+			Long teamId = Long.parseLong(teamIdStr);
+			TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
+			result.put("teamInfo",teamInfo);
 			//被查看用户是否是本队队长
 			Long elseIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
 			//我是否是本队队长
 			Long meIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,myUserId);
 			result.put("elseIsTeamCaptain",elseIsTeamCaptain >0 ?true:false);
 			result.put("meIsTeamCaptain",meIsTeamCaptain >0 ?true:false);
-		}
+		}else if(StringUtils.isNotEmpty(matchIdStr)){
+			Long matchId = Long.parseLong(matchIdStr);
+			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+			result.put("matchInfo",matchInfo);
 
-		if(matchId != null){
-			//被查看用户是否是本比赛的赛长
-			Long elseIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
-			//我是否是本比赛的赛长
-			Long meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
-			result.put("elseIsMatchCaptain",elseIsMatchCaptain >0 ?true:false);
+			//被查看用户是否是本比赛的参赛人员
+			Long otherIsJoinMatchUser = matchDao.getIsMatchCaptain(matchId,otherUserInfo.getUiId());
+			Long otherIsMatchCaptain = 0l;
+			Long otherIsMatchWatch = 0l;
+			if(otherIsJoinMatchUser>0){
+				//被查看用户是否是本比赛的赛长
+				otherIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,otherUserInfo.getUiId());
+			}else{
+				//被查看用户是否是本比赛的围观人员
+				otherIsMatchWatch = matchDao.getIsWatch(otherUserInfo.getUiId(),matchId);
+				if(otherIsMatchWatch>0){
+					//查询我所在的比赛分组
+					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,myUserId);
+					//被查看用户是否已经被邀请记分
+					MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, matchUserGroupMapping.getMugmGroupId(), otherUserInfo.getUiId());
+					if(matchScoreUserMapping == null){
+						result.put("otherIsInvitate",false);
+					}else{
+						result.put("otherIsInvitate",true);
+					}
+				}
+			}
+
+			result.put("otherIsJoinMatchUser",otherIsJoinMatchUser >0 ?true:false);
+			result.put("otherIsMatchCaptain",otherIsMatchCaptain >0 ?true:false);
+			result.put("otherIsMatchWatch",otherIsMatchWatch >0 ?true:false);
+
+			//我是否是参赛者
+			Long meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
+			Long meIsMatchCaptain = 0L;
+			if(meIsJoinMatchUser>0){
+				//我是否是本比赛的赛长
+				meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
+			}
+			result.put("meIsJoinMatchUser",meIsJoinMatchUser >0 ?true:false);
 			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
 		}
-
 		return result;
 	}
 

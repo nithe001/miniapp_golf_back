@@ -155,7 +155,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfoById")
-	public JsonElement getUserInfoById(Long teamId, Long matchId, Long userId, String openid) {
+	public JsonElement getUserInfoById(String teamId, String matchId, Long userId, String openid) {
 		try {
 			Map<String, Object> result = userService.getUserDetaliInfoById(teamId,matchId,userId,openid);
 			return JsonWrapper.newDataInstance(result);

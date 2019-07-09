@@ -53,21 +53,47 @@ public class MatchDoubleRodService implements IBaseService {
 		//可能的情况：第一组 第一队2人，第二队1人，那么第一队的2人一行，第二队的1人自己一行
 		if(userList != null && userList.size() >0){
             if(userList != null && userList.size()>0){
-                Long teamIdTemp = 0L;
-                for(Map<String,Object> groupUser:userList){
-                    Long teamId = matchService.getLongValue(groupUser,"team_id");
-                    if(!teamId.equals(teamIdTemp)){
-                        teamIdTemp = teamId;
-                        if(userList0.size() >0){
-                            userList1.add(groupUser);
-                        }else{
-                            userList0.add(groupUser);
-                        }
-                    }else{
-                        userList0.add(groupUser);
-                    }
-
-                }
+            	//有参赛队的，按照队伍分组
+            	if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds().trim())){
+					Long teamIdTemp = null;
+					for(Iterator<Map<String,Object>> userListIterator = (Iterator<Map<String, Object>>) userList.iterator(); userListIterator.hasNext();){
+						Map<String,Object> groupUser = userListIterator.next();
+						Long teamId = matchService.getLongValue(groupUser,"team_id");
+						if(teamIdTemp == null || teamId.equals(teamIdTemp)){
+							teamIdTemp = teamId;
+							userList0.add(groupUser);
+							userListIterator.remove();
+						}
+					}
+					userList1.addAll(userList);
+				}else{
+            		//没有参赛队的，每个比赛分组 前两个人一小组，后两个人一小组 如果是两个人，就一人一个分组
+					if(userList.size() <= 2){
+						userList0.add(userList.get(0));
+						userList1.add(userList.get(1));
+					}else{
+						userList0.add(userList.get(0));
+						userList0.add(userList.get(1));
+						userList1.add(userList.get(2));
+						if(userList.size() ==4){
+							userList1.add(userList.get(3));
+						}
+					}
+					String userIds0 = "";
+					String userIds1 = "";
+					if(userList0.size()>0){
+						for(Map<String,Object> user:userList0){
+							userIds0 += ","+matchService.getLongValue(user,"uiId");
+						}
+					}
+					if(userList1.size()>0){
+						for(Map<String,Object> user:userList1){
+							userIds1 += ","+matchService.getLongValue(user,"uiId");
+						}
+					}
+					result.put("userIds0", userIds0);
+					result.put("userIds1", userIds1);
+				}
             }
         }
         result.put("userList0", userList0);
@@ -103,18 +129,36 @@ public class MatchDoubleRodService implements IBaseService {
 		result.put("totalStandardRod", totalStandardRod);
 
 		//用户总分 按球队来分组
-		List<Map<String, Object>> totalScoreList = matchDao.getTotalScoreWithUserByGroupTeam(matchId, groupId);
+		List<Map<String, Object>> totalScoreList = null;
+		if(matchInfo.getMiMatchFormat2() == 1 && matchInfo.getMiMatchFormat1() == 0
+				&& StringUtils.isEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isEmpty(matchInfo.getMiJoinTeamIds().trim())){
+			//双人比杆公开赛
+			totalScoreList = matchDao.getTotalScoreWithUserByGroup(matchId, groupId);
+		}else{
+			totalScoreList = matchDao.getTotalScoreWithUserByGroupTeam(matchId, groupId);
+		}
 		//去重
         if(totalScoreList != null && totalScoreList.size() >0){
-            Long teamIdTemp = 0l;
-            for(Iterator<Map<String,Object>> userIterator = (Iterator<Map<String, Object>>) totalScoreList.iterator(); userIterator.hasNext();){
-                Map<String,Object> map = userIterator.next();
-                Long teamId = matchService.getLongValue(map,"team_id");
-                if(teamId.equals(teamIdTemp)){
-                    userIterator.remove();
-                }
-                teamIdTemp = teamId;
-            }
+			if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds().trim())){
+				Long teamIdTemp = 0l;
+				for(Iterator<Map<String,Object>> userIterator = (Iterator<Map<String, Object>>) totalScoreList.iterator(); userIterator.hasNext();){
+					Map<String,Object> map = userIterator.next();
+					Long teamId = matchService.getLongValue(map,"team_id");
+					if(teamId.equals(teamIdTemp)){
+						userIterator.remove();
+					}
+					teamIdTemp = teamId;
+				}
+			}else{
+				if(totalScoreList.size() > 2){
+					if(totalScoreList.size() == 3){
+						totalScoreList.remove(totalScoreList.get(0));
+					}else if(totalScoreList.size() == 4){
+						totalScoreList.remove(totalScoreList.get(0));
+						totalScoreList.remove(totalScoreList.get(1));
+					}
+				}
+			}
         }
 		result.put("totalScoreList", totalScoreList);
 		return result;

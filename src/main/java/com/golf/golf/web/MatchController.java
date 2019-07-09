@@ -9,7 +9,10 @@ import com.golf.common.util.PropertyConst;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
-import com.golf.golf.service.*;
+import com.golf.golf.service.MatchDoubleRodService;
+import com.golf.golf.service.MatchHoleService;
+import com.golf.golf.service.MatchService;
+import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,17 +46,13 @@ public class MatchController {
 	@Autowired
 	private UserService userService;
 
-	//个人比洞记分卡service  每组2人
-	@Autowired
-	protected MatchSingleHoleService matchSingleHoleService;
-
 	//双人比杆记分卡service 每组4人  同一个球队的放一行
 	@Autowired
 	protected MatchDoubleRodService matchDoubleRodService;
 
-	//双人比洞记分卡service 每组4人 同一个球队的放一行
+	//比洞赛记分卡service 每组4人 同一个球队的放一行
 	@Autowired
-	protected MatchDoubleHoleService matchDoubleHoleService;
+	protected MatchHoleService matchHoleService;
 
 
 
@@ -116,17 +114,23 @@ public class MatchController {
 	 * 参赛球队自动在各自球队记分，不需要设置上报球队，
 	 * 但是这两个球队的球友都有来自北大队的，就需要设置上报球队为北大队，
 	 * 反正就按某个上报球队和所有参赛球队的交集筛选队员成绩并算积分就行
-     * type:0 所有上报球队
-     * type:1 已选择的上报球队
+     * @param type:0 所有上报球队 type:1 已选择的上报球队
+	 * @param checkedReportTeamIds:已选上报球队id
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = "getJoinTeamListByMatchId")
-	public JsonElement getJoinTeamListByMatchId(String joinTeamIds,Integer type) {
+	@RequestMapping(value = "getReportTeamListByMatchId")
+	public JsonElement getReportTeamListByMatchId(String joinTeamIds,String checkedReportTeamIds,String keyword,Integer type) {
 		try {
 			List<Map<String,Object>> list = null;
 			if(StringUtils.isNotEmpty(joinTeamIds)){
-				list = matchService.getJoinTeamListByMatchId(joinTeamIds,type);
+				if(type == 0){
+					//备选球队
+					list = matchService.getJoinTeamListByMatchId(joinTeamIds,checkedReportTeamIds,keyword);
+				}else{
+					//已选球队（获取球队详情）
+					list = matchService.getCheckedReportTeamInfoList(checkedReportTeamIds,keyword);
+				}
 			}else{
 				list = new ArrayList<>();
 			}
@@ -149,6 +153,7 @@ public class MatchController {
 	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
 									 String afterZoneName, String reportTeamIds, String chooseTeamId, String openid) {
 		try {
+			MatchInfo m = null;
 			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
@@ -162,9 +167,9 @@ public class MatchController {
 				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined") && !reportTeamIds.equals("null")){
 					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				}
-				matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+				m = matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
 			}
-			return JsonWrapper.newSuccessInstance();
+			return JsonWrapper.newDataInstance(m);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("创建比赛时出错。" ,e);
@@ -584,8 +589,8 @@ public class MatchController {
 	@RequestMapping("getMeCanScore")
 	public JsonElement getMeCanScore(Long matchId, Long groupId, String openid) {
 		try {
-			Long count = matchService.getMeCanScore(matchId, groupId, openid);
-			return JsonWrapper.newDataInstance(count);
+			boolean flag = matchService.getMeCanScore(matchId, groupId, openid);
+			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			String errmsg = "前台-单练——开始记分——保存数据时出错。";
 			e.printStackTrace();
@@ -594,6 +599,23 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 点击围观用户并邀请其记分
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("invitationScore")
+	public JsonElement invitationScore(Long matchId, Long userId, String openid) {
+		try {
+			matchService.saveInvitationScore(matchId, userId, openid);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "前台-点击围观用户并邀请其记分时出错。";
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 
 
@@ -769,37 +791,18 @@ public class MatchController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("getSingleHoleScoreCard")
-	public JsonElement getSingleHoleScoreCardByGroupId(Long matchId, Long groupId) {
+	@RequestMapping("getHoleScoreCard")
+	public JsonElement getHoleScoreCard(Long matchId, Long groupId) {
 		try {
-			Map<String,Object> groupInfoList = matchSingleHoleService.updateOrGetSingleHoleScoreCardByGroupId(matchId,groupId);
+			Map<String,Object> groupInfoList = matchHoleService.updateOrGetHoleScoreCardByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
 		} catch (Exception e) {
-			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
+			String errmsg = "前台-比赛—通过matchid和groupid查询本组比洞赛记分卡信息时出错。";
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
-
-	/**
-	 * 通过matchid和groupid查询本组记分卡信息——双人比洞 每组4个人 每2人一小组
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getDoubleHoleScoreCard")
-	public JsonElement getDoubleHoleScoreCard(Long matchId, Long groupId) {
-		try {
-			Map<String,Object> groupInfoList = matchDoubleHoleService.getDoubleHoleScoreCardByGroupId(matchId,groupId);
-			return JsonWrapper.newDataInstance(groupInfoList);
-		} catch (Exception e) {
-			String errmsg = "前台-比赛—通过matchid和groupid查询本组单人比洞记分卡信息时出错。";
-			e.printStackTrace();
-			logger.error(errmsg ,e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
-
 
 	/**
 	 * 保存或更新计分数据  如果有上报球队，同时向上报球队记分
@@ -807,18 +810,25 @@ public class MatchController {
 	 * 比标准杆少一杆叫小鸟
 	 * 比标准杆多一杆或者标准杆完成该洞叫Par
 	 * 低于标准杆2杆完成该洞叫老鹰
+	 * userIds: 双人比杆公开赛 大分组中小组的所有用户id
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
-	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId,
-                                         Long scoreId, Long holeId,
+	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long holeId,
                                          String isUp, Integer rod, String rodCha,
-										 Integer pushRod, Integer beforeAfter, String openid) {
+										 Integer pushRod, Integer beforeAfter, String openid, String userIds) {
 		try {
-			matchService.saveOrUpdateScore(userId, matchId, groupId,
-                    scoreId, holeId,
-                    isUp, rod, rodCha, pushRod, beforeAfter, openid);
+			if(userId != 0L){
+				matchService.saveOrUpdateScore(userId, matchId, groupId,
+						holeId,
+						isUp, rod, rodCha, pushRod, beforeAfter, openid,userIds);
+			}else{
+				//双人比杆公开赛
+				matchService.saveOrUpdateScoreDoubleRod(matchId, groupId,
+						holeId,
+						isUp, rod, rodCha, pushRod, beforeAfter, openid,userIds);
+			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -975,6 +985,7 @@ public class MatchController {
 
 	/**
 	 * 比赛——group——分队统计
+	 * 如果是两个队比洞的话，把每队各组的分相加，其中赢的组得1分，输的组得0分，平的组各得0.5分。一个队队内，及多个队之间没法进行比洞赛
 	 * 分队统计的前n名，就是指每个队排前n名的人的杆数和排名
 	 * 比杆赛：如果是比杆赛，名次就取每队成绩最好（杆数最少）的前n人（如果是双人，就是前5组）计算
 	 * 					按创建比赛时“参赛范围”选择的球队统计成绩并按平均杆数排名，（球队、参赛人数、平均杆数、总杆数、排名）
