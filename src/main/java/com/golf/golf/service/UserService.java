@@ -452,6 +452,7 @@ public class UserService implements IBaseService {
 		Double chaPoint = matchService.getUserChaPoint(userId);
 		result.put("chaPoint",chaPoint);
 		Long myUserId = getUserIdByOpenid(openid);
+
 		if(StringUtils.isNotEmpty(teamIdStr)){
 			Long teamId = Long.parseLong(teamIdStr);
 			TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
@@ -467,6 +468,22 @@ public class UserService implements IBaseService {
 			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 			result.put("matchInfo",matchInfo);
 
+			//我是否是本比赛的围观人员
+			Long meIsMatchWatch = matchDao.getIsWatch(myUserId,matchId);
+			Long meIsJoinMatchUser = 0L;
+			Long meIsMatchCaptain = 0L;
+			if(meIsMatchWatch <= 0){
+				//我不是围观人 再判断我是否是参赛者
+				meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
+				if(meIsJoinMatchUser>0){
+					//我是否是本比赛的赛长
+					meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
+				}
+			}
+			result.put("meIsMatchWatch",meIsMatchWatch >0 ?true:false);
+			result.put("meIsJoinMatchUser",meIsJoinMatchUser >0 ?true:false);
+			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
+
 			//被查看用户是否是本比赛的参赛人员
 			Long otherIsJoinMatchUser = matchDao.getIsMatchCaptain(matchId,otherUserInfo.getUiId());
 			Long otherIsMatchCaptain = 0l;
@@ -477,7 +494,8 @@ public class UserService implements IBaseService {
 			}else{
 				//被查看用户是否是本比赛的围观人员
 				otherIsMatchWatch = matchDao.getIsWatch(otherUserInfo.getUiId(),matchId);
-				if(otherIsMatchWatch>0){
+				//被查看用户是围观人员，我是参赛者
+				if(otherIsMatchWatch>0 && meIsJoinMatchUser >0){
 					//查询我所在的比赛分组
 					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,myUserId);
 					//被查看用户是否已经被邀请记分
@@ -489,20 +507,9 @@ public class UserService implements IBaseService {
 					}
 				}
 			}
-
 			result.put("otherIsJoinMatchUser",otherIsJoinMatchUser >0 ?true:false);
 			result.put("otherIsMatchCaptain",otherIsMatchCaptain >0 ?true:false);
 			result.put("otherIsMatchWatch",otherIsMatchWatch >0 ?true:false);
-
-			//我是否是参赛者
-			Long meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
-			Long meIsMatchCaptain = 0L;
-			if(meIsJoinMatchUser>0){
-				//我是否是本比赛的赛长
-				meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
-			}
-			result.put("meIsJoinMatchUser",meIsJoinMatchUser >0 ?true:false);
-			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
 		}
 		return result;
 	}

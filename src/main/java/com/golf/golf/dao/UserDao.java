@@ -129,16 +129,15 @@ public class UserDao extends CommonDao {
         parp.put("otherUserId", otherUserId);
         StringBuffer hql = new StringBuffer();
 
-        hql.append("FROM TeamUserMapping as m WHERE m.tumUserId = :otherUserId ");
+        hql.append("SELECT m.tumTeamId FROM TeamUserMapping as m WHERE m.tumUserId = :otherUserId ");
         hql.append("AND m.tumTeamId IN ( ");
         hql.append("select m1.tumTeamId from TeamUserMapping as m1 where m1.tumUserId = :myUserId ");
         hql.append(") ");
-        Long count = dao.createCountQuery("SELECT COUNT(*) "+ hql.toString(), parp);
-        if(count == 0){
-            return null;
-        }
-        List<Long> list = dao.createQuery("SELECT m.tumTeamId "+ hql.toString(), parp);
-        return list.get(0);
+        List<Long> list = dao.createQuery(hql.toString(), parp);
+        if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
     }
 
     /**
