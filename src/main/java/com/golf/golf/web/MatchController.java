@@ -27,7 +27,6 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -106,39 +105,6 @@ public class MatchController {
 			e.printStackTrace();
 			logger.error("创建比赛——获取赛长所在球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建比赛——获取赛长所在球队时出错。");
-		}
-	}
-
-	/**
-	 * 创建比赛——选择上报的上级球队——获取参赛用户所在的上级球队
-	 * 参赛球队自动在各自球队记分，不需要设置上报球队，
-	 * 但是这两个球队的球友都有来自北大队的，就需要设置上报球队为北大队，
-	 * 反正就按某个上报球队和所有参赛球队的交集筛选队员成绩并算积分就行
-     * @param type:0 所有上报球队 type:1 已选择的上报球队
-	 * @param checkedReportTeamIds:已选上报球队id
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping(value = "getReportTeamListByMatchId")
-	public JsonElement getReportTeamListByMatchId(String joinTeamIds,String checkedReportTeamIds,String keyword,Integer type) {
-		try {
-			List<Map<String,Object>> list = null;
-			if(StringUtils.isNotEmpty(joinTeamIds)){
-				if(type == 0){
-					//备选球队
-					list = matchService.getJoinTeamListByMatchId(joinTeamIds,checkedReportTeamIds,keyword);
-				}else{
-					//已选球队（获取球队详情）
-					list = matchService.getCheckedReportTeamInfoList(checkedReportTeamIds,keyword);
-				}
-			}else{
-				list = new ArrayList<>();
-			}
-			return JsonWrapper.newDataInstance(list);
-		} catch (Exception e) {
-			e.printStackTrace();
-			logger.error("创建比赛——获取上报球队时出错。" ,e);
-			return JsonWrapper.newErrorInstance("创建比赛——获取上报球队时出错");
 		}
 	}
 

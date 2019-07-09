@@ -86,7 +86,7 @@ public class TeamManageController {
 	}
 
 	/**
-	 * 获取已选球队列表
+	 * 获取参赛球队——已选球队列表
 	 * @param page 分页
 	 * @param keyword 球队名称
 	 * @param joinTeamIds 用于创建比赛时添加球队，如果不为空，就查询除去这些球队的列表
@@ -113,6 +113,45 @@ public class TeamManageController {
 				searchBean.addParpField("chooseTeamIds", teamIds);
 				pageInfo = teamService.getChooseTeamList(searchBean, pageInfo, openid);
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			errmsg = "前台-获取已选球队列表出错。openid="+openid;
+			logger.error(errmsg,e );
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newDataInstance(pageInfo);
+	}
+
+	/**
+	 * 获取参赛球队——上报球队列表
+	 * @param page 分页
+	 * @param keyword 球队名称
+	 * @param joinTeamIds 用于创建比赛时添加上报球队 除去这些球队
+	 * @param checkedReportTeamIds 用于创建比赛时添加球队，如果不为空，就查询除去这些球队的列表
+	 * @param type 0:已选 1备选
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getReportTeamListByMatchId")
+	public JsonElement getReportTeamListByMatchId(Integer page, String keyword, String joinTeamIds,String checkedReportTeamIds,
+												  Integer type, String openid) {
+		Integer nowPage = 1;
+		if (page > 0) {
+			nowPage = page;
+		}
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+		try {
+			SearchBean searchBean = new SearchBean();
+			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+			}
+			searchBean.addParpField("type", type);
+			//参赛队
+			List<Long> joinTeamIdList = matchService.getLongIdListReplace(joinTeamIds);
+			List<Long> reportTeamIdList = matchService.getLongIdListReplace(checkedReportTeamIds);
+			searchBean.addParpField("joinTeamIdList", joinTeamIdList);
+			searchBean.addParpField("reportTeamIdList", reportTeamIdList);
+			pageInfo = teamService.getReportTeamList(searchBean, pageInfo, openid);
 		} catch (Exception e) {
 			e.printStackTrace();
 			errmsg = "前台-获取已选球队列表出错。openid="+openid;

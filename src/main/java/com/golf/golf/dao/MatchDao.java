@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1638,80 +1637,26 @@ public class MatchDao extends CommonDao {
 	}
 
     /**
-     * 创建比赛——选择上报球队——获取参赛用户所在的上级球队
+     * 创建比赛——选择上报球队——获取参赛球队的所有有交集的球队的用户（参赛球队参赛用户的交集）
      * @return
      */
     public List<Map<String,Object>> getJoinTeamUserListByMatchId(List<Long> idList) {
         Map<String, Object> parp = new HashMap<>();
         parp.put("idList",idList);
         StringBuilder sql = new StringBuilder();
-        sql.append("select tum.tum_user_id as userId,COUNT(tum.tum_user_id) as count " +
-                "from team_user_mapping as tum where tum.tum_team_id in(:idList) " +
-                "GROUP BY tum.tum_user_id " +
-                "having count>1 " +
-                " ORDER BY tum.tum_user_id ");
+        sql.append("SELECT a.* FROM( ");
+        if(idList.size()>1){
+			for(int i=0;i<idList.size();i++){
+				Long teamId = idList.get(i);
+				sql.append("(SELECT tum_user_id as userId FROM team_user_mapping WHERE tum_team_id = "+teamId+") ");
+				if(i<idList.size()-1){
+					sql.append("UNION ALL ");
+				}
+			}
+		}
+		sql.append(")a GROUP BY a.userId HAVING COUNT(a.userId)>1 ");
         return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
-    //获取上报球队——备选球队
-    public List<Map<String, Object>> getReportTeamList(List<Long> joinTeamIdList,List<Long> userIdList,String keyword) {
-        Map<String, Object> parp = new HashMap<>();
-        parp.put("joinTeamIdList",joinTeamIdList);
-        parp.put("userIdList",userIdList);
-		if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
-			parp.put("keyword","%"+keyword+"%");
-		}
-        StringBuilder hql = new StringBuilder();
-		hql.append("select team.*,tum.tum_user_id as userId,u.ui_real_name as userRealName,u.ui_nick_name as userNickName " +
-				"from ( ");
-        hql.append("select t.ti_id as tiId,t.ti_name as tiName,t.ti_create_time as ti_create_time,t.ti_logo as logo ");
-        hql.append("from ( ");
-        hql.append("select * from team_user_mapping as tum1 where tum1.tum_team_id not in(:joinTeamIdList) " +
-                    "and tum1.tum_user_id  in(:userIdList) ");
-        hql.append(")as tum LEFT JOIN team_info AS t ");
-        hql.append("on t.ti_id = tum.tum_team_id ");
-        hql.append("where t.ti_is_valid = 1 ");
-		if(parp.get("keyword") != null){
-            hql.append("AND t.ti_name LIKE :keyword ");
-        }
-        hql.append("ORDER BY t.ti_create_time desc ");
-		hql.append(") as team,team_user_mapping as tum,user_info as u ");
-		hql.append("where team.tiId = tum.tum_user_id ");
-		hql.append("and tum.tum_user_id = u.ui_id ");
-		hql.append("and tum.tum_user_type = 0 ");
-        List<Map<String, Object>> list = dao.createSQLQuery( hql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
-        return list;
-    }
-
-	//获取上报球队——已选球队
-	public List<Map<String, Object>> getReportTeamInfoList(List<Long> reportTeamIdList,String keyword) {
-		Map<String, Object> parp = new HashMap<>();
-		parp.put("reportTeamIdList",reportTeamIdList);
-		if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
-			parp.put("keyword","%"+keyword+"%");
-		}
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT " +
-				"t.ti_id AS tiId, " +
-				"t.ti_name AS tiName, " +
-				"t.ti_create_time AS ti_create_time, " +
-				"t.ti_logo AS logo, " +
-				"u.ui_real_name AS userRealName, " +
-				"u.ui_nick_name AS userNickName " +
-				"FROM ");
-		hql.append("team_info AS t,team_user_mapping AS tum,user_info AS u ");
-		hql.append("WHERE t.ti_id = tum.tum_team_id " +
-					"AND t.ti_is_valid = 1 " +
-					"AND tum.tum_user_id = u.ui_id " +
-					"AND tum.tum_user_type = 0 " +
-					"AND t.ti_id IN (3) ");
-		if(parp.get("keyword") != null){
-			hql.append("AND t.ti_name LIKE :keyword ");
-		}
-		hql.append(" ORDER BY t.ti_create_time desc ");
-		List<Map<String, Object>> list = dao.createSQLQuery( hql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
-		return list;
-	}
-
 
 
     /**
@@ -2062,13 +2007,15 @@ public class MatchDao extends CommonDao {
     }
 
     //从matchUserMapping表中获取参赛队
-    public List<Long> getJoinTeamMappingList(Long matchId) {
+    public List<Map<String,Object>> getJoinTeamMappingList(Long matchId,List<Long> groupList) {
+		Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId",matchId);
+		parp.put("groupList",groupList);
 	    StringBuilder sql = new StringBuilder();
-        sql.append("select mugm.mugmTeamId " +
-                "from MatchUserGroupMapping as mugm " +
-                "where mugm.mugmMatchId = " +matchId+
-                " GROUP BY mugm.mugmTeamId ");
-        return dao.createQuery(sql.toString());
+        sql.append("select mugm.mugm_team_id as teamId from match_user_group_mapping as mugm where mugm.mugm_match_id = :matchId  " +
+				"and mugm.mugm_group_id in (:groupList)" +
+				"GROUP BY mugm.mugm_team_id ");
+        return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
     //获取该球队在本比赛中的平、赢组个数
@@ -2111,4 +2058,13 @@ public class MatchDao extends CommonDao {
 				" and g.mugmIsDel = 0");
         return dao.createCountQuery("select count(*) "+sql.toString());
     }
+
+    //获取比赛的前n组，按顺序排
+	public List<Long> getGroupIdByMingci(Long matchId, Integer mingci) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select m.mugm_group_id from match_user_group_mapping as m where m.mugm_match_id = "+matchId+
+				" GROUP BY m.mugm_group_id ORDER BY m.mugm_group_id "+
+				" limit 0,"+mingci);
+		return dao.createSQLQuery(sql.toString());
+	}
 }

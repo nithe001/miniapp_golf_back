@@ -119,7 +119,7 @@ public class TeamDao extends CommonDao {
 
 
 	/**
-	 * 比赛——获取已经选中的球队列表
+	 * 创建比赛——获取参赛球队列表 或 上报球队列表
 	 * @return
 	 */
 	public POJOPageInfo getChooseTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -139,6 +139,51 @@ public class TeamDao extends CommonDao {
 			return pageInfo;
 		}
 		List<Map<String, Object>> list = dao.createSQLQuery(select+ hql.toString(),parp,Transformers.ALIAS_TO_ENTITY_MAP);
+		pageInfo.setCount(count.intValue());
+		pageInfo.setItems(list);
+		return pageInfo;
+	}
+
+	/**
+	 * 比赛——获取上报球队列表 不包括参赛队 也不包括已经选中的上报队
+	 * type 0:已选 1备选
+	 * @return
+	 */
+	public POJOPageInfo getReportTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
+		Map<String, Object> parp = searchBean.getParps();
+		StringBuilder hql = new StringBuilder();
+		String select = "select t.ti_id as tiId,t.ti_name as tiName,tum.*,t.ti_create_time as ti_create_time,t.ti_logo as logo ";
+		hql.append("from team_info as t LEFT JOIN ( ");
+		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
+		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
+		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
+		hql.append("where t.ti_is_valid = 1 ");
+
+		List<Long> list1 = (List<Long>)parp.get("joinTeamIdList");
+		List<Long> list2 = (List<Long>)parp.get("reportTeamIdList");
+
+		if("0".equals(parp.get("type").toString())){
+			//备选球队 去除参赛队和选中的上报球队
+			if(parp.get("joinTeamIdList") != null && list1.size()>0){
+				hql.append("and t.ti_id not in(:joinTeamIdList) ");
+			}
+			if(parp.get("reportTeamIdList") != null && list2.size()>0){
+				hql.append("and t.ti_id not in(:reportTeamIdList) ");
+			}
+		}else{
+			//已选球队
+			if(parp.get("reportTeamIdList") != null && list1.size()>0){
+				hql.append("and t.ti_id in(:reportTeamIdList) ");
+			}
+		}
+
+		Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+		if (count == null || count.intValue() == 0) {
+			pageInfo.setItems(new ArrayList<>());
+			pageInfo.setCount(0);
+			return pageInfo;
+		}
+		List<Map<String, Object>> list = dao.createSQLQuery(select+hql.toString(),parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
 		return pageInfo;
