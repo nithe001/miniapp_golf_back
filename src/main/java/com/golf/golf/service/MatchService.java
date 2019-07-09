@@ -1524,6 +1524,7 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 成绩上报 杆数越少 代表成绩越好 （注意球友加入球队是否成功）
+	 * ***************拿每个参赛队和每个上报球队算交集，如果没有就忽略，如果有，就把交集的队员成绩交给上报球队并积分
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param baseScore 基础分,
 	 * @param rodScore  杆差倍数,

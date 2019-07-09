@@ -771,7 +771,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 保存或更新计分数据  如果有上报球队，同时向上报球队记分
+	 * 保存或更新计分数据             如果有上报球队，同时向上报球队记分（向上报球队记分改为在成绩提交的时候记分）
 	 * 与标准杆一样 叫平标准杆
 	 * 比标准杆少一杆叫小鸟
 	 * 比标准杆多一杆或者标准杆完成该洞叫Par
@@ -827,6 +827,7 @@ public class MatchController {
 
 	/**
 	 * 成绩上报 计算积分（注意球友加入球队是否成功） 允许重复上报
+	 * 拿每个参赛队和每个上报球队算交集，如果没有就忽略，如果有，就把交集的队员成绩交给上报球队并积分
      * **********注意比洞赛的积分公式和比杆赛不一样
 	 * @param matchId 比赛id,
 	 * @param teamId 上报球队id,
@@ -1108,11 +1109,11 @@ public class MatchController {
 	}
 
     /**
-     * 比赛——退出观战
+     * 比赛——退出观战——此功能不用，改为不退出
      * @return
      */
     @ResponseBody
-    @RequestMapping("delWatchMatch")
+    @RequestMapping("delWatchMatch_notuse")
     public JsonElement delWatchMatch(Long matchId, String openid) {
         try {
             matchService.delWatchMatch(matchId, openid);

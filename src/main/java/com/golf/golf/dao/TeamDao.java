@@ -138,7 +138,7 @@ public class TeamDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		List<Map<String, Object>> list = dao.createSQLQuery(select+ hql.toString(),parp,Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String, Object>> list = dao.createSQLQuery(select+ hql.toString(),parp,pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
 		return pageInfo;
