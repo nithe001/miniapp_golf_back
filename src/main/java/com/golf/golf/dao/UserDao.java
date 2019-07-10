@@ -185,7 +185,9 @@ public class UserDao extends CommonDao {
 				"sum(CASE WHEN s.ms_is_up = \"开球偏左\" then 1 else 0 end) AS zuo, " +
 				"sum(CASE WHEN s.ms_is_up = \"开球出界\" then 1 else 0 end) AS chu, " +
 				"count(s.ms_is_on or 0) as biaoOn ");
-		hql.append("FROM match_score AS s WHERE s.ms_user_id = :userId and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
+		hql.append("FROM match_score AS s,match_info as m WHERE s.ms_user_id = :userId ");
+		hql.append(" and s.ms_match_id = m.mi_id and m.mi_is_valid = 1 ");
+		hql.append(" and s.ms_create_time >=:startTime and s.ms_create_time <=:endTime ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -197,8 +199,11 @@ public class UserDao extends CommonDao {
 	public Long getSumRod(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT sum(s.msRodNum) ");
-		hql.append("FROM MatchScore as s where s.msUserId = :userId ");
-		hql.append("and s.msMatchType = 1 ");
+		hql.append("FROM MatchInfo as m, MatchScore as s ");
+		hql.append("where s.msUserId = :userId ");
+		hql.append("and m.miType = 1 ");
+		hql.append("and m.miIsValid = 1 ");
+		hql.append("and m.miId = s.msMatchId ");
 		hql.append("and s.msCreateTime >= :startTime ");
 		hql.append("and s.msCreateTime <= :endTime ");
 		return dao.createCountQuery(hql.toString(), parp);

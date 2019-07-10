@@ -428,6 +428,7 @@ public class UserService implements IBaseService {
 			BigDecimal b = new BigDecimal((float)(sumRod / matchCount));
 			avgRod = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
 		}
+		//平均杆数
 		result.put("avgRod",avgRod);
 		//所有杆数
 		List<Map<String, Object>> scoreList = dao.getScoreByYear(parp);
