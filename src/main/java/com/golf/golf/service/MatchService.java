@@ -631,6 +631,7 @@ public class MatchService implements IBaseService {
 					for(MatchUserGroupMapping bean:matchUserGroupMappingList){
 						if(bean.getMugmUserType() != 0){
 							bean.setMugmUserType(2);
+							bean.setMugmIsDel(1);
 							bean.setMugmUpdateUserId(userInfo.getUiId());
 							bean.setMugmUpdateUserName(userInfo.getUiRealName());
 							bean.setMugmUpdateTime(updateTime);
@@ -900,6 +901,7 @@ public class MatchService implements IBaseService {
 		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
 		matchUserGroupMapping.setMugmUserType(0);
+		matchUserGroupMapping.setMugmIsDel(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
 		matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
@@ -922,6 +924,7 @@ public class MatchService implements IBaseService {
 			maxOtherUserId += i_;
 			otherPeople.setMugmUserId(maxOtherUserId);
 			otherPeople.setMugmUserType(1);
+			otherPeople.setMugmIsDel(0);
 			otherPeople.setMugmGroupId(matchGroup.getMgId());
 			otherPeople.setMugmGroupName(matchGroup.getMgGroupName());
 			otherPeople.setMugmUserName("球友" + i);
@@ -2707,6 +2710,7 @@ public class MatchService implements IBaseService {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,userId);
 		matchUserGroupMapping.setMugmUserType(0);
+		matchUserGroupMapping.setMugmIsDel(0);
 		matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
 		matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
 		matchUserGroupMapping.setMugmUpdateUserName(userInfo.getUiRealName());

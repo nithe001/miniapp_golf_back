@@ -1,12 +1,10 @@
 package com.golf.golf.service;
 
 import com.golf.common.IBaseService;
-import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.common.security.UserModel;
-import com.golf.golf.common.security.WechatUserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.*;
@@ -14,10 +12,11 @@ import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ import java.util.Map;
  */
 @Service
 public class UserService implements IBaseService {
-	
+
     @Autowired
     private UserDao dao;
     @Autowired
