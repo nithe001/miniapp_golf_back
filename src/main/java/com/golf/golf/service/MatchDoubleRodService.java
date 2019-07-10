@@ -50,51 +50,50 @@ public class MatchDoubleRodService implements IBaseService {
         List<Map<String,Object>> userList0 = new ArrayList<>();
         //第二行
         List<Map<String,Object>> userList1 = new ArrayList<>();
+		List<Long> joinTeamIdList = matchService.getLongTeamIdList(matchInfo.getMiJoinTeamIds());
 		//可能的情况：第一组 第一队2人，第二队1人，那么第一队的2人一行，第二队的1人自己一行
 		if(userList != null && userList.size() >0){
-            if(userList != null && userList.size()>0){
-            	//有参赛队的，按照队伍分组
-            	if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds().trim())){
-					Long teamIdTemp = null;
-					for(Iterator<Map<String,Object>> userListIterator = (Iterator<Map<String, Object>>) userList.iterator(); userListIterator.hasNext();){
-						Map<String,Object> groupUser = userListIterator.next();
-						Long teamId = matchService.getLongValue(groupUser,"team_id");
-						if(teamIdTemp == null || teamId.equals(teamIdTemp)){
-							teamIdTemp = teamId;
-							userList0.add(groupUser);
-							userListIterator.remove();
-						}
+			//有参赛队的，按照队伍分组
+			if(joinTeamIdList != null && joinTeamIdList.size() >0){
+				Long teamIdTemp = null;
+				for(Iterator<Map<String,Object>> userListIterator = (Iterator<Map<String, Object>>) userList.iterator(); userListIterator.hasNext();){
+					Map<String,Object> groupUser = userListIterator.next();
+					Long teamId = matchService.getLongValue(groupUser,"team_id");
+					if(teamIdTemp == null || teamId.equals(teamIdTemp)){
+						teamIdTemp = teamId;
+						userList0.add(groupUser);
+						userListIterator.remove();
 					}
-					userList1.addAll(userList);
-				}else{
-            		//没有参赛队的，每个比赛分组 前两个人一小组，后两个人一小组 如果是两个人，就一人一个分组
-					if(userList.size() <= 2){
-						userList0.add(userList.get(0));
-						userList1.add(userList.get(1));
-					}else{
-						userList0.add(userList.get(0));
-						userList0.add(userList.get(1));
-						userList1.add(userList.get(2));
-						if(userList.size() ==4){
-							userList1.add(userList.get(3));
-						}
-					}
-					String userIds0 = "";
-					String userIds1 = "";
-					if(userList0.size()>0){
-						for(Map<String,Object> user:userList0){
-							userIds0 += ","+matchService.getLongValue(user,"uiId");
-						}
-					}
-					if(userList1.size()>0){
-						for(Map<String,Object> user:userList1){
-							userIds1 += ","+matchService.getLongValue(user,"uiId");
-						}
-					}
-					result.put("userIds0", userIds0);
-					result.put("userIds1", userIds1);
 				}
-            }
+				userList1.addAll(userList);
+			}else{
+				//没有参赛队的，每个比赛分组 前两个人一小组，后两个人一小组 如果是两个人，就一人一个分组
+				if(userList.size() <= 2){
+					userList0.add(userList.get(0));
+					userList1.add(userList.get(1));
+				}else{
+					userList0.add(userList.get(0));
+					userList0.add(userList.get(1));
+					userList1.add(userList.get(2));
+					if(userList.size() ==4){
+						userList1.add(userList.get(3));
+					}
+				}
+				String userIds0 = "";
+				String userIds1 = "";
+				if(userList0.size()>0){
+					for(Map<String,Object> user:userList0){
+						userIds0 += ","+matchService.getLongValue(user,"uiId");
+					}
+				}
+				if(userList1.size()>0){
+					for(Map<String,Object> user:userList1){
+						userIds1 += ","+matchService.getLongValue(user,"uiId");
+					}
+				}
+				result.put("userIds0", userIds0);
+				result.put("userIds1", userIds1);
+			}
         }
         result.put("userList0", userList0);
         result.put("userList1", userList1);

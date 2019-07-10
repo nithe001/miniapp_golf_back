@@ -272,6 +272,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_par")
 	public Integer getMsIsPar() {
+		if(msIsPar == null){
+			return 0;
+		}
 		return msIsPar;
 	}
 
@@ -281,6 +284,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_bird")
 	public Integer getMsIsBird() {
+		if(msIsBird == null){
+			return 0;
+		}
 		return msIsBird;
 	}
 
@@ -290,6 +296,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_eagle")
 	public Integer getMsIsEagle() {
+		if(msIsEagle == null){
+			return 0;
+		}
 		return msIsEagle;
 	}
 
@@ -299,6 +308,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_on")
 	public Integer getMsIsOn() {
+		if(msIsOn == null){
+			return 0;
+		}
 		return msIsOn;
 	}
 
@@ -308,6 +320,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_bomb")
 	public Integer getMsIsBomb() {
+		if(msIsBomb == null){
+			return 0;
+		}
 		return msIsBomb;
 	}
 
@@ -317,6 +332,9 @@ public class MatchScore implements java.io.Serializable {
 
 	@Column(name = "ms_is_bogey")
 	public Integer getMsIsBogey() {
+		if(msIsBogey == null){
+			return 0;
+		}
 		return msIsBogey;
 	}
 
