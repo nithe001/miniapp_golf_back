@@ -444,6 +444,11 @@ public class MatchService implements IBaseService {
 			List<Long> reportScoreTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
 			List<TeamInfo> reportScoreTeamList = matchDao.getTeamListByIds(reportScoreTeamIdList);
 			//在比赛详情页显示上报球队
+			if (reportScoreTeamList != null && reportScoreTeamList.size() > 0) {
+				for (TeamInfo teamInfo : reportScoreTeamList) {
+					teamInfo.setTiLogo(PropertyConst.DOMAIN + teamInfo.getTiLogo());
+				}
+			}
 			result.put("reportScoreTeamList", reportScoreTeamList);
 			String checkReportTeamNames = "";
 			if(reportScoreTeamIdList != null && reportScoreTeamIdList.size()>0){
