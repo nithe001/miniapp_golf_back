@@ -36,7 +36,7 @@ public class AdminTeamController {
 	 * @return
 	 */
 	@RequestMapping("list")
-	public String list(ModelMap mm, String keyword, String startDate, String endDate, Integer page,Integer rowsPerPage,Integer state){
+	public String list(ModelMap mm, String keyword, String startDate, String endDate, Integer page,Integer rowsPerPage,Integer isValid){
 		if (page == null || page.intValue() == 0) {
 			page = 1;
 		}
@@ -49,8 +49,8 @@ public class AdminTeamController {
 			if (StringUtils.isNotEmpty(keyword)) {
 				searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
 			}
-			if (state != null) {
-				searchBean.addParpField("state", state);
+			if (isValid != null) {
+				searchBean.addParpField("isValid", isValid);
 			}
 			pageInfo = adminTeamService.teamList(searchBean, pageInfo);
 		} catch (Exception e) {
@@ -62,7 +62,7 @@ public class AdminTeamController {
 		mm.addAttribute("keyword",keyword);
 		mm.addAttribute("page",page);
 		mm.addAttribute("rowsPerPage",rowsPerPage);
-		mm.addAttribute("state",state);
+		mm.addAttribute("isValid",isValid);
 		mm.addAttribute("startDate", startDate);
 		mm.addAttribute("endDate", endDate);
 		return "admin/team/list";

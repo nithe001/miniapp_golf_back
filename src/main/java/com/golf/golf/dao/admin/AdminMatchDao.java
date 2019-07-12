@@ -40,8 +40,8 @@ public class AdminMatchDao extends CommonDao {
 		if(parp.get("type") != null){
 			hql.append("AND m.miType = :type ");
 		}
-		if(parp.get("state") != null){
-			hql.append("AND m.miIsEnd = :state ");
+		if(parp.get("isValid") != null){
+			hql.append("AND m.miIsValid = :isValid ");
 		}
 		Long count = dao.createCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
 		if (count == null || count.intValue() == 0) {

@@ -34,8 +34,8 @@ public class AdminTeamDao extends CommonDao {
 		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
 		hql.append("from team_user_mapping as tm where 1=1 GROUP BY tum_team_id ");
 		hql.append(")as tum on ");
-		if(parp.get("state") != null){
-			hql.append(" (t.ti_id = tum.tum_team_id and t.ti_is_valid = :state) ");
+		if(parp.get("isValid") != null){
+			hql.append(" (t.ti_id = tum.tum_team_id and t.ti_is_valid = :isValid) ");
 		}else{
 			hql.append(" t.ti_id = tum.tum_team_id ");
 		}
@@ -65,7 +65,7 @@ public class AdminTeamDao extends CommonDao {
 	 */
 	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiHeadimg as uiHeadimg,m.tumUserType as tumUserType  ");
+		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiNickName as uiNickName,u.uiHeadimg as uiHeadimg,m.tumUserType as tumUserType  ");
 		hql.append("FROM TeamUserMapping AS m,UserInfo AS u WHERE 1=1 ");
 		hql.append("AND m.tumTeamId = "+teamId);
 		hql.append(" and m.tumUserId = u.uiId ");

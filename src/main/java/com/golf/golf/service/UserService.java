@@ -12,8 +12,6 @@ import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -364,11 +362,11 @@ public class UserService implements IBaseService {
 		//本用户的前后半场总得分情况
 		List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 		//本用户前半场得分情况
-		List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,0,matchUserGroupMapping.getMugmTeamId(),0);
+		List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,0,matchUserGroupMapping.getMugmTeamId());
 		createNewUserScore(userScoreList, uScoreBeforeList);
 		Integer beforeTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
 		//本用户后半场得分情况
-		List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,1,matchUserGroupMapping.getMugmTeamId(),0);
+		List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,1,matchUserGroupMapping.getMugmTeamId());
 		createNewUserScore(userScoreList, uScoreAfterList);
         Integer afterTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
 

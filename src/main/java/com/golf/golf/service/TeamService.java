@@ -248,6 +248,7 @@ public class TeamService implements IBaseService {
 				if(type == 0){
 					//比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 					Collections.sort(list,new Comparator<TeamPointBean>(){
+						@Override
 						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
 							if(teamPointBean1.getAvgRodNum() != 0 && teamPointBean2.getAvgRodNum() != 0){
 								return new Double(teamPointBean1.getAvgRodNum()).compareTo(new Double(teamPointBean2.getAvgRodNum()));
@@ -257,9 +258,11 @@ public class TeamService implements IBaseService {
 					});
 				}else{
 					//积分榜是积分多的排前面
-					Collections.sort(list,new Comparator<TeamPointBean>(){ public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2)
-					{
-						return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());}
+					Collections.sort(list,new Comparator<TeamPointBean>(){
+						@Override
+						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
+							return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());
+						}
 					});
 				}
 			}

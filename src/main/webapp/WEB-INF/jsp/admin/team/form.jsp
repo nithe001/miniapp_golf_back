@@ -90,7 +90,7 @@
             <tr>
                 <th>序号</th>
                 <th>队员头像</th>
-                <th>队员名称</th>
+                <th>队员真实姓名/昵称</th>
                 <th>用户类型</th>
                 <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
             </tr>
@@ -100,7 +100,13 @@
                 <tr>
                     <td>${s.index +1}</td>
                     <td><img src="${userInfo.uiHeadimg}" style="width:55px;height:55px;"></td>
-                    <td>${userInfo.uiRealName}</td>
+                    <td>
+                        <c:if test="${userInfo.uiRealName ne '' && userInfo.uiRealName ne null}">
+                            ${userInfo.uiRealName}
+                        </c:if>
+                        <c:if  test="${userInfo.uiRealName eq '' || userInfo.uiRealName eq null}">
+                            ${userInfo.uiNickName}
+                        </c:if>
                     <td>
                         <c:if test="${userInfo.tumUserType == 0}">
                             <div style="color:red;">队长</div>

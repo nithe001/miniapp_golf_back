@@ -13,6 +13,8 @@ import com.golf.golf.bean.*;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -33,6 +35,8 @@ public class MatchService implements IBaseService {
 
 	@Autowired
 	private MatchDao matchDao;
+	@Autowired
+	private TeamDao teamDao;
 	@Autowired
 	private TeamService teamService;
 	@Autowired
@@ -82,8 +86,8 @@ public class MatchService implements IBaseService {
 					parkInfo.put("toMyDistance", Integer.parseInt(distance));
 				}
 			}
-//			Collections.sort(pageInfo.getItems());
 			Collections.sort(pageInfo.getItems(), new Comparator<Map<String, Object>>() {
+				@Override
 				public int compare(Map<String, Object> o1, Map<String, Object> o2) {
 					if(o1.get("toMyDistance") != null && o2.get("toMyDistance") != null){
 						int map1value = (Integer) o1.get("toMyDistance");
@@ -111,15 +115,14 @@ public class MatchService implements IBaseService {
 		if(type <= 1){
 			pageInfo = matchDao.getMatchList(searchBean, pageInfo);
 		}else if(type ==2){
-			//正在报名的比赛（所有正在报名的比赛，包括我创建的正在报名的比赛）
-			// 先获取正在报名中的并且我不在比赛用户配置中的比赛 按距离排序
+			//正在报名的比赛(全部正在报名的比赛)
 			pageInfo = matchDao.getCanJoinMatchList(searchBean, pageInfo);
-			//判断我是否在参赛球队中
 			if(pageInfo.getItems() != null && pageInfo.getItems().size()>0){
+				//就判断这个人在不在参赛球队的名单中，在就符合要求，不在的不要。如果没参赛球队的也要。可报名的比赛应该不多，可以先不管地理位置远近了。
 				checkIsInJoinTeam(pageInfo,(Long)searchBean.getParps().get("userId"));
 			}
 		}else if(type == 3){
-			//已报名的比赛（包括我参加的报名中的比赛）
+			//已报名的比赛（包括我参加的和我创建的报名中的比赛）
 			pageInfo = matchDao.getMyJoinMatchList(searchBean, pageInfo);
 		}else{
 			pageInfo = matchDao.getMyMatchList(searchBean, pageInfo);
@@ -170,7 +173,6 @@ public class MatchService implements IBaseService {
 	 */
 	private void checkIsInJoinTeam(POJOPageInfo pageInfo, Long userId) {
 		for(Iterator<Map<String,Object>> teamIterator = (Iterator<Map<String, Object>>) pageInfo.getItems().iterator(); teamIterator.hasNext();){
-//		for(Map<String,Object> map:(List<Map<String,Object>>)pageInfo.getItems()){
 			Map<String,Object> map = teamIterator.next();
 			String joinTeamIds = getName(map,"mi_join_team_ids");
 			List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
@@ -189,7 +191,6 @@ public class MatchService implements IBaseService {
 					}
 					//如果不一样的球队个数等于0，说明我不能报名这个比赛，就从列表中删除
 					if(count == 0){
-//						pageInfo.getItems().remove(map);
 						teamIterator.remove();
 					}
 				}
@@ -234,7 +235,7 @@ public class MatchService implements IBaseService {
 		List<Map<String, Object>> captainList = matchDao.getCaptainListByMatchId(matchId, pageInfo);
 
 		//分组
-		List<Map<String,Object>> groupList_ = matchDao.getMatchGroupList_(matchId,matchInfo.getMiIsEnd());
+		List<Map<String,Object>> groupList_ = matchDao.getMatchGroupList(matchId,matchInfo.getMiIsEnd());
 		List<MatchGroupBean> groupList = new ArrayList<>();
 		if (groupList_ != null && groupList_.size() > 0) {
 			for (Map<String,Object> map : groupList_) {
@@ -269,7 +270,7 @@ public class MatchService implements IBaseService {
 		if (captainCount > 0) {
 			isMatchCaptain = true;
 		}
-		//报名人数
+		//报名人数（报名页的报名人数去掉待分组的）
 		Long userCount = matchDao.getMatchUserCount(matchId);
 
 		//我是否是参赛者
@@ -570,7 +571,8 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public MatchInfo saveMatchInfo(MatchInfo matchInfo, String parkName, String chooseTeamId, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo myUserInfo = userService.getUserByOpenId(openid);
+		String myUserName = StringUtils.isNotEmpty(myUserInfo.getUiRealName())?myUserInfo.getUiRealName():myUserInfo.getUiNickName();
 		ParkInfo parkInfo = matchDao.getParkIdByName(parkName);
 		if (matchInfo.getMiId() != null) {
 			//更新
@@ -614,8 +616,8 @@ public class MatchService implements IBaseService {
 			}
 
 			matchInfoDb.setMiUpdateTime(System.currentTimeMillis());
-			matchInfoDb.setMiUpdateUserId(userInfo.getUiId());
-			matchInfoDb.setMiUpdateUserName(userInfo.getUiRealName());
+			matchInfoDb.setMiUpdateUserId(myUserInfo.getUiId());
+			matchInfoDb.setMiUpdateUserName(myUserName);
 			matchDao.update(matchInfoDb);
 
 			//顺序：如果赛制有修改，先将参赛用户退回报名表，再去判断参赛球队是否有变化，再删除报名表中对应的参赛球队的用户
@@ -632,8 +634,8 @@ public class MatchService implements IBaseService {
 						if(bean.getMugmUserType() != 0){
 							bean.setMugmUserType(2);
 							bean.setMugmIsDel(1);
-							bean.setMugmUpdateUserId(userInfo.getUiId());
-							bean.setMugmUpdateUserName(userInfo.getUiRealName());
+							bean.setMugmUpdateUserId(myUserInfo.getUiId());
+							bean.setMugmUpdateUserName(myUserName);
 							bean.setMugmUpdateTime(updateTime);
 							matchDao.save(bean);
 						}
@@ -645,11 +647,11 @@ public class MatchService implements IBaseService {
 				List<Long> oldJoinTeamIdList = null;
 				List<Long> newJoinTeamIdList = null;
 				//获取我在本比赛的分组配置
-				MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfoDb.getMiId(),null,userInfo.getUiId());
+				MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfoDb.getMiId(),null,myUserInfo.getUiId());
 				if(StringUtils.isNotEmpty(oldJoinTeamIds)){
 					//删除比赛mapping表的本比赛所有参赛报名用户 除了自己
 					oldJoinTeamIdList = getLongTeamIdList(oldJoinTeamIds);
-					matchDao.delMatchUserMappingByTeamId(matchInfoDb.getMiId(), oldJoinTeamIdList, userInfo.getUiId());
+					matchDao.delMatchUserMappingByTeamId(matchInfoDb.getMiId(), oldJoinTeamIdList, myUserInfo.getUiId());
 					//删除比赛mapping的无效的group
 					matchDao.delMatchGroup(matchInfoDb.getMiId(),matchUserGroupMapping.getMugmGroupId());
 				}
@@ -663,7 +665,7 @@ public class MatchService implements IBaseService {
 						for (Map<String, Object> map : teamCaptainList) {
 							Long captainUserId = (Long) map.get("userId");
 							//是否存在
-							if (captainUserId.equals(userInfo.getUiId())) {
+							if (captainUserId.equals(myUserInfo.getUiId())) {
 								continue;
 							}
 							Long groupId = matchUserGroupMapping.getMugmGroupId();
@@ -699,8 +701,8 @@ public class MatchService implements IBaseService {
 							mugm.setMugmUserId(captainUserId);
 							UserInfo userInfo_ = matchDao.get(UserInfo.class, captainUserId);
 							mugm.setMugmUserName(StringUtils.isNotEmpty(userInfo_.getUiRealName())?userInfo_.getUiRealName():userInfo_.getUiNickName());
-							mugm.setMugmCreateUserId(userInfo.getUiId());
-							mugm.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+							mugm.setMugmCreateUserId(myUserInfo.getUiId());
+							mugm.setMugmCreateUserName(myUserName);
 							mugm.setMugmCreateTime(System.currentTimeMillis());
 							matchDao.save(mugm);
 						}
@@ -708,13 +710,13 @@ public class MatchService implements IBaseService {
 				}
 			}
 			//更新我的比赛用户配置
-			MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfoDb.getMiId(),null,userInfo.getUiId());
+			MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfoDb.getMiId(),null,myUserInfo.getUiId());
 			if(StringUtils.isNotEmpty(chooseTeamId) && !chooseTeamId.equals("0") && !chooseTeamId.equals("null")
 					&& !chooseTeamId.equals("undefined") && !chooseTeamId.equals(matchUserGroupMapping.getMugmTeamId())){
 				matchUserGroupMapping.setMugmTeamId(Long.parseLong(chooseTeamId));
 				matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
-				matchUserGroupMapping.setMugmUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
-				matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
+				matchUserGroupMapping.setMugmUpdateUserName(myUserName);
+				matchUserGroupMapping.setMugmUpdateUserId(myUserInfo.getUiId());
 				matchDao.update(matchUserGroupMapping);
 			}
 			return matchInfoDb;
@@ -733,8 +735,8 @@ public class MatchService implements IBaseService {
 			matchInfo.setMiParkName(parkName);
 			matchInfo.setMiType(1);
 			matchInfo.setMiCreateTime(System.currentTimeMillis());
-			matchInfo.setMiCreateUserId(userInfo.getUiId());
-			matchInfo.setMiCreateUserName(userInfo.getUiRealName());
+			matchInfo.setMiCreateUserId(myUserInfo.getUiId());
+			matchInfo.setMiCreateUserName(myUserInfo.getUiRealName());
 			matchInfo.setMiIsValid(1);
 			//0：报名中  1进行中  2结束
 			matchInfo.setMiIsEnd(0);
@@ -745,20 +747,13 @@ public class MatchService implements IBaseService {
 			matchGroup.setMgMatchId(matchInfo.getMiId());
 			matchGroup.setMgGroupName("第1组");
 			matchGroup.setMgCreateTime(System.currentTimeMillis());
-			matchGroup.setMgCreateUserId(userInfo.getUiId());
-			matchGroup.setMgCreateUserName(userInfo.getUiRealName());
+			matchGroup.setMgCreateUserId(myUserInfo.getUiId());
+			matchGroup.setMgCreateUserName(myUserInfo.getUiRealName());
 			matchDao.save(matchGroup);
-
-			//查询用户所在球队
-		/*if(chooseTeamId != null){
-			//获取赛长所在的球队
-			TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userInfo.getUiId());
-			chooseTeamId = teamUserMapping.getTumTeamId();
-		}*/
 
 			//创建用户分组mapping 创建人自动成为赛长
 			MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
-			String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
+
 			matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
 			if(StringUtils.isNotEmpty(chooseTeamId) && !chooseTeamId.equals("0") && !chooseTeamId.equals("null") && !chooseTeamId.equals("undefined")){
 				matchUserGroupMapping.setMugmTeamId(Long.parseLong(chooseTeamId));
@@ -767,10 +762,10 @@ public class MatchService implements IBaseService {
 			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 			matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
-			matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
-			matchUserGroupMapping.setMugmUserName(userName);
-			matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
-			matchUserGroupMapping.setMugmCreateUserName(userName);
+			matchUserGroupMapping.setMugmUserId(myUserInfo.getUiId());
+			matchUserGroupMapping.setMugmUserName(myUserName);
+			matchUserGroupMapping.setMugmCreateUserId(myUserInfo.getUiId());
+			matchUserGroupMapping.setMugmCreateUserName(myUserName);
 			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 			matchDao.save(matchUserGroupMapping);
 
@@ -782,7 +777,7 @@ public class MatchService implements IBaseService {
 					for (Map<String, Object> map : teamCaptainList) {
 						Long captainUserId = (Long) map.get("userId");
 						//是否存在
-						if (captainUserId.equals(userInfo.getUiId())) {
+						if (captainUserId.equals(myUserInfo.getUiId())) {
 							continue;
 						}
 						MatchUserGroupMapping mugm = new MatchUserGroupMapping();
@@ -795,8 +790,8 @@ public class MatchService implements IBaseService {
 						mugm.setMugmUserId(captainUserId);
 						UserInfo userInfo_ = matchDao.get(UserInfo.class, captainUserId);
 						mugm.setMugmUserName(StringUtils.isNotEmpty(userInfo_.getUiRealName())?userInfo_.getUiRealName():userInfo_.getUiNickName());
-						mugm.setMugmCreateUserId(userInfo_.getUiId());
-						mugm.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo_.getUiRealName())?userInfo_.getUiRealName():userInfo_.getUiNickName());
+						mugm.setMugmCreateUserId(myUserInfo.getUiId());
+						mugm.setMugmCreateUserName(myUserName);
 						mugm.setMugmCreateTime(System.currentTimeMillis());
 						matchDao.save(mugm);
 					}
@@ -804,49 +799,6 @@ public class MatchService implements IBaseService {
 			}
 			return matchInfo;
 		}
-	}
-
-	//获取新老参赛队中不同的球队id，如果老参赛队id为空，则不管
-	private List<Long> getDifferentTeamIds(String oldJoinTeamIds,String newJoinTeamIds){
-		if(StringUtils.isEmpty(oldJoinTeamIds)){
-			return null;
-		}
-		if(StringUtils.isEmpty(newJoinTeamIds)){
-			return getLongTeamIdList(oldJoinTeamIds);
-		}
-		String[] oldTeamIds = oldJoinTeamIds.split(",");
-		String[] newTeamIds = newJoinTeamIds.split(",");
-		List<Long> diffTeamIdList = new ArrayList<>();
-		for (int i = 0; i < oldTeamIds.length; i++) {
-			boolean flag = true;
-			String temp = oldTeamIds[i];
-			for (int j = 0; j < newTeamIds.length; j++) {
-				if (temp.equals(newTeamIds[j])) {
-					flag = false;
-					break;
-				}
-			}
-			if (flag) {
-				diffTeamIdList.add(Long.parseLong(temp));
-			}
-		}
-		System.out.println(diffTeamIdList.toString());
-		return diffTeamIdList;
-	}
-
-
-	/**
-	 * 赛长——删除用户——本组用户列表
-	 * 不包括自己
-	 * @return
-	 */
-	public Map<String, Object> getUserListByMatchIdGroupId(Long matchId, Long groupId, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
-		Map<String, Object> result = new HashMap<>();
-		List<Map<String, Object>> list = matchDao.getUserListByMatchIdGroupId(matchId, groupId, userInfo.getUiId());
-		result.put("applyUserList", list);
-		result.put("userCount", list.size());
-		return result;
 	}
 
 	/**
@@ -996,7 +948,8 @@ public class MatchService implements IBaseService {
 		//本组人数(不包括已报名的)
 		Long count = matchDao.getGroupUserCountById(matchId, groupId);
 		result.put("userCount", count);
-		List<Map<String, Object>> applyUserList = matchDao.getApplyUserByMatchId(matchId, keyword,groupId);
+		//获取待分组人员
+		List<Map<String, Object>> applyUserList = matchDao.getUserListByGroupId(matchId, keyword,null,1);
 		result.put("applyUserList", applyUserList);
 		return result;
 	}
@@ -1006,46 +959,57 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> getUserListByGroupId(Long matchId, Long groupId,String openid) {
+	public Map<String, Object> getUserListByGroupId(Long matchId, Long groupId) {
 		Map<String, Object> result = new HashMap<>();
-		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//本组人数
 		Long count = matchDao.getGroupUserCountById(matchId, groupId);
 		result.put("userCount", count);
-		List<Map<String, Object>> userList = matchDao.getUserListByGroupId(matchId,groupId,userInfo.getUiId());
+		List<Map<String, Object>> userList = matchDao.getUserListByGroupId(matchId,null,groupId,0);
 		result.put("userList", userList);
 		return result;
 	}
 
 	/**
 	 * 比赛详情——赛长 添加用户至分组
-	 * @param myTeamId 赛长所在球队id，也就是这些用户的代表球队id
+	 * @param checkIds:选中的id（mappingid或者用户id）
+	 * @param type：0 添加待分组球友mappingid  1：添加备选球友 用户id
 	 * @return
 	 */
-	public void updateGroupUserByMatchIdGroupId(Long matchId, Long myTeamId, Long groupId, String userIds, String openid) {
-		//赛长
+	public void updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, Integer type, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		MatchGroup matchGroup = matchDao.get(MatchGroup.class,groupId);
-
-		Long captainUserId = userInfo.getUiId();
-		//将用户加入比赛分组
-		if(StringUtils.isNotEmpty(userIds)){
-			userIds = userIds.replace("[", "");
-			userIds = userIds.replace("]", "");
-			userIds = userIds.replace("\"", "");
-			String[] uids = userIds.split(",");
-			Long updateTime = System.currentTimeMillis();
-			for(String uid : uids){
-				if(StringUtils.isNotEmpty(uid)){
-					Long userId = Long.parseLong(uid);
-					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, null, userId);
-					if(matchUserGroupMapping == null){
-						//如果为null，则表示从备选球友中选进来的
+		Long time = System.currentTimeMillis();
+		if(type == 0){
+			//添加待分组球友 将该球友的状态改为加入
+			if (StringUtils.isNotEmpty(checkIds)) {
+				List<Long> mappingIdList = getLongIdListReplace(checkIds);
+				for (Long mappingId : mappingIdList) {
+					if (mappingId != null) {
+						MatchUserGroupMapping matchUserGroupMapping = matchDao.get(MatchUserGroupMapping.class, mappingId);
+						if(matchUserGroupMapping != null){
+							matchUserGroupMapping.setMugmGroupId(groupId);
+							matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
+							matchUserGroupMapping.setMugmIsDel(0);
+							matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
+							matchUserGroupMapping.setMugmUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName()) ? userInfo.getUiRealName() : userInfo.getUiNickName());
+							matchUserGroupMapping.setMugmUpdateTime(time);
+							matchDao.update(matchUserGroupMapping);
+						}
+					}
+				}
+			}
+		}else{
+			//添加备选球友 将用户加入比赛分组
+			if(StringUtils.isNotEmpty(checkIds)){
+				List<Long> userIdList = getLongIdListReplace(checkIds);
+				for(Long userId : userIdList){
+					if(userId != null){
+						UserInfo ui = matchDao.get(UserInfo.class, userId);
+						//赛长参赛代表队
 						TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByUserId(userId);
-						UserInfo ui = matchDao.get(UserInfo.class,userId);
-						matchUserGroupMapping = new MatchUserGroupMapping();
+						MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
 						matchUserGroupMapping.setMugmMatchId(matchId);
-						if(teamUserMapping != null){
+						if (teamUserMapping != null) {
 							matchUserGroupMapping.setMugmTeamId(teamUserMapping.getTumTeamId());
 						}
 						matchUserGroupMapping.setMugmUserType(1);
@@ -1053,19 +1017,11 @@ public class MatchService implements IBaseService {
 						matchUserGroupMapping.setMugmGroupId(groupId);
 						matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
 						matchUserGroupMapping.setMugmUserId(userId);
-						matchUserGroupMapping.setMugmUserName(StringUtils.isNotEmpty(ui.getUiRealName())?ui.getUiRealName():ui.getUiNickName());
+						matchUserGroupMapping.setMugmUserName(StringUtils.isNotEmpty(ui.getUiRealName()) ? ui.getUiRealName() : ui.getUiNickName());
 						matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
-						matchUserGroupMapping.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
-						matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+						matchUserGroupMapping.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName()) ? userInfo.getUiRealName() : userInfo.getUiNickName());
+						matchUserGroupMapping.setMugmCreateTime(time);
 						matchDao.save(matchUserGroupMapping);
-					}else{
-						matchUserGroupMapping.setMugmGroupId(groupId);
-						matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
-						matchUserGroupMapping.setMugmIsDel(0);
-						matchUserGroupMapping.setMugmUpdateUserId(captainUserId);
-						matchUserGroupMapping.setMugmUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
-						matchUserGroupMapping.setMugmUpdateTime(updateTime);
-						matchDao.update(matchUserGroupMapping);
 					}
 				}
 			}
@@ -1454,12 +1410,13 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 保存或更新比赛状态
+	 * 开始比赛 / 结束比赛——保存或更新比赛状态
 	 * state   0：报名中  1进行中  2结束
 	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
 	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
 	 * 3、单人比杆赛分组不用有任何限制。
 	 * 4、一个队队内，及多个队之间没法进行比洞赛
+	 * 比洞赛的输赢组已经在获取比洞赛记分卡的时候进行了更新
 	 * @return
 	 */
 	public String updateMatchState(Long matchId, Integer state, String openid) {
@@ -1467,67 +1424,84 @@ public class MatchService implements IBaseService {
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		String joinTeamIds = matchInfo.getMiJoinTeamIds();
 		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
-		//如果是队内或者队际赛，获取每个组的队伍个数情况
-		List<Map<String,Object>> teamCountList = null;
-		if(joinTeamIdList != null && joinTeamIdList.size()>0){
-			teamCountList = matchDao.getTeamCountByMatchId(matchId,null);
-			if(teamCountList == null || teamCountList.size() == 0){
-				return "没有参赛队无法开始比赛。";
-			}
-		}
-		//获取每个组的每队人数情况
-		List<Map<String,Object>> userCountListByTeam = matchDao.getUserCountByMatchId(matchId,null);
-		if(userCountListByTeam == null || userCountListByTeam.size() ==0){
-            return "没有参赛队员无法开始比赛。";
-        }
 
-		//2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
-		// 3、单人比杆赛分组不用有任何限制。
-		if(joinTeamIdList != null){
-			//单人比洞
-			if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 0){
-				//每组只能两个人
-				//获取每组人数
-				List<Map<String,Object>> userCountByEveGroup = matchDao.getUserCountWithEveGroupByMatchId(matchId);
-				for(Map<String,Object> userCount:userCountByEveGroup){
-					Long groupId = getLongValue(userCount,"groupId");
-					String groupName = getName(userCount,"groupName");
-					Integer countEveGroup = getIntegerValue(userCount,"count");
-					if(countEveGroup != 2){
-						return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
-					}
-					if(joinTeamIdList.size()>1){
-						//队际赛，一组的两个人要是两个球队的 就判断每一组的球队个数，如果为1 说明这俩人是一队，不能开始比赛
-						//获取本组的球队个数
-						List<Map<String,Object>> teamCountByGroup = matchDao.getTeamCountByMatchId(matchId,groupId);
-						if(getIntegerValue(teamCountByGroup.get(0),"count") !=2){
-							return groupName+" 球队数不符合比赛要求，无法开始比赛。";
-						}
-					}
+		if(state == 1){
+			//开始比赛
+			//如果是队内或者队际赛，获取每个组的队伍个数情况
+			List<Map<String,Object>> teamCountList = null;
+			if(joinTeamIdList != null && joinTeamIdList.size()>0){
+				teamCountList = matchDao.getTeamCountByMatchId(matchId,null);
+				if(teamCountList == null || teamCountList.size() == 0){
+					return "没有参赛队无法开始比赛。";
 				}
-			}else if(matchInfo.getMiMatchFormat2() == 1){
-				//1、如果是多队双人比赛，不管比杆比洞，每组最多两个队，每个队不超过两人，也可以是一人。生成记分卡时，只有一个队的两个人才能放入一行。
-				if(joinTeamIdList.size() == 2){
-					//所有组球队个数
-					for(Map<String,Object> teamCount :teamCountList){
-						Long groupId = getLongValue(teamCount,"groupId");
-						String groupName = getName(teamCount,"groupName");
-						Integer tCount = getIntegerValue(teamCount,"count");
-						if(tCount >2 || tCount == 1){
-							return groupName+" 球队数不符合比赛要求，无法开始比赛。";
+			}
+			//获取每个组的每队人数情况
+			List<Map<String,Object>> userCountListByTeam = matchDao.getUserCountByMatchId(matchId,null);
+			if(userCountListByTeam == null || userCountListByTeam.size() ==0){
+				return "没有参赛队员无法开始比赛。";
+			}
+
+			//2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+			// 3、单人比杆赛分组不用有任何限制。
+			if(joinTeamIdList != null){
+				//单人比洞
+				if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 0){
+					//每组只能两个人
+					//获取每组人数
+					List<Map<String,Object>> userCountByEveGroup = matchDao.getUserCountWithEveGroupByMatchId(matchId);
+					for(Map<String,Object> userCount:userCountByEveGroup){
+						Long groupId = getLongValue(userCount,"groupId");
+						String groupName = getName(userCount,"groupName");
+						Integer countEveGroup = getIntegerValue(userCount,"count");
+						if(countEveGroup != 2){
+							return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
 						}
-						//获取本组每个球队的人数
-						userCountListByTeam = matchDao.getUserCountByMatchId(matchId,groupId);
-						for(Map<String,Object> userCount:userCountListByTeam){
-							Integer c = getIntegerValue(userCount,"count");
-							if(c >2){
-								return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
+						if(joinTeamIdList.size()>1){
+							//队际赛，一组的两个人要是两个球队的 就判断每一组的球队个数，如果为1 说明这俩人是一队，不能开始比赛
+							//获取本组的球队个数
+							List<Map<String,Object>> teamCountByGroup = matchDao.getTeamCountByMatchId(matchId,groupId);
+							if(getIntegerValue(teamCountByGroup.get(0),"count") !=2){
+								return groupName+" 球队数不符合比赛要求，无法开始比赛。";
+							}
+						}
+						//该组重复的用户个数
+						List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
+						if(count != null &&  count.size() > 0){
+							return groupName+" 有重复球友，无法开始比赛。";
+						}
+					}
+				}else if(matchInfo.getMiMatchFormat2() == 1){
+					//1、如果是多队双人比赛，不管比杆比洞，每组最多两个队，每个队不超过两人，也可以是一人。生成记分卡时，只有一个队的两个人才能放入一行。
+					if(joinTeamIdList.size() >= 2){
+						//所有组球队个数
+						for(Map<String,Object> teamCount :teamCountList){
+							Long groupId = getLongValue(teamCount,"groupId");
+							String groupName = getName(teamCount,"groupName");
+							Integer tCount = getIntegerValue(teamCount,"count");
+							if(tCount >2 || (matchInfo.getMiMatchFormat1() == 1 && tCount == 1)){
+								//双人比洞赛，每组2个队（一个队或者多个队打不了比洞赛）
+								return groupName+" 球队数不符合比赛要求，无法开始比赛。";
+							}
+							//获取本组每个球队的人数
+							userCountListByTeam = matchDao.getUserCountByMatchId(matchId,groupId);
+							for(Map<String,Object> userCount:userCountListByTeam){
+								Integer c = getIntegerValue(userCount,"count");
+								if(c >2 || (tCount == 1 && c<2)){
+									return groupName+" 参赛人数不符合比赛要求，无法开始比赛。";
+								}
+							}
+
+							//该组重复的用户个数
+							List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
+							if(count != null &&  count.size() > 0){
+								return groupName+" 有重复球友，无法开始比赛。";
 							}
 						}
 					}
 				}
 			}
 		}
+
 		matchInfo.setMiIsEnd(state);
 		matchInfo.setMiUpdateUserId(userInfo.getUiId());
 		matchInfo.setMiUpdateUserName(userInfo.getUiRealName());
@@ -1538,6 +1512,7 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 成绩上报 杆数越少 代表成绩越好 （注意球友加入球队是否成功）
+	 * 我作为一个上报球队队长，可能给不同的参赛球队分配不同的积分
 	 * ***************拿每个参赛队和每个上报球队算交集，如果没有就忽略，如果有，就把交集的队员成绩交给上报球队并积分
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param baseScore 基础分,
@@ -1547,95 +1522,73 @@ public class MatchService implements IBaseService {
 	 */
 	public void submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
 									   Integer rodScore, Integer winScore, String openid) {
-		Long userId = userService.getUserIdByOpenid(openid);
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long captainUserId = userInfo.getUiId();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		String reportTeamIds = matchInfo.getMiReportScoreTeamId();
-		List<Long> reportTeamIdList = null;
-		Long isReportTeamCaptain = 0L;
-		if(StringUtils.isNotEmpty(reportTeamIds)){
-			//有上报球队
-			reportTeamIdList = getLongTeamIdList(reportTeamIds);
-			//我是否是上报球队的队长
-			for(Long reportTeamId:reportTeamIdList){
-				isReportTeamCaptain = teamService.getIsCaptain(userId, reportTeamId);
-				if(isReportTeamCaptain >0){
-					//是上报球队队长
-					//新增、更新 上报球队——积分配置 允许重复上报（修改）
-					saveOrUpdateReportConfig(matchId, reportTeamId, teamId, baseScore, rodScore, winScore, openid);
-					//获取本球队上报的球友
-					List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
-					//计算球友积分（一场比赛对应一次积分）
-					calculateScore(matchInfo,reportTeamId, userIdList, scoreType, baseScore, rodScore, winScore);
-				}
-			}
-		}
-		//我是否是本球队队长，页面上其实已经做过判断，为了保险，此处再校验一次
-		Long isTeamCaptain = teamService.getIsCaptain(userId, teamId);
+		//我是否是选中的球队队长，页面上其实已经做过判断，为了保险，此处再校验一次
+		Long isTeamCaptain = teamService.getIsCaptain(captainUserId, teamId);
+		//参赛球队
+		List<Long> joinTeamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
+		//上报球队
+		List<Long> reportTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
+
 		if(isTeamCaptain >0){
-			//更新配置 允许重复上报（修改）
-			saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore, openid);
-			//计算球友积分（一场比赛对应一次积分）
-			calculateScore(matchInfo,teamId, null, scoreType, baseScore, rodScore, winScore);
+			//更新配置 允许重复上报（update）
+			saveOrUpdateConfig(matchId, teamId, baseScore, rodScore, winScore, userInfo);
+
+			//是否是参赛球队还是上报球队，创建比赛时，参赛球队和上报球队不可能重复
+			if(joinTeamIdList.contains(teamId)){
+				//是参赛球队
+				//计算球友积分（一场比赛对应一次积分）
+				calculateScore(captainUserId, matchInfo,teamId, null, scoreType, baseScore, rodScore, winScore, 0);
+			}else if(reportTeamIdList.contains(teamId)){
+				//是上报球队
+				//获取本球队上报的球友
+				List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
+				//计算球友积分（一场比赛对应一次积分）
+				calculateScore(captainUserId, matchInfo,teamId, userIdList, scoreType, baseScore, rodScore, winScore, 1);
+			}
 		}
 	}
 
-	//计算球友积分 teamId 球队id,上报球队id
-	//（一场比赛对应一次积分）
-	private void calculateScore(MatchInfo matchInfo, Long teamId, List<Long> userIdList, Integer scoreType, Integer baseScore,
-								Integer rodScore, Integer winScore) {
+	/**
+	 * 成绩上报——计算球友积分 teamId 参赛球队id,上报球队id
+	 * （一场比赛对应一次积分）
+	 * teamType：0：参赛队，1：上报队
+	 */
+	private void calculateScore(Long captainUserId, MatchInfo matchInfo, Long teamId, List<Long> userIdList, Integer scoreType, Integer baseScore,
+								Integer rodScore, Integer winScore, Integer teamType) {
 		Integer format = matchInfo.getMiMatchFormat1();
+		boolean flag = false;
 		if (format == 0) {
 			//比杆赛
 			//积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（110-球友比分）*杆差倍数
 			//或者 球友积分=基础积分+赢球奖分/比赛排名
-			updatePointByRodScore(matchInfo.getMiId(), teamId, userIdList, scoreType, baseScore, rodScore, winScore);
+			flag = updatePointByRodScore(captainUserId, matchInfo.getMiId(), teamId, userIdList, scoreType, baseScore, rodScore, winScore, teamType);
 		} else if (format == 1) {
 			//比洞赛
 			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
 			// 计算公式为：球友积分=基础积分+赢球奖分
-			updatePointByHoleScore(matchInfo.getMiId(), teamId, baseScore, winScore);
+			flag = updatePointByHoleScore(captainUserId, matchInfo.getMiId(), teamId, baseScore, winScore, teamType);
 		}
-		//将该组的得分成绩标为已确认
-		matchDao.updateMatchScoreById(matchInfo.getMiId(),teamId,userIdList);
+		if(flag){
+			//将该组的得分成绩标为已确认
+			matchDao.updateMatchScoreById(matchInfo.getMiId(),teamId,userIdList);
+		}
 	}
 
-	//保存成绩提交的积分计算配置 允许重复上报（修改）
-	private void saveOrUpdateConfig(Long matchId, Long teamId,Integer baseScore, Integer rodScore, Integer winScore, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+	/**
+	 * 成绩上报——保存参赛球队 或 上报球队 的成绩提交的积分计算配置 允许重复上报（修改）
+	 * 我作为一个上报球队队长，可能给不同的参赛球队分配不同的积分
+	 * type:0 参赛队  1：上报队
+	 */
+	private void saveOrUpdateConfig(Long matchId,Long teamId,Integer baseScore, Integer rodScore,
+										Integer winScore, UserInfo userInfo) {
 		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
-		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,null,teamId,0);
+		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId,userInfo.getUiId());
 		if(config == null){
 			config = new IntegralConfig();
 			config.setIcMatchId(matchId);
-			config.setIcTeamId(teamId);
-			config.setIcBaseScore(baseScore);
-			config.setIcRodCha(rodScore);
-			config.setIcWinScore(winScore);
-			config.setIcCreateTime(System.currentTimeMillis());
-			config.setIcCreateUserId(userInfo.getUiId());
-			config.setIcCreateUserName(userInfo.getUiRealName());
-			matchDao.save(config);
-		}else{
-			config.setIcBaseScore(baseScore);
-			config.setIcRodCha(rodScore);
-			config.setIcWinScore(winScore);
-			config.setIcUpdateTime(System.currentTimeMillis());
-			config.setIcUpdateUserId(userInfo.getUiId());
-			config.setIcUpdateUserName(userName);
-			matchDao.update(config);
-		}
-	}
-	//保存成绩提交的积分计算配置 允许重复上报（修改）
-	private void saveOrUpdateReportConfig(Long matchId, Long reportTeamId, Long teamId, Integer baseScore, Integer rodScore, Integer winScore, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
-		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
-		IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,reportTeamId,teamId,1);
-		if(config == null){
-			config = new IntegralConfig();
-			config.setIcMatchId(matchId);
-			//上报球队id
-			config.setIcReportTeamId(reportTeamId);
-			//被上报球队id
 			config.setIcTeamId(teamId);
 			config.setIcBaseScore(baseScore);
 			config.setIcRodCha(rodScore);
@@ -1655,21 +1608,23 @@ public class MatchService implements IBaseService {
 		}
 	}
 
+
 	/**
 	 * 成绩上报 比杆赛   （一场比赛对应一次积分）
 	 * 积分“杆差倍数”和“赢球奖分”只能二选
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param teamId 上报球队id或者本球队id
+	 * @param teamType 0：参赛队，1：上报队
 	 * 杆差倍数 ：球友积分=基础积分+（110-球友比分）*杆差倍数
 	 * 赢球奖分 ：球友积分=基础积分+赢球奖分/比赛排名
 	 *
 	 */
-	private void updatePointByRodScore(Long matchId, Long teamId, List<Long> userIdList,Integer scoreType, Integer baseScore,
-									   Integer rodScore, Integer winScore) {
+	private boolean updatePointByRodScore(Long captainUserId, Long matchId, Long teamId, List<Long> userIdList,Integer scoreType, Integer baseScore,
+									   Integer rodScore, Integer winScore, Integer teamType) {
 		if (scoreType == 1) {
 			//杆差倍数 球友积分=基础积分+（110-球友比分）*杆差倍数
 			//获取该队伍的得分情况
-			List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchId, teamId,userIdList);
+			List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchId, teamId,userIdList, teamType);
 			if (matchScoreList != null && matchScoreList.size() > 0) {
 				for (Map<String, Object> scoreMap : matchScoreList) {
 					//杆数
@@ -1677,35 +1632,35 @@ public class MatchService implements IBaseService {
 					Long userId = getLongValue(scoreMap, "userId");
 					Integer point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodScore;
 					//更新该球友原先的积分情况  （一场比赛对应一次积分）
-					updatePointByIds(matchId, teamId, userId, point, 0);
+					updatePointByIds(matchId, teamId, userId, captainUserId, point, 0);
 				}
+				return true;
 			}
 		} else {
 			//赢球奖分 球友积分=基础积分+赢球奖分/比赛排名
 			//计算杆数的总排名
-			List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchId, teamId,userIdList);
+			List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchId, teamId,userIdList, teamType);
 			if (matchScoreList != null && matchScoreList.size() > 0) {
 				for (int i=0;i<matchScoreList.size();i++) {
                     Map<String, Object> scoreMap = matchScoreList.get(i);
 					Long teamIdByScore = getLongValue(scoreMap, "teamId");
-					if(teamId.equals(teamIdByScore)){
-						Long userId = getLongValue(scoreMap, "userId");
-						//排名
-						Integer rank = i+1;
-						//计算得分
-						Integer point = baseScore + winScore/rank;
-						//计算得分(有小数)
-						/*BigDecimal a = new BigDecimal(baseScore);
-						BigDecimal b = new BigDecimal((float)winScore/rank);
-						BigDecimal c = a.add(b);
-						Double point = c.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();*/
-						//更新该球友原先的积分情况
-						updatePointByIds(matchId, teamIdByScore, userId, point, 0);
-
-					}
+					Long userId = getLongValue(scoreMap, "userId");
+					//排名
+					Integer rank = i+1;
+					//计算得分
+					Integer point = baseScore + winScore/rank;
+					//计算得分(有小数)
+					/*BigDecimal a = new BigDecimal(baseScore);
+					BigDecimal b = new BigDecimal((float)winScore/rank);
+					BigDecimal c = a.add(b);
+					Double point = c.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();*/
+					//更新该球友原先的积分情况
+					updatePointByIds(matchId, teamIdByScore, userId, captainUserId, point, 0);
 				}
+				return true;
 			}
 		}
+		return false;
 	}
 
 
@@ -1716,165 +1671,37 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public boolean cancelScoreByTeamId(Long matchId, Long teamId, String openid) {
-		Long userId = userService.getUserIdByOpenid(openid);
+		Long captainUserId = userService.getUserIdByOpenid(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		String reportTeamIds = matchInfo.getMiReportScoreTeamId();
-		List<Long> reportTeamIdList = null;
-		Long isReportTeamCaptain = 0L;
-		if(StringUtils.isNotEmpty(reportTeamIds)){
-			//有上报球队
-			reportTeamIdList = getLongTeamIdList(reportTeamIds);
-			//我是否是上报球队的队长
-			for(Long reportTeamId:reportTeamIdList){
-				isReportTeamCaptain = teamService.getIsCaptain(userId, reportTeamId);
-				if(isReportTeamCaptain >0){
-					//是上报球队队长
-					//获取该球队的上报的球友
-					List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
-					//获取配置
-					IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,reportTeamId,teamId,1);
-					if(config == null){
-						return false;
-					}
-					//计算得分
-					updateScore(matchInfo,reportTeamId,config,userIdList);
-				}
-			}
-		}
-		//我是否是本球队队长，页面上其实已经做过判断，为了保险，此处再校验一次
-		Long isTeamCaptain = teamService.getIsCaptain(userId, teamId);
+		//我是否是选中的球队队长，页面上其实已经做过判断，为了保险，此处再校验一次
+		Long isTeamCaptain = teamService.getIsCaptain(captainUserId, teamId);
 		if(isTeamCaptain >0){
-			IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,null,teamId,0);
+			//查询是否有对该球队的积分配置
+			IntegralConfig config = matchDao.getSubmitScoreConfig(matchId,teamId,captainUserId);
 			if(config == null){
 				return false;
 			}
-			//计算得分
-			updateScore(matchInfo,teamId,config,null);
+			//删除球队用户积分
+			matchDao.delTeamUserPoint(matchInfo.getMiId(),teamId,captainUserId);
+			//删除积分计算配置
+			matchDao.del(config);
+			List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
+			matchDao.cancelMatchScoreById(matchInfo.getMiId(),teamId,userIdList);
+			return true;
 		}
-		return true;
-	}
-
-	//撤销上报——计算得分 teamId:球队id 或者上报球队id
-	private void updateScore(MatchInfo matchInfo,Long teamId,IntegralConfig config,List<Long> userIdList) {
-		//基础积分
-		Integer baseScore = config.getIcBaseScore();
-		//杆差倍数
-		Integer rodCha = config.getIcRodCha();
-		//赢球奖分
-		Integer winScore = config.getIcWinScore();
-		if (matchInfo.getMiMatchFormat1() == 0) {
-			//比杆赛 积分“杆差倍数”和“赢球奖分”只能二选  球友积分=基础积分+（110-球友比分）*杆差倍数 或者 球友积分=基础积分+赢球奖分/比赛排名
-			if(rodCha != null){
-				//获取该队伍的得分情况
-				List<Map<String, Object>> teamScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchInfo.getMiId(), teamId, userIdList);
-				if (teamScoreList != null && teamScoreList.size() > 0) {
-					for (Map<String, Object> scoreMap : teamScoreList) {
-						//杆数
-						Integer score = getIntegerValue(scoreMap, "sumRodNum");
-						Long userId = getLongValue(scoreMap, "userId");
-						Integer point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodCha;
-						//更新该球友的积分情况
-						updatePointByIds(matchInfo.getMiId(), teamId, userId, point, 1);
-					}
-				}
-			}else if(winScore != null){
-				//选择的赢球奖分 赢球奖分 球友积分=基础积分+赢球奖分/比赛排名
-				//计算杆数的总排名
-				List<Map<String, Object>> matchScoreList = matchDao.getRankingListByMatchId(matchInfo.getMiId(),teamId,userIdList);
-				if (matchScoreList != null && matchScoreList.size() > 0) {
-                    for (int i=0;i<matchScoreList.size();i++) {
-                        Map<String, Object> scoreMap = matchScoreList.get(i);
-						Long teamIdByScore = getLongValue(scoreMap, "teamId");
-						if(teamId.equals(teamIdByScore)){
-							Long userId = getLongValue(scoreMap, "userId");
-							//排名
-							Integer rank = i+1;
-							//计算得分
-							Integer point = baseScore + winScore/rank;
-							//更新该球友原先的积分情况
-							updatePointByIds(matchInfo.getMiId(), teamIdByScore, userId, point, 1);
-						}
-					}
-				}
-			}
-		} else if (matchInfo.getMiMatchFormat1() == 1) {
-			//比洞赛
-			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
-			// 计算公式为：球友积分=基础积分+赢球奖分
-			//获取本次比赛中的分组和每组用户的总分
-			List<Map<String,Object>> holeScoreList = matchDao.getMatchHoleScoreList(matchInfo.getMiId());
-			if(holeScoreList != null && holeScoreList.size()>0){
-				for(int i = 0;i<holeScoreList.size();i++){
-					Map<String,Object> team1 = holeScoreList.get(i);
-					Map<String,Object> team2 = holeScoreList.get(i+1);
-					i += 1;
-					Long team1Id = getLongValue(team1,"teamId");
-					Long team2Id = getLongValue(team2,"teamId");
-					Integer team1SumRod = getIntegerValue(team1,"sumRod");
-					Integer team2SumRod = getIntegerValue(team2,"sumRod");
-					Long userForTeam = null;
-					Integer point = 0;
-					if(teamId.equals(team1Id)){
-						userForTeam = getLongValue(team1,"userId");
-						if(team1SumRod < team2SumRod){
-							//第一队赢球 球友积分=基础积分+赢球奖分
-							point = baseScore + winScore;
-						}else if(team1SumRod > team2SumRod){
-							//第一队输球 球友积分=基础积分+赢球奖分0
-							point = baseScore;
-						}else if(team1SumRod.equals(team2SumRod)){
-							//打平 球友积分=基础积分+赢球奖分的一半
-							point = baseScore + winScore/2;
-						}
-					}else if(teamId.equals(team2Id)){
-						userForTeam = getLongValue(team2,"userId");
-						if(team2SumRod < team1SumRod){
-							//第二队赢球 球友积分=基础积分+赢球奖分
-							point = baseScore + winScore;
-						}else if(team2SumRod > team1SumRod){
-							//第二队输球 球友积分=基础积分+赢球奖分0
-							point = baseScore;
-						}else if(team2SumRod.equals(team1SumRod)){
-							//打平 球友积分=基础积分+赢球奖分的一半
-							point = baseScore + winScore/2;
-						}
-					}
-					//更新该球友的积分情况
-					updatePointByIds(matchInfo.getMiId(), teamId, userForTeam, point, 1);
-				}
-			}
-		}
-		//删除积分计算配置
-		matchDao.del(config);
-		//将该组的得分成绩标为撤销
-		matchDao.cancelMatchScoreById(matchInfo.getMiId(),teamId,userIdList);
+		return false;
 	}
 
 
 	/**
-	 * 更新该球友原先的积分情况  （一场比赛对应一次积分）
+	 * 更新该球友原先的比赛积分情况  （一场比赛对应一次积分）
+	 * 如果是上报球队队长，作为一个上报球队队长，可能给不同的参赛球队分配不同的积分
 	 * type: 0:加积分   1：减积分
 	 */
-	private void updatePointByIds(Long matchId, Long teamId, Long userId, Integer point, Integer type) {
-		UserInfo userInfo = userService.getUserById(userId);
-		//总积分
-		TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(teamId, userId);
-		if (teamUserMapping.getTumPoint() == null || teamUserMapping.getTumPoint() == 0) {
-			teamUserMapping.setTumPoint(point);
-		} else {
-			if(type == 0){
-				teamUserMapping.setTumPoint(teamUserMapping.getTumPoint() + point);
-			}else{
-				teamUserMapping.setTumPoint(teamUserMapping.getTumPoint() - point);
-			}
-		}
-		 teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
-		teamUserMapping.setTumUpdateUserId(userInfo.getUiId());
-		teamUserMapping.setTumUpdateUserName(userInfo.getUiRealName());
-		matchDao.update(teamUserMapping);
-
-		//比赛积分
-		TeamUserPoint teamUserPoint = matchDao.getTeamUserPoint(matchId, teamId, userId);
+	private void updatePointByIds(Long matchId, Long teamId, Long userId, Long captainUserId, Integer point, Integer type) {
+		UserInfo captainUserInfo = userService.getUserById(captainUserId);
+		String captainName = StringUtils.isNotEmpty(captainUserInfo.getUiRealName())?captainUserInfo.getUiRealName():captainUserInfo.getUiNickName();
+		TeamUserPoint teamUserPoint = matchDao.getTeamUserPoint(matchId, teamId, userId, captainUserId);
 		if(type == 0){
 			//加积分 或者 修改积分
 			if(teamUserPoint == null){
@@ -1883,14 +1710,14 @@ public class MatchService implements IBaseService {
 				teamUserPoint.setTupTeamId(teamId);
 				teamUserPoint.setTupUserId(userId);
 				teamUserPoint.setTupMatchPoint(point);
-				teamUserPoint.setTupCreateUserId(userId);
-				teamUserPoint.setTupCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+				teamUserPoint.setTupCreateUserId(captainUserId);
+				teamUserPoint.setTupCreateUserName(captainName);
 				teamUserPoint.setTupCreateTime(System.currentTimeMillis());
 				matchDao.save(teamUserPoint);
 			}else{
 				teamUserPoint.setTupMatchPoint(point);
-				teamUserPoint.setTupUpdateUserId(userId);
-				teamUserPoint.setTupUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+				teamUserPoint.setTupUpdateUserId(captainUserId);
+				teamUserPoint.setTupUpdateUserName(captainName);
 				teamUserPoint.setTupUpdateTime(System.currentTimeMillis());
 				matchDao.update(teamUserPoint);
 			}
@@ -1907,34 +1734,85 @@ public class MatchService implements IBaseService {
 	 * 成绩上报 比洞赛
 	 * 积分只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
 	 * 计算公式为：球友积分=基础积分+赢球奖分
+	 * @param teamType 0：参赛队，1：上报队
 	 */
-	private void updatePointByHoleScore(Long matchId, Long teamId, Integer baseScore, Integer winScore) {
-		//获取本队的输球组和赢球组
-        List<MatchHoleResult> matchHoleResultList = matchDao.getMatchHoleWinOrLoseList(matchId,teamId);
-        if(matchHoleResultList != null && matchHoleResultList.size()>0){
-            Integer point = 0;
-            for(MatchHoleResult matchHoleResult:matchHoleResultList){
-                if(matchHoleResult.getMhrResult() == 1){
-                    //赢球组 球友积分=基础积分+赢球奖分
-                    point = baseScore + winScore;
-                }else if(matchHoleResult.getMhrResult() == 2){
-                    //输球组 奖分为0 球友积分=基础积分+0
-                    point = baseScore;
-                }else if(matchHoleResult.getMhrResult() == 0){
-                    //打平 球友积分=基础积分+赢球奖分的一半
-                    point = baseScore + winScore/2;
-                }
-                //获取本组本球队的用户列表
-                List<Map<String,Object>> userList = matchDao.getUserListByTeamId(matchId,teamId,matchHoleResult.getMhrGroupId());
-                if(userList != null && userList.size() >0){
-                    for(Map<String,Object> user:userList){
-                        Long userId = getLongValue(user,"uiId");
-                        //更新该球友的积分情况
-                        updatePointByIds(matchId, teamId, userId, point, 0);
-                    }
-                }
-            }
-        }
+	private boolean updatePointByHoleScore(Long captainUserId, Long matchId, Long teamId, Integer baseScore,
+										   Integer winScore, Integer teamType) {
+		List<MatchHoleResult> matchHoleResultList = null;
+		if(teamType == 0){
+			//选的是参赛队
+			//获取本队的输球组和赢球组
+			matchHoleResultList = matchDao.getMatchHoleWinOrLoseList(matchId,teamId);
+			if(matchHoleResultList != null && matchHoleResultList.size()>0){
+				//是参赛球队
+				Integer point = 0;
+				for(MatchHoleResult matchHoleResult:matchHoleResultList){
+					if(matchHoleResult.getMhrResult() == 1){
+						//赢球组 球友积分=基础积分+赢球奖分
+						point = baseScore + winScore;
+					}else if(matchHoleResult.getMhrResult() == 2){
+						//输球组 奖分为0 球友积分=基础积分+0
+						point = baseScore;
+					}else if(matchHoleResult.getMhrResult() == 0){
+						//打平 球友积分=基础积分+赢球奖分的一半
+						point = baseScore + winScore/2;
+					}
+					//获取本组本球队的用户列表
+					List<Map<String,Object>> userList = matchDao.getUserListByTeamId(matchId,teamId,matchHoleResult.getMhrGroupId());
+					if(userList != null && userList.size() >0){
+						for(Map<String,Object> user:userList){
+							Long userId = getLongValue(user,"uiId");
+							//更新该球友的积分情况
+							updatePointByIds(matchId, teamId, userId, captainUserId, point, 0);
+						}
+					}
+				}
+				return true;
+			}
+        }else{
+			//选的是上报球队
+			//获取本队的输球组和赢球组
+			matchHoleResultList = matchDao.getMatchHoleWinOrLoseList(matchId,null);
+			if(matchHoleResultList != null && matchHoleResultList.size()>0){
+				for(MatchHoleResult matchHoleResult:matchHoleResultList){
+					//获取该输赢组该球队的参赛人员 是否在上报球队中
+					List<Map<String,Object>> userIdList = matchDao.getUserListByGroupIdInMatchScoreForReport(matchHoleResult.getMhrMatchId(),
+							matchHoleResult.getMhrGroupId(),matchHoleResult.getMhrTeamId());
+					if(userIdList != null && userIdList.size() >0){
+						//如果存在，复制一份输赢数据给上报球队
+						MatchHoleResult matchHoleResultForReport = new MatchHoleResult();
+						BeanUtils.copyProperties(matchHoleResult,matchHoleResultForReport);
+						//type=1 上报球队记分
+						matchHoleResultForReport.setMhrTeamId(teamId);
+						//查看是否有上报队输赢结果
+						Long count = matchDao.getReportMatchHoleReslutCount(matchHoleResultForReport);
+						if(count == 0){
+							matchDao.save(matchHoleResultForReport);
+						}
+
+						Integer point = 0;
+						if(matchHoleResult.getMhrResult() == 1){
+							//赢球组 球友积分=基础积分+赢球奖分
+							point = baseScore + winScore;
+						}else if(matchHoleResult.getMhrResult() == 2){
+							//输球组 奖分为0 球友积分=基础积分+0
+							point = baseScore;
+						}else if(matchHoleResult.getMhrResult() == 0){
+							//打平 球友积分=基础积分+赢球奖分的一半
+							point = baseScore + winScore/2;
+						}
+						//更新上报球队参赛用户的积分
+						for(Map<String,Object> map:userIdList){
+							Long userId = getLongValue(map,"userId");
+							//更新该球友的积分情况
+							updatePointByIds(matchId, teamId, userId, captainUserId, point, 0);
+						}
+					}
+				}
+				return true;
+			}
+		}
+        return false;
 	}
 
 	/**
@@ -2049,7 +1927,7 @@ public class MatchService implements IBaseService {
 		result.put("userList", userList);
 
 		//本组用户每个洞得分情况
-		createNewUserScoreList(userList,list,matchInfo,0);
+		createNewUserScoreList(userList,list,matchInfo);
 
 		result.put("list", list);
 		return result;
@@ -2107,7 +1985,45 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 比赛——group——分队比分
+	 * 比赛——group——分队比分（不包括上报球队）  获取我在参赛队和上报队都是队长的球队
+	 * @return
+	 */
+	public Map<String, Object> getMyTeamListByKeepScore(Long matchId, Long teamId, String openid) {
+		Map<String, Object> result = new HashMap<>();
+		Long userId = userService.getUserIdByOpenid(openid);
+		//比赛信息
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		//成绩上报球队
+		List<Long> reportTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
+
+		//我是否是选中的参赛球队队长
+		Long isTeamCaptain = teamService.getIsCaptain(userId, teamId);
+		//筛选我是否是某个上报球队的队长
+		if(reportTeamIdList != null && reportTeamIdList.size()>0){
+			reportTeamIdList = matchDao.getMyTeamInfoList(reportTeamIdList,userId);
+		}
+
+		List<TeamInfo> teamList = new ArrayList<>();
+		//1：我只是选中的参赛球队的队长，只给该参赛球队分配积分
+		if(isTeamCaptain > 0 && (reportTeamIdList == null || reportTeamIdList.size() == 0)){
+			TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
+			teamList.add(teamInfo);
+		}else if(isTeamCaptain <= 0 && reportTeamIdList != null && reportTeamIdList.size() > 0){
+			//2：我只是某个上报球队队长,则计算两队交集并把交集队员提交上报球队并积分
+			//如果我同时是多个上报球队的队长，让用户选择给哪个队积分
+			teamList = matchDao.getTeamListByIds(reportTeamIdList);
+		}else if(isTeamCaptain > 0 && reportTeamIdList != null && reportTeamIdList.size() > 0){
+			//3：我既是选中的参赛队队长，又是上报队队长，则让他选择向哪个球队积分，选上报球队执行2，选参赛球队执行1。
+			TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
+			teamList = matchDao.getTeamListByIds(reportTeamIdList);
+			teamList.add(teamInfo);
+		}
+		result.put("teamList", teamList);
+		return result;
+	}
+
+	/**
+	 * 比赛——group——分队比分（不包括上报球队）
 	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
 	 * 如果是该队队长，就显示“球队确认”按钮
 	 *
@@ -2155,47 +2071,29 @@ public class MatchService implements IBaseService {
 			teamList = matchDao.getTeamListByIds(joinTeamIdList);
 		}
 
-		//成绩上报球队
-		List<TeamInfo> reportTeamList = null;
-		String reportTeamIds = matchInfo.getMiReportScoreTeamId();
-		List<Long> reportTeamIdList = getLongTeamIdList(reportTeamIds);
-		if(reportTeamIdList != null && reportTeamIdList.size() >0){
-			reportTeamList = matchDao.getTeamListByIds(reportTeamIdList);
-			if(reportTeamList != null && reportTeamList.size() >0){
-				teamList.addAll(reportTeamList);
-			}
-		}
-
 		if (teamId == null) {
 			//如果没选球队，默认显示第一个球队
 			teamId = teamList.get(0).getTiId();
 		}
 		result.put("teamList", teamList);
 
-		//比赛的本球队所有用户(首列显示)
-		List<Map<String, Object>> userList = null;
-		//默认查比赛记分
-		Integer scoreType = 0;
-		if(reportTeamIdList != null && reportTeamIdList.size()>0 && reportTeamIdList.contains(teamId)){
-			//选中的球队是上报球队,查上报给该球队的记分
-			scoreType = 1;
-			userList = matchDao.getReportUserListById(matchId, teamId);
-		}else{
-			userList = matchDao.getUserListById(matchId, null,teamId);
-		}
+		//比赛的本球队所有用户 和总杆数(首列显示)
+		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,teamId);
+
 		//用户名截串（太长显示不下的）
 		subStringUserName(userList);
 		result.put("userList", userList);
 
 		//本组用户每个洞得分情况
-		createNewUserScoreList(userList,list,matchInfo,scoreType);
+		createNewUserScoreList(userList,list,matchInfo);
 		result.put("list", list);
 
 		//是否是该球队队长
 		Long isTeamCaptain = teamService.getIsCaptain(userId, teamId);
 		result.put("isTeamCaptain", isTeamCaptain);
 
-		//是否是上报球队队长
+		//是否是上报球队队长 显示“球队积分确认按钮”
+		List<Long> reportTeamIdList = getLongTeamIdList(matchInfo.getMiReportScoreTeamId());
 		if(reportTeamIdList != null && reportTeamIdList.size() >0){
 			Long isReportTeamCaptain = teamService.getIsReportTeamCaptain(userId, reportTeamIdList);
 			result.put("isReportTeamCaptain", isReportTeamCaptain);
@@ -2225,7 +2123,7 @@ public class MatchService implements IBaseService {
 	/**
 	 * 获取用户在每个球洞的得分情况
 	 */
-	private void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo,Integer scoreType) {
+	private void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
 		if (userList != null && userList.size() > 0) {
 			for (Map<String, Object> user : userList) {
 				Long uiId = getLongValue(user, "uiId");
@@ -2236,10 +2134,10 @@ public class MatchService implements IBaseService {
 				//本用户的前后半场总得分情况
 				List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 				//本用户前半场得分情况
-				List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,0,teamId,scoreType);
+				List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,0,teamId);
 				createNewUserScore(userScoreList, uScoreBeforeList);
 				//本用户后半场得分情况
-				List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,1,teamId,scoreType);
+				List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,1,teamId);
 				createNewUserScore(userScoreList, uScoreAfterList);
 				bean.setUserScoreTotalList(userScoreList);
 
@@ -2372,6 +2270,7 @@ public class MatchService implements IBaseService {
 					}
 					//排序
 					Collections.sort(matchTeamRankingList,new Comparator<MatchTeamRankingBean>(){
+						@Override
 						public int compare(MatchTeamRankingBean bean1,MatchTeamRankingBean bean2){
 							return new Double(bean1.getAvgRodNum()).compareTo(new Double(bean2.getAvgRodNum()));}
 					});
@@ -2491,35 +2390,36 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 比赛——普通用户报名
+	 * 比赛——普通用户报名——可以换组
 	 * @return
 	 */
-	public Integer applyMatch(Long matchId, Long groupId, String groupName, Long chooseTeamId, String openid) {
+	public Integer applyMatch(Long matchId, Long groupId, String groupName, String chooseTeamId, String openid) {
 		Integer flag = -1;
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		UserInfo userInfo = userService.getUserByOpenId(openid);
-		Long userId = userInfo.getUiId();
+		//参赛球队
 		List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-		//是否已经报名
-		Long countApply = matchDao.getIsApply(userId,matchId);
-		if(countApply >0){
-			return -2;
-		}
-		//查看是否是该球队的队员，如果不是，自动生成一条入队申请
-		if(chooseTeamId != null){
-			TeamUserMapping teamUserMapping = matchDao.getTeamUserMappingByIds(chooseTeamId,userId);
-			if(teamUserMapping == null){
-				teamUserMapping = new TeamUserMapping();
-				teamUserMapping.setTumTeamId(chooseTeamId);
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
+		Long userId = userInfo.getUiId();
+		Long chooseTeam = null;
+		//代表球队
+		if(StringUtils.isNotEmpty(chooseTeamId) && !"null".equals(chooseTeamId) && !"undefined".equals(chooseTeamId)){
+			chooseTeam = Long.parseLong(chooseTeamId);
+			//我是否在本球队中，没有就加一条入队申请
+			Long count = teamDao.getMeIsInTeam(userId,chooseTeam);
+			if(count <= 0){
+				TeamUserMapping teamUserMapping = new TeamUserMapping();
+				teamUserMapping.setTumTeamId(chooseTeam);
 				teamUserMapping.setTumUserId(userId);
 				teamUserMapping.setTumUserType(2);
-				teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 				teamUserMapping.setTumCreateUserId(userId);
-				teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+				teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+				teamUserMapping.setTumCreateUserName(userName);
 				matchDao.save(teamUserMapping);
 			}
 		}
-		//查询是否在临时分组中
+
+		//查询是否已经报名 isDel=0
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,userId);
 		if(matchUserGroupMapping == null){
 			matchUserGroupMapping = new MatchUserGroupMapping();
@@ -2527,67 +2427,49 @@ public class MatchService implements IBaseService {
 			matchUserGroupMapping.setMugmGroupId(groupId);
 			matchUserGroupMapping.setMugmGroupName(groupName);
 			matchUserGroupMapping.setMugmUserId(userId);
-			matchUserGroupMapping.setMugmUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+			matchUserGroupMapping.setMugmUserName(userName);
 			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 			matchUserGroupMapping.setMugmCreateUserId(userId);
-			matchUserGroupMapping.setMugmCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
+			matchUserGroupMapping.setMugmCreateUserName(userName);
 			matchUserGroupMapping.setMugmUserType(1);
 			matchUserGroupMapping.setMugmIsDel(0);
-			//参赛范围 赛长可能修改比赛的赛制(1、公开 球友均可报名；2、队内：某几个球队队员可报名；3:不公开)
-			if(matchInfo.getMiJoinOpenType() == 1){
-				matchDao.save(matchUserGroupMapping);
-				flag = 0;
-			}else if(matchInfo.getMiJoinOpenType() == 2){
-				matchUserGroupMapping.setMugmTeamId(chooseTeamId);
-				//是否参赛球队的队员
-				Long count = matchDao.getIsJoinTeamsUser(userId,teamIdList);
-				if(count >0){
-					matchDao.save(matchUserGroupMapping);
-					flag = 0;
-				}
+			if(teamIdList != null && teamIdList.size()>0 && chooseTeam != null){
+				//是队际赛 并且选择了参赛球队  如果是公开赛，不用保存参赛球队
+				matchUserGroupMapping.setMugmTeamId(chooseTeam);
 			}
+			matchDao.save(matchUserGroupMapping);
+			flag = 0;
 		}else{
+			//在临时分组，修改其状态，从临时分组改为加入到报名组
 			matchUserGroupMapping.setMugmGroupId(groupId);
 			matchUserGroupMapping.setMugmGroupName(groupName);
 			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
 			matchUserGroupMapping.setMugmUpdateUserId(userId);
-			matchUserGroupMapping.setMugmUpdateUserName(userInfo.getUiRealName());
-			if(matchInfo.getMiJoinOpenType() == 1){
-				matchDao.update(matchUserGroupMapping);
-				flag = 0;
-			}else if(matchInfo.getMiJoinOpenType() == 2){
-				matchUserGroupMapping.setMugmTeamId(chooseTeamId);
-				//是否参赛球队的队员
-				Long count = matchDao.getIsJoinTeamsUser(userId,teamIdList);
-				if(count >0){
-					matchDao.update(matchUserGroupMapping);
-					flag = 0;
-				}
-			}
+			matchUserGroupMapping.setMugmUpdateUserName(userName);
+			matchDao.update(matchUserGroupMapping);
+			flag = 0;
 		}
-
 		return flag;
 	}
 
 	/**
 	 * 比赛——普通用户从一个组退出比赛
+	 * 直接删除
 	 * @return
 	 */
-	public void quitMatch(Long matchId, Long groupId, String openid) {
+	public void quitMatch(Long matchId, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		Long userId = userInfo.getUiId();
-		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,userId);
-		if(matchUserGroupMapping != null){
-			matchUserGroupMapping.setMugmIsDel(1);
-			matchUserGroupMapping.setMugmUpdateUserId(userId);
-			matchUserGroupMapping.setMugmUpdateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
-			matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
-			matchDao.update(matchUserGroupMapping);
+		List<MatchUserGroupMapping> list = matchDao.getIsInMatchGroupMappingByUserId(matchId,userId);
+		if(list != null && list.size()>0){
+			for(MatchUserGroupMapping bean :list){
+				matchDao.del(bean);
+			}
 		}
 	}
 
-
+	private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 	/**
 	 * 比赛——邀请记分——生成二维码
 	 * 接口B: 获取小程序码（永久有效、数量暂无限制）.
@@ -2613,7 +2495,8 @@ public class MatchService implements IBaseService {
 			file.mkdirs();
 		}
 		String parp = "matchId="+matchId+"&groupId="+groupId;//参数
-		String scene = URLEncoder.encode(parp,"utf-8");
+		String jsonParp = gson.toJson(parp);
+		String scene = URLEncoder.encode(jsonParp,"utf-8");
 		String page ="pages/score_card/score_card";//要跳转的页面，根路径不能加/  不填默认跳转主页
 //		file = wxMaService.getQrcodeService().createWxaCodeUnlimit(scene,page); 此方法好像是有包冲突，会报错
 		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(scene,page,300,false,null,false);
@@ -2639,32 +2522,6 @@ public class MatchService implements IBaseService {
 		return path;
 	}
 
-	public static void main(String[] args) throws UnsupportedEncodingException {
-//		String scene = "matchId="+1+"&groupId="+2;//参数
-//		String a = URLEncoder.encode(scene,"utf-8");
-//		System.out.println(a);
-//		System.out.println(URLDecoder.decode(a,"utf-8"));
-
-		int InitProducts[] = { 1, 2, 3, 4, 5 };
-		int deleteProducts[] = { 4, 2 };
-		int newProducts[] = new int[InitProducts.length
-				- deleteProducts.length];
-		int count = 0;
-		for (int i = 0; i < InitProducts.length; i++) {
-			boolean flag = true;
-			int temp = InitProducts[i];
-			for (int j = 0; j < deleteProducts.length; j++) {
-				if (temp==deleteProducts[j]) {
-					flag = false;
-					break;
-				}
-			}
-			if (flag) {
-				newProducts[count++] = temp;
-			}
-		}
-		System.out.println(Arrays.toString(newProducts));
-	}
 
 	/**
 	 * 单练——更新临时用户姓名
@@ -2761,7 +2618,7 @@ public class MatchService implements IBaseService {
 	 * 比赛详情——赛长——获取备选球友(除去已经报名、参赛的)，赛长所在队的球友或者其搜索的结果
 	 * @return
 	 */
-	public Map<String,Object> getMyTeamUserList(Long matchId,Long groupId, String keyword, String openid) {
+	public Map<String,Object> getMyTeamUserList(Long matchId,String keyword, String openid) {
 		Map<String,Object> result = new HashMap<>();
 		Long captainUserId = userService.getUserIdByOpenid(openid);
 		//查询赛长代表哪个球队比赛
@@ -2769,10 +2626,12 @@ public class MatchService implements IBaseService {
 		result.put("myTeamId",teamId);
 		List<Map<String,Object>> userList = null;
 		if(teamId != null){
-			//赛长所在球队 已经报名/参赛的球友
+			//赛长所在球队 已经报名/参赛的球友 包括待分组的
 			List<Long> userIdList = matchDao.getApplyUserIdList(matchId,teamId);
-			//获取与赛长同队的球友，去除已经报名、参赛的同队球友
-			userList = matchDao.getUserListByTeamId(teamId, keyword, userIdList);
+			if(userIdList != null && userIdList.size()>0){
+				//获取与赛长同队的球友，去除已经报名/参赛的球友
+				userList = matchDao.getUserListByTeamId(teamId, keyword, userIdList);
+			}
 		}
 		result.put("userList",userList);
 		return result;
@@ -2788,22 +2647,18 @@ public class MatchService implements IBaseService {
 	public List<TeamInfo> getCaptainTeamIdList(String joinTeamIds,String openid) {
 		Long userId = userService.getUserIdByOpenid(openid);
 		//参赛球队
-		List<Long> teamIds = getLongTeamIdList(joinTeamIds);
-		//我加入的球队
-		List<Long> myTeamIdList = matchDao.getMyJoinTeamList(userId);
-		List<Long> idList = new ArrayList<>();
-		for(Long joinTid:teamIds){
-			for(Long myJoinTid:myTeamIdList){
-				if(joinTid.equals(myJoinTid)){
-					idList.add(myJoinTid);
-				}
-			}
+		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
+		if(joinTeamIdList == null || joinTeamIdList.size() == 0){
+			return new ArrayList<>();
 		}
-		if(idList.size() >0){
-			//获取这些球队的id和球队名称
-			return matchDao.getTeamListByIds(idList);
+
+		//我是否在参赛队中(申请入队的也算)
+		List<Long> myJoinTeamIdList = matchDao.getIsJoinTeam(userId,joinTeamIdList);
+		if(myJoinTeamIdList == null || myJoinTeamIdList.size() == 0){
+			//我不在参赛队中，
+			return matchDao.getTeamListByIds(joinTeamIdList);
 		}
-		return null;
+		return matchDao.getTeamListByIds(myJoinTeamIdList);
 	}
 
 
@@ -2812,16 +2667,12 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public void delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
-		if (StringUtils.isNotEmpty(userIds)) {
-			userIds = userIds.replace("[", "");
-			userIds = userIds.replace("]", "");
-			userIds = userIds.replace("\"", "");
-			String[] uIds = userIds.split(",");
-			for (String userId : uIds) {
-				if (StringUtils.isNotEmpty(userId)) {
-					Long uid = Long.parseLong(userId);
-					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId, groupId, uid);
+	public void delUserByMatchIdGroupId(String mappingIds) {
+		if (StringUtils.isNotEmpty(mappingIds)) {
+			List<Long> mappingIdList = getLongIdListReplace(mappingIds);
+			for (Long mappingId : mappingIdList) {
+				if (mappingId != null) {
+					MatchUserGroupMapping matchUserGroupMapping = matchDao.get(MatchUserGroupMapping.class, mappingId);
 					if(matchUserGroupMapping != null){
 						//将该球友的状态改为已删除
 						matchUserGroupMapping.setMugmIsDel(1);
@@ -2844,17 +2695,28 @@ public class MatchService implements IBaseService {
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		//比赛参赛球队
 		String joinTeamIds = matchInfo.getMiJoinTeamIds();
+		Long userId = userService.getUserIdByOpenid(openid);
+		//用户换组 是队际赛，先判断是否已经选过代表球队
+		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
+		if(joinTeamIdList != null && joinTeamIdList.size() > 0){
+			MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatchUserMapping(matchId,userId);
+			if(matchUserGroupMapping != null && matchUserGroupMapping.getMugmTeamId() != null){
+				List<TeamInfo> list = new ArrayList<>();
+				TeamInfo t = matchDao.get(TeamInfo.class, matchUserGroupMapping.getMugmTeamId());
+				list.add(t);
+				return  list;
+			}
+		}
 		return getCaptainTeamIdList(joinTeamIds,openid);
 	}
 
 	/**
-	 * 比赛——报名——查询是否已经报名
+	 * 比赛——报名——普通用户——查询自己是否已经报名
 	 * @return
 	 */
-	public boolean checkIsApplyMatch(Long matchId, String openid) {
+	public boolean checkIsApplyMatch(Long matchId,Long groupId, String openid) {
 		Long userId = userService.getUserIdByOpenid(openid);
-		//是否已经报名
-		Long countApply = matchDao.getIsApply(userId,matchId);
+		Long countApply = matchDao.getIsApplyNormalUser(userId,matchId,groupId);
 		if(countApply >0){
 			return true;
 		}
@@ -2905,4 +2767,6 @@ public class MatchService implements IBaseService {
 		}
 		return new ArrayList<>();
 	}
+
+
 }

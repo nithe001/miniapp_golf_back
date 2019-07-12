@@ -1095,5 +1095,6 @@ public class TimeUtil {
 
 	public static void main(String[] args){
 		System.out.println(getNowTime().getTime());
+		System.out.println(longToString(1562924986957L,FORMAT_DATETIME_FULL));
 	}
 }

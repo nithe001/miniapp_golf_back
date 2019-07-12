@@ -31,17 +31,14 @@
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="keyword"
                                                name="keyword" placeholder="标题" value="${keyword }"/>
-                                        状态：
-                                        <select class="form-control" name="state">
+                                        是否有效：
+                                        <select class="form-control" name="isValid">
                                             <option value="">全部</option>
-                                            <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
-                                                报名中
+                                            <option value="1" <c:if test='${isValid == 1}'>selected="selected"</c:if>>
+                                                有效
                                             </option>
-                                            <option value="1" <c:if test='${state == 1}'>selected="selected"</c:if>>
-                                                进行中
-                                            </option>
-                                            <option value="0" <c:if test='${state == 0}'>selected="selected"</c:if>>
-                                                已结束
+                                            <option value="0" <c:if test='${isValid == 0}'>selected="selected"</c:if>>
+                                                无效
                                             </option>
                                         </select>
                                         日期：<input type="text" class="form-control" id="startDate" name="startDate"

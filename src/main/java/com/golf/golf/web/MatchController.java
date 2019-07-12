@@ -348,14 +348,14 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——赛长获取本组用户
+	 * 比赛详情——赛长获取本组用户，包括自己
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getUserListByGroupId")
-	public JsonElement getUserListByGroupId(Long matchId, Long groupId,String openid) {
+	public JsonElement getUserListByGroupId(Long matchId, Long groupId) {
 		try {
-			Map<String, Object> result = matchService.getUserListByGroupId(matchId, groupId,openid);
+			Map<String, Object> result = matchService.getUserListByGroupId(matchId, groupId);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
@@ -390,9 +390,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyTeamUserList")
-	public JsonElement getMyTeamUserList(Long matchId, Long groupId, String keyword, String openid) {
+	public JsonElement getMyTeamUserList(Long matchId, String keyword, String openid) {
 		try {
-			Map<String,Object> result = matchService.getMyTeamUserList(matchId,groupId,keyword,openid);
+			Map<String,Object> result = matchService.getMyTeamUserList(matchId,keyword,openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取备选球友时出错。";
@@ -408,9 +408,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("delUserByMatchIdGroupId")
-	public JsonElement delUserByMatchIdGroupId(Long matchId, Long groupId, String userIds) {
+	public JsonElement delUserByMatchIdGroupId(String mappingIds) {
 		try {
-			matchService.delUserByMatchIdGroupId(matchId,groupId,userIds);
+			matchService.delUserByMatchIdGroupId(mappingIds);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
@@ -422,14 +422,15 @@ public class MatchController {
 
 	/**
 	 * 比赛详情——赛长 添加用户至分组
-	 * @param myTeamId 赛长所在球队id，也就是这些用户的代表球队id
+	 * @param checkIds:选中的id（mappingid或者用户id）
+	 * @param type：0 添加待分组球友mappingid  1：添加备选球友 用户id
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("updateGroupUserByMatchIdGroupId")
-	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long myTeamId, Long groupId, String userIds, String openid) {
+	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, Integer type, String openid) {
 		try {
-			matchService.updateGroupUserByMatchIdGroupId(matchId, myTeamId, groupId,userIds,openid);
+			matchService.updateGroupUserByMatchIdGroupId(matchId, groupId,checkIds,type,openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
@@ -706,12 +707,10 @@ public class MatchController {
 				logger.info("文件不存在");
 				return "error";
 			}
-//			return JsonWrapper.newDataInstance(logoPath);
 			return logoPath;
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("上传比赛logo时出错。" ,e);
-//			return JsonWrapper.newErrorInstance("上传比赛logo时出错");
 			return "error";
 		}
 	}
@@ -806,7 +805,7 @@ public class MatchController {
 
 
 	/**
-	 * 保存或更新比赛状态
+	 * 开始比赛 / 结束比赛 ——保存或更新比赛状态
 	 * state   0：报名中  1进行中  2结束
 	 * @return
 	 */
@@ -827,6 +826,7 @@ public class MatchController {
 
 	/**
 	 * 成绩上报 计算积分（注意球友加入球队是否成功） 允许重复上报
+	 * 我作为一个上报球队队长，可能给不同的参赛球队分配不同的积分
 	 * 拿每个参赛队和每个上报球队算交集，如果没有就忽略，如果有，就把交集的队员成绩交给上报球队并积分
      * **********注意比洞赛的积分公式和比杆赛不一样
 	 * @param matchId 比赛id,
@@ -855,7 +855,7 @@ public class MatchController {
 	/**
 	 * 撤销成绩上报
 	 * @param matchId 比赛id,
-	 * @param teamId 上报球队id,
+	 * @param teamId 球队id,
 	 * @return
 	 */
 	@ResponseBody
@@ -931,7 +931,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛——group——分队比分（包括上报球队，筛选一下）
+	 * 比赛——group——分队比分（不包括上报球队）
 	 * 显示创建比赛时“参赛范围”所选择球队的第一个，也可以选其他参赛球队
 	 * 如果是该队队长，就显示“球队确认”按钮
 	 * @return
@@ -949,6 +949,25 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+	/**
+	 * 比赛——group——分队比分（不包括上报球队）  获取我在参赛队和上报队都是队长的球队
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getMyTeamListByKeepScore")
+	public JsonElement getMyTeamListByKeepScore(Long matchId, Long teamId, String openid) {
+		try {
+			Map<String,Object> myTeamList = matchService.getMyTeamListByKeepScore(matchId, teamId, openid);
+			return JsonWrapper.newDataInstance(myTeamList);
+		} catch (Exception e) {
+			String errmsg = "比赛—分队比分—初始化球队积分确认-获取我在参赛队和上报队都是队长的球队时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
 
 	/**
 	 * 比赛——group——分队统计
@@ -995,13 +1014,13 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛——普通用户选一个组报名
+	 * 比赛——普通用户选一个组报名——可以换组
 	 * @param chooseTeamId:代表球队id（在加入了多个球队的情况下）
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("applyMatch")
-	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, Long chooseTeamId, String openid) {
+	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, String chooseTeamId, String openid) {
 		try {
 			Integer flag = matchService.applyMatch(matchId, groupId, groupName, chooseTeamId, openid);
 			return JsonWrapper.newDataInstance(flag);
@@ -1019,9 +1038,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("checkIsApplyMatch")
-	public JsonElement checkIsApplyMatch(Long matchId, String openid) {
+	public JsonElement checkIsApplyMatch(Long matchId,Long groupId, String openid) {
 		try {
-			boolean flag = matchService.checkIsApplyMatch(matchId, openid);
+			boolean flag = matchService.checkIsApplyMatch(matchId,groupId, openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
@@ -1039,7 +1058,7 @@ public class MatchController {
 	@RequestMapping("quitMatch")
 	public JsonElement quitMatch(Long matchId, Long groupId, String openid) {
 		try {
-			matchService.quitMatch(matchId, groupId, openid);
+			matchService.quitMatch(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "比赛——退出比赛时出错。matchId="+matchId;
