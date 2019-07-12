@@ -255,7 +255,7 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>> getJoinMatchChangCiByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("select count(t.matchId) as count from (select s.ms_match_id as matchId from match_score as s,match_info as m " +
-				"where s.ms_team_id = :teamId and s.ms_user_id = :userId " +
+				"where s.ms_match_id = m.mi_id and s.ms_team_id = :teamId and s.ms_user_id = :userId " +
 				"and s.ms_is_team_submit = 1 and s.ms_match_type = 1 " +
 				"and m.mi_is_valid = 1 " +
 				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
@@ -288,8 +288,11 @@ public class TeamDao extends CommonDao {
 				"s.ms_user_id AS userId, " +
 				"s.ms_match_id AS matchId, " +
 				"sum(s.ms_rod_num) AS sumRod " +
-				"FROM match_score AS s " +
-				"WHERE s.ms_user_id = :userId "+
+				"FROM match_score AS s,match_info as m " +
+				"WHERE s.ms_match_id = m.mi_id " +
+				"and m.mi_is_valid = 1 "+
+				"and m.mi_is_end = 2 "+
+				"and s.ms_user_id = :userId "+
 				"and s.ms_team_id = :teamId "+
 				"and s.ms_is_team_submit = 1 " +
 				"and s.ms_create_time >=:startYear and s.ms_create_time <=:endYear " +
@@ -370,8 +373,8 @@ public class TeamDao extends CommonDao {
 					"team.ti_abbrev as teamAbbrev,c.ic_base_score as baseScore," +
 					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
 					"FROM integral_config AS c,match_info as m,team_info as team " +
-					"WHERE c.ic_match_id = m.mi_id and (c.ic_team_id = :teamId or c.ic_report_team_id = :teamId) and c.ic_team_id = team.ti_id " +
-					"and m.mi_is_valid = 1 " +
+					"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +
+					"and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
@@ -410,9 +413,12 @@ public class TeamDao extends CommonDao {
         StringBuilder hql = new StringBuilder();
         hql.append("SELECT sum(t.point) AS sumPoint ");
         hql.append("FROM ( SELECT tup.tup_match_point AS point ");
-        hql.append("FROM team_user_point AS tup " +
-                "WHERE tup.tup_user_id = :userId " +
+        hql.append("FROM team_user_point AS tup,match_info as m " +
+                "WHERE tup.tup_match_id = m.mi_id and m.mi_is_valid = 1 " +
+				"and tup.tup_user_id = :userId " +
                 "AND tup.tup_team_id = :teamId " +
+				"and tup.tup_create_time >= :startYear " +
+				"and tup.tup_create_time <= :endYear " +
                 "ORDER BY tup.tup_match_point DESC " +
                 "LIMIT 0, :changCi ");
         hql.append(" ) AS t");

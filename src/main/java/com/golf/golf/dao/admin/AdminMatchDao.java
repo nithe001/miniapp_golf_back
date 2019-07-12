@@ -5,6 +5,8 @@ import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
+import com.golf.golf.db.MatchScoreUserMapping;
+import com.golf.golf.db.TeamUserPoint;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -99,7 +101,7 @@ public class AdminMatchDao extends CommonDao {
      */
     public void delMatchScore(Long matchId) {
         StringBuilder hql = new StringBuilder();
-        hql.append("DELETE FROM MatchScore AS t WHERE t.msMatchId= "+matchId);
+        hql.append("DELETE FROM MatchScore AS t WHERE t.msMatchId = "+matchId);
         dao.executeHql(hql.toString());
     }
 
@@ -109,7 +111,7 @@ public class AdminMatchDao extends CommonDao {
      */
     public void delMatchGroup(Long matchId) {
         StringBuilder hql = new StringBuilder();
-        hql.append("DELETE FROM MatchGroup AS t WHERE t.mgMatchId= "+matchId);
+        hql.append("DELETE FROM MatchGroup AS t WHERE t.mgMatchId = "+matchId);
         dao.executeHql(hql.toString());
     }
 
@@ -119,7 +121,48 @@ public class AdminMatchDao extends CommonDao {
      */
     public void delMatchScoreConfig(Long matchId) {
         StringBuilder hql = new StringBuilder();
-        hql.append("DELETE FROM IntegralConfig AS t WHERE t.icMatchId= "+matchId);
+        hql.append("DELETE FROM IntegralConfig AS t WHERE t.icMatchId = "+matchId);
         dao.executeHql(hql.toString());
     }
+
+	/**
+	 * 删除比赛输赢情况
+	 * @return
+	 */
+	public void delMatchWinOrLose(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchHoleResult AS t WHERE t.mhrMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 删除比赛观战信息
+	 * @return
+	 */
+	public void delMatchWatchInfo(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchJoinWatchInfo AS t WHERE t.mjwiMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
+
+
+	/**
+	 * 删除比赛对应的邀请记分信息
+	 * @return
+	 */
+	public void delMatchUserApplyScoreInfo(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchScoreUserMapping AS t WHERE t.msumMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 删除比赛对应的用户积分信息
+	 * @return
+	 */
+	public void delMatchUserPointInfo(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM TeamUserPoint AS t WHERE t.tupMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
 }

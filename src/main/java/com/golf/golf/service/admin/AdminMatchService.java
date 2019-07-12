@@ -153,15 +153,24 @@ public class AdminMatchService implements IBaseService {
      * @return
      */
     public void delMatch(Long matchId) {
+		//删除比赛球队确认配置
+		dao.delMatchScoreConfig(matchId);
+		//删除比赛分组
+		dao.delMatchGroup(matchId);
+		//删除比赛输赢情况
+		dao.delMatchWinOrLose(matchId);
+		//删除比赛信息
         dao.del(MatchInfo.class, matchId);
+		//删除比赛观战信息
+		dao.delMatchWatchInfo(matchId);
+		//删除比赛对应的用户比分
+		dao.delMatchScore(matchId);
+		//删除比赛对应的邀请记分信息
+		dao.delMatchUserApplyScoreInfo(matchId);
         //删除比赛对应的用户mapping
         dao.delMatchUserMapping(matchId);
-        //删除比赛对应的用户比分
-        dao.delMatchScore(matchId);
-        //删除比赛分组
-        dao.delMatchGroup(matchId);
-        //删除比赛球队确认配置
-        dao.delMatchScoreConfig(matchId);
+		//删除比赛对应的用户积分信息
+		dao.delMatchUserPointInfo(matchId);
     }
 	/**
 	 * 删除高球规则
