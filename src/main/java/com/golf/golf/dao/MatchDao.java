@@ -396,7 +396,11 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append(" ORDER BY IF(ISNULL(distance),1,0),distance");
+        if(parp.get("myLat") != null && parp.get("myLng") != null ){
+            hql.append(" ORDER BY IF(ISNULL(distance),1,0),distance");
+        }else{
+            hql.append(" ORDER BY p.pi_id ");
+        }
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp, pageInfo.getStart(), pageInfo.getRowsPerPage(), Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
 		pageInfo.setItems(list);
