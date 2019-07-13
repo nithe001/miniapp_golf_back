@@ -784,7 +784,8 @@ public class MatchService implements IBaseService {
 						mugm.setMugmMatchId(matchInfo.getMiId());
 						mugm.setMugmTeamId((Long) map.get("teamId"));
 						mugm.setMugmUserType(0);
-						mugm.setMugmIsDel(0);
+                        //创建人默认在第一组，其他赛长先不放入待选球友中
+                        mugm.setMugmIsDel(1);
 						mugm.setMugmGroupId(matchGroup.getMgId());
 						mugm.setMugmGroupName(matchGroup.getMgGroupName());
 						mugm.setMugmUserId(captainUserId);
