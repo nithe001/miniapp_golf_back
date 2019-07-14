@@ -14,6 +14,8 @@ import com.golf.golf.service.MatchHoleService;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.UserService;
 import com.google.gson.JsonElement;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -198,7 +201,7 @@ public class MatchController {
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
 
 			//如果比赛状态是进行中，如果不是参赛人员，则加入围观用户
-            boolean isWatch = false;
+            boolean isWatch = true;
 			if(matchInfo.getMiIsEnd() != 0){
 				isWatch = matchService.saveOrUpdateWatch(matchInfo, openid);
 			}
@@ -243,11 +246,11 @@ public class MatchController {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
-			/*//我是否是参赛人员(显示邀请记分按钮)
-            Long isJoin = matchService.getIsJoinMatch(matchId,groupId,openid);
+			//我是否是本组参赛人员(显示邀请记分按钮)
+            Long meIsInGroup = matchService.getIsJoinMatchGroup(matchId,groupId,openid);
             Map<String,Object> map = new HashMap<>();
             map.put("matchInfo",matchInfo);
-            map.put("isJoin",isJoin);*/
+            map.put("meIsInGroup",meIsInGroup);
 			return JsonWrapper.newDataInstance(matchInfo);
 		} catch (Exception e) {
 			String errmsg = "前台-获取比赛详情时出错。";
@@ -365,15 +368,38 @@ public class MatchController {
 		}
 	}
 
-	/**
-	 * 比赛详情——赛长获取待分组人员
+    /**
+     * 比赛详情——赛长获取已报名人员
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getApplyUserByMatchId")
+    public JsonElement getApplyUserByMatchId(Long matchId, String keyword) {
+        try {
+            Map<String, Object> result = new HashMap<>();
+            List<Map<String, Object>> userList = matchService.getApplyUserByMatchId(matchId, keyword);
+            MatchInfo matchInfo = matchService.getMatchById(matchId);
+            result.put("userList",userList);
+            result.put("matchInfo",matchInfo);
+            return JsonWrapper.newDataInstance(result);
+        } catch (Exception e) {
+            String errmsg = "前台-比赛详情——赛长获取已报名人员时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+
+    /**
+	 * 比赛详情——赛长获取待分组人员不进行任何筛选，直接取所有待分组的
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("getApplyUserByMatchId")
-	public JsonElement getApplyUserByMatchId(Long matchId, String keyword, Long groupId) {
+	@RequestMapping("getWaitGroupUserList")
+	public JsonElement getWaitGroupUserList(Long matchId, String keyword) {
 		try {
-			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, keyword, groupId);
+            List<Map<String, Object>> result = matchService.getWaitGroupUserList(matchId, keyword);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取待分组人员时出错。";
@@ -386,13 +412,17 @@ public class MatchController {
 
 	/**
 	 * 比赛详情——赛长——获取备选球友(除去已经报名的)，赛长所在队的球友或者其搜索的结果
+     * 备选列表中，把我所在的参赛球队的队友都列出来（我可能同时在几个参赛队中，只是代表一个队参赛），
+     * 当把该名单中某几人添加到分组后，备选名单里这些人要还在，
+     * 也就是不维护备选名单的人员，这样即使一个人已加入一组，
+     * 就还能从备选名单中选他加入新组以实现自动换组
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getMyTeamUserList")
 	public JsonElement getMyTeamUserList(Long matchId, String keyword, String openid) {
 		try {
-			Map<String,Object> result = matchService.getMyTeamUserList(matchId,keyword,openid);
+			Map<String,Object> result = matchService.getMyTeamUserList(matchId, keyword,openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取备选球友时出错。";
@@ -420,25 +450,46 @@ public class MatchController {
 		}
 	}
 
+    /**
+     * 普通球友 换组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("updateMatchGroupByUserId")
+    public JsonElement updateMatchGroupByUserId(Long matchId, Long groupId, String openid) {
+        try {
+            matchService.updateMatchGroupByUserId(matchId, groupId, openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "前台-比赛详情—普通球友换组时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
 	/**
 	 * 比赛详情——赛长 添加用户至分组
 	 * @param checkIds:选中的id（mappingid或者用户id）
-	 * @param type：0 添加待分组球友mappingid  1：添加备选球友 用户id
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("updateGroupUserByMatchIdGroupId")
-	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, Integer type, String openid) {
+	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, String openid) {
 		try {
-			matchService.updateGroupUserByMatchIdGroupId(matchId, groupId,checkIds,type,openid);
+			matchService.updateGroupUserByMatchIdGroupId(matchId, groupId,checkIds,openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
-			String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
+			String errmsg = "前台-比赛详情—更新用户分组时出错。";
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+    public static void main(String[] args) {
+
+    }
 
     /**
      * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
@@ -1022,25 +1073,7 @@ public class MatchController {
 	@RequestMapping("applyMatch")
 	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, String chooseTeamId, String openid) {
 		try {
-			Integer flag = matchService.applyMatch(matchId, groupId, groupName, chooseTeamId, openid);
-			return JsonWrapper.newDataInstance(flag);
-		} catch (Exception e) {
-			String errmsg = "比赛——报名时出错。matchId="+matchId;
-			e.printStackTrace();
-			logger.error(errmsg ,e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
-
-	/**
-	 * 比赛——报名——查询是否已经报名
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("checkIsApplyMatch")
-	public JsonElement checkIsApplyMatch(Long matchId,Long groupId, String openid) {
-		try {
-			boolean flag = matchService.checkIsApplyMatch(matchId,groupId, openid);
+			boolean flag = matchService.applyMatch(matchId, groupId, groupName, chooseTeamId, openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			String errmsg = "比赛——报名时出错。matchId="+matchId;
@@ -1056,7 +1089,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("quitMatch")
-	public JsonElement quitMatch(Long matchId, Long groupId, String openid) {
+	public JsonElement quitMatch(Long matchId, String openid) {
 		try {
 			matchService.quitMatch(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
