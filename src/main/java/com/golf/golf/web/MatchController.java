@@ -136,7 +136,11 @@ public class MatchController {
 				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined") && !reportTeamIds.equals("null")){
 					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				}
-				m = matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+				if(matchInfoBean.getMiId() != null){
+					m = matchService.updateMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+				}else{
+					m = matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+				}
 			}
 			return JsonWrapper.newDataInstance(m);
 		} catch (Exception e) {
@@ -362,6 +366,24 @@ public class MatchController {
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已经报名的用户时出错。";
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛详情——获取全部已报名人员，按球队分组显示
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getAllApplyUserByMatchId")
+	public JsonElement getAllApplyUserByMatchId(Long matchId) {
+		try {
+			Map<String, Object> result = matchService.getAllApplyUserByMatchId(matchId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛详情——赛长获取已报名人员时出错。";
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);

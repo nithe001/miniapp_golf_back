@@ -365,6 +365,7 @@ public class TeamDao extends CommonDao {
 	 * 获取球队比赛榜
 	 * 列出当年所有本球队相关的比赛情况统计 只列比赛结束且球队确认过的比赛
 	 * 比赛名称、参赛队、时间、参赛人数、基础积分、杆差倍数、赢球奖分
+	 * 排序 按照离今天近的排序
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
@@ -376,6 +377,8 @@ public class TeamDao extends CommonDao {
 					"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +
 					"and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
+		//排序 按照离今天近的排序
+		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
