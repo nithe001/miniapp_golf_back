@@ -255,7 +255,7 @@ public class MatchController {
             Map<String,Object> map = new HashMap<>();
             map.put("matchInfo",matchInfo);
             map.put("meIsInGroup",meIsInGroup);
-			return JsonWrapper.newDataInstance(matchInfo);
+			return JsonWrapper.newDataInstance(map);
 		} catch (Exception e) {
 			String errmsg = "前台-获取比赛详情时出错。";
 			e.printStackTrace();
@@ -1117,6 +1117,24 @@ public class MatchController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "比赛——退出比赛时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——报名页面——底部按钮——报名待分组
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("applyMatchWaitGroup")
+	public JsonElement applyMatchWaitGroup(Long matchId, String chooseTeamId, String openid) {
+		try {
+			matchService.applyMatchWaitGroup(matchId, chooseTeamId, openid);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "比赛——报名待分组时出错。matchId="+matchId;
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);

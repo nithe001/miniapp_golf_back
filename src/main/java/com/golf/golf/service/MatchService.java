@@ -773,6 +773,26 @@ public class MatchService implements IBaseService {
 		matchUserGroupMapping.setMugmMatchId(matchInfo.getMiId());
 		if(StringUtils.isNotEmpty(chooseTeamId) && !chooseTeamId.equals("0") && !chooseTeamId.equals("null") && !chooseTeamId.equals("undefined")){
 			matchUserGroupMapping.setMugmTeamId(Long.parseLong(chooseTeamId));
+			Long tid = Long.parseLong(chooseTeamId);
+			//我是不是这个球队的 申请中也算
+			Long count = teamDao.getMeIsInTeam(myUserInfo.getUiId(),tid);
+			if(count <= 0){
+				//发送一条入队申请
+				TeamInfo teamInfo = teamDao.get(TeamInfo.class,tid);
+				TeamUserMapping teamUserMapping = new TeamUserMapping();
+				teamUserMapping.setTumTeamId(tid);
+				teamUserMapping.setTumUserId(myUserInfo.getUiId());
+				//是否有加入审核(1、是（队长审批）  0、否)
+				if(teamInfo.getTiJoinOpenType() == 1){
+					teamUserMapping.setTumUserType(2);
+				}else{
+					teamUserMapping.setTumUserType(1);
+				}
+				teamUserMapping.setTumCreateUserId(myUserInfo.getUiId());
+				teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+				teamUserMapping.setTumCreateUserName(myUserName);
+				matchDao.save(teamUserMapping);
+			}
 		}
 		matchUserGroupMapping.setMugmUserType(0);
 		matchUserGroupMapping.setMugmIsDel(0);
@@ -2532,6 +2552,52 @@ public class MatchService implements IBaseService {
 			}
 		}
 	}
+
+	/**
+	 * 比赛——报名页面——底部按钮——报名待分组
+	 * @return
+	 */
+	public void applyMatchWaitGroup(Long matchId, String chooseTeamId, String openid) {
+		UserInfo userInfo = userService.getUserByOpenId(openid);
+		Long userId = userInfo.getUiId();
+		String userName = StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName();
+
+		MatchUserGroupMapping myMugm = new MatchUserGroupMapping();
+		myMugm.setMugmMatchId(matchId);
+		if(StringUtils.isNotEmpty(chooseTeamId)){
+			Long tid = Long.parseLong(chooseTeamId);
+			//我是不是这个球队的 申请中也算
+			Long count = teamDao.getMeIsInTeam(userId,tid);
+			if(count <= 0){
+				//发送一条入队申请
+				TeamInfo teamInfo = teamDao.get(TeamInfo.class,tid);
+				TeamUserMapping teamUserMapping = new TeamUserMapping();
+				teamUserMapping.setTumTeamId(tid);
+				teamUserMapping.setTumUserId(userInfo.getUiId());
+				//是否有加入审核(1、是（队长审批）  0、否)
+				if(teamInfo.getTiJoinOpenType() == 1){
+					teamUserMapping.setTumUserType(2);
+				}else{
+					teamUserMapping.setTumUserType(1);
+				}
+				teamUserMapping.setTumCreateUserId(userInfo.getUiId());
+				teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+				teamUserMapping.setTumCreateUserName(userName);
+				matchDao.save(teamUserMapping);
+			}
+			myMugm.setMugmTeamId(tid);
+		}
+		myMugm.setMugmUserType(0);
+		myMugm.setMugmIsDel(0);
+		myMugm.setMugmUserId(userId);
+		myMugm.setMugmUserName(userName);
+		myMugm.setMugmCreateUserId(userId);
+		myMugm.setMugmCreateUserName(userName);
+		myMugm.setMugmCreateTime(System.currentTimeMillis());
+		matchDao.save(myMugm);
+	}
+
+
 
 	private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 	/**

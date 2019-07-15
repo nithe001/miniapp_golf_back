@@ -76,12 +76,12 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		if(parp.get("type") != null && (Integer)parp.get("type") == 1){
+		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
+		/*if(parp.get("type") != null && (Integer)parp.get("type") == 1){
 			//比分下 我的比赛按时间排序，距离今天越近的排前面
-			hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		}else{
 			hql.append(" ORDER BY IF(ISNULL(distance),1,0),distance,m.mi_is_end, abs(DATEDIFF(m.mi_match_time,now()))  ");
-		}
+		}*/
 		List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
 				pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
