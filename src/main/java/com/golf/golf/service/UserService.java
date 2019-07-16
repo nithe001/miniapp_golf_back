@@ -53,7 +53,9 @@ public class UserService implements IBaseService {
 			String nickName = userInfo.getUiNickName();
 			if(StringUtils.isNotEmpty(nickName)){
 				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
-				userInfo.setUiNickName(nickName);
+				if(StringUtils.isNotEmpty(nickName)){
+					userInfo.setUiNickName(nickName);
+				}
 			}
 		}
 		result.put("userInfo",userInfo);
