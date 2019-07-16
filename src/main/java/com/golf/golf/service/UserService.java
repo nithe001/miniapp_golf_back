@@ -11,11 +11,13 @@ import com.golf.golf.db.*;
 import com.golf.golf.enums.UserTypeEnum;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,13 +46,17 @@ public class UserService implements IBaseService {
 	 * 获取“我的”
 	 * @return
 	 */
-	public Map<String,Object> getMyDetail(String openid) {
+	public Map<String,Object> getMyDetail(String openid) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
 		UserInfo userInfo = dao.getUserByOpenid(openid);
-		result.put("userInfo",userInfo);
 		if(userInfo != null){
-
+			String nickName = userInfo.getUiNickName();
+			if(StringUtils.isNotEmpty(nickName)){
+				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+				userInfo.setUiNickName(nickName);
+			}
 		}
+		result.put("userInfo",userInfo);
 		//差点
 		Double chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
 		result.put("chaPoint",chaPoint);
@@ -204,8 +210,10 @@ public class UserService implements IBaseService {
 		}
 		if(wechatUserInfo != null){
 			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+			String nickName = jsonObject.get("nickName").toString();
+			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
 			wechatUserInfo.setWuiOpenid(openid);
-			wechatUserInfo.setWuiNickName(jsonObject.get("nickName").toString());
+			wechatUserInfo.setWuiNickName(nickName);
 			String gender = jsonObject.get("gender").toString();
 			if("1".equals(gender)){
 				wechatUserInfo.setWuiSex("男");
@@ -228,9 +236,12 @@ public class UserService implements IBaseService {
 			dao.update(wechatUserInfo);
 		}else{
 			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+			String nickName = jsonObject.get("nickName").toString();
+			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+			wechatUserInfo.setWuiNickName(nickName);
 			wechatUserInfo = new WechatUserInfo();
 			wechatUserInfo.setWuiOpenid(openid);
-			wechatUserInfo.setWuiNickName(jsonObject.get("nickName").toString());
+			wechatUserInfo.setWuiNickName(nickName);
 			String gender = jsonObject.get("gender").toString();
 			if("1".equals(gender)){
 				wechatUserInfo.setWuiSex("男");

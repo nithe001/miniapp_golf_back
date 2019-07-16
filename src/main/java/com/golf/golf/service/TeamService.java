@@ -209,6 +209,9 @@ public class TeamService implements IBaseService {
 		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
 		parp.put("teamId", teamId);
 		parp.put("changCi", changCi);
+		TeamInfo teamInfo = teamDao.get(TeamInfo.class,teamId);
+		result.put("teamInfo",teamInfo);
+
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
 			List<TeamPointBean> list = new ArrayList<>();
