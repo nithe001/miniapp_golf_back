@@ -232,7 +232,7 @@ public class TeamDao extends CommonDao {
 		hql.append("AND m.tumTeamId = "+teamId);
 		hql.append(" and m.tumUserId = u.uiId ");
 		hql.append(" and m.tumUserType != 2 ");
-		hql.append("ORDER BY m.tumUserType ");
+		hql.append("ORDER BY m.tumCreateTime DESC,m.tumUserType ");
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 14,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -323,13 +323,10 @@ public class TeamDao extends CommonDao {
 				"m.tumUserId = u.uiId and m.tumTeamId = "+teamId);
 		if(type == 0){
 			hql.append(" AND m.tumUserType = 2 " );
-			hql.append(" order by m.tumCreateTime desc " );
 		}else if(type == 1){
 			hql.append(" AND m.tumUserType = 1 " );
-			hql.append(" order by m.tumCreateTime " );
-		}else{
-			hql.append(" order by m.tumCreateTime " );
 		}
+		hql.append(" order by m.tumCreateTime DESC,m.tumUserType " );
 		list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}

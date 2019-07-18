@@ -61,7 +61,7 @@ public class MatchController {
 	/**
 	 * 比赛列表
 	 * @param page 翻页
-	 * @param type 0：全部比赛 1：我参加的比赛  2：可报名的比赛 3:已报名的比赛  4：我创建的比赛
+	 * @param type 0：全部比赛 1：我参加的比赛（包括我参加的正在报名的比赛）2：可报名的比赛 3:已报名的比赛  4：我创建的比赛
 	 * @param keyword 搜索内容
 	 * @return
 	 */
@@ -161,8 +161,8 @@ public class MatchController {
 	@RequestMapping(value = "setMatchCaptainByUserId")
 	public JsonElement setMatchCaptainByUserId(Long matchId, Long userId, String openid) {
 		try {
-			matchService.setMatchCaptainByUserId(matchId, userId, openid);
-			return JsonWrapper.newSuccessInstance();
+			boolean flag = matchService.setMatchCaptainByUserId(matchId, userId, openid);
+			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("赛长指定该用户成为赛长时出错。比赛id="+matchId +" 用户id="+userId,e);
@@ -378,9 +378,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getAllApplyUserByMatchId")
-	public JsonElement getAllApplyUserByMatchId(Long matchId) {
+	public JsonElement getAllApplyUserByMatchId(Long matchId, String openid) {
 		try {
-			Map<String, Object> result = matchService.getAllApplyUserByMatchId(matchId);
+			Map<String, Object> result = matchService.getAllApplyUserByMatchId(matchId, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取已报名人员时出错。";
@@ -391,18 +391,14 @@ public class MatchController {
 	}
 
     /**
-     * 比赛详情——赛长获取已报名人员
+     * 比赛详情——赛长获取已报名人员——按球队分组
      * @return
      */
     @ResponseBody
     @RequestMapping("getApplyUserByMatchId")
     public JsonElement getApplyUserByMatchId(Long matchId, String keyword) {
         try {
-            Map<String, Object> result = new HashMap<>();
-            List<Map<String, Object>> userList = matchService.getApplyUserByMatchId(matchId, keyword);
-            MatchInfo matchInfo = matchService.getMatchById(matchId);
-            result.put("userList",userList);
-            result.put("matchInfo",matchInfo);
+			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, keyword);
             return JsonWrapper.newDataInstance(result);
         } catch (Exception e) {
             String errmsg = "前台-比赛详情——赛长获取已报名人员时出错。";
@@ -421,7 +417,7 @@ public class MatchController {
 	@RequestMapping("getWaitGroupUserList")
 	public JsonElement getWaitGroupUserList(Long matchId, String keyword) {
 		try {
-            List<Map<String, Object>> result = matchService.getWaitGroupUserList(matchId, keyword);
+            Map<String, Object> result = matchService.getWaitGroupUserList(matchId, keyword);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情——赛长获取待分组人员时出错。";
@@ -1128,10 +1124,10 @@ public class MatchController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("applyMatchWaitGroup")
-	public JsonElement applyMatchWaitGroup(Long matchId, String chooseTeamId, String openid) {
+	@RequestMapping("saveUserApplyWaitGroup")
+	public JsonElement saveUserApplyWaitGroup(Long matchId, String chooseTeamId, String openid) {
 		try {
-			matchService.applyMatchWaitGroup(matchId, chooseTeamId, openid);
+			matchService.saveUserApplyWaitGroup(matchId, chooseTeamId, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "比赛——报名待分组时出错。matchId="+matchId;
@@ -1217,4 +1213,23 @@ public class MatchController {
             return JsonWrapper.newErrorInstance(errmsg);
         }
     }
+
+
+	/**
+	 * 比赛——报名页面——获取更多赛长
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getAllMatchCaptainList")
+	public JsonElement getAllMatchCaptainList(Long matchId) {
+		try {
+			List<Map<String, Object>> watchList = matchService.getAllMatchCaptainList(matchId);
+			return JsonWrapper.newDataInstance(watchList);
+		} catch (Exception e) {
+			String errmsg = "前台-获取更多赛长时出错。matchId="+matchId;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 }
