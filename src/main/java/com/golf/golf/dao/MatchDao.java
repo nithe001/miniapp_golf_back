@@ -483,10 +483,10 @@ public class MatchDao extends CommonDao {
 	 * 获取比赛最大组
 	 * @return
 	 */
-	public MatchGroup getMaxGroupByMatchId(Long matchId) {
+	public String getMaxGroupByMatchId(Long matchId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("FROM MatchGroup AS t WHERE t.mgId = (SELECT MAX(g.mgId) FROM MatchGroup as g where g.mgMatchId = "+matchId+") ");
-		List<MatchGroup> list = dao.createQuery(sql.toString());
+		sql.append("SELECT MAX(g.mgGroupName) FROM MatchGroup as g where g.mgMatchId = "+matchId);
+		List<String> list = dao.createQuery(sql.toString());
 		if(list != null && list.size()>0){
 			return list.get(0);
 		}else{
@@ -1197,7 +1197,6 @@ public class MatchDao extends CommonDao {
 			sql.append(" AND s.msUserId in(:userList)");
 		}
 		dao.executeHql(sql.toString(),parp);
-
 	}
 
 	/**
@@ -2015,5 +2014,17 @@ public class MatchDao extends CommonDao {
 		hql.append(" ORDER BY mugm.mugmCreateTime DESC");
 		List<Map<String, Object>> list = dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
+	}
+
+	/**
+	 * 更新本比赛的其他分组，重新排列
+	 * @return
+	 */
+	public void updateGroupNames(Long matchId,String groupName) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE MatchGroup AS t SET t.mgGroupName = t.mgGroupName -1 ");
+		sql.append(" WHERE t.mgMatchId = "+matchId);
+		sql.append(" AND t.mgGroupName > "+groupName);
+		dao.executeHql(sql.toString());
 	}
 }

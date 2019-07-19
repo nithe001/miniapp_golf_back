@@ -634,7 +634,7 @@ public class MatchService implements IBaseService {
 				MatchGroup matchGroup = new MatchGroup();
 				//创建一个新分组
 				matchGroup.setMgMatchId(matchInfo.getMiId());
-				matchGroup.setMgGroupName("第1组");
+				matchGroup.setMgGroupName("1");
 				matchGroup.setMgCreateUserId(myUserInfo.getUiId());
 				matchGroup.setMgCreateUserName(myUserName);
 				matchGroup.setMgCreateTime(System.currentTimeMillis());
@@ -761,7 +761,7 @@ public class MatchService implements IBaseService {
 		//创建比赛分组
 		MatchGroup matchGroup = new MatchGroup();
 		matchGroup.setMgMatchId(matchInfo.getMiId());
-		matchGroup.setMgGroupName("第1组");
+		matchGroup.setMgGroupName("1");
 		matchGroup.setMgCreateTime(System.currentTimeMillis());
 		matchGroup.setMgCreateUserId(myUserInfo.getUiId());
 		matchGroup.setMgCreateUserName(myUserInfo.getUiRealName());
@@ -879,7 +879,7 @@ public class MatchService implements IBaseService {
 		//创建分组
 		MatchGroup matchGroup = new MatchGroup();
 		matchGroup.setMgMatchId(matchInfo.getMiId());
-		matchGroup.setMgGroupName("第1组");
+		matchGroup.setMgGroupName("1");
 		matchGroup.setMgCreateUserId(userInfo.getUiId());
 		matchGroup.setMgCreateUserName(userInfo.getUiRealName());
 		matchGroup.setMgCreateTime(System.currentTimeMillis());
@@ -955,18 +955,15 @@ public class MatchService implements IBaseService {
 	public MatchGroup addGroupByTeamId(Long matchId, String openid) {
 		UserInfo userInfo = userService.getUserByOpenId(openid);
 		//获取最大组
-		MatchGroup maxGroup = matchDao.getMaxGroupByMatchId(matchId);
-		Integer max = 1;
-		String groupName = "";
-		if(maxGroup != null){
-			groupName = maxGroup.getMgGroupName();
-			max = Integer.parseInt(groupName.substring(1, groupName.length() - 1));
-			max++;
+		String maxGroupName = matchDao.getMaxGroupByMatchId(matchId);
+		Integer maxGroupNum = 1;
+		if(StringUtils.isNotEmpty(maxGroupName)){
+			maxGroupNum = Integer.parseInt(maxGroupName);
+			maxGroupNum++;
 		}
-
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
-		group.setMgGroupName("第" + max + "组");
+		group.setMgGroupName(maxGroupNum.toString());
 		group.setMgCreateUserId(userInfo.getUiId());
 		group.setMgCreateUserName(StringUtils.isNotEmpty(userInfo.getUiRealName())?userInfo.getUiRealName():userInfo.getUiNickName());
 		group.setMgCreateTime(System.currentTimeMillis());
@@ -2653,7 +2650,9 @@ public class MatchService implements IBaseService {
 	}
 
 
-
+	/**
+	 * 要设置disableHtmlEscaping，否则会在转换成json的时候自作多情地转义一些特殊字符，如"="
+	 */
 	private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 	/**
 	 * 比赛——邀请记分——生成二维码
@@ -2679,16 +2678,17 @@ public class MatchService implements IBaseService {
 		if(!file.exists()){
 			file.mkdirs();
 		}
-		String parp = "matchId="+matchId+"&groupId="+groupId;//参数
-		String jsonParp = gson.toJson(parp);
-		String scene = URLEncoder.encode(jsonParp,"utf-8");
+		String parp = "?matchId="+matchId+"&groupId="+groupId;//参数
+//		String scene = gson.toJson(parp);
+//		scene = URLEncoder.encode(scene,"utf-8");
 		String page ="pages/score_card/score_card";//要跳转的页面，根路径不能加/  不填默认跳转主页
-//		file = wxMaService.getQrcodeService().createWxaCodeUnlimit(scene,page); 此方法好像是有包冲突，会报错
-		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(scene,page,300,false,null,false);
+//		File file_ = wxMaService.getQrcodeService().createWxaCodeUnlimit(parp,page); //此方法好像是有包冲突，会报错
+//		System.out.println(file_);
+		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(parp,page,300,false,null,false);
 		InputStream inputStream = null;
 		OutputStream outputStream = null;
 		inputStream = new ByteArrayInputStream(result);
-		outputStream = new FileOutputStream(file);
+		outputStream = new FileOutputStream(QRCodePath+fileName);
 		int len = 0;
 		byte[] buf = new byte[1024];
 		while ((len = inputStream.read(buf, 0, 1024)) != -1) {
@@ -2801,7 +2801,11 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public void delMatchGroupByGroupId(Long groupId) {
-		matchDao.del(MatchGroup.class, groupId);
+		MatchGroup group = matchDao.get(MatchGroup.class, groupId);
+		//更新其他分组
+		matchDao.updateGroupNames(group.getMgMatchId(),group.getMgGroupName());
+		//删除当前分组
+		matchDao.del(group);
 	}
 
 	/**

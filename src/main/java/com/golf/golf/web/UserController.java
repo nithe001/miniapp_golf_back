@@ -1,6 +1,7 @@
 package com.golf.golf.web;
 
 import com.golf.common.gson.JsonWrapper;
+import com.golf.golf.common.security.UserModel;
 import com.golf.golf.db.MatchRule;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.UserService;
@@ -38,17 +39,18 @@ public class UserController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = "saveUserInfo")
-	public JsonElement saveUserInfo(String openid, String userDataStr) {
+	@RequestMapping(value = "saveOrUpdateWechatUserInfo")
+	public JsonElement saveOrUpdateWechatUserInfo(String openid, String userDataStr) {
 		try {
 			if(StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(userDataStr)){
 				userService.saveOrUpdateWechatUserInfo(openid, userDataStr);
+				return JsonWrapper.newSuccessInstance();
 			}
-			return JsonWrapper.newSuccessInstance();
+			return JsonWrapper.newErrorInstance("保存/更新 微信用户信息时出错。openid="+openid+" 用户信息="+userDataStr);
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("保存微信用户信息时出错。" ,e);
-			return JsonWrapper.newErrorInstance("保存微信用户信息时出错"+e);
+			logger.error("保存/更新 微信用户信息时出错。openid="+openid+" 用户信息="+userDataStr ,e);
+			return JsonWrapper.newErrorInstance("保存/更新 微信用户信息时出错"+e);
 		}
 	}
 
@@ -67,11 +69,27 @@ public class UserController {
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.error("保存微信用户信息时出错。" ,e);
-			return JsonWrapper.newErrorInstance("保存微信用户信息时出错");
+			logger.error("更新用户经纬度信息时出错。" ,e);
+			return JsonWrapper.newErrorInstance("更新用户经纬度信息时出错");
 		}
 	}
 
+	/**
+	 * 获取我的信息
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getUserInfoByOpenId")
+	public JsonElement getUserInfoByOpenId(String openid) {
+		try {
+			UserModel userModel = userService.getUserInfoByOpenId(openid);
+			return JsonWrapper.newDataInstance(userModel);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("获取用户信息失败。", e);
+			return JsonWrapper.newErrorInstance("获取用户信息失败");
+		}
+	}
 
 	/**
 	 * 获取我的信息

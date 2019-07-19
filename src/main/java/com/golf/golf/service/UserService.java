@@ -162,7 +162,7 @@ public class UserService implements IBaseService {
 		dao.updateSubscribeTypeByOpenId(openId);
 	}
 
-	//通过openId获取用户信息
+	//通过openId获取用户微信信息 和注册信息
 	public UserModel getUserInfoByOpenId(String openId) {
 		UserModel userModel = null;
 		WechatUserInfo dbUser = dao.getUserInfoByOpenId(openId);
@@ -181,7 +181,10 @@ public class UserService implements IBaseService {
 	//通过openId获取用户信息
 	public UserInfo getUserByOpenId(String openId) {
 		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openId);
-		return dao.get(UserInfo.class,wechatUserInfo.getWuiUId());
+		if(wechatUserInfo != null){
+			return dao.get(UserInfo.class,wechatUserInfo.getWuiUId());
+		}
+		return null;
 	}
 
     /**
@@ -206,92 +209,109 @@ public class UserService implements IBaseService {
 	 */
 	public void saveOrUpdateWechatUserInfo(String openid, String userDataStr) throws IOException {
 		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openid);
-		UserInfo userInfo = null;
-		if(wechatUserInfo != null && wechatUserInfo.getWuiUId() != null){
-			userInfo = dao.get(UserInfo.class, wechatUserInfo.getWuiUId());
-		}
 		if(wechatUserInfo != null){
-			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
-			String nickName = jsonObject.get("nickName").toString();
-			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
-			wechatUserInfo.setWuiOpenid(openid);
-			wechatUserInfo.setWuiNickName(nickName);
-			String gender = jsonObject.get("gender").toString();
-			if("1".equals(gender)){
-				wechatUserInfo.setWuiSex("男");
-			}else if("0".equals(gender)){
-				wechatUserInfo.setWuiSex("女");
-			}else{
-				wechatUserInfo.setWuiSex("未知");
+			updateWechatUserInfo(wechatUserInfo, openid, userDataStr);
+			if(wechatUserInfo.getWuiUId() != null){
+				updateUserInfo(wechatUserInfo);
 			}
-			wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
-			wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
-			wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
-			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
-
-			wechatUserInfo.setWuiIsValid(1);
-			wechatUserInfo.setCreateTime(System.currentTimeMillis());
-
-			//创建一条用户信息
-			saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
-			wechatUserInfo.setWuiUId(userInfo.getUiId());
-			dao.update(wechatUserInfo);
 		}else{
-			net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
-			String nickName = jsonObject.get("nickName").toString();
-			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
-			wechatUserInfo.setWuiNickName(nickName);
-			wechatUserInfo = new WechatUserInfo();
-			wechatUserInfo.setWuiOpenid(openid);
-			wechatUserInfo.setWuiNickName(nickName);
-			String gender = jsonObject.get("gender").toString();
-			if("1".equals(gender)){
-				wechatUserInfo.setWuiSex("男");
-			}else if("0".equals(gender)){
-				wechatUserInfo.setWuiSex("女");
-			}else{
-				wechatUserInfo.setWuiSex("未知");
-			}
-			wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
-			wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
-			wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
-			wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
-
-			//下载头像
-			/*String headImgPath = PropertyConst.HEADIMG_PATH + openid + ".png";
-			String path = WebUtil.getRealPath(PropertyConst.HEADIMG_PATH);
-			if(StringUtils.isNotEmpty(wechatUserInfo.getWuiHeadimgurl())){
-				HttpUtil.downloadPicture(wechatUserInfo.getWuiHeadimgurl(), path,openid + ".png");
-			}
-			wechatUserInfo.setWuiHeadimg(headImgPath);*/
-			wechatUserInfo.setWuiIsValid(1);
-			wechatUserInfo.setCreateTime(System.currentTimeMillis());
-
-			//创建一条用户信息
-			userInfo = saveOrUpdateUserInfo(userInfo, openid, wechatUserInfo);
-			wechatUserInfo.setWuiUId(userInfo.getUiId());
-			dao.save(wechatUserInfo);
+			wechatUserInfo = saveWechatUserInfo(openid, userDataStr);
+			saveUserInfo(wechatUserInfo);
 		}
 	}
 
-	private UserInfo saveOrUpdateUserInfo(UserInfo userInfo, String openid, WechatUserInfo wechatUserInfo) {
-		if(wechatUserInfo.getWuiUId() == null){
-			userInfo = new UserInfo();
+	/**
+	 * 保存用户微信信息
+	 * @return
+	 */
+	private WechatUserInfo saveWechatUserInfo(String openid, String userDataStr) throws UnsupportedEncodingException {
+		WechatUserInfo wechatUserInfo = new WechatUserInfo();
+		net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+		String nickName = null;
+		if(jsonObject.get("nickName") != null){
+			nickName = jsonObject.get("nickName").toString();
+			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
 		}
-		userInfo.setUiOpenId(openid);
+		wechatUserInfo.setWuiNickName(nickName);
+		wechatUserInfo = new WechatUserInfo();
+		wechatUserInfo.setWuiOpenid(openid);
+		String gender = jsonObject.get("gender").toString();
+		if("1".equals(gender)){
+			wechatUserInfo.setWuiSex("男");
+		}else if("0".equals(gender)){
+			wechatUserInfo.setWuiSex("女");
+		}else{
+			wechatUserInfo.setWuiSex("未知");
+		}
+		wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
+		wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
+		wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
+		wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
+		wechatUserInfo.setWuiIsValid(1);
+		wechatUserInfo.setCreateTime(System.currentTimeMillis());
+		dao.save(wechatUserInfo);
+		return wechatUserInfo;
+	}
+
+	/**
+	 * 更新用户微信信息
+	 * @return
+	 */
+	private void updateWechatUserInfo(WechatUserInfo wechatUserInfo, String openid, String userDataStr) throws UnsupportedEncodingException {
+		net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userDataStr);
+		String nickName = null;
+		if(jsonObject.get("nickName") != null){
+			nickName = jsonObject.get("nickName").toString();
+			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+		}
+		wechatUserInfo.setWuiOpenid(openid);
+		wechatUserInfo.setWuiNickName(nickName);
+		String gender = jsonObject.get("gender").toString();
+		if("1".equals(gender)){
+			wechatUserInfo.setWuiSex("男");
+		}else if("0".equals(gender)){
+			wechatUserInfo.setWuiSex("女");
+		}else{
+			wechatUserInfo.setWuiSex("未知");
+		}
+		wechatUserInfo.setWuiLanguage(jsonObject.get("language").toString());
+		wechatUserInfo.setWuiCity(jsonObject.get("city").toString());
+		wechatUserInfo.setWuiProvince(jsonObject.get("province").toString());
+		wechatUserInfo.setWuiHeadimgurl(jsonObject.get("avatarUrl").toString());
+		wechatUserInfo.setWuiIsValid(1);
+		wechatUserInfo.setCreateTime(System.currentTimeMillis());
+		dao.update(wechatUserInfo);
+	}
+
+	/**
+	 * 保存一条用户注册信息
+	 * @return
+	 */
+	private void saveUserInfo(WechatUserInfo wechatUserInfo) {
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUiOpenId(wechatUserInfo.getWuiOpenid());
 		userInfo.setUiNickName(wechatUserInfo.getWuiNickName());
 		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimgurl());
 		userInfo.setUiSex(wechatUserInfo.getWuiSex());
-		if(wechatUserInfo.getWuiUId() == null){
-			//普通用户
-			userInfo.setUiType(UserTypeEnum.PT.ordinal());
-			userInfo.setUiCreateTime(System.currentTimeMillis());
-			dao.save(userInfo);
-		}else{
-			userInfo.setUiUpdateTime(System.currentTimeMillis());
-			dao.update(userInfo);
-		}
-		return userInfo;
+		userInfo.setUiType(UserTypeEnum.PT.ordinal());
+		userInfo.setUiCreateTime(System.currentTimeMillis());
+		dao.save(userInfo);
+		wechatUserInfo.setWuiUId(userInfo.getUiId());
+		dao.update(wechatUserInfo);
+	}
+
+	/**
+	 * 更新用户注册信息
+	 * @return
+	 */
+	private void updateUserInfo(WechatUserInfo wechatUserInfo) {
+		UserInfo userInfo = dao.get(UserInfo.class,wechatUserInfo.getWuiUId());
+		userInfo.setUiOpenId(wechatUserInfo.getWuiOpenid());
+		userInfo.setUiNickName(wechatUserInfo.getWuiNickName());
+		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimgurl());
+		userInfo.setUiSex(wechatUserInfo.getWuiSex());
+		userInfo.setUiUpdateTime(System.currentTimeMillis());
+		dao.update(userInfo);
 	}
 
 	/**
@@ -300,12 +320,14 @@ public class UserService implements IBaseService {
 	 */
 	public void updateUserLocation(String latitude, String longitude, String openid) {
 		UserInfo db = getUserByOpenId(openid);
-		db.setUiLatitude(latitude);
-		db.setUiLongitude(longitude);
-		db.setUiUpdateTime(System.currentTimeMillis());
-		db.setUiUpdateUserId(db.getUiId());
-		db.setUiUpdateUserName(db.getUiRealName());
-		dao.update(db);
+		if(db != null){
+			db.setUiLatitude(latitude);
+			db.setUiLongitude(longitude);
+			db.setUiUpdateTime(System.currentTimeMillis());
+			db.setUiUpdateUserId(db.getUiId());
+			db.setUiUpdateUserName(db.getUiRealName());
+			dao.update(db);
+		}
 	}
 
 	/**

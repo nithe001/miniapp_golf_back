@@ -221,7 +221,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 删除比赛分组
+	 * 删除比赛分组 并重新排列组
 	 * @return
 	 */
 	@ResponseBody

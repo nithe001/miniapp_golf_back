@@ -49,7 +49,7 @@ public class WechatMiniAppController extends GenericController {
 
 
     /**
-     * 登录
+     * 登录——获取openid
      * https://blog.csdn.net/fanfan4569/article/details/80903450
      * @throws Exception
      */
@@ -64,7 +64,7 @@ public class WechatMiniAppController extends GenericController {
 				String openid = jsCode2SessionInfo.getOpenid();
 				if (StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(sessionkey)) {
 					// 成功 自定义生成3rd_session与openid&session_key绑定并返回3rd_session
-					String loginSessionKey = RandomUtil.generateIntString(128);
+					/*String loginSessionKey = RandomUtil.generateIntString(128);
 					HttpSession session = WebUtil.getOrCreateSession();
 					if (session.getAttribute(loginSessionKey) != null) {
 						session.removeAttribute(loginSessionKey);
@@ -82,7 +82,7 @@ public class WechatMiniAppController extends GenericController {
 					}
 
 					//以3rd_session为key,session_key+openid为value写入session存储
-					session.setAttribute(loginSessionKey, sessionkey+","+openid);
+					session.setAttribute(loginSessionKey, sessionkey+","+openid);*/
 					//回传loginSessionKey
 					Map<String, Object> result = new HashMap<String, Object>();
 					result.put("openid",openid);
