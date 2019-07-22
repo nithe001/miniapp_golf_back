@@ -1,6 +1,7 @@
 package com.golf.golf.service;
 
 import com.golf.common.IBaseService;
+import com.golf.common.util.EmojiFilterUtil;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
@@ -252,7 +253,10 @@ public class UserService implements IBaseService {
 		String nickName = null;
 		if(jsonObject.get("nickName") != null){
 			nickName = jsonObject.get("nickName").toString();
-			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+			boolean hasEmoji = EmojiFilterUtil.containsEmoji(nickName);
+			if(hasEmoji){
+				nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+			}
 		}
 		wechatUserInfo.setWuiNickName(nickName);
 		wechatUserInfo = new WechatUserInfo();
@@ -284,7 +288,10 @@ public class UserService implements IBaseService {
 		String nickName = null;
 		if(jsonObject.get("nickName") != null){
 			nickName = jsonObject.get("nickName").toString();
-			nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+			boolean hasEmoji = EmojiFilterUtil.containsEmoji(nickName);
+			if(hasEmoji){
+				nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+			}
 		}
 		wechatUserInfo.setWuiOpenid(openid);
 		wechatUserInfo.setWuiNickName(nickName);
