@@ -1087,11 +1087,11 @@ public class MatchDao extends CommonDao {
 	 * 获取本比赛本球队所有用户，除了自动设置的赛长
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserListByMatchTeamIdWithOutTeamCap(Long matchId, Long teamId, List<Long> capUserList) {
+	public List<Map<String, Object>> getUserListByMatchTeamIdWithOutTeamCap(Long matchId, Long teamId) {
 		Map<String, Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
 		parp.put("teamId",teamId);
-		parp.put("capUserList",capUserList);
+//		parp.put("capUserList",capUserList);
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT t.*, team.ti_name AS tiName,team.ti_abbrev AS tiAbbrev,team.ti_id as tiId FROM ");
 		sql.append("(SELECT g.mugm_id as mappingId," +
@@ -1106,7 +1106,7 @@ public class MatchDao extends CommonDao {
 				"WHERE " +
 				"g.mugm_user_id = u.ui_id " +
 				"AND g.mugm_match_id = :matchId and g.mugm_team_id = :teamId ");
-		sql.append(" and g.mugm_user_id not in(:capUserList) ");
+		sql.append(" and (g.mugm_is_auto_cap is null or g.mugm_is_auto_cap = 0) ");
 		sql.append(" ) AS t ");
 		sql.append("LEFT JOIN team_info AS team ON t.teamId = team.ti_id ");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
@@ -1678,21 +1678,21 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT count(t.mugmUserId) FROM MatchUserGroupMapping as t ");
 		sql.append("where t.mugmMatchId ="+matchId+" and t.mugmIsDel = 0 ");
+		sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
 		return dao.createCountQuery(sql.toString());
 	}
+
 	/**
 	 * 获取本比赛的报名（参赛）用户人数(去掉自动设置的赛长)
 	 */
-	public Long getAllMatchApplyUserCount(Long matchId,List<Long> capUserIdList) {
+	public Long getAllMatchApplyUserCount(Long matchId,Long userId) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
-		parp.put("capUserIdList",capUserIdList);
+		parp.put("userId",userId);
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT count(t.mugmUserId) FROM MatchUserGroupMapping as t ");
 		sql.append("where t.mugmMatchId = :matchId ");
-		if(capUserIdList != null && capUserIdList.size() >0){
-			sql.append("and t.mugmUserId not in(:capUserIdList) ");
-		}
+		sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
 		return dao.createCountQuery(sql.toString(),parp);
 	}
 

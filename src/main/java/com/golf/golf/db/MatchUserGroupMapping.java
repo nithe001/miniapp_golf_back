@@ -15,6 +15,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 	private Long mugmMatchId;
 	private Long mugmTeamId;
 	private Integer mugmUserType;
+	private Integer mugmIsAutoCap;
 	private Long mugmGroupId;
 	private String mugmGroupName;
 	private Long mugmUserId;
@@ -34,7 +35,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public MatchUserGroupMapping(Long mugmMatchId, Long mugmTeamId, Integer mugmUserType,
+	public MatchUserGroupMapping(Long mugmMatchId, Long mugmTeamId, Integer mugmUserType,Integer mugmIsAutoCap,
 								 Long mugmGroupId, String mugmGroupName, Long mugmUserId,
 								 String mugmUserName, Integer mugmIsDel,Long mugmCreateUserId,
 								 String mugmCreateUserName, Long mugmCreateTime,Long mugmUpdateUserId,
@@ -42,6 +43,7 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 		this.mugmMatchId = mugmMatchId;
 		this.mugmTeamId = mugmTeamId;
 		this.mugmUserType = mugmUserType;
+		this.mugmIsAutoCap = mugmIsAutoCap;
 		this.mugmGroupId = mugmGroupId;
 		this.mugmGroupName = mugmGroupName;
 		this.mugmUserId = mugmUserId;
@@ -92,6 +94,15 @@ public class MatchUserGroupMapping implements java.io.Serializable {
 
 	public void setMugmUserType(Integer mugmUserType) {
 		this.mugmUserType = mugmUserType;
+	}
+
+	@Column(name = "mugm_is_auto_cap")
+	public Integer getMugmIsAutoCap() {
+		return mugmIsAutoCap;
+	}
+
+	public void setMugmIsAutoCap(Integer mugmIsAutoCap) {
+		this.mugmIsAutoCap = mugmIsAutoCap;
 	}
 
 	@Column(name = "mugm_group_id")

@@ -269,17 +269,10 @@ public class MatchService implements IBaseService {
 		if (captainCount > 0) {
 			isMatchCaptain = true;
 		}
-		//全部报名人数，包括待分组的
+		//获取已分组的人数
 		Long userCountAlreadyGroup = matchDao.getMatchUserCountAlreadyGroup(matchId);
-		//全部报名人数，包括待分组的(去掉自动设置的赛长)
-		List<Long> capUserIdList = null;
-		if(joinTeamIds != null && joinTeamIds.size() >0){
-			capUserIdList = matchDao.getCapUserListByJoinTeamId(joinTeamIds);
-		}
-		Long allApplyUserCount = matchDao.getAllMatchApplyUserCount(matchId,capUserIdList);
-		if(allApplyUserCount == 0){
-			allApplyUserCount = 1L;
-		}
+		//已报名人数（出去自动设置的赛长以外全部的）
+		Long allApplyUserCount = matchDao.getAllMatchApplyUserCount(matchId,userInfo.getUiId());
 
 		//我是否是参赛者
 		Long isJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,userInfo.getUiId());
@@ -663,6 +656,8 @@ public class MatchService implements IBaseService {
 					myMugm.setMugmTeamId(tid);
 				}
 				myMugm.setMugmUserType(0);
+				//标记我 自动设置的赛长为否
+				myMugm.setMugmIsAutoCap(0);
 				myMugm.setMugmIsDel(0);
 				myMugm.setMugmGroupId(matchGroup.getMgId());
 				myMugm.setMugmGroupName(matchGroup.getMgGroupName());
@@ -686,6 +681,8 @@ public class MatchService implements IBaseService {
 							MatchUserGroupMapping mugm = new MatchUserGroupMapping();
 							mugm.setMugmMatchId(matchInfo.getMiId());
 							mugm.setMugmUserType(0);
+							//其他赛长为自动设置的赛长
+							mugm.setMugmIsAutoCap(1);
 							mugm.setMugmTeamId((Long) map.get("teamId"));
 							mugm.setMugmIsDel(1);
 							mugm.setMugmGroupId(matchGroup.getMgId());
@@ -778,6 +775,7 @@ public class MatchService implements IBaseService {
 			}
 		}
 		matchUserGroupMapping.setMugmUserType(0);
+		matchUserGroupMapping.setMugmIsAutoCap(0);
 		matchUserGroupMapping.setMugmIsDel(0);
 		matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
 		matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
@@ -803,6 +801,8 @@ public class MatchService implements IBaseService {
 					mugm.setMugmMatchId(matchInfo.getMiId());
 					mugm.setMugmTeamId((Long) map.get("teamId"));
 					mugm.setMugmUserType(0);
+					//自动设置的赛长
+					mugm.setMugmIsAutoCap(1);
 					//创建人默认在第一组，其他赛长先不放入待选球友中
 					mugm.setMugmIsDel(1);
 					mugm.setMugmGroupId(matchGroup.getMgId());
@@ -1085,6 +1085,7 @@ public class MatchService implements IBaseService {
                     if(teamId != null){
                         matchUserGroupMapping.setMugmTeamId(teamId);
                     }
+                    matchUserGroupMapping.setMugmIsAutoCap(null);
                     matchUserGroupMapping.setMugmGroupId(groupId);
                     matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
                     matchUserGroupMapping.setMugmIsDel(0);
@@ -2714,6 +2715,8 @@ public class MatchService implements IBaseService {
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatch(matchId,userId);
 		if(matchUserGroupMapping != null){
 			matchUserGroupMapping.setMugmUserType(0);
+			//不是自动设置的赛长
+			matchUserGroupMapping.setMugmIsAutoCap(0);
 			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
 			matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
@@ -2977,11 +2980,9 @@ public class MatchService implements IBaseService {
 		List<TeamUserBean> teamUserList = new ArrayList<>();
 		if(joinTeamIds != null && joinTeamIds.size()>0){
 			for(Long teamId:joinTeamIds){
-				//获取本参赛队的队长
-				List<Long> capUserIdList = matchDao.getCaptainUserListByJoinTeamId(teamId,myUserId);
 				TeamUserBean bean = new TeamUserBean();
 				//获取本参赛队的报名用户 除去队长（自动设置的赛长）
-				List<Map<String, Object>> userList = matchDao.getUserListByMatchTeamIdWithOutTeamCap(matchId,teamId,capUserIdList);
+				List<Map<String, Object>> userList = matchDao.getUserListByMatchTeamIdWithOutTeamCap(matchId,teamId);
 				TeamInfo teamInfo = matchDao.get(TeamInfo.class,teamId);
 				if(bean.getTeamInfo() == null){
 					bean.setTeamInfo(teamInfo);
