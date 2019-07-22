@@ -189,11 +189,11 @@ public class TeamDao extends CommonDao {
 	 * 通过球队id获取队长
 	 * @return
 	 */
-	public List<String> getCaptainByTeamId(Long teamId) {
+	public List<Map<String,Object>> getCaptainByTeamId(Long teamId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiNickName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
+		hql.append("SELECT u.uiNickName as uiNickName,u.uiRealName as uiRealName FROM TeamUserMapping AS t,UserInfo as u WHERE 1=1 " +
 				"AND t.tumTeamId = "+teamId+" AND t.tumUserType = 0 AND t.tumUserId = u.uiId ");
-		return dao.createQuery(hql.toString());
+		return dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
 	/**

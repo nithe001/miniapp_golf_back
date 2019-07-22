@@ -10,10 +10,12 @@ import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -35,7 +37,7 @@ public class TeamService implements IBaseService {
 	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队(显示待审核人数)
 	 * @return
 	 */
-	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
+	public POJOPageInfo getTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) throws UnsupportedEncodingException {
 		if((Integer)searchBean.getParps().get("type") <3){
 			pageInfo = teamDao.getTeamList(searchBean,pageInfo);
 		}else if((Integer)searchBean.getParps().get("type") ==3){
@@ -52,7 +54,7 @@ public class TeamService implements IBaseService {
 	 * 比赛——获取已经选中的球队列表
 	 * @return
 	 */
-	public POJOPageInfo getChooseTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
+	public POJOPageInfo getChooseTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) throws UnsupportedEncodingException {
 		pageInfo = teamDao.getChooseTeamList(searchBean,pageInfo);
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
 			getCaptain(pageInfo.getItems(), openid);
@@ -64,7 +66,7 @@ public class TeamService implements IBaseService {
 	 * 比赛——获取上报球队列表
 	 * @return
 	 */
-	public POJOPageInfo getReportTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) {
+	public POJOPageInfo getReportTeamList(SearchBean searchBean, POJOPageInfo pageInfo, String openid) throws UnsupportedEncodingException {
 		pageInfo = teamDao.getReportTeamList(searchBean,pageInfo);
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
 			getCaptain(pageInfo.getItems(), openid);
@@ -74,8 +76,8 @@ public class TeamService implements IBaseService {
 
 
     //队长
-	public void getCaptain(List<Map<String,Object>> mapList, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+	public void getCaptain(List<Map<String,Object>> mapList, String openid) throws UnsupportedEncodingException {
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		for(Map<String,Object> result : mapList){
 			Integer count = matchService.getIntegerValue(result, "userCount");
 			if(count == 0){
@@ -84,11 +86,16 @@ public class TeamService implements IBaseService {
 			//队长名字
 			Long teamId = matchService.getLongValue(result, "tiId");
 			if(teamId != null){
-				List<String> captainList = teamDao.getCaptainByTeamId(teamId);
-				if(captainList == null || captainList.size() ==0){
-					result.put("captain", "未知");
+				List<Map<String,Object>> captainList = teamDao.getCaptainByTeamId(teamId);
+				//用户昵称解码
+				matchService.decodeUserNickName(captainList);
+				Map<String,Object> cap = captainList.get(0);
+				String realName = matchService.getName(cap,"uiRealName");
+				String nickName = matchService.getName(cap,"uiNickName");
+				if(StringUtils.isNotEmpty(realName)){
+					result.put("captain", realName);
 				}else{
-					result.put("captain", captainList.get(0));
+					result.put("captain", nickName);
 				}
 			}
 			//logo
@@ -105,11 +112,11 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public void saveOrUpdateTeamInfo(TeamInfo teamInfoBean, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		if(teamInfoBean.getTiId() == null){
 			teamInfoBean.setTiCreateTime(TimeUtil.stringToLong(teamInfoBean.getTiCreateTimeStr(),TimeUtil.FORMAT_DATE));
 			teamInfoBean.setTiCreateUserId(userInfo.getUiId());
-			teamInfoBean.setTiCreateUserName(userInfo.getUiRealName());
+			teamInfoBean.setTiCreateUserName(userInfo.getUserName());
 			teamInfoBean.setTiIsValid(1);
 			Long teamId = teamDao.save(teamInfoBean);
 			//向球队用户表新增一条记录
@@ -120,7 +127,7 @@ public class TeamService implements IBaseService {
 			teamUserMapping.setTumUserType(0);
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 			teamUserMapping.setTumCreateUserId(userInfo.getUiId());
-			teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+			teamUserMapping.setTumCreateUserName(userInfo.getUserName());
 			teamDao.save(teamUserMapping);
 		}else{
 			TeamInfo db = teamDao.get(TeamInfo.class,teamInfoBean.getTiId());
@@ -139,7 +146,7 @@ public class TeamService implements IBaseService {
 			db.setTiMatchResultAuditType(teamInfoBean.getTiMatchResultAuditType());
 			db.setTiUpdateTime(System.currentTimeMillis());
 			db.setTiUpdateUserId(userInfo.getUiId());
-			db.setTiUpdateUserName(userInfo.getUiRealName());
+			db.setTiUpdateUserName(userInfo.getUserName());
 			teamDao.update(db);
 		}
 
@@ -150,26 +157,16 @@ public class TeamService implements IBaseService {
 	 * @param teamId:球队id count 显示的队员人数
 	 * @return
 	 */
-	public Map<String, Object> getTeamInfoById(Long teamId, String openid) {
+	public Map<String, Object> getTeamInfoById(Long teamId, String openid) throws UnsupportedEncodingException {
 		Map<String, Object> result = new HashMap<>();
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
 		teamInfo.getCreateTimeStr();
 		teamInfo.setTiLogo(PropertyConst.DOMAIN+teamInfo.getTiLogo());
 		result.put("teamInfo",teamInfo);
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
-		if(userList!= null && userList.size()>0){
-			for(Map<String, Object> user:userList){
-				String realName = matchService.getName(user,"uiRealName");
-				if(StringUtils.isNotEmpty(realName) && realName.length() >5){
-					user.put("uiRealName",realName.substring(0,5)+"...");
-				}
-				String nickName = matchService.getName(user,"uiNickName");
-				if(StringUtils.isNotEmpty(nickName) && nickName.length() >5){
-					user.put("uiNickName",nickName.substring(0,5)+"...");
-				}
-			}
-		}
+		//解码用户昵称
+		matchService.decodeUserNickName(userList);
 		result.put("userList",userList);
 		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userInfo.getUiId());
 		result.put("isCaptain",isCaptain);
@@ -202,7 +199,7 @@ public class TeamService implements IBaseService {
 	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
 	 * @return
 	 */
-	public Map<String, Object> getTeamPointByYear(Integer type, String date, Long teamId, Integer changCi) {
+	public Map<String, Object> getTeamPointByYear(Integer type, String date, Long teamId, Integer changCi) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("startYear", TimeUtil.getYearFirst(Integer.parseInt(date)));
@@ -224,7 +221,21 @@ public class TeamService implements IBaseService {
 					UserInfo userInfo = teamDao.get(UserInfo.class,userId);
 					teamPointBean.setUserId(userId);
 					teamPointBean.setRealName(userInfo.getUiRealName());
-					teamPointBean.setNickName(userInfo.getUiNickName());
+
+					String nickName = userInfo.getUiNickName();
+					//用户昵称解码
+					if(StringUtils.isNotEmpty(nickName)){
+						String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
+						Boolean isLegal = nickName.matches(base64Pattern);
+						if (isLegal) {
+							nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+							if(StringUtils.isNotEmpty(nickName)){
+								teamPointBean.setNickName(nickName);
+							}
+						}else{
+							teamPointBean.setNickName(userInfo.getUiNickName());
+						}
+					}
 
 					//获取本球友代表此球队的参赛场次（有效的比赛）
 					parp.put("userId",userId);
@@ -286,8 +297,11 @@ public class TeamService implements IBaseService {
 	 * @param type:0已报名的 1本队用户 2本队所有用户
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserListByTeamId(Long teamId, Integer type) {
-		return teamDao.getUserListByTeamId(teamId, type);
+	public List<Map<String, Object>> getUserListByTeamId(Long teamId, Integer type) throws UnsupportedEncodingException {
+		List<Map<String, Object>> userList = teamDao.getUserListByTeamId(teamId, type);
+		//解码用户昵称
+		matchService.decodeUserNickName(userList);
+		return userList;
 	}
 
 	/**
@@ -298,7 +312,7 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public void updateTeamUserByTeamId(Long teamId, String userIds, Integer type, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		if(StringUtils.isNotEmpty(userIds)){
 			userIds = userIds.replace("[","");
 			userIds = userIds.replace("]","");
@@ -312,7 +326,7 @@ public class TeamService implements IBaseService {
 						teamUserMapping.setTumUserType(1);
 						teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 						teamUserMapping.setTumCreateUserId(userInfo.getUiId());
-						teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+						teamUserMapping.setTumCreateUserName(userInfo.getUserName());
 						teamDao.update(teamUserMapping);
 					}else{
 						teamDao.del(teamUserMapping);
@@ -329,20 +343,10 @@ public class TeamService implements IBaseService {
 	 * type:0已报名的 1本队用户 2本队所有用户
 	 * @return
 	 */
-	public List<Map<String, Object>> getAllUserListByTeamId(Long teamId) {
+	public List<Map<String, Object>> getAllUserListByTeamId(Long teamId) throws UnsupportedEncodingException {
 		List<Map<String, Object>> userList = teamDao.getUserListByTeamId(teamId, 2);
-		if(userList!= null && userList.size()>0){
-			for(Map<String, Object> user:userList){
-				String realName = matchService.getName(user,"uiRealName");
-				if(StringUtils.isNotEmpty(realName) && realName.length() >5){
-					user.put("uiRealName",realName.substring(0,5)+"...");
-				}
-				String nickName = matchService.getName(user,"uiNickName");
-				if(StringUtils.isNotEmpty(nickName) && nickName.length() >5){
-					user.put("uiNickName",nickName.substring(0,5)+"...");
-				}
-			}
-		}
+		//解码用户昵称
+		matchService.decodeUserNickName(userList);
 		return userList;
 	}
 
@@ -353,7 +357,7 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public void joinOrQuitTeamById(Long teamId, Integer type, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		Long userId = userInfo.getUiId();
 		if(type == 0){
 			TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
@@ -369,7 +373,7 @@ public class TeamService implements IBaseService {
 				teamUserMapping.setTumUserType(1);
 			}
 			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-			teamUserMapping.setTumCreateUserName(userInfo.getUiRealName());
+			teamUserMapping.setTumCreateUserName(userInfo.getUserName());
 			teamUserMapping.setTumCreateUserId(userId);
 			teamDao.save(teamUserMapping);
 		}else{
@@ -404,7 +408,7 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public void setTeamCaptainByUserId(Long teamId, Long userId, String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		TeamUserMapping teamUserMapping = teamDao.getTeamUserMapping(teamId,userId);
 		teamUserMapping.setTumUserType(0);
 		teamUserMapping.setTumUpdateTime(System.currentTimeMillis());
@@ -418,7 +422,7 @@ public class TeamService implements IBaseService {
 	 * @return
 	 */
 	public boolean getHasDetail(String openid) {
-		UserInfo userInfo = userService.getUserByOpenId(openid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		if(StringUtils.isNotEmpty(userInfo.getUiRealName()) && userInfo.getUiAge() != null && StringUtils.isNotEmpty(userInfo.getUiTelNo())
 			&& StringUtils.isNotEmpty(userInfo.getUiEmail()) && StringUtils.isNotEmpty(userInfo.getUiGraduateSchool())
 				&& StringUtils.isNotEmpty(userInfo.getUiGraduateDepartment())

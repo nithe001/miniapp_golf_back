@@ -1,6 +1,7 @@
 package com.golf.golf.handler;
 
 import com.golf.golf.common.security.UserModel;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -40,11 +41,11 @@ public class UnSubscribeHandler extends AbstractHandler {
 		try {
 			WxMpUser wxMpUser = wechatService.getUserInfo(wxMessage.getFromUser(), "zh_CN");
 			WxMpXmlOutTextMessage message = null;
-			UserModel user = userService.getUserInfoByOpenId(wxMpUser.getOpenId());
+			/*UserInfo user = userService.getUserInfoByOpenId(wxMpUser.getOpenId());
 			if(user != null){
 				//更新用户绑定状态
 				userService.updateSubscribeType(wxMpUser);
-			}
+			}*/
 			return message;
 		} catch (Exception e) {
 				logger.error("取消关注时，更新用户信息失败。", e);

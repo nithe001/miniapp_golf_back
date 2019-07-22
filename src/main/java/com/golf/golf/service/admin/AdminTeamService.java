@@ -16,6 +16,7 @@ import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.Time;
 import java.util.HashMap;
 import java.util.List;
@@ -41,13 +42,13 @@ public class AdminTeamService implements IBaseService {
 	 * @param pageInfo
 	 * @return
 	 */
-	public POJOPageInfo<MatchInfo> teamList(SearchBean searchBean, POJOPageInfo pageInfo){
+	public POJOPageInfo<MatchInfo> teamList(SearchBean searchBean, POJOPageInfo pageInfo) throws UnsupportedEncodingException {
 		pageInfo = adminTeamDao.teamList(searchBean,pageInfo);
 		getCaptain(pageInfo);
 		return pageInfo;
 	}
 	//队长
-	private void getCaptain(POJOPageInfo pageInfo) {
+	private void getCaptain(POJOPageInfo pageInfo) throws UnsupportedEncodingException {
 		if(pageInfo.getCount() >0 && pageInfo.getItems() != null && pageInfo.getItems().size() >0){
 			for(Map<String,Object> result : (List<Map<String,Object>>)pageInfo.getItems()){
 				Integer count = matchService.getIntegerValue(result, "userCount");
@@ -56,11 +57,16 @@ public class AdminTeamService implements IBaseService {
 				}
 				Long teamId = matchService.getLongValue(result, "tiId");
 				if(teamId != null){
-					List<String> captainList = teamDao.getCaptainByTeamId(teamId);
-					if(captainList == null || captainList.size() ==0){
-						result.put("captain", "未知");
+					List<Map<String,Object>> captainList = teamDao.getCaptainByTeamId(teamId);
+					//用户昵称解码
+					matchService.decodeUserNickName(captainList);
+					Map<String,Object> cap = captainList.get(0);
+					String realName = matchService.getName(cap,"uiRealName");
+					String nickName = matchService.getName(cap,"uiNickName");
+					if(StringUtils.isNotEmpty(realName)){
+						result.put("captain", realName);
 					}else{
-						result.put("captain", captainList.get(0));
+						result.put("captain", nickName);
 					}
 				}
 				Long createTime = matchService.getLongValue(result, "createTime");

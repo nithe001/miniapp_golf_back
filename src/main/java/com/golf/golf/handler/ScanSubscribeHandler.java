@@ -45,7 +45,7 @@ public class ScanSubscribeHandler extends AbstractHandler {
 		// 是否已经是医生
 		WechatUserInfo wechatUser = userService.getWechatUserByOpenid(wxMpUser.getOpenId());
 		if (wechatUser != null && wechatUser.getWuiUId() != null) {
-			UserInfo user = userService.getUserById(wechatUser.getWuiUId());
+//			UserInfo user = userService.getUserInfoById(wechatUser.getWuiUId());
 		}else{
 			message = WxMpXmlOutMessage.TEXT()
 					.content("您已经关联医生!")

@@ -1,5 +1,7 @@
 package com.golf.golf.db;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javax.persistence.*;
 
 import static javax.persistence.GenerationType.IDENTITY;
@@ -347,5 +349,17 @@ public class UserInfo implements java.io.Serializable {
 
 	public void setUiHomeCourt(String uiHomeCourt) {
 		this.uiHomeCourt = uiHomeCourt;
+	}
+
+	private String userName;
+	@Transient
+
+	public String getUserName() {
+		userName = StringUtils.isNotEmpty(this.getUiRealName())?this.getUiRealName():this.getUiNickName();
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 }

@@ -82,7 +82,7 @@ public class UserController {
 	@RequestMapping("getUserInfoByOpenId")
 	public JsonElement getUserInfoByOpenId(String openid) {
 		try {
-			UserModel userModel = userService.getUserInfoByOpenId(openid);
+			UserModel userModel = userService.getUserModelByOpenid(openid);
 			return JsonWrapper.newDataInstance(userModel);
 		} catch (Exception e) {
 			e.printStackTrace();

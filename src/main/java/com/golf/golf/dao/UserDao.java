@@ -78,7 +78,7 @@ public class UserDao extends CommonDao {
 	 * 通过openid获取用户微信信息
 	 * @return
 	 */
-	public WechatUserInfo getUserInfoByOpenId(String openId) {
+	public WechatUserInfo getWechatUserInfoByOpenId(String openId) {
 		WechatUserInfo user = null;
 		Map<String, Object> parp = new HashMap<String, Object>();
 		parp.put("openId", openId);
@@ -113,14 +113,14 @@ public class UserDao extends CommonDao {
 	 * 根据OPENID获取用户信息
 	 * @return
 	 */
-	public UserInfo getUserByOpenid(String openId) {
+	public UserInfo getUserInfoByOpenid(String openId) {
 		StringBuffer hql = new StringBuffer();
 		hql.append("FROM UserInfo as u WHERE u.uiOpenId = '" +openId+"'");
 		return dao.findOne(hql.toString(), null);
 	}
 
     /**
-     * 是否是我的队友
+     * 是否是我的队友（入队审核通过的）
      * @return
      */
     public Long getIsMyTeammate(Long myUserId, Long otherUserId) {
@@ -129,7 +129,7 @@ public class UserDao extends CommonDao {
         parp.put("otherUserId", otherUserId);
         StringBuffer hql = new StringBuffer();
 
-        hql.append("SELECT m.tumTeamId FROM TeamUserMapping as m WHERE m.tumUserId = :otherUserId ");
+        hql.append("SELECT m.tumTeamId FROM TeamUserMapping as m WHERE m.tumUserId = :otherUserId and m.tumUserType !=2 ");
         hql.append("AND m.tumTeamId IN ( ");
         hql.append("select m1.tumTeamId from TeamUserMapping as m1 where m1.tumUserId = :myUserId ");
         hql.append(") ");
@@ -231,6 +231,10 @@ public class UserDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("UPDATE MatchInfo AS m set m.miCreateUserName = '"+ uiRealName+"' where m.miCreateUserId = "+uiId);
 		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchInfo AS m set m.miUpdateUserName = '"+ uiRealName+"' where m.miUpdateUserId = "+uiId);
+		dao.executeHql(hql.toString());
 	}
 
 
@@ -242,6 +246,14 @@ public class UserDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("UPDATE MatchScore AS s set s.msUserName = '"+uiRealName+"' where s.msUserId ="+uiId);
 		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchScore AS s set s.msCreateUserName = '"+uiRealName+"' where s.msCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchScore AS s set s.msUpdateUserName = '"+uiRealName+"' where s.msUpdateUserId ="+uiId);
+		dao.executeHql(hql.toString());
 	}
 
 	/**
@@ -251,6 +263,14 @@ public class UserDao extends CommonDao {
 	public void updateMatchUserGroupMapping(Long uiId, String uiRealName) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("UPDATE MatchUserGroupMapping AS g set g.mugmUserName = '"+uiRealName+"' where g.mugmUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchUserGroupMapping AS g set g.mugmCreateUserName = '"+uiRealName+"' where g.mugmCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchUserGroupMapping AS g set g.mugmUpdateUserName = '"+uiRealName+"' where g.mugmUpdateUserId ="+uiId);
 		dao.executeHql(hql.toString());
 	}
 
@@ -262,6 +282,68 @@ public class UserDao extends CommonDao {
 	public void updateTeamInfo(Long uiId, String uiRealName) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("UPDATE TeamInfo AS t set t.tiCreateUserName = '"+uiRealName+"' where t.tiCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE TeamInfo AS t set t.tiUpdateUserName = '"+uiRealName+"' where t.tiUpdateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新球队用户mapping
+	 * @return
+	 */
+	public void updateTeamUserMappingInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE TeamUserMapping AS t set t.tumCreateUserName = '"+uiRealName+"' where t.tumCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE TeamUserMapping AS t set t.tumUpdateUserName = '"+uiRealName+"' where t.tumUpdateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新球队用户积分表
+	 * @return
+	 */
+	public void updateTeamUserPointInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE TeamUserPoint AS t set t.tupCreateUserName = '"+uiRealName+"' where t.tupCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE TeamUserPoint AS t set t.tupUpdateUserName = '"+uiRealName+"' where t.tupUpdateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+
+
+	/**
+	 * 更新比赛积分计算配置表
+	 * @return
+	 */
+	public void updateMatchIntegralConfigInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE IntegralConfig AS t set t.icCreateUserName = '"+uiRealName+"' where t.icCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE IntegralConfig AS t set t.icUpdateUserName = '"+uiRealName+"' where t.icUpdateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新比赛分组表
+	 * @return
+	 */
+	public void updateMatchGroupInfo(Long uiId, String uiRealName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchGroup AS g set g.mgCreateUserName = '"+uiRealName+"' where g.mgCreateUserId ="+uiId);
+		dao.executeHql(hql.toString());
+
+		hql.delete(0,hql.length());
+		hql.append("UPDATE MatchGroup AS g set g.mgUpdateUserName = '"+uiRealName+"' where g.mgUpdateUserId ="+uiId);
 		dao.executeHql(hql.toString());
 	}
 }

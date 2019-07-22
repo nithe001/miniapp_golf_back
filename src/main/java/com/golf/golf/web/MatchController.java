@@ -373,7 +373,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛详情——获取全部已报名人员，按球队分组显示
+	 * 比赛详情——获取全部已报名人员，按球队分组显示（去掉除我之外的参赛队的队长）
 	 * @return
 	 */
 	@ResponseBody
@@ -1178,23 +1178,6 @@ public class MatchController {
 		}
 	}
 
-	/**
-	 * 比赛——邀请记分——用户扫码后的操作
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("scanScoreQRCode")
-	public JsonElement scanScoreQRCode(Long matchId, Long groupId, String openid) {
-		try {
-			String QRCodePath = matchService.invitationScore(matchId, groupId, openid);
-			return JsonWrapper.newDataInstance(QRCodePath);
-		} catch (Exception e) {
-			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
-			e.printStackTrace();
-			logger.error(errmsg ,e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
 
     /**
      * 比赛——退出观战——此功能不用，改为不退出

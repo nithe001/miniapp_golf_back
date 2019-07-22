@@ -12,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -35,12 +36,16 @@ public class MatchDoubleRodService implements IBaseService {
      * 	 * 4、一个队队内，及多个队之间没法进行比洞赛
 	 * @return
 	 */
-	public Map<String, Object> getDoubleRodScoreCardByGroupId(Long matchId, Long groupId) {
+	public Map<String, Object> getDoubleRodScoreCardByGroupId(Long matchId, Long groupId) throws UnsupportedEncodingException {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         result.put("matchInfo", matchInfo);
 		//固定的首列：本组用户
 		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
+		//解码用户昵称
+		matchService.decodeUserNickName(userList);
+		//设置用户名
+		matchService.setUserName(userList);
 		result.put("userList", userList);
 
 		//第一条记录：半场球洞

@@ -284,14 +284,14 @@ public class WechatController extends GenericController {
         try {
             accessToken = this.wxMpService.oauth2getAccessToken(code);
             String openId = accessToken.getOpenId();
-            WechatUserInfo wechatUser = userService.getWechatUserByOpenid(openId);
+            /*WechatUserInfo wechatUser = userService.getWechatUserByOpenid(openId);
             if(wechatUser == null){
                 WxMpUser wxMpUser = wechatService.getUserInfo(openId, "zh_CN");
                 // 如果已经关注了微信号的人，数据没有在本地数据库中，则重新关注
 //                wechatUser = userService.saveOrUpdateWechatUser(wxMpUser);
-            }
+            }*/
 
-            UserInfo user = null;
+           /* UserInfo user = null;
             if(wechatUser.getWuiId() != null){
                 user = userService.getUserById(wechatUser.getWuiUId());
             }
@@ -299,15 +299,15 @@ public class WechatController extends GenericController {
             UserModel userModel = new UserModel();
             userModel.setWechatUser(wechatUser);
             userModel.setUser(user);
-            UserUtil.login(userModel);
+            UserUtil.login(userModel);*/
 
         } catch (WxErrorException e) {
             this.logger.error("取用用户openid接口，设置用户cookie失败", e);
-        } catch (UnsupportedEncodingException e) {
+        }/* catch (UnsupportedEncodingException e) {
             this.logger.error("取用用户openid接口，设置用户cookie失败", e);
         } catch (IOException e) {
             this.logger.error("取用用户openid接口，设置用户cookie失败", e);
-        }
+        }*/
         return "redirect:" + url;
     }
 

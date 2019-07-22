@@ -48,16 +48,8 @@ public class UserService implements IBaseService {
 	 */
 	public Map<String,Object> getMyDetail(String openid) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
-		UserInfo userInfo = dao.getUserByOpenid(openid);
-		if(userInfo != null){
-			String nickName = userInfo.getUiNickName();
-			if(StringUtils.isNotEmpty(nickName)){
-				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
-				if(StringUtils.isNotEmpty(nickName)){
-					userInfo.setUiNickName(nickName);
-				}
-			}
-		}
+		//用户信息——昵称已解码
+		UserInfo userInfo = getUserInfoByOpenIdDecodeNickName(openid);
 		result.put("userInfo",userInfo);
 		//差点
 		Double chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
@@ -70,9 +62,9 @@ public class UserService implements IBaseService {
 	 * 获取其他用户的详细资料
 	 * @return
 	 */
-	public Map<String, Object> getOtherDetail(Long userId) {
+	public Map<String, Object> getOtherDetail(Long userId) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
-		UserInfo userInfo = dao.get(UserInfo.class, userId);
+		UserInfo userInfo = getUserInfoByIdDecodeNickName(userId);
 		result.put("userInfo",userInfo);
 		//差点
 		Double chaPoint = matchService.getUserChaPoint(userInfo.getUiId());
@@ -85,8 +77,10 @@ public class UserService implements IBaseService {
      * @param userId 用户id
      * @return
      */
-    public UserInfo getUserById(Long userId){
+    public UserInfo getUserInfoByIdDecodeNickName(Long userId) throws UnsupportedEncodingException {
 		UserInfo userInfo = dao.get(UserInfo.class, userId);
+		//解码用户昵称
+		decodeUserNickName(userInfo);
 		return userInfo;
     }
 
@@ -95,8 +89,11 @@ public class UserService implements IBaseService {
      * @param openid openid
      * @return
      */
-    public WechatUserInfo getWechatUserByOpenid(String openid){
-        return dao.getWechatUserByOpenid(openid);
+    public WechatUserInfo getWechatUserByOpenidDecodeNickName(String openid) throws UnsupportedEncodingException {
+		WechatUserInfo wechatUserInfo = dao.getWechatUserByOpenid(openid);
+		//解码用户昵称
+		decodeWechatUserNickName(wechatUserInfo);
+		return  wechatUserInfo;
     }
 
 
@@ -105,7 +102,7 @@ public class UserService implements IBaseService {
      * @param user
      */
     public void updateUser(UserInfo user, String openid) throws Exception {
-    	UserInfo db = getUserByOpenId(openid);
+    	UserInfo db = dao.getUserInfoByOpenid(openid);
     	db.setUiRealName(user.getUiRealName());
     	db.setUiAge(user.getUiAge());
     	db.setUiTelNo(user.getUiTelNo());
@@ -123,7 +120,12 @@ public class UserService implements IBaseService {
 		db.setUiUpdateUserId(db.getUiId());
 		db.setUiUpdateUserName(db.getUiRealName());
         dao.update(db);
+
         //更新其他表有用到真实姓名的地方
+		//比赛积分计算配置表
+		dao.updateMatchIntegralConfigInfo(db.getUiId(),user.getUiRealName());
+		//比赛分组表
+		dao.updateMatchGroupInfo(db.getUiId(),user.getUiRealName());
 		//比赛表
 		dao.updateMatchInfo(db.getUiId(),user.getUiRealName());
 		//比赛成绩表
@@ -132,26 +134,23 @@ public class UserService implements IBaseService {
 		dao.updateMatchUserGroupMapping(db.getUiId(),user.getUiRealName());
 		//球队表
 		dao.updateTeamInfo(db.getUiId(),user.getUiRealName());
+		//球队用户mapping表
+		dao.updateTeamUserMappingInfo(db.getUiId(),user.getUiRealName());
+		//球队用户积分表
+		dao.updateTeamUserPointInfo(db.getUiId(),user.getUiRealName());
     }
 
 	/**
 	 * 更新签名
 	 * @return
 	 */
-	public void updateUserSignature(String signature, String openid) {
-		UserInfo db = dao.getUserByOpenid(openid);
+	public void updateUserSignature(String signature, String openid){
+		UserInfo db = dao.getUserInfoByOpenid(openid);
 		db.setUiPersonalizedSignature(signature);
 		db.setUiUpdateTime(System.currentTimeMillis());
 		db.setUiUpdateUserId(db.getUiId());
 		db.setUiUpdateUserName(db.getUiRealName());
 		dao.update(db);
-	}
-
-	/**
-	 * 注册
-	 */
-	public void registerUser(UserInfo user) {
-		dao.save(user);
 	}
 
 	/**
@@ -162,29 +161,52 @@ public class UserService implements IBaseService {
 		dao.updateSubscribeTypeByOpenId(openId);
 	}
 
-	//通过openId获取用户微信信息 和注册信息
-	public UserModel getUserInfoByOpenId(String openId) {
-		UserModel userModel = null;
-		WechatUserInfo dbUser = dao.getUserInfoByOpenId(openId);
-		if(dbUser != null){
-			userModel = new UserModel();
-			userModel.setWechatUser(dbUser);
-			if(dbUser.getWuiId() != null){
-				UserInfo UserInfo = dao.get(UserInfo.class,dbUser.getWuiId());
-				userModel.setUser(UserInfo);
-			}
+	/**
+	 * 通过openId获取用户信息——昵称已解码
+	 * @return
+	 */
+	public UserInfo getUserInfoByOpenIdDecodeNickName(String openId) throws UnsupportedEncodingException {
+		UserInfo userInfo = dao.getUserInfoByOpenid(openId);
+		if(userInfo != null){
+			decodeUserNickName(userInfo);
 		}
-		userModel.setOpenId(openId);
-		return userModel;
+		return userInfo;
 	}
 
-	//通过openId获取用户信息
-	public UserInfo getUserByOpenId(String openId) {
-		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openId);
-		if(wechatUserInfo != null){
-			return dao.get(UserInfo.class,wechatUserInfo.getWuiUId());
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		String name = "8J+NlPCfjZ/wn42V";
+		String nickName = new String(Base64.decodeBase64(name.getBytes()),"utf-8");
+		System.out.println(nickName);
+	}
+
+	/**
+	 * 解码用户昵称
+	 */
+	public void decodeUserNickName(UserInfo userInfo) throws UnsupportedEncodingException {
+		if(userInfo != null){
+			String nickName = userInfo.getUiNickName();
+			if(StringUtils.isNotEmpty(nickName)){
+				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+				if(StringUtils.isNotEmpty(nickName)){
+					userInfo.setUiNickName(nickName);
+				}
+			}
 		}
-		return null;
+	}
+
+	/**
+	 * 解码用户昵称
+	 */
+	public void decodeWechatUserNickName(WechatUserInfo wechatUserInfo) throws UnsupportedEncodingException {
+		if(wechatUserInfo != null){
+			String nickName = wechatUserInfo.getWuiNickName();
+			if(StringUtils.isNotEmpty(nickName)){
+				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+				if(StringUtils.isNotEmpty(nickName)){
+					wechatUserInfo.setWuiNickName(nickName);
+				}
+			}
+		}
 	}
 
     /**
@@ -192,7 +214,7 @@ public class UserService implements IBaseService {
      * @return
      */
     public boolean userInfoIsOpen(Long userId, String openid) {
-        //是否是我的队友
+        //是否是我的队友（入队审核通过的）
         Long teamId = dao.getIsMyTeammate(getUserIdByOpenid(openid),userId);
         if(teamId != null){
             TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
@@ -208,7 +230,7 @@ public class UserService implements IBaseService {
 	 * @return
 	 */
 	public void saveOrUpdateWechatUserInfo(String openid, String userDataStr) throws IOException {
-		WechatUserInfo wechatUserInfo = dao.getUserInfoByOpenId(openid);
+		WechatUserInfo wechatUserInfo = dao.getWechatUserInfoByOpenId(openid);
 		if(wechatUserInfo != null){
 			updateWechatUserInfo(wechatUserInfo, openid, userDataStr);
 			if(wechatUserInfo.getWuiUId() != null){
@@ -319,7 +341,7 @@ public class UserService implements IBaseService {
 	 * @return
 	 */
 	public void updateUserLocation(String latitude, String longitude, String openid) {
-		UserInfo db = getUserByOpenId(openid);
+		UserInfo db = dao.getUserInfoByOpenid(openid);
 		if(db != null){
 			db.setUiLatitude(latitude);
 			db.setUiLongitude(longitude);
@@ -379,16 +401,22 @@ public class UserService implements IBaseService {
 		return result;
 	}
 
-	//通过openid获取userid
+	/**
+	 * 通过openid获取userid
+	 * @return
+	 */
 	public Long getUserIdByOpenid(String openid) {
-		UserInfo userInfo = dao.getUserByOpenid(openid);
+		UserInfo userInfo = dao.getUserInfoByOpenid(openid);
 		if(userInfo != null){
 			return userInfo.getUiId();
 		}
 		return null;
 	}
 
-	//获取用户在每个球洞的得分情况
+	/**
+	 * 获取用户在每个球洞的得分情况
+	 * @return
+	 */
 	private void createNewUserScoreList(Long userId, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
 		MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
 		//这场比赛我的代表球队
@@ -411,7 +439,9 @@ public class UserService implements IBaseService {
 	}
 
 
-	//格式化用户半场得分
+	/**
+	 * 格式化用户半场得分
+	 */
 	private void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
 		Integer totalRod = 0;
 		//杆差
@@ -473,10 +503,10 @@ public class UserService implements IBaseService {
 	 * 详细资料 只有是队友且该球队要求 详细资料时才可见
 	 * @return
 	 */
-	public Map<String, Object> getUserDetaliInfoById(String teamIdStr, String matchIdStr, Long userId, String openid) {
+	public Map<String, Object> getUserDetaliInfoById(String teamIdStr, String matchIdStr, Long userId, String openid) throws UnsupportedEncodingException {
 		Map<String, Object> result = new HashMap<>();
 		//被查看用户资料
-		UserInfo otherUserInfo = getUserById(userId);
+		UserInfo otherUserInfo = getUserInfoByIdDecodeNickName(userId);
 		result.put("userInfo",otherUserInfo);
 		//信息是否公开
 		boolean isOpen = userInfoIsOpen(userId, openid);
@@ -555,4 +585,32 @@ public class UserService implements IBaseService {
 		return dao.getMatchRuleList();
 	}
 
+	/**
+	 * 我的微信信息和注册信息
+	 * @return
+	 */
+	public UserModel getUserModelByOpenid(String openid) throws UnsupportedEncodingException {
+		UserModel userModel = new UserModel();
+		UserInfo userInfo = getUserInfoByOpenIdDecodeNickName(openid);
+		WechatUserInfo wechatUserInfo = getWechatUserByOpenidDecodeNickName(openid);
+		userModel.setUser(userInfo);
+		userModel.setWechatUser(wechatUserInfo);
+		return userModel;
+	}
+
+	/**
+	 * 通过openid获取用户注册信息
+	 * @return
+	 */
+	public UserInfo getUserInfoByOpenId(String openid) {
+		return dao.getUserInfoByOpenid(openid);
+	}
+
+	/**
+	 * 通过openid获取用户微信信息
+	 * @return
+	 */
+	public WechatUserInfo getWechatUserByOpenid(String openid) {
+		return dao.getWechatUserByOpenid(openid);
+	}
 }
