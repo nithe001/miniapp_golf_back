@@ -13,6 +13,8 @@ public class MatchScoreUserMapping implements java.io.Serializable {
 	private Long msumGroupId;
 	private Long msumMatchUserId;
 	private Long msumScoreUserId;
+	private Integer msumType;
+	private String msumQrcodePath;
 	private Long msumCreateTime;
 
 	// Constructors
@@ -22,12 +24,14 @@ public class MatchScoreUserMapping implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public MatchScoreUserMapping(Long msumMatchId, Long msumGroupId,
-								 Long msumMatchUserId, Long msumScoreUserId, Long msumCreateTime) {
+	public MatchScoreUserMapping(Long msumMatchId, Long msumGroupId, Long msumMatchUserId, Long msumScoreUserId,
+								 Integer msumType, String msumQrcodePath, Long msumCreateTime) {
 		this.msumMatchId = msumMatchId;
 		this.msumGroupId = msumGroupId;
 		this.msumMatchUserId = msumMatchUserId;
 		this.msumScoreUserId = msumScoreUserId;
+		this.msumType = msumType;
+		this.msumQrcodePath = msumQrcodePath;
 		this.msumCreateTime = msumCreateTime;
 	}
 
@@ -77,6 +81,24 @@ public class MatchScoreUserMapping implements java.io.Serializable {
 
 	public void setMsumScoreUserId(Long msumScoreUserId) {
 		this.msumScoreUserId = msumScoreUserId;
+	}
+
+	@Column(name = "msum_type")
+	public Integer getMsumType() {
+		return msumType;
+	}
+
+	public void setMsumType(Integer msumType) {
+		this.msumType = msumType;
+	}
+
+	@Column(name = "msum_qrcode_path",length = 128)
+	public String getMsumQrcodePath() {
+		return msumQrcodePath;
+	}
+
+	public void setMsumQrcodePath(String msumQrcodePath) {
+		this.msumQrcodePath = msumQrcodePath;
 	}
 
 	@Column(name = "msum_create_time")

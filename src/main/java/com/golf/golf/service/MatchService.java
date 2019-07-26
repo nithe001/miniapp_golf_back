@@ -15,6 +15,7 @@ import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.org.apache.xml.internal.security.keys.content.MgmtData;
 import me.chanjar.weixin.common.error.WxErrorException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -2621,34 +2622,42 @@ public class MatchService implements IBaseService {
 	 * https://developers.weixin.qq.com/miniprogram/dev/api/getWXACodeUnlimit.html
 	 * 必须是已经发布的小程序存在的页面（否则报错），例如 pages/index/index,
 	 * 根路径前不要填加 /,不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面
+	 *
+	 * @param type 0:邀请记分 1：邀请加入
 	 * @return
 	 */
-	public String invitationScore(Long matchId, Long groupId, String openid) throws WxErrorException, IOException {
+	public Map<String,Object> createQRCode(Long matchId, Long groupId, String openid, Integer type) throws WxErrorException, IOException {
+		Map<String,Object> result = new HashMap<>();
 		String path = null;
 		Long myUserId = userService.getUserIdByOpenid(openid);
-		//查询是否有我生成的邀请记分二维码
-		MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, groupId, myUserId);
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		result.put("matchInfo",matchInfo);
+		//查询是否有我生成的二维码
+		MatchScoreUserMapping matchScoreUserMapping = matchDao.getHasMyQRCode(matchId, groupId, myUserId, type);
 		if(matchScoreUserMapping != null){
-			path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + matchId+"_"+groupId+"_"+myUserId+".png";
-			return path;
+//			path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + matchId+"_"+groupId+"_"+myUserId+"_"+type+".png";
+			path = PropertyConst.DOMAIN + matchScoreUserMapping.getMsumQrcodePath();
+			result.put("qrCodePath",path);
+			return result;
 		}
+
 		//没有生成过
-		String fileName = matchId+"_"+groupId+"_"+myUserId+".png";//文件名称 比赛id_本组id_邀请人id
+		String fileName = matchId+"_"+groupId+"_"+myUserId+"_"+type+".png";//文件名称 比赛id_本组id_邀请人id
 		String QRCodePath = WebUtil.getPath()+PropertyConst.QRCODE_PATH;
 		File file = new File(QRCodePath);
 		if(!file.exists()){
 			file.mkdirs();
 		}
-		String parp = "?matchId="+matchId+"&groupId="+groupId;//参数
+		String parp = "?matchId="+matchId+"&groupId="+groupId+"&type="+type;//参数
 //		String scene = gson.toJson(parp);
 //		scene = URLEncoder.encode(scene,"utf-8");
 		String page ="pages/index/index";//要跳转的页面，先跳转到index，再通过首页判断进行路由，根路径不能加/  不填默认跳转主页
 //		File file_ = wxMaService.getQrcodeService().createWxaCodeUnlimit(parp,page); //此方法好像是有包冲突，会报错
 //		System.out.println(file_);
-		byte[] result = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(parp,page,300,false,null,false);
+		byte[] qrcodeResult = wxMaService.getQrcodeService().createWxaCodeUnlimitBytes(parp,page,300,false,null,false);
 		InputStream inputStream = null;
 		OutputStream outputStream = null;
-		inputStream = new ByteArrayInputStream(result);
+		inputStream = new ByteArrayInputStream(qrcodeResult);
 		outputStream = new FileOutputStream(QRCodePath+fileName);
 		int len = 0;
 		byte[] buf = new byte[1024];
@@ -2662,10 +2671,13 @@ public class MatchService implements IBaseService {
 		matchScoreUserMapping.setMsumMatchId(matchId);
 		matchScoreUserMapping.setMsumGroupId(groupId);
 		matchScoreUserMapping.setMsumMatchUserId(myUserId);
+		matchScoreUserMapping.setMsumType(type);
+		matchScoreUserMapping.setMsumQrcodePath(PropertyConst.QRCODE_PATH + fileName);
 		matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
 		matchDao.save(matchScoreUserMapping);
 		path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
-		return path;
+		result.put("qrCodePath",path);
+		return result;
 	}
 
 
@@ -3059,5 +3071,29 @@ public class MatchService implements IBaseService {
 	 */
 	public List<Map<String, Object>> getAllMatchCaptainList(Long matchId) {
 		return matchDao.getAllMatchCaptainList(matchId);
+	}
+
+	/**
+	 * 比赛——扫码加入其他球友的单练
+	 * @param matchId 比赛id
+	 * @param groupId 本组id
+	 * @param openid 我的openid
+	 * @return
+	 */
+	public void joinOtherPractice(Long matchId, Long groupId, String openid) throws Exception {
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
+		MatchGroup group = matchDao.get(MatchGroup.class,groupId);
+		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+		matchUserGroupMapping.setMugmMatchId(matchId);
+		matchUserGroupMapping.setMugmUserType(1);
+		matchUserGroupMapping.setMugmGroupId(groupId);
+		matchUserGroupMapping.setMugmGroupName(group.getMgGroupName());
+		matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmUserName(userInfo.getUserName());
+		matchUserGroupMapping.setMugmIsDel(0);
+		matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
+		matchUserGroupMapping.setMugmCreateUserName(userInfo.getUserName());
+		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+		matchDao.save(matchUserGroupMapping);
 	}
 }

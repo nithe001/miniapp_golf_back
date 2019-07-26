@@ -252,9 +252,13 @@ public class MatchController {
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
 			//我是否是本组参赛人员(显示邀请记分按钮)
             Long meIsInGroup = matchService.getIsJoinMatchGroup(matchId,groupId,openid);
+			//我是否是赛长
+			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
+
             Map<String,Object> map = new HashMap<>();
             map.put("matchInfo",matchInfo);
             map.put("meIsInGroup",meIsInGroup);
+			map.put("meIsCap",meIsCap);
 			return JsonWrapper.newDataInstance(map);
 		} catch (Exception e) {
 			String errmsg = "前台-获取比赛详情时出错。";
@@ -1158,20 +1162,47 @@ public class MatchController {
 	}
 
 	/**
-	 * 比赛——邀请记分——邀请记分初始化二维码
+	 * 比赛——生成二维码：邀请记分、邀请加入
 	 * @param matchId 比赛id
 	 * @param groupId 本组id
-	 * @param openid 邀请人openid
+	 * @param openid 我的openid
+	 * @param type 0:邀请记分 1：邀请加入
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("createScoreQRCode")
-	public JsonElement createScoreQRCode(Long matchId, Long groupId, String openid) {
+	@RequestMapping("createQRCode")
+	public JsonElement createQRCode(Long matchId, Long groupId, String openid, Integer type) {
 		try {
-			String QRCodePath = matchService.invitationScore(matchId, groupId, openid);
-			return JsonWrapper.newDataInstance(QRCodePath);
+			Map<String,Object> result = matchService.createQRCode(matchId, groupId, openid, type);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
-			String errmsg = "比赛——邀请记分初始化二维码时时出错。matchId="+matchId;
+			String errmsg = "";
+			if(type == 0){
+				errmsg = "比赛——生成'邀请记分'二维码时出错。matchId="+matchId+" groupId="+groupId+" openid="+openid;
+			}else{
+				errmsg = "比赛——生成'邀请加入'二维码时出错。matchId="+matchId+" groupId="+groupId+" openid="+openid;
+			}
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	/**
+	 * 比赛——扫码加入其他球友的单练
+	 * @param matchId 比赛id
+	 * @param groupId 本组id
+	 * @param openid 我的openid
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("joinOtherPractice")
+	public JsonElement joinOtherPractice(Long matchId, Long groupId, String openid) {
+		try {
+			matchService.joinOtherPractice(matchId, groupId, openid);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "比赛——扫码加入其他球友的单练时出错。matchId="+matchId+" groupId="+groupId+" openid="+openid;
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);

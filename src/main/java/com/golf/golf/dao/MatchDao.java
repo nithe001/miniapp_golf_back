@@ -1435,7 +1435,23 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 查询该用户是否已经被邀请记分
+	 * 查询是否有我生成的二维码
+	 * @return
+	 */
+	public MatchScoreUserMapping getHasMyQRCode(Long matchId, Long groupId, Long userId, Integer type) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchScoreUserMapping as t WHERE t.msumMatchId = "+matchId+" and t.msumGroupId = "+groupId);
+		hql.append(" and t.msumMatchUserId = "+userId);
+		hql.append(" and t.msumType = "+type);
+		List<MatchScoreUserMapping> list = dao.createQuery(hql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 查询我是否已经被邀请记分
 	 * @return
 	 */
 	public MatchScoreUserMapping getMatchScoreUserMapping(Long matchId, Long groupId, Long userId) {
