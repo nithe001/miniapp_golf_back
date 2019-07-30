@@ -2012,17 +2012,16 @@ public class MatchService implements IBaseService {
 		list.add(thBean2);
 
 
-		//比赛的所有用户(首列显示)
+		//比赛的所有用户和其总杆数，为0的排后面(首列显示)
 		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,null);
 		//用户昵称解码
 		decodeUserNickName(userList);
 		//用户名
 		setUserName(userList);
-		result.put("userList", userList);
-
 		//本组用户每个洞得分情况
 		createNewUserScoreList(userList,list,matchInfo);
 
+		result.put("userList", userList);
 		result.put("list", list);
 		return result;
 	}
@@ -2236,7 +2235,6 @@ public class MatchService implements IBaseService {
 				List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,1,teamId);
 				createNewUserScore(userScoreList, uScoreAfterList);
 				bean.setUserScoreTotalList(userScoreList);
-
 				list.add(bean);
 			}
 		}

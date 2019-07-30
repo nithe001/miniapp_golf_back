@@ -649,7 +649,7 @@ public class MatchDao extends CommonDao {
 		sql.append(" and m.mugm_is_del != 1 ");
 		sql.append(" GROUP BY m.mugm_user_id " );
 		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-		sql.append("ORDER BY score.sumRodNum ");
+		sql.append("ORDER BY score.sumRodNum !=0 asc,score.sumRodNum ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
