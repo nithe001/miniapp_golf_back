@@ -70,7 +70,7 @@ public class AdminTeamDao extends CommonDao {
 		hql.append("AND m.tumTeamId = "+teamId);
 		hql.append(" and m.tumUserId = u.uiId ");
 		hql.append("ORDER BY m.tumUserType ");
-		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 12,Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String, Object>> list = dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
 

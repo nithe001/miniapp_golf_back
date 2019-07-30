@@ -43,7 +43,7 @@
                 <h4 class="modal-title" id="myFileModalLabel">提示</h4>
             </div>
             <div class="modal-body">
-                <input type="file" id="multiFileUpload" name="file" cssClass="form-control"/>
+                <input type="file" id="multiFileUpload" name="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>

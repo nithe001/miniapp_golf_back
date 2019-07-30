@@ -60,13 +60,15 @@ public class AdminTeamService implements IBaseService {
 					List<Map<String,Object>> captainList = teamDao.getCaptainByTeamId(teamId);
 					//用户昵称解码
 					matchService.decodeUserNickName(captainList);
-					Map<String,Object> cap = captainList.get(0);
-					String realName = matchService.getName(cap,"uiRealName");
-					String nickName = matchService.getName(cap,"uiNickName");
-					if(StringUtils.isNotEmpty(realName)){
-						result.put("captain", realName);
-					}else{
-						result.put("captain", nickName);
+					if(captainList != null && captainList.size() >0){
+						Map<String,Object> cap = captainList.get(0);
+						String realName = matchService.getName(cap,"uiRealName");
+						String nickName = matchService.getName(cap,"uiNickName");
+						if(StringUtils.isNotEmpty(realName)){
+							result.put("captain", realName);
+						}else{
+							result.put("captain", nickName);
+						}
 					}
 				}
 				Long createTime = matchService.getLongValue(result, "createTime");

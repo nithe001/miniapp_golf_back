@@ -47,6 +47,7 @@ public class TimeUtil {
 	public static String NOW_DATE_CN = "yyyy年MM月dd日";
 	/** 日期格式 yyyy-MM-dd HH:mm:ss 2013-06-16 09:54:02 */
 	public static String FORMAT_DATETIME_HH_MM = "yyyy-MM-dd HH:mm";
+	public static String NOW_DATE_CN_NO_DAY = "yyyy年MM月dd";
 
 	/**
 	 * 得到当前时间

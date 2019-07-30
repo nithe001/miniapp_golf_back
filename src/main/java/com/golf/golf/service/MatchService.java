@@ -147,18 +147,10 @@ public class MatchService implements IBaseService {
 				matchInfo.setMiMatchTime(getName(result, "mi_match_time"));
 				matchInfo.setMiMatchFormat1(getIntegerValue(result, "mi_match_format_1"));
 				matchInfo.setMiMatchFormat2(getIntegerValue(result, "mi_match_format_2"));
-				Integer state = getIntegerValue(result, "mi_is_end");
-				//0：报名中  1进行中  2结束
-				if (state == null || state == 0) {
-					matchInfo.setStateStr("报名中");
-				} else if (state == 1) {
-					matchInfo.setStateStr("进行中");
-				} else {
-					matchInfo.setStateStr("已结束");
-				}
 				matchInfo.setMiHit(getIntegerValue(result, "userWatchCount"));
 				matchInfo.setUserCount(getIntegerValue(result, "userCount"));
 				matchInfo.setMiIsEnd(getIntegerValue(result, "mi_is_end"));
+				matchInfo.setStateStr(matchInfo.getStateStr());
 				//是否是赛长（显示创建比赛列表时用）
 				matchInfoList.add(matchInfo);
 			}

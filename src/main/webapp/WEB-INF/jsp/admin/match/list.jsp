@@ -111,7 +111,7 @@
                                             <td>${matchInfo.miMatchTime}</td>
                                             <td>${matchInfo.createTimeStr}</td>
                                             <td>${matchInfo.miCreateUserName}</td>
-                                            <td>${matchInfo.state}</td>
+                                            <td>${matchInfo.stateStr}</td>
                                             <td><c:if test="${matchInfo.miIsValid == 0}">无效</c:if>
                                                 <c:if test="${matchInfo.miIsValid == 1}">有效</c:if></td>
                                             <td>

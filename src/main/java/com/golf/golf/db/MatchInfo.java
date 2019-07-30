@@ -371,8 +371,16 @@ public class MatchInfo implements java.io.Serializable {
 	private Long isCaptain;
 	@Transient
 	public String getStateStr() {
+		if(this.getMiIsEnd() == 0){
+			stateStr = "报名中";
+		}else if(this.getMiIsEnd() == 1){
+			stateStr = "进行中";
+		}else if(this.getMiIsEnd() == 2){
+			stateStr = "已结束";
+		}
 		return stateStr;
 	}
+
 	public void setStateStr(String stateStr) {
 		this.stateStr = stateStr;
 	}
@@ -391,7 +399,6 @@ public class MatchInfo implements java.io.Serializable {
 	private String watchTypeStr;
 	private String joinTypeStr;
 	private String matchTypeStr;
-	private String state;
 	@Transient
 	public String getWatchTypeStr() {
 		if(this.getMiType() == 0 || this.getMiMatchOpenType() == null){
@@ -453,21 +460,6 @@ public class MatchInfo implements java.io.Serializable {
 		this.matchTypeStr = matchTypeStr;
 	}
 
-	@Transient
-	public String getState() {
-		if(this.getMiIsEnd() == 0){
-			state = "报名中";
-		}else if(this.getMiIsEnd() == 1){
-			state = "进行中";
-		}else if(this.getMiIsEnd() == 3){
-			state = "已结束";
-		}
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
-	}
 
 
 	//创建比赛——滑动删除时需要的

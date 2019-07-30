@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 导入成绩
@@ -49,16 +50,21 @@ public class AdminImportController {
 	@ResponseBody
 	@RequestMapping(value = {"importScore"})
 	public JsonElement importScore(MultipartFile file) throws IOException {
-		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
-		int n = xwb.getNumberOfSheets();
-		//导入球队详情
-		boolean result = adminImportService.importTeamInfo(xwb);
-		if(result){
+		try {
+			XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
+			int n = xwb.getNumberOfSheets();
+			//导入球队详情
+			List<String> joinTeamIdList = adminImportService.importTeamInfo(xwb);
+			//导入球队球友mapping
+			adminImportService.importTeamUserMapping(xwb);
 			//导入比赛详情
-			result = adminImportService.importMatchInfo(xwb);
-			if(result){
-				//导入成绩
-			}
+			Long matchId = adminImportService.importMatchInfo(xwb,joinTeamIdList);
+			//导入比赛球友mapping
+			adminImportService.importMatchUserMapping(xwb,matchId);
+			//导入成绩
+//		adminImportService.importMatchInfo(xwb);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
