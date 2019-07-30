@@ -15,7 +15,6 @@ import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.org.apache.xml.internal.security.keys.content.MgmtData;
 import me.chanjar.weixin.common.error.WxErrorException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -398,8 +397,13 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public List<Map<String, Object>> getMoreWatchUserList(Long matchId) {
-		return matchDao.getWatchUserListByMatchId(matchId);
+	public List<Map<String, Object>> getMoreWatchUserList(Long matchId) throws UnsupportedEncodingException {
+		List<Map<String, Object>> allWatchUserList = matchDao.getWatchUserListByMatchId(matchId);
+		//用户昵称解码
+		decodeUserNickName(allWatchUserList);
+		//取用户名
+		setUserName(allWatchUserList);
+		return allWatchUserList;
 	}
 
 	/**
@@ -3083,8 +3087,13 @@ public class MatchService implements IBaseService {
 	 * 比赛——报名页面——获取更多赛长
 	 * @return
 	 */
-	public List<Map<String, Object>> getAllMatchCaptainList(Long matchId) {
-		return matchDao.getAllMatchCaptainList(matchId);
+	public List<Map<String, Object>> getAllMatchCaptainList(Long matchId) throws UnsupportedEncodingException {
+		List<Map<String, Object>> captainList = matchDao.getAllMatchCaptainList(matchId);
+		//用户昵称解码
+		decodeUserNickName(captainList);
+		//取用户名
+		setUserName(captainList);
+		return captainList;
 	}
 
 	/**

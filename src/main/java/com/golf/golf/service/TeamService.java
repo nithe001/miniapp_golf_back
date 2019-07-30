@@ -167,6 +167,8 @@ public class TeamService implements IBaseService {
 		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
 		//解码用户昵称
 		matchService.decodeUserNickName(userList);
+		//取用户名
+		matchService.setUserName(userList);
 		result.put("userList",userList);
 		Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userInfo.getUiId());
 		result.put("isCaptain",isCaptain);
@@ -347,6 +349,8 @@ public class TeamService implements IBaseService {
 		List<Map<String, Object>> userList = teamDao.getUserListByTeamId(teamId, 2);
 		//解码用户昵称
 		matchService.decodeUserNickName(userList);
+		//取用户名
+		matchService.setUserName(userList);
 		return userList;
 	}
 
