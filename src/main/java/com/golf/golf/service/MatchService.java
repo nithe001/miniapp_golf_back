@@ -294,12 +294,14 @@ public class MatchService implements IBaseService {
 	 */
 	public boolean getIsCaptain(Long matchId, String openid){
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
-		Long captainCount = matchDao.getIsMatchCaptain(matchId, userInfo.getUiId());
-		Boolean isCaptain = false;
-		if (captainCount > 0) {
-			isCaptain = true;
+		if(userInfo == null){
+			return false;
 		}
-		return isCaptain;
+		Long captainCount = matchDao.getIsMatchCaptain(matchId, userInfo.getUiId());
+		if (captainCount > 0) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -896,6 +898,7 @@ public class MatchService implements IBaseService {
 			maxOtherUserId += i_;
 			otherPeople.setMugmUserId(maxOtherUserId);
 			otherPeople.setMugmUserType(1);
+			otherPeople.setMugmIsLinshi(1);
 			otherPeople.setMugmIsDel(0);
 			otherPeople.setMugmGroupId(matchGroup.getMgId());
 			otherPeople.setMugmGroupName(matchGroup.getMgGroupName());
@@ -2632,6 +2635,16 @@ public class MatchService implements IBaseService {
 		Long myUserId = userService.getUserIdByOpenid(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
 		result.put("matchInfo",matchInfo);
+		if(type == 1 && matchInfo.getMiType() == 0){
+			//单练——最多4个人
+			Long userCount = matchDao.getGroupUserCountById(matchId,groupId);
+			if(userCount == 4){
+				result.put("userCount",userCount);
+				return result;
+			}
+		}
+
+
 		//查询是否有我生成的二维码
 		MatchScoreUserMapping matchScoreUserMapping = matchDao.getHasMyQRCode(matchId, groupId, myUserId, type);
 		if(matchScoreUserMapping != null){
@@ -2777,10 +2790,10 @@ public class MatchService implements IBaseService {
 	 */
 	public void delMatchGroupByGroupId(Long groupId) {
 		MatchGroup group = matchDao.get(MatchGroup.class, groupId);
-		//更新其他分组
-		matchDao.updateGroupNames(group.getMgMatchId(),group.getMgGroupName());
 		//删除当前分组
 		matchDao.del(group);
+		//更新其他分组
+		matchDao.updateGroupNames(group.getMgMatchId(),group.getMgGroupName());
 	}
 
 	/**
@@ -2976,7 +2989,8 @@ public class MatchService implements IBaseService {
     //我是否是本组参赛人员(显示邀请记分按钮)
     public Long getIsJoinMatchGroup(Long matchId, Long groupId, String openid) {
 	    Long userId = userService.getUserIdByOpenid(openid);
-	    return matchDao.getIsJoinMatchGroup(matchId,groupId,userId);
+	    MatchInfo matchInfo = matchDao.get(MatchInfo.class,matchId);
+		return matchDao.getIsJoinMatchGroup(matchId,groupId,userId);
     }
 
 	/**
@@ -3083,17 +3097,26 @@ public class MatchService implements IBaseService {
 	public void joinOtherPractice(Long matchId, Long groupId, String openid) throws Exception {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		MatchGroup group = matchDao.get(MatchGroup.class,groupId);
-		MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
-		matchUserGroupMapping.setMugmMatchId(matchId);
-		matchUserGroupMapping.setMugmUserType(1);
-		matchUserGroupMapping.setMugmGroupId(groupId);
-		matchUserGroupMapping.setMugmGroupName(group.getMgGroupName());
-		matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
-		matchUserGroupMapping.setMugmUserName(userInfo.getUserName());
-		matchUserGroupMapping.setMugmIsDel(0);
-		matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
-		matchUserGroupMapping.setMugmCreateUserName(userInfo.getUserName());
-		matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
-		matchDao.save(matchUserGroupMapping);
+		//我是否加入了
+		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,groupId,userInfo.getUiId());
+		if(matchUserGroupMapping == null){
+			matchUserGroupMapping = new MatchUserGroupMapping();
+			matchUserGroupMapping.setMugmMatchId(matchId);
+			matchUserGroupMapping.setMugmUserType(1);
+			matchUserGroupMapping.setMugmGroupId(groupId);
+			matchUserGroupMapping.setMugmGroupName(group.getMgGroupName());
+			matchUserGroupMapping.setMugmUserId(userInfo.getUiId());
+			matchUserGroupMapping.setMugmUserName(userInfo.getUserName());
+			matchUserGroupMapping.setMugmIsDel(0);
+			matchUserGroupMapping.setMugmCreateUserId(userInfo.getUiId());
+			matchUserGroupMapping.setMugmCreateUserName(userInfo.getUserName());
+			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+			matchDao.save(matchUserGroupMapping);
+			//删除一个临时球友 获取临时球友，按照id升序排列，取第一个临时球友
+			MatchUserGroupMapping linshi = matchDao.getLinshiUserByMatchId(matchId);
+			if(linshi != null){
+				matchDao.del(linshi);
+			}
+		}
 	}
 }

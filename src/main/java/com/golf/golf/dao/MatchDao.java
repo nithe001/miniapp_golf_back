@@ -2079,4 +2079,21 @@ public class MatchDao extends CommonDao {
 		sql.append(" AND t.tumUserType = 0 ");
 		return dao.createQuery(sql.toString(),parp);
 	}
+
+	/**
+	 * 获取临时球友，按照id升序排列，取第一个临时球友
+	 * @return
+	 */
+	public MatchUserGroupMapping getLinshiUserByMatchId(Long matchId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append(" from MatchUserGroupMapping as t ");
+		sql.append(" WHERE t.mugmMatchId ="+matchId);
+		sql.append(" AND t.mugmIsLinshi = 1 ");
+		sql.append(" order by t.mugmUserId desc ");
+		List<MatchUserGroupMapping> list = dao.createQuery(sql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
 }

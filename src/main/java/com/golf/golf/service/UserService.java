@@ -259,7 +259,6 @@ public class UserService implements IBaseService {
 			}
 		}
 		wechatUserInfo.setWuiNickName(nickName);
-		wechatUserInfo = new WechatUserInfo();
 		wechatUserInfo.setWuiOpenid(openid);
 		String gender = jsonObject.get("gender").toString();
 		if("1".equals(gender)){
