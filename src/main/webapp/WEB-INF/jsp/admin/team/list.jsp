@@ -56,7 +56,6 @@
                                     <thead>
                                     <tr>
                                         <th>序号</th>
-                                        <th>球队logo</th>
                                         <th>球队名称</th>
                                         <th>队长</th>
                                         <th>成员数</th>
@@ -72,7 +71,6 @@
                                     <c:forEach items="${pageInfo.items}" var="teamInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
-                                            <td><img src="${teamInfo.logo}" style="width:65px;height:65px;border-radius: 50%;"></td>
                                             <td>${teamInfo.tiName}</td>
                                             <td>${teamInfo.captain}</td>
                                             <td>${teamInfo.userCount}</td>
