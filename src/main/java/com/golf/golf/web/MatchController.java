@@ -874,6 +874,23 @@ public class MatchController {
 		}
 	}
 
+	/**
+	 * 开始比赛 前检查分组是否合理
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("checkBeforeUpdateMatchState")
+	public JsonElement checkBeforeUpdateMatchState(Long matchId, Integer state) {
+		try {
+			String msg = matchService.checkBeforeUpdateMatchState(matchId, state);
+			return JsonWrapper.newDataInstance(msg);
+		} catch (Exception e) {
+			String errmsg = "前台-比赛—开始比赛前检查分组是否合理时出错。";
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
 
 	/**
 	 * 开始比赛 / 结束比赛 ——保存或更新比赛状态
@@ -1140,25 +1157,6 @@ public class MatchController {
 	}
 
 
-
-	/**
-	 * 对方扫码进入记分页面
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("saveUserScoreMapping")
-	public JsonElement saveUserScoreMapping(Long matchId, Long groupId, Long scorerId) {
-		try {
-			matchService.saveUserScoreMapping(matchId, groupId, scorerId);
-			return JsonWrapper.newSuccessInstance();
-		} catch (Exception e) {
-			String errmsg = "前台-根据邀请用户记分时出错。记分人id="+scorerId;
-			e.printStackTrace();
-			logger.error(errmsg ,e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
-
 	/**
 	 * 比赛——生成二维码：邀请记分、邀请加入
 	 * @param matchId 比赛id
@@ -1206,6 +1204,29 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
+
+	/**
+	 * 比赛——更新我的扫码记录
+	 * @param matchId 比赛id
+	 * @param groupId 本组id
+	 * @param openid 我的openid
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateMyScanQRCode")
+	public JsonElement updateMyScanQRCode(Long matchId, Long groupId, Integer type, String openid) {
+		try {
+			matchService.updateMyScanQRCode(matchId, groupId, openid,type);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			String errmsg = "比赛——更新我的扫码记录时出错。matchId="+matchId+" groupId="+groupId+" openid="+openid+" type="+type;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+
 
 
     /**

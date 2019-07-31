@@ -521,19 +521,6 @@ public class MatchService implements IBaseService {
 
 
 
-	/**
-	 * 保存一条用户记分对应关系
-	 *
-	 * @return
-	 */
-	public void saveUserScoreMapping(Long matchId, Long groupId, Long scorerId) {
-		MatchScoreUserMapping mapping = new MatchScoreUserMapping();
-		mapping.setMsumMatchId(matchId);
-		mapping.setMsumGroupId(groupId);
-		mapping.setMsumScoreUserId(scorerId);
-		mapping.setMsumCreateTime(System.currentTimeMillis());
-		matchDao.save(mapping);
-	}
 
 	/**
 	 * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
@@ -1495,7 +1482,98 @@ public class MatchService implements IBaseService {
 	}
 
 	/**
-	 * 开始比赛 / 结束比赛——保存或更新比赛状态
+	 * 开始比赛 前检查分组是否合理
+	 * state   0：报名中  1进行中  2结束
+	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
+	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+	 * 3、单人比杆赛分组不用有任何限制。
+	 * 4、一个队队内，及多个队之间没法进行比洞赛
+	 * 比洞赛的输赢组已经在获取比洞赛记分卡的时候进行了更新
+	 * @return
+	 */
+	public String checkBeforeUpdateMatchState(Long matchId, Integer state) {
+		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		String joinTeamIds = matchInfo.getMiJoinTeamIds();
+		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
+
+		//如果是队内或者队际赛，获取每个组的队伍个数情况
+		List<Map<String,Object>> teamCountList = null;
+		if(joinTeamIdList != null && joinTeamIdList.size()>0){
+			teamCountList = matchDao.getTeamCountByMatchId(matchId,null);
+			if(teamCountList == null || teamCountList.size() == 0){
+				return "没有参赛队无法开始比赛。";
+			}
+		}
+		//获取每个组的每队人数情况
+		List<Map<String,Object>> userCountListByTeam = matchDao.getUserCountByMatchId(matchId,null);
+		if(userCountListByTeam == null || userCountListByTeam.size() ==0){
+			return "没有参赛队员无法开始比赛。";
+		}
+
+		//2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
+		// 3、单人比杆赛分组不用有任何限制。
+		if(joinTeamIdList != null){
+			//单人比洞
+			if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 0){
+				//每组只能两个人
+				//获取每组人数
+				List<Map<String,Object>> userCountByEveGroup = matchDao.getUserCountWithEveGroupByMatchId(matchId);
+				for(Map<String,Object> userCount:userCountByEveGroup){
+					Long groupId = getLongValue(userCount,"groupId");
+					String groupName = getName(userCount,"groupName");
+					Integer countEveGroup = getIntegerValue(userCount,"count");
+					if(countEveGroup != 2){
+						return "第"+groupName+"组 参赛人数不符合比赛要求，无法开始比赛。";
+					}
+					if(joinTeamIdList.size()>1){
+						//队际赛，一组的两个人要是两个球队的 就判断每一组的球队个数，如果为1 说明这俩人是一队，不能开始比赛
+						//获取本组的球队个数
+						List<Map<String,Object>> teamCountByGroup = matchDao.getTeamCountByMatchId(matchId,groupId);
+						if(getIntegerValue(teamCountByGroup.get(0),"count") !=2){
+							return "第"+groupName+"组 球队数不符合比赛要求，无法开始比赛。";
+						}
+					}
+					//该组重复的用户个数
+					List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
+					if(count != null &&  count.size() > 0){
+						return "第"+groupName+"组 有重复球友，无法开始比赛。";
+					}
+				}
+			}else if(matchInfo.getMiMatchFormat2() == 1){
+				//1、如果是多队双人比赛，不管比杆比洞，每组最多两个队，每个队不超过两人，也可以是一人。生成记分卡时，只有一个队的两个人才能放入一行。
+				if(joinTeamIdList.size() >= 2){
+					//所有组球队个数
+					for(Map<String,Object> teamCount :teamCountList){
+						Long groupId = getLongValue(teamCount,"groupId");
+						String groupName = getName(teamCount,"groupName");
+						Integer tCount = getIntegerValue(teamCount,"count");
+						if(tCount >2 || (matchInfo.getMiMatchFormat1() == 1 && tCount == 1)){
+							//双人比洞赛，每组2个队（一个队或者多个队打不了比洞赛）
+							return "第"+groupName+"组 球队数不符合比赛要求，无法开始比赛。";
+						}
+						//获取本组每个球队的人数
+						userCountListByTeam = matchDao.getUserCountByMatchId(matchId,groupId);
+						for(Map<String,Object> userCount:userCountListByTeam){
+							Integer c = getIntegerValue(userCount,"count");
+							if(c >2 || (tCount == 1 && c<2)){
+								return "第"+groupName+"组 参赛人数不符合比赛要求，无法开始比赛。";
+							}
+						}
+
+						//该组重复的用户个数
+						List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
+						if(count != null &&  count.size() > 0){
+							return "第"+groupName+"组 有重复球友，无法开始比赛。";
+						}
+					}
+				}
+			}
+		}
+		return "true";
+	}
+
+	/**
+	 * 开始比赛
 	 * state   0：报名中  1进行中  2结束
 	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
 	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
@@ -1507,86 +1585,6 @@ public class MatchService implements IBaseService {
 	public String updateMatchState(Long matchId, Integer state, String openid) {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		String joinTeamIds = matchInfo.getMiJoinTeamIds();
-		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
-
-		if(state == 1){
-			//开始比赛
-			//如果是队内或者队际赛，获取每个组的队伍个数情况
-			List<Map<String,Object>> teamCountList = null;
-			if(joinTeamIdList != null && joinTeamIdList.size()>0){
-				teamCountList = matchDao.getTeamCountByMatchId(matchId,null);
-				if(teamCountList == null || teamCountList.size() == 0){
-					return "没有参赛队无法开始比赛。";
-				}
-			}
-			//获取每个组的每队人数情况
-			List<Map<String,Object>> userCountListByTeam = matchDao.getUserCountByMatchId(matchId,null);
-			if(userCountListByTeam == null || userCountListByTeam.size() ==0){
-				return "没有参赛队员无法开始比赛。";
-			}
-
-			//2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
-			// 3、单人比杆赛分组不用有任何限制。
-			if(joinTeamIdList != null){
-				//单人比洞
-				if(matchInfo.getMiMatchFormat1() == 1 && matchInfo.getMiMatchFormat2() == 0){
-					//每组只能两个人
-					//获取每组人数
-					List<Map<String,Object>> userCountByEveGroup = matchDao.getUserCountWithEveGroupByMatchId(matchId);
-					for(Map<String,Object> userCount:userCountByEveGroup){
-						Long groupId = getLongValue(userCount,"groupId");
-						String groupName = getName(userCount,"groupName");
-						Integer countEveGroup = getIntegerValue(userCount,"count");
-						if(countEveGroup != 2){
-							return "第"+groupName+"组 参赛人数不符合比赛要求，无法开始比赛。";
-						}
-						if(joinTeamIdList.size()>1){
-							//队际赛，一组的两个人要是两个球队的 就判断每一组的球队个数，如果为1 说明这俩人是一队，不能开始比赛
-							//获取本组的球队个数
-							List<Map<String,Object>> teamCountByGroup = matchDao.getTeamCountByMatchId(matchId,groupId);
-							if(getIntegerValue(teamCountByGroup.get(0),"count") !=2){
-								return "第"+groupName+"组 球队数不符合比赛要求，无法开始比赛。";
-							}
-						}
-						//该组重复的用户个数
-						List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
-						if(count != null &&  count.size() > 0){
-							return "第"+groupName+"组 有重复球友，无法开始比赛。";
-						}
-					}
-				}else if(matchInfo.getMiMatchFormat2() == 1){
-					//1、如果是多队双人比赛，不管比杆比洞，每组最多两个队，每个队不超过两人，也可以是一人。生成记分卡时，只有一个队的两个人才能放入一行。
-					if(joinTeamIdList.size() >= 2){
-						//所有组球队个数
-						for(Map<String,Object> teamCount :teamCountList){
-							Long groupId = getLongValue(teamCount,"groupId");
-							String groupName = getName(teamCount,"groupName");
-							Integer tCount = getIntegerValue(teamCount,"count");
-							if(tCount >2 || (matchInfo.getMiMatchFormat1() == 1 && tCount == 1)){
-								//双人比洞赛，每组2个队（一个队或者多个队打不了比洞赛）
-								return "第"+groupName+"组 球队数不符合比赛要求，无法开始比赛。";
-							}
-							//获取本组每个球队的人数
-							userCountListByTeam = matchDao.getUserCountByMatchId(matchId,groupId);
-							for(Map<String,Object> userCount:userCountListByTeam){
-								Integer c = getIntegerValue(userCount,"count");
-								if(c >2 || (tCount == 1 && c<2)){
-									return "第"+groupName+"组 参赛人数不符合比赛要求，无法开始比赛。";
-								}
-							}
-
-							//该组重复的用户个数
-							List<Object[]> count = matchDao.getHavingCountUserId(matchId,groupId);
-							if(count != null &&  count.size() > 0){
-								return "第"+groupName+"组 有重复球友，无法开始比赛。";
-							}
-						}
-					}
-				}
-			}
-		}
-
 		matchInfo.setMiIsEnd(state);
 		matchInfo.setMiUpdateUserId(userInfo.getUiId());
 		matchInfo.setMiUpdateUserName(userInfo.getUserName());
@@ -2638,24 +2636,22 @@ public class MatchService implements IBaseService {
 			}
 		}
 
-
 		//查询是否有我生成的二维码
-		MatchScoreUserMapping matchScoreUserMapping = matchDao.getHasMyQRCode(matchId, groupId, myUserId, type);
-		if(matchScoreUserMapping != null){
-//			path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + matchId+"_"+groupId+"_"+myUserId+"_"+type+".png";
-			path = PropertyConst.DOMAIN + matchScoreUserMapping.getMsumQrcodePath();
+		MatchUserQrcode matchUserQrcode = matchDao.getHasMyQRCode(matchId, groupId, myUserId, type);
+		if(matchUserQrcode != null){
+			path = PropertyConst.DOMAIN + matchUserQrcode.getMuqQrcodePath();
 			result.put("qrCodePath",path);
 			return result;
 		}
 
-		//没有生成过
-		String fileName = matchId+"_"+groupId+"_"+myUserId+"_"+type+".png";//文件名称 比赛id_本组id_邀请人id
+		//没有生成过  文件名称 = 比赛id_本组id_邀请人id_类型（0:邀请记分 1：邀请加入）
+		String fileName = matchId+"_"+groupId+"_"+myUserId+"_"+type+".png";
 		String QRCodePath = WebUtil.getPath()+PropertyConst.QRCODE_PATH;
 		File file = new File(QRCodePath);
 		if(!file.exists()){
 			file.mkdirs();
 		}
-		String parp = "?matchId="+matchId+"&groupId="+groupId+"&type="+type;//参数
+		String parp = "?matchId="+matchId+"&groupId="+groupId+"&matchUserId="+myUserId+"&type="+type;//参数
 //		String scene = gson.toJson(parp);
 //		scene = URLEncoder.encode(scene,"utf-8");
 		String page ="pages/index/index";//要跳转的页面，先跳转到index，再通过首页判断进行路由，根路径不能加/  不填默认跳转主页
@@ -2673,15 +2669,15 @@ public class MatchService implements IBaseService {
 		}
 		outputStream.flush();
 
-		//新增一条记录
-		matchScoreUserMapping = new MatchScoreUserMapping();
-		matchScoreUserMapping.setMsumMatchId(matchId);
-		matchScoreUserMapping.setMsumGroupId(groupId);
-		matchScoreUserMapping.setMsumMatchUserId(myUserId);
-		matchScoreUserMapping.setMsumType(type);
-		matchScoreUserMapping.setMsumQrcodePath(PropertyConst.QRCODE_PATH + fileName);
-		matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
-		matchDao.save(matchScoreUserMapping);
+		//新增一条二维码记录
+		matchUserQrcode = new MatchUserQrcode();
+		matchUserQrcode.setMuqMatchId(matchId);
+		matchUserQrcode.setMuqGroupId(groupId);
+		matchUserQrcode.setMuqMatchUserId(myUserId);
+		matchUserQrcode.setMuqType(type);
+		matchUserQrcode.setMuqQrcodePath(PropertyConst.QRCODE_PATH + fileName);
+		matchUserQrcode.setMuqCreateTime(System.currentTimeMillis());
+		matchDao.save(matchUserQrcode);
 		path = PropertyConst.DOMAIN + PropertyConst.QRCODE_PATH + fileName;
 		result.put("qrCodePath",path);
 		return result;
@@ -2960,7 +2956,6 @@ public class MatchService implements IBaseService {
 			matchScoreUserMapping = new MatchScoreUserMapping();
 			matchScoreUserMapping.setMsumMatchId(matchId);
 			matchScoreUserMapping.setMsumGroupId(matchUserGroupMapping.getMugmGroupId());
-			matchScoreUserMapping.setMsumMatchUserId(myUserId);
 			matchScoreUserMapping.setMsumScoreUserId(otherUserId);
 			matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
 			matchDao.save(matchScoreUserMapping);
@@ -3116,6 +3111,28 @@ public class MatchService implements IBaseService {
 			if(linshi != null){
 				matchDao.del(linshi);
 			}
+		}
+	}
+
+	/**
+	 * 比赛——更新我的扫码记录
+	 * @param matchId 比赛id
+	 * @param groupId 本组id
+	 * @param openid 我的openid
+	 * @return
+	 */
+	public void updateMyScanQRCode(Long matchId, Long groupId, String openid, Integer type) {
+		Long myUserId = userService.getUserIdByOpenid(openid);
+		//查询是否有我扫描的这个二维码
+		MatchScoreUserMapping matchScoreUserMapping = matchDao.getHasMyScanQRCode(matchId, groupId, myUserId,type);
+		if(matchScoreUserMapping == null){
+			matchScoreUserMapping = new MatchScoreUserMapping();
+			matchScoreUserMapping.setMsumMatchId(matchId);
+			matchScoreUserMapping.setMsumGroupId(groupId);
+			matchScoreUserMapping.setMsumScoreUserId(myUserId);
+			matchScoreUserMapping.setMsumType(type);
+			matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
+			matchDao.save(matchScoreUserMapping);
 		}
 	}
 }

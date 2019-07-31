@@ -78,4 +78,46 @@ public class AdminImportDao extends CommonDao {
 		}
 		return null;
 	}
+
+	/**
+	 * 查询是否存在比赛用户mapping
+	 * @return
+	 */
+	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchUserGroupMapping as t WHERE t.mugmMatchId = "+matchId);
+		hql.append(" and t.mugmTeamId = "+teamId);
+		hql.append(" and t.mugmUserId = "+userId);
+		List<MatchUserGroupMapping> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 查询比赛用户的分组
+	 * @return
+	 */
+	public List<Object> getMatchUserMappingGroupList(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("select t1.* from (select DISTINCT t.mugm_group_name+0 as gname from match_user_group_mapping as t where t.mugm_match_id =  "+matchId);
+		hql.append(" as t1 ORDER BY t1.gname ");
+		return dao.createSQLQuery(hql.toString());
+	}
+
+	/**
+	 * 查询是否存在比赛分组
+	 * @return
+	 */
+	public MatchGroup getMatchGroupByName(Long matchId, String groupName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchGroup as t WHERE t.mgMatchId = "+matchId);
+		hql.append(" and t.mgGroupName = "+groupName);
+		List<MatchGroup> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
 }

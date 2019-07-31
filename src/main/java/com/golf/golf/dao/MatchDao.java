@@ -1438,10 +1438,26 @@ public class MatchDao extends CommonDao {
 	 * 查询是否有我生成的二维码
 	 * @return
 	 */
-	public MatchScoreUserMapping getHasMyQRCode(Long matchId, Long groupId, Long userId, Integer type) {
+	public MatchUserQrcode getHasMyQRCode(Long matchId, Long groupId, Long userId, Integer type) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchUserQrcode as t WHERE t.muqMatchId = "+matchId+" and t.muqGroupId = "+groupId);
+		hql.append(" and t.muqMatchUserId = "+userId);
+		hql.append(" and t.muqType = "+type);
+		List<MatchUserQrcode> list = dao.createQuery(hql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 查询是否有我扫描的二维码
+	 * @return
+	 */
+	public MatchScoreUserMapping getHasMyScanQRCode(Long matchId, Long groupId, Long userId,Integer type) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchScoreUserMapping as t WHERE t.msumMatchId = "+matchId+" and t.msumGroupId = "+groupId);
-		hql.append(" and t.msumMatchUserId = "+userId);
+		hql.append(" and t.msumScoreUserId = "+userId);
 		hql.append(" and t.msumType = "+type);
 		List<MatchScoreUserMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size()>0){

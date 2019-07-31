@@ -62,7 +62,7 @@ public class AdminImportController {
 			//导入比赛球友mapping
 			adminImportService.importMatchUserMapping(xwb,matchId);
 			//导入成绩
-//		adminImportService.importMatchInfo(xwb);
+			adminImportService.importScoreInfo(xwb,matchId);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -5,6 +5,7 @@ import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminImportDao;
 import com.golf.golf.db.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -44,10 +45,16 @@ public class AdminImportService implements IBaseService {
 			//用球队简称 查询是否有该球队
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName);
 			if(teamInfo == null){
-				//新建球队
 				teamInfo = new TeamInfo();
-				teamInfo.setTiName(teamName);
-				teamInfo.setTiAbbrev(teamName);
+			}
+			teamInfo.setTiName(teamName);
+			teamInfo.setTiAbbrev(teamName);
+			if(teamInfo != null && teamInfo.getTiId() != null){
+				teamInfo.setTiUpdateTime(System.currentTimeMillis());
+				teamInfo.setTiUpdateUserId(AdminUserUtil.getUserId());
+				teamInfo.setTiUpdateUserName(AdminUserUtil.getShowName());
+				adminImportDao.update(teamInfo);
+			}else{
 				teamInfo.setTiCreateTime(System.currentTimeMillis());
 				teamInfo.setTiCreateUserId(AdminUserUtil.getUserId());
 				teamInfo.setTiCreateUserName(AdminUserUtil.getShowName());
@@ -125,7 +132,7 @@ public class AdminImportService implements IBaseService {
 			String matchTitle = row.getCell(0).toString();
 			//球场
 			String parkName = row.getCell(1).toString();
-			ParkInfo parkInfo = getParkInfoByName(parkName);
+			ParkInfo parkInfo = adminImportDao.getParkInfoByName(parkName);
 			if(parkInfo == null){
 				logger.error("数据库没有此球场："+parkName);
 				throw new Exception("数据库没有此球场："+parkName);
@@ -141,13 +148,11 @@ public class AdminImportService implements IBaseService {
 			String matchType = row.getCell(4).toString();
 			String[] matchTypeSplit = matchType.split(",");
 
-
 			//根据比赛标题获取是否有此比赛
 			MatchInfo matchInfo = adminImportDao.getMatchInfoByMatchTitle(matchTitle);
 			if(matchInfo == null){
 				matchInfo = new MatchInfo();
 			}
-
 			matchInfo.setMiType(1);
 			matchInfo.setMiTitle(matchTitle);
 			matchInfo.setMiParkId(parkInfo.getPiId());
@@ -162,12 +167,15 @@ public class AdminImportService implements IBaseService {
 			matchInfo.setMiJoinTeamIds(String.join(",", joinTeamIdList));
 			matchInfo.setMiIsEnd(2);
 			matchInfo.setMiIsValid(1);
-			matchInfo.setMiCreateTime(System.currentTimeMillis());
-			matchInfo.setMiCreateUserId(AdminUserUtil.getUserId());
-			matchInfo.setMiCreateUserName(AdminUserUtil.getShowName());
 			if(matchInfo != null && matchInfo.getMiId() != null){
+				matchInfo.setMiUpdateTime(System.currentTimeMillis());
+				matchInfo.setMiUpdateUserId(AdminUserUtil.getUserId());
+				matchInfo.setMiUpdateUserName(AdminUserUtil.getShowName());
 				adminImportDao.update(matchInfo);
 			}else{
+				matchInfo.setMiCreateTime(System.currentTimeMillis());
+				matchInfo.setMiCreateUserId(AdminUserUtil.getUserId());
+				matchInfo.setMiCreateUserName(AdminUserUtil.getShowName());
 				adminImportDao.save(matchInfo);
 			}
 			matchId = matchInfo.getMiId();
@@ -188,8 +196,15 @@ public class AdminImportService implements IBaseService {
 			row = sheet.getRow(i);
 			//第二列 球队
 			String teamName = row.getCell(1).toString();
-			//第4列 改球队的球友
+			//第4列 该球队的球友
 			String userName = row.getCell(3).toString();
+			//第3列 所在分组
+			String groupName = row.getCell(2).toString();
+			if(StringUtils.isNotEmpty(groupName)){
+				Double d = Double.parseDouble(groupName);
+				groupName = d.intValue()+"";
+			}
+
 			Long teamId = null;
 			Long userId = null;
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName);
@@ -201,18 +216,57 @@ public class AdminImportService implements IBaseService {
 			if (userInfo != null) {
 				userId = userInfo.getUiId();
 			}
+			MatchUserGroupMapping matchUserGroupMapping = adminImportDao.getMatchUserMapping(matchId,teamId,userId);
+			if(matchUserGroupMapping == null){
+				matchUserGroupMapping = new MatchUserGroupMapping();
+			}
+			matchUserGroupMapping.setMugmMatchId(matchId);
+			matchUserGroupMapping.setMugmTeamId(teamId);
+			matchUserGroupMapping.setMugmUserId(userId);
+			matchUserGroupMapping.setMugmUserName(userName);
+			matchUserGroupMapping.setMugmUserType(1);
+			matchUserGroupMapping.setMugmIsAutoCap(0);
 
-			MatchUserGroupMapping matchUserGroupMapping = new MatchUserGroupMapping();
+			//分组
+			MatchGroup matchGroup = adminImportDao.getMatchGroupByName(matchId,groupName);
+			if(matchGroup == null){
+				matchGroup = new MatchGroup();
+			}
+			matchGroup.setMgMatchId(matchId);
+			matchGroup.setMgGroupName(groupName);
+			if(matchGroup != null && matchGroup.getMgId() != null){
+				matchGroup.setMgUpdateTime(System.currentTimeMillis());
+				matchGroup.setMgUpdateUserId(AdminUserUtil.getUserId());
+				matchGroup.setMgUpdateUserName(AdminUserUtil.getShowName());
+				adminImportDao.update(matchGroup);
+			}else{
+				matchGroup.setMgCreateTime(System.currentTimeMillis());
+				matchGroup.setMgCreateUserId(AdminUserUtil.getUserId());
+				matchGroup.setMgCreateUserName(AdminUserUtil.getShowName());
+				adminImportDao.save(matchGroup);
+			}
+			matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
+			matchUserGroupMapping.setMugmGroupName(groupName);
+			matchUserGroupMapping.setMugmIsDel(1);
+			if(matchUserGroupMapping != null && matchUserGroupMapping.getMugmId() != null){
+				matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
+				matchUserGroupMapping.setMugmUpdateUserId(AdminUserUtil.getUserId());
+				matchUserGroupMapping.setMugmUpdateUserName(AdminUserUtil.getShowName());
+				adminImportDao.update(matchUserGroupMapping);
+			}else{
+				matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+				matchUserGroupMapping.setMugmCreateUserId(AdminUserUtil.getUserId());
+				matchUserGroupMapping.setMugmCreateUserName(AdminUserUtil.getShowName());
+				adminImportDao.save(matchUserGroupMapping);
+			}
 		}
 	}
 
 	/**
-	 * 根据球场名称获取球场信息
+	 * 导入成绩
 	 * @return
 	 */
-	public ParkInfo getParkInfoByName(String parkName) {
-		return adminImportDao.getParkInfoByName(parkName);
+	public void importScoreInfo(XSSFWorkbook xwb, Long matchId) {
 	}
-
 
 }
