@@ -2651,7 +2651,7 @@ public class MatchService implements IBaseService {
 		if(!file.exists()){
 			file.mkdirs();
 		}
-		String parp = "?matchId="+matchId+"&groupId="+groupId+"&matchUserId="+myUserId+"&type="+type;//参数
+		String parp = "?mId="+matchId+"&gId="+groupId+"&uId="+myUserId+"&type="+type;//参数
 //		String scene = gson.toJson(parp);
 //		scene = URLEncoder.encode(scene,"utf-8");
 		String page ="pages/index/index";//要跳转的页面，先跳转到index，再通过首页判断进行路由，根路径不能加/  不填默认跳转主页
