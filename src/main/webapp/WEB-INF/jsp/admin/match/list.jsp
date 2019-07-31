@@ -79,7 +79,6 @@
                                     <thead>
                                     <tr>
                                         <th width="4%">序号</th>
-                                        <th width="5%">logo</th>
                                         <th width="12%">标题</th>
                                         <th width="5%">类型</th>
                                         <th width="5%">观战范围</th>
@@ -97,10 +96,6 @@
                                     <c:forEach items="${pageInfo.items}" var="matchInfo" varStatus="s">
                                         <tr>
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1) }</td>
-                                            <td>
-                                                <c:if test="${matchInfo.miType == 0}"><img src="static/images/logo.png" style="width:65px;height:65px;border-radius: 50%;"></c:if>
-                                                <c:if test="${matchInfo.miType == 1}"><img src="${matchInfo.miLogo}" style="width:65px;height:65px;border-radius: 50%;"></c:if>
-                                            </td>
                                             <td>${matchInfo.miTitle}</td>
                                             <td><c:if test="${matchInfo.miType == 0}">单练</c:if>
                                                 <c:if test="${matchInfo.miType == 1}">团队/多人赛</c:if>

@@ -120,4 +120,41 @@ public class AdminImportDao extends CommonDao {
 		}
 		return null;
 	}
+
+	/**
+	 * 获取本球场第j洞的详情
+	 * @return
+	 */
+	public ParkPartition getParkPartition(Long miParkId, Integer holeNum, String holeName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM ParkPartition as t WHERE t.ppPId = "+miParkId);
+		hql.append(" and t.ppHoleNum = "+holeNum);
+		hql.append(" and t.ppName = '"+holeName+"'");
+		List<ParkPartition> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取该用户是否有该洞的成绩
+	 * @return
+	 */
+	public MatchScore getMatchScoreByUser(Long teamId, Long matchId, String groupName, String userName, Integer holeNum,
+										  String holeName,Integer beforeAfter) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchScore as t WHERE t.msTeamId = "+teamId);
+		hql.append(" and t.msMatchId = "+matchId);
+		hql.append(" and t.msGroupName = '"+groupName+"'");
+		hql.append(" and t.msUserName = '"+userName+"'");
+		hql.append(" and t.msBeforeAfter = "+beforeAfter);
+		hql.append(" and t.msHoleNum = "+holeNum);
+		hql.append(" and t.msHoleName = '"+holeName+"'");
+		List<MatchScore> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
 }

@@ -1439,7 +1439,7 @@ public class MatchService implements IBaseService {
         return score;
     }
 
-    private void getScore(MatchScore score, Integer holeStandardRod) {
+    public void getScore(MatchScore score, Integer holeStandardRod) {
 		if(score.getMsRodNum().equals(holeStandardRod)){
 			//标准杆一样 par
 			score.setMsIsPar(1);
@@ -1475,9 +1475,11 @@ public class MatchService implements IBaseService {
 			score.setMsIsEagle(null);
 		}
 
-		if(score.getMsRodNum() - score.getMsPushRodNum() == holeStandardRod - 2){
-			//标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON 3-1=4-2
-			score.setMsIsOn(1);
+		if(score.getMsPushRodNum() != null){
+			if(score.getMsRodNum() - score.getMsPushRodNum() == holeStandardRod - 2){
+				//标ON是计算出来的，如果某洞：杆数-推杆数=该洞标准杆数-2，则该洞为 标ON 3-1=4-2
+				score.setMsIsOn(1);
+			}
 		}
 	}
 

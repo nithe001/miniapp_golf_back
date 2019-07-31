@@ -5,6 +5,7 @@ import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminImportDao;
 import com.golf.golf.db.*;
+import com.golf.golf.service.MatchService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -28,7 +29,8 @@ public class AdminImportService implements IBaseService {
 
 	@Autowired
 	private AdminImportDao adminImportDao;
-
+	@Autowired
+	private MatchService matchService;
 	/**
 	 * 导入球队详情
 	 * @return
@@ -267,6 +269,89 @@ public class AdminImportService implements IBaseService {
 	 * @return
 	 */
 	public void importScoreInfo(XSSFWorkbook xwb, Long matchId) {
+		MatchInfo matchInfo = adminImportDao.get(MatchInfo.class,matchId);
+		//第二张工作表
+		XSSFSheet sheet = xwb.getSheetAt(1);
+		XSSFRow row;
+		for(int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
+			//从第三行开始
+			row = sheet.getRow(i);
+			//第2列 球队
+			String teamName = row.getCell(1).toString();
+			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName);
+			//第3列 分组
+			String groupName = row.getCell(2).toString();
+			if(StringUtils.isNotEmpty(groupName)){
+				Double d = Double.parseDouble(groupName);
+				groupName = d.intValue()+"";
+			}
+			MatchGroup matchGroup = adminImportDao.getMatchGroupByName(matchId,groupName);
+			//第4列 球友
+			String userName = row.getCell(3).toString();
+			UserInfo userInfo = adminImportDao.getUserByRealName(userName);
+			//从第5列开始 每洞得分
+			//前9洞
+			for(int j = 4;j<13;j++){
+				Integer holeNum = j-3;
+				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,matchGroup,userInfo,0);
+			}
+			//后9洞
+			for(int j = 14;j<23;j++){
+				Integer holeNum = j-13;
+				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,matchGroup,userInfo,1);
+			}
+		}
 	}
+
+	//新增或更新球友成绩
+	private void saveOrUpdateUserScore(XSSFRow row, int j, Integer holeNum,MatchInfo matchInfo,TeamInfo teamInfo,
+									   MatchGroup matchGroup,UserInfo userInfo,Integer beforeAfter) {
+		String scoreEveHole = row.getCell(j).toString();
+		Integer score = null;
+		if(StringUtils.isNotEmpty(scoreEveHole)){
+			Double d = Double.parseDouble(scoreEveHole);
+			score = d.intValue();
+		}
+		//获取本球场第j洞的详情
+		String holeName = "";
+		if(beforeAfter == 0){
+			holeName = matchInfo.getMiZoneBeforeNine();
+		}else{
+			holeName = matchInfo.getMiZoneAfterNine();
+		}
+		ParkPartition parkPartition = adminImportDao.getParkPartition(matchInfo.getMiParkId(),holeNum,holeName);
+		MatchScore matchScore = adminImportDao.getMatchScoreByUser(
+				teamInfo.getTiId(),matchInfo.getMiId(),matchGroup.getMgGroupName(),userInfo.getUiRealName(),holeNum,holeName,beforeAfter);
+		if(matchScore == null){
+			matchScore = new MatchScore();
+		}
+		matchScore.setMsTeamId(teamInfo.getTiId());
+		matchScore.setMsMatchId(matchInfo.getMiId());
+		matchScore.setMsMatchTitle(matchInfo.getMiTitle());
+		matchScore.setMsMatchType(matchInfo.getMiType());
+		matchScore.setMsGroupId(matchGroup.getMgId());
+		matchScore.setMsGroupName(matchGroup.getMgGroupName());
+		matchScore.setMsUserId(userInfo.getUiId());
+		matchScore.setMsUserName(userInfo.getUiRealName());
+		matchScore.setMsType(0);
+		matchScore.setMsRodNum(score);
+		matchScore.setMsBeforeAfter(beforeAfter);
+		matchScore.setMsHoleName(parkPartition.getppName());
+		matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
+		matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
+		matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
+		if(matchScore != null && matchScore.getMsId() != null){
+			matchScore.setMsUpdateTime(System.currentTimeMillis());
+			matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
+			matchScore.setMsUpdateUserName(AdminUserUtil.getShowName());
+			adminImportDao.update(matchScore);
+		}else{
+			matchScore.setMsCreateTime(System.currentTimeMillis());
+			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
+			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
+			adminImportDao.save(matchScore);
+		}
+	}
+
 
 }
