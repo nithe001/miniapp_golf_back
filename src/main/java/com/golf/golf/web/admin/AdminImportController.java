@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 导入成绩
@@ -43,14 +44,22 @@ public class AdminImportController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = {"importScore"})
-	public JsonElement importScore(MultipartFile file) throws IOException {
+	public JsonElement importScore(MultipartFile file,Integer isCoverMatch,Integer isCoverTeam,Integer isCoverScore) throws IOException {
 		try {
 			XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
 			int n = xwb.getNumberOfSheets();
 			//导入球队详情
-			List<String> joinTeamIdList = adminImportService.importTeamInfo(xwb);
+			Map<String,Object> map = adminImportService.importTeamInfo(xwb);
+			//重名的球队
+
+			
+			List<String> joinTeamIdList = (List<String>)map.get("joinTeamIdList");
 			//导入比赛详情
-			Long matchId = adminImportService.importMatchInfo(xwb,joinTeamIdList);
+			Long matchId = adminImportService.importMatchInfo(xwb,joinTeamIdList,isCoverMatch);
+			if(matchId == 0L){
+				//有重名的比赛
+				return JsonWrapper.newDataInstance(matchId);
+			}
 			//导入用户
 			adminImportService.importUserInfo(xwb);
 			//导入球队球友mapping

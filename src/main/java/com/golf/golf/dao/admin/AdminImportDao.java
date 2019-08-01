@@ -69,6 +69,17 @@ public class AdminImportDao extends CommonDao {
 		return null;
 	}
 
+
+	/**
+	 * 根据用户名查询是否存在球队用户mapping
+	 * @return
+	 */
+	public List<UserInfo> getUserListByRealName(String userName) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM UserInfo as t WHERE t.uiRealName = '"+userName+"'");
+		return dao.createQuery(hql.toString());
+	}
+
 	/**
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return

@@ -89,10 +89,11 @@
                                                    href="admin/wechatUser/wechatUserEditUI?wechatId=${user.wui_id}">
                                                     <span class="glyphicon glyphicon-pencil"></span>查看
                                                 </a>&nbsp;|
-                                                <a class="btn btn-success"
-                                                   href="admin/wechatUser/setAdmin?userId=${user.wui_u_id}">
-                                                    <span class="glyphicon glyphicon-pencil"></span>设为赛事管理员
-                                                </a>&nbsp;
+                                                <%--<a class="btn btn-success"--%>
+                                                   <%--href="admin/wechatUser/setAdmin?userId=${user.wui_u_id}">--%>
+                                                    <%--<span class="glyphicon glyphicon-pencil"></span>设为赛事管理员--%>
+                                                <%--</a>--%>
+                                                &nbsp;
                                                 <a class="btn btn-danger" href="javascript:void(0);" onclick="updateUserState(${user.wui_id})">
                                                     <c:if test="${user.wui_is_valid == null || user.wui_is_valid == 1}">注销</c:if>
                                                     <c:if test="${user.wui_is_valid == 0 }">恢复</c:if>

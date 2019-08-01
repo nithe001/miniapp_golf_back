@@ -627,16 +627,21 @@ public class UserService implements IBaseService {
 		Long myUserId = getUserIdByOpenid(openid);
 		//查询是否有这个真实姓名
 		List<UserInfo> importUserInfoList = dao.getUserCountByRealName(userInfoBean.getUiRealName(),myUserId);
-		if(importUserInfoList != null && importUserInfoList.size() == 1){
-			UserInfo importUserInfo = importUserInfoList.get(0);
-			//更新这个导入用户的 比赛分组mapping 为db的id
-			dao.updateImportMatchMappingUserId(importUserInfo.getUiId(),myUserId);
-			//更新这个导入用户的 比赛成绩 的用户id为db的id
-			dao.updateImportMatchScoreUserId(importUserInfo.getUiId(),myUserId);
-			//更新这个导入用户的 球队分组mapping 为db的id
-			dao.updateImportTeamMappingUserId(importUserInfo.getUiId(),myUserId);
-			//删除这个导入用户
-			dao.del(importUserInfo);
+		if(importUserInfoList != null && importUserInfoList.size()>0){
+			if(importUserInfoList.size() == 1){
+				UserInfo importUserInfo = importUserInfoList.get(0);
+				//更新这个导入用户的 比赛分组mapping 为db的id
+				dao.updateImportMatchMappingUserId(importUserInfo.getUiId(),myUserId);
+				//更新这个导入用户的 比赛成绩 的用户id为db的id
+				dao.updateImportMatchScoreUserId(importUserInfo.getUiId(),myUserId);
+				//更新这个导入用户的 球队分组mapping 为db的id
+				dao.updateImportTeamMappingUserId(importUserInfo.getUiId(),myUserId);
+				//删除这个导入用户
+				dao.del(importUserInfo);
+			}else if(importUserInfoList.size() > 1){
+				//有重名的，选一下球队
+//				List<Map<String,Object>> teamList = dao.getUserJoinTeamList();
+			}
 		}
 	}
 }
