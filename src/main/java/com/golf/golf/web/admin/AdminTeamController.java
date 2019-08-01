@@ -163,4 +163,25 @@ public class AdminTeamController {
         }
         return "redirect:list";
     }
+
+	/**
+	 * 操作球队球友
+	 * @param teamId 球队id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为队长  1：取消设为队长or同意入队  2：移出队伍
+	 * @return
+	 */
+	@RequestMapping("updateTeamUser")
+	public String updateTeamUser(Long teamId,Long userId,Integer type){
+		try{
+			adminTeamService.updateTeamUser(teamId,userId,type);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("后台管理——操作球队球友出错。teamId="+teamId+"     "+ e );
+			return "admin/error";
+		}
+		return "redirect:editTeamUI?teamId="+teamId;
+	}
+
+
 }

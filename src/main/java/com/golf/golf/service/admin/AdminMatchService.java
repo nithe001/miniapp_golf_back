@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 赛事活动
@@ -28,7 +29,7 @@ import java.util.List;
 public class AdminMatchService implements IBaseService {
 	
     @Autowired
-    private AdminMatchDao dao;
+    private AdminMatchDao adminMatchDao;
 	@Autowired
 	private MatchDao matchDao;
 
@@ -39,7 +40,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo<MatchInfo> matchList(SearchBean searchBean, POJOPageInfo pageInfo){
-		return  dao.matchList(searchBean,pageInfo);
+		return adminMatchDao.matchList(searchBean,pageInfo);
 	}
 
 	/**
@@ -48,7 +49,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public MatchInfo getMatchById(Long id) {
-		return dao.get(MatchInfo.class,id);
+		return adminMatchDao.get(MatchInfo.class,id);
 	}
 
 	/**
@@ -57,7 +58,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void editMatch(MatchInfo matchInfo) {
-		MatchInfo db = dao.get(MatchInfo.class,matchInfo.getMiId());
+		MatchInfo db = adminMatchDao.get(MatchInfo.class,matchInfo.getMiId());
 		db.setMiMatchTime(matchInfo.getMiMatchTime());
 		db.setMiDigest(matchInfo.getMiDigest());
 		db.setMiContent(matchInfo.getMiContent());
@@ -68,7 +69,7 @@ public class AdminMatchService implements IBaseService {
 		db.setMiUpdateTime(System.currentTimeMillis());
 		db.setMiUpdateUserId(AdminUserUtil.getUserId());
 		db.setMiUpdateUserName(AdminUserUtil.getShowName());
-		dao.update(db);
+		adminMatchDao.update(db);
 	}
 
 	/**
@@ -76,7 +77,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public POJOPageInfo matchRuleList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		return  dao.matchRuleList(searchBean,pageInfo);
+		return  adminMatchDao.matchRuleList(searchBean,pageInfo);
 	}
 
 	/**
@@ -84,7 +85,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void saveRule(MatchRule rule) {
-		dao.save(rule);
+		adminMatchDao.save(rule);
 	}
 
 	/**
@@ -93,7 +94,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public MatchRule getRuleById(Long ruleId) {
-		return dao.get(MatchRule.class,ruleId);
+		return adminMatchDao.get(MatchRule.class,ruleId);
 	}
 
 	/**
@@ -101,7 +102,7 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void editRule(MatchRule rule) {
-		dao.update(rule);
+		adminMatchDao.update(rule);
 	}
 
 	/**
@@ -128,50 +129,51 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void updateMatchState(Long matchId) {
-		MatchInfo matchInfo = dao.get(MatchInfo.class, matchId);
+		MatchInfo matchInfo = adminMatchDao.get(MatchInfo.class, matchId);
 		if(matchInfo.getMiIsValid() == 1){
 			matchInfo.setMiIsValid(0);
 		}else{
 			matchInfo.setMiIsValid(1);
 		}
-        dao.update(matchInfo);
+        adminMatchDao.update(matchInfo);
 	}
 
 	/**
 	 * 获取参赛队员列表
 	 * @return
 	 */
-	public List<Object[]> getMatchUserGroupMappingList(Long matchId) {
-		return matchDao.getMatchUserGroupMappingList(matchId);
+	public List<Map<String,Object>> getMatchUserGroupMappingList(Long matchId) {
+		return adminMatchDao.getMatchUserGroupMappingList(matchId);
 	}
 
-    /**
+
+	/**
      * 删除比赛
      * @param matchId 比赛id
      * @return
      */
     public void delMatch(Long matchId) {
 		//删除比赛球队确认配置
-		dao.delMatchScoreConfig(matchId);
+		adminMatchDao.delMatchScoreConfig(matchId);
 		//删除比赛分组
-		dao.delMatchGroup(matchId);
+		adminMatchDao.delMatchGroup(matchId);
 		//删除比赛输赢情况
-		dao.delMatchWinOrLose(matchId);
+		adminMatchDao.delMatchWinOrLose(matchId);
 		//删除比赛信息
-        dao.del(MatchInfo.class, matchId);
+        adminMatchDao.del(MatchInfo.class, matchId);
 		//删除比赛观战信息
-		dao.delMatchWatchInfo(matchId);
+		adminMatchDao.delMatchWatchInfo(matchId);
 		//删除比赛对应的用户比分
-		dao.delMatchScore(matchId);
+		adminMatchDao.delMatchScore(matchId);
 		//删除比赛对应的邀请记分信息
-		dao.delMatchUserApplyScoreInfo(matchId);
+		adminMatchDao.delMatchUserApplyScoreInfo(matchId);
         //删除比赛对应的用户mapping
-        dao.delMatchUserMapping(matchId);
+        adminMatchDao.delMatchUserMapping(matchId);
 		//删除比赛对应的用户积分信息
-		dao.delMatchUserPointInfo(matchId);
+		adminMatchDao.delMatchUserPointInfo(matchId);
 
 		//获取比赛对应的生成二维码信息
-		List<MatchUserQrcode> matchUserQrcodeList = dao.getMatchUserQRCodeList(matchId);
+		List<MatchUserQrcode> matchUserQrcodeList = adminMatchDao.getMatchUserQRCodeList(matchId);
 		//删掉对应的二维码文件
 		if(matchUserQrcodeList != null && matchUserQrcodeList.size() >0){
 			for(MatchUserQrcode qrcode:matchUserQrcodeList){
@@ -184,10 +186,9 @@ public class AdminMatchService implements IBaseService {
 			}
 		}
 		//删除比赛对应的生成二维码信息
-		dao.delMatchQRCodeInfo(matchId);
-
+		adminMatchDao.delMatchQRCodeInfo(matchId);
 		//删除比赛对应的扫二维码信息
-		dao.delScanMatchQRCodeInfo(matchId);
+		adminMatchDao.delScanMatchQRCodeInfo(matchId);
     }
 	/**
 	 * 删除高球规则
@@ -195,6 +196,22 @@ public class AdminMatchService implements IBaseService {
 	 * @return
 	 */
 	public void delMatchRule(Long ruleId) {
-		dao.del(MatchRule.class,ruleId);
+		adminMatchDao.del(MatchRule.class,ruleId);
+	}
+
+	/**
+	 * 操作比赛球友
+	 * @param matchId 比赛id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为赛长  1：取消设为赛长  2:移出比赛
+	 * @return
+	 */
+	public void updateMatchUser(Long matchId, Long userId, Integer type) {
+		if(type < 2){
+			adminMatchDao.updateUserType(matchId,userId,type);
+		}else{
+			//移出比赛
+			adminMatchDao.delUserFromTeamUserMapping(matchId,userId);
+		}
 	}
 }

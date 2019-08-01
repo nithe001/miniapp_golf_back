@@ -157,6 +157,21 @@ public class AdminTeamService implements IBaseService {
 		adminTeamDao.delMatchHoleResultByTeamId(teamId);
 		//删除球队积分
 		adminTeamDao.delTeamUserPointByTeamId(teamId);
-
     }
+
+	/**
+	 * 操作球队球友
+	 * @param teamId 球队id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为队长  1：取消设为队长or同意入队  2：移出队伍
+	 * @return
+	 */
+	public void updateTeamUser(Long teamId, Long userId, Integer type) {
+		if(type < 2){
+			adminTeamDao.updateUserType(teamId,userId,type);
+		}else{
+			//移出队伍
+			adminTeamDao.delUserFromTeamUserMapping(teamId,userId);
+		}
+	}
 }

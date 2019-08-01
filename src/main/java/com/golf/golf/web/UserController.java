@@ -126,8 +126,9 @@ public class UserController {
 	}
 
 	/**
-	 * 修改个人信息 同时更新其他表中有用到真实姓名的地方
-	 * 用真实姓名匹配导入的成绩
+	 * 修改个人信息
+	 * 同时更新其他表中有用到真实姓名的地方
+	 * 同时用真实姓名匹配导入的成绩
 	 * @return
 	 */
 	@ResponseBody
@@ -138,6 +139,10 @@ public class UserController {
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
 				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
 				userService.updateUser(userInfoBean, openid);
+				/*if(StringUtils.isNotEmpty(userInfoBean.getUiRealName())){
+					//匹配导入的成绩
+					userService.updateScoreByRealName(userInfoBean,openid);
+				}*/
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {

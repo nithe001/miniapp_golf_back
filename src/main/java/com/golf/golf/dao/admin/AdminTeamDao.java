@@ -135,4 +135,32 @@ public class AdminTeamDao extends CommonDao {
 		hql.append("DELETE FROM TeamUserPoint AS t WHERE t.tupTeamId= "+teamId);
 		dao.executeHql(hql.toString());
 	}
+
+	/**
+	 * 设为队长、取消设为队长、同意入队
+	 * @param teamId 球队id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为队长  1：取消设为队长or同意入队  2：移出队伍
+	 * @return
+	 */
+	public void updateUserType(Long teamId, Long userId, Integer type) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE FROM TeamUserMapping AS t set t.tumUserType = "+type);
+		hql.append(" WHERE t.tumTeamId= "+teamId);
+		hql.append(" and t.tumUserId= "+userId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 移出队伍
+	 * @param teamId 球队id
+	 * @param userId 用户id
+	 * @return
+	 */
+	public void delUserFromTeamUserMapping(Long teamId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM TeamUserMapping AS t WHERE t.tupTeamId= "+teamId);
+		hql.append(" and t.tumUserId= "+userId);
+		dao.executeHql(hql.toString());
+	}
 }

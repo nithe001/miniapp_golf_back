@@ -85,59 +85,63 @@
     </div>
 
     <c:if test="${teamInfo.userList != null && teamInfo.userList.size() > 0 }">
-        <table id="example2" class="table table-bordered table-hover">
-            <thead>
-            <tr>
-                <th>序号</th>
-                <th>队员头像</th>
-                <th>队员真实姓名/昵称</th>
-                <th>用户类型</th>
-                <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
-            </tr>
-            </thead>
-            <tbody>
-            <c:forEach items="${teamInfo.userList}" var="userInfo" varStatus="s">
+        <div style="width: 60%;margin-left:10%;">
+            <table id="example2" class="table table-bordered table-hover">
+                <thead>
                 <tr>
-                    <td>${s.index +1}</td>
-                    <td><img src="${userInfo.uiHeadimg}" style="width:55px;height:55px;"></td>
-                    <td>
-                        <c:if test="${userInfo.uiRealName ne '' && userInfo.uiRealName ne null}">
-                            ${userInfo.uiRealName}
-                        </c:if>
-                        <c:if  test="${userInfo.uiRealName eq '' || userInfo.uiRealName eq null}">
-                            ${userInfo.uiNickName}
-                        </c:if>
-                    <td>
-                        <c:if test="${userInfo.tumUserType == 0}">
-                            <div style="color:red;">队长</div>
-                        </c:if>
-                        <c:if test="${userInfo.tumUserType == 1}">
-                            普通队员
-                        </c:if>
-                        <c:if test="${userInfo.tumUserType == 2}">
-                            申请入队
-                        </c:if>
-                    </td>
-                    <td>
-                        <c:if test="${userInfo.tumUserType == 1}">
-                            <a class="btn btn-danger moveOutFromTeam" href="javascript:void(0)" id="${userInfo.uiId}">移出队伍</a>
-                        </c:if>
-                        <c:if test="${userInfo.tumUserType == 2}">
-                            <a class="btn btn-success accessApplyTeam" href="javascript:void(0)" id="${userInfo.uiId}">同意入队</a>
-                        </c:if>
-                    </td>
+                    <th width="8%">序号</th>
+                    <th width="13%">队员头像</th>
+                    <th width="20%">队员真实姓名/昵称</th>
+                    <th width="13%">用户类型</th>
+                    <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                 </tr>
-            </c:forEach>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                <c:forEach items="${teamInfo.userList}" var="userInfo" varStatus="s">
+                    <tr>
+                        <td>${s.index +1}</td>
+                        <td><img src="${userInfo.uiHeadimg}" style="width:55px;height:55px;"></td>
+                        <td>
+                            <c:if test="${userInfo.uiRealName ne '' && userInfo.uiRealName ne null}">
+                                ${userInfo.uiRealName}
+                            </c:if>
+                            <c:if  test="${userInfo.uiRealName eq '' || userInfo.uiRealName eq null}">
+                                ${userInfo.uiNickName}
+                            </c:if>
+                        <td>
+                            <c:if test="${userInfo.tumUserType == 0}">
+                                <div style="color:red;">队长</div>
+                            </c:if>
+                            <c:if test="${userInfo.tumUserType == 1}">
+                                普通队员
+                            </c:if>
+                            <c:if test="${userInfo.tumUserType == 2}">
+                                申请入队
+                            </c:if>
+                        </td>
+                        <td>
+                            <c:if test="${userInfo.tumUserType != 0}">
+                                <a class="btn btn-success" href="javascript:setCap(${userInfo.uiId})">设为队长</a>
+                                <a class="btn btn-danger" href="javascript:delFromTeam(${userInfo.uiId})">移出队伍</a>
+                            </c:if>
+                            <c:if test="${userInfo.tumUserType == 0}">
+                                <a class="btn btn-danger" href="javascript:delCap(${userInfo.uiId})">取消队长</a>
+                            </c:if>
+                            <c:if test="${userInfo.tumUserType == 2}">
+                                <a class="btn btn-success" href="javascript:agreeApplyTeam(${userInfo.uiId})">同意入队</a>
+                            </c:if>
+                        </td>
+                    </tr>
+                </c:forEach>
+                </tbody>
+            </table>
+        </div>
     </c:if>
     <c:if test="${teamInfo.userList == null || teamInfo.userList.size() <= 0 }">
         暂无队员数据！
     </c:if>
 
 </div>
-
-
 
 <div class="box-footer">
     <div class="col-xs-push-2 col-xs-2">
@@ -149,20 +153,22 @@
 </div>
 
 
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myFileModalLabel"
-     aria-hidden="true">
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myFileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">提示</h4>
             </div>
-            <div class="modal-body">
-                <div class="col-md-12" id="tips"></div>
+            <div class="modal-body" id="tips">
             </div>
+            <input type="hidden" id="userId"/>
+            <input type="hidden" id="type"/>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
             </div>
         </div>
     </div>
@@ -172,15 +178,36 @@
 
 <script>
     $(document).ready(function(){
-        //移出队伍
-        $(".moveOutFromTeam").click(function () {
-            $("#tips").html("确定要将");
-            $("#myModal").modal("show");
+        $("#sureBtn").click(function () {
+            window.location.href = "admin/team/updateTeamUser?teamId="+$("#tiId").val()+"&userId="+$("#userId").val()+"&type="+$("#type").val();
         });
-        //同意入队
-        $(".moveOutFromTeam").click(function () {
-
-        });
-    })
-
+    });
+    //设为队长
+    function setCap(userId) {
+        $("#userId").val(userId);
+        $("#type").val(0);
+        $("#tips").html("确定要将该球友设为队长吗？");
+        $("#myModal").modal("show");
+    }
+    //取消设为队长
+    function delCap(userId) {
+        $("#userId").val(userId);
+        $("#type").val(1);
+        $("#tips").html("确定要取消该球友的队长吗？");
+        $("#myModal").modal("show");
+    }
+    //同意入队
+    function agreeApplyTeam(userId) {
+        $("#userId").val(userId);
+        $("#type").val(1);
+        $("#tips").html("确定要将该球友加入队伍吗？");
+        $("#myModal").modal("show");
+    }
+    //移出队伍
+    function delFromTeam(userId) {
+        $("#userId").val(userId);
+        $("#type").val(2);
+        $("#tips").html("确定要将该球友移出队伍吗？此操作不可恢复！");
+        $("#myModal").modal("show");
+    }
 </script>

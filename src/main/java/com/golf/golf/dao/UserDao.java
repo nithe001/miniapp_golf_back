@@ -346,4 +346,45 @@ public class UserDao extends CommonDao {
 		hql.append("UPDATE MatchGroup AS g set g.mgUpdateUserName = '"+uiRealName+"' where g.mgUpdateUserId ="+uiId);
 		dao.executeHql(hql.toString());
 	}
+
+	/**
+	 * 查询是否有这个真实姓名
+	 * @return
+	 */
+	public List<UserInfo> getUserCountByRealName(String uiRealName,Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("FROM UserInfo AS u WHERE u.uiRealName = '"+uiRealName+"'");
+		hql.append(" and u.uiId != "+myUserId);
+		return dao.createQuery(hql.toString());
+	}
+
+	/**
+	 * 更新这个导入用户的 比赛分组mapping 为db的id
+	 * @return
+	 */
+	public void updateImportMatchMappingUserId(Long importUserId, Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchUserGroupMapping AS t set t.mugmUserId = "+myUserId+" where t.mugmUserId ="+importUserId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新这个导入用户的成绩id为db的id
+	 * @return
+	 */
+	public void updateImportMatchScoreUserId(Long importUserId, Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE MatchScore AS t set t.msUserId = "+myUserId+" where t.msUserId ="+importUserId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 更新这个导入用户的 球队分组mapping 为db的id
+	 * @return
+	 */
+	public void updateImportTeamMappingUserId(Long importUserId, Long myUserId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE TeamUserMapping AS t set t.tumUserId = "+myUserId+" where t.tumUserId ="+importUserId);
+		dao.executeHql(hql.toString());
+	}
 }

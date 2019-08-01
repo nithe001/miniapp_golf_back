@@ -1414,28 +1414,6 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 获取参赛队员列表
-	 * @return
-	 */
-	public List<Object[]> getMatchUserGroupMappingList(Long matchId) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("FROM MatchUserGroupMapping as g,TeamInfo as t WHERE g.mugmTeamId = t.tiId and g.mugmMatchId = "+matchId);
-		hql.append(" order by g.mugmGroupId ");
-		return dao.createQuery(hql.toString());
-	}
-
-	/**
-	 * 获取参赛队员列表
-	 * @return
-	 */
-	public List<MatchUserGroupMapping> getMatchUserGroupMappingListByMatchId(Long matchId,Long userId) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("FROM MatchUserGroupMapping as g WHERE g.mugmMatchId = "+matchId);
-		hql.append(" and g.mugmUserId != "+userId);
-		return dao.createQuery(hql.toString());
-	}
-
-	/**
 	 * 查询是否有我生成的二维码
 	 * @return
 	 */

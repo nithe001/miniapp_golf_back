@@ -192,4 +192,45 @@ public class AdminMatchDao extends CommonDao {
 		hql.append("DELETE FROM MatchScoreUserMapping AS t WHERE t.msumMatchId = "+matchId);
 		dao.executeHql(hql.toString());
 	}
+
+
+	/**
+	 * 设为赛长、取消设为赛长
+	 * @param matchId 比赛id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为队长  1：取消设为队长
+	 * @return
+	 */
+	public void updateUserType(Long matchId, Long userId, Integer type) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("UPDATE FROM MatchUserGroupMapping AS t set t.mugmUserType = "+type);
+		hql.append(" WHERE t.mugmMatchId= "+matchId);
+		hql.append(" and t.mugmUserId= "+userId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 移出比赛
+	 * @param matchId 比赛id
+	 * @param userId 用户id
+	 * @return
+	 */
+	public void delUserFromTeamUserMapping(Long matchId, Long userId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchGroupUserMapping AS t WHERE t.mugmMatchId= "+matchId);
+		hql.append(" and t.mugmUserId= "+userId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 获取参赛队员列表
+	 * @return
+	 */
+	public List<Map<String,Object>> getMatchUserGroupMappingList(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("SELECT g.mugmUserId as userId,g.mugmGroupName+0 as groupName,g.mugmUserName as userName,t.tiAbbrev as teamAbbrev,g.mugmUserType as userType ");
+		hql.append(" FROM MatchUserGroupMapping as g,TeamInfo as t WHERE g.mugmTeamId = t.tiId and g.mugmMatchId = "+matchId);
+		hql.append(" order by groupName ");
+		return dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
+	}
 }

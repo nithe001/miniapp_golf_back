@@ -204,10 +204,10 @@ public class AdminImportService implements IBaseService {
 					TeamUserMapping teamUserMapping = adminImportDao.getTeamUserMappingByUserId(userInfo.getUiId());
 					if(teamUserMapping == null){
 						teamUserMapping = new TeamUserMapping();
+						teamUserMapping.setTumUserType(1);
 					}
 					teamUserMapping.setTumTeamId(teamInfo.getTiId());
 					teamUserMapping.setTumUserId(userInfo.getUiId());
-					teamUserMapping.setTumUserType(1);
 					teamUserMapping.setTumCreateTime(System.currentTimeMillis());
 					teamUserMapping.setTumCreateUserId(AdminUserUtil.getUserId());
 					teamUserMapping.setTumCreateUserName(AdminUserUtil.getShowName());

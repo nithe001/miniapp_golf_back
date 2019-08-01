@@ -102,7 +102,7 @@ public class UserService implements IBaseService {
      * 保存用户信息
      * @param user
      */
-    public void updateUser(UserInfo user, String openid) throws Exception {
+    public void updateUser(UserInfo user, String openid) {
     	UserInfo db = dao.getUserInfoByOpenid(openid);
     	db.setUiRealName(user.getUiRealName());
     	db.setUiAge(user.getUiAge());
@@ -121,7 +121,6 @@ public class UserService implements IBaseService {
 		db.setUiUpdateUserId(db.getUiId());
 		db.setUiUpdateUserName(db.getUiRealName());
         dao.update(db);
-
         //更新其他表有用到真实姓名的地方
 		//比赛积分计算配置表
 		dao.updateMatchIntegralConfigInfo(db.getUiId(),user.getUiRealName());
@@ -618,5 +617,26 @@ public class UserService implements IBaseService {
 	 */
 	public WechatUserInfo getWechatUserByOpenid(String openid) {
 		return dao.getWechatUserByOpenid(openid);
+	}
+
+	/**
+	 * 匹配导入的成绩
+	 * @return
+	 */
+	public void updateScoreByRealName(UserInfo userInfoBean, String openid) {
+		Long myUserId = getUserIdByOpenid(openid);
+		//查询是否有这个真实姓名
+		List<UserInfo> importUserInfoList = dao.getUserCountByRealName(userInfoBean.getUiRealName(),myUserId);
+		if(importUserInfoList != null && importUserInfoList.size() == 1){
+			UserInfo importUserInfo = importUserInfoList.get(0);
+			//更新这个导入用户的 比赛分组mapping 为db的id
+			dao.updateImportMatchMappingUserId(importUserInfo.getUiId(),myUserId);
+			//更新这个导入用户的 比赛成绩 的用户id为db的id
+			dao.updateImportMatchScoreUserId(importUserInfo.getUiId(),myUserId);
+			//更新这个导入用户的 球队分组mapping 为db的id
+			dao.updateImportTeamMappingUserId(importUserInfo.getUiId(),myUserId);
+			//删除这个导入用户
+			dao.del(importUserInfo);
+		}
 	}
 }

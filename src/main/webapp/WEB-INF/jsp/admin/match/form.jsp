@@ -1,16 +1,5 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<script>
-    $(document).ready(function(){
-        $('#miMatchTime').datepicker({
-            format: 'yyyy-mm-dd',
-            minView: 1,//只显示到小时
-            language: "zh-CN",
-            autoclose: true,
-            todayHighlight: true
-        });
-    });
-</script>
 <input type="hidden" name="miId" id="miId" value="${matchInfo.miId }"/>
 <div class="box-body">
     <div class="form-group">
@@ -112,18 +101,28 @@
                 <th>队员名称</th>
                 <th>所属队伍</th>
                 <th>队员类型</th>
+                <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
             </tr>
             </thead>
             <tbody>
             <c:forEach items="${matchUserGroupMappingList}" var="group" varStatus="s">
                 <tr>
                     <td>${s.index +1}</td>
-                    <td>${group[0].mugmGroupName}</td>
-                    <td>${group[0].mugmUserName}</td>
-                    <td>${group[1].tiName}</td>
+                    <td>${group.groupName}</td>
+                    <td>${group.userName}</td>
+                    <td>${group.teamAbbrev}</td>
                     <td>
-                        <c:if test="${group[0].mugmUserType == 0}"><div style="color:red;">赛长</div></c:if>
-                        <c:if test="${group[0].mugmUserType == 1}">队员</c:if>
+                        <c:if test="${group.userType == 0}"><div style="color:red;">赛长</div></c:if>
+                        <c:if test="${group.userType == 1}">队员</c:if>
+                    </td>
+                    <td>
+                        <c:if test="${group.userType != 0}">
+                            <a class="btn btn-success" href="javascript:setCap(${group.userId})">设为赛长</a>
+                            <a class="btn btn-danger" href="javascript:delFromTeam(${group.userId})">移出比赛</a>
+                        </c:if>
+                        <c:if test="${group.userType == 0}">
+                            <a class="btn btn-danger" href="javascript:delCap(${group.userId})">取消赛长</a>
+                        </c:if>
                     </td>
                 </tr>
             </c:forEach>
@@ -131,16 +130,13 @@
         </table>
     </c:if>
 
-
     <br/>
     <br/>
-    <br/>
-
     <div class="form-group">
         <label for="wcTitle" class="col-sm-2 control-label">比分列表</label>
     </div>
     <c:if test="${score != null && score.size() > 0 }">
-        <table id="example2" class="table table-bordered table-hover" style="float:left;width:14%;">
+        <table id="example2" class="table table-bordered table-hover" style="float:left;width:14%;margin-left:5%;">
             <thead>
             <tr>
                 <th>序号</th>
@@ -194,3 +190,62 @@
 		<button type="submit" class="btn btn-info pull-right">保存</button>
 	</div>
 </div>
+
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">提示</h4>
+            </div>
+            <div class="modal-body" id="tips">
+            </div>
+            <input type="hidden" id="userId"/>
+            <input type="hidden" id="type"/>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="sureBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function(){
+        $('#miMatchTime').datepicker({
+            format: 'yyyy-mm-dd',
+            minView: 1,//只显示到小时
+            language: "zh-CN",
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $("#sureBtn").click(function () {
+            window.location.href = "admin/match/updateMatchUser?matchId="+$("#miId").val()+"&userId="+$("#userId").val()+"&type="+$("#type").val();
+        });
+    });
+    //设为赛长
+    function setCap(userId) {
+        $("#userId").val(userId);
+        $("#type").val(0);
+        $("#tips").html("确定要将该球友设为赛长吗？");
+        $("#myModal").modal("show");
+    }
+    //取消设为赛长
+    function delCap(userId) {
+        $("#userId").val(userId);
+        $("#type").val(1);
+        $("#tips").html("确定要取消该球友的赛长吗？");
+        $("#myModal").modal("show");
+    }
+    //移出比赛
+    function delFromTeam(userId) {
+        $("#userId").val(userId);
+        $("#type").val(2);
+        $("#tips").html("确定要将该球友移出比赛吗？此操作不可恢复！");
+        $("#myModal").modal("show");
+    }
+</script>

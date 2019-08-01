@@ -132,7 +132,7 @@ public class AdminMatchController {
 			List<TeamInfo> joinTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiJoinTeamIds());
 			List<TeamInfo> submitTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiReportScoreTeamId());
 			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId);
-			List<Object[]> matchUserGroupMappingList = adminMatchService.getMatchUserGroupMappingList(matchInfo.getMiId());
+			List<Map<String,Object>> matchUserGroupMappingList = adminMatchService.getMatchUserGroupMappingList(matchInfo.getMiId());
 			mm.addAttribute("matchInfo",matchInfo);
 			mm.addAttribute("joinTeamInfoList",joinTeamInfoList);
 			mm.addAttribute("submitTeamInfoList",submitTeamInfoList);
@@ -380,5 +380,25 @@ public class AdminMatchController {
         }
         return "admin/match/add";
     }
+
+
+	/**
+	 * 操作比赛球友
+	 * @param matchId 比赛id
+	 * @param userId 用户id
+	 * @param type 类型 0：设为赛长  1：取消设为赛长 2:移出比赛
+	 * @return
+	 */
+	@RequestMapping("updateMatchUser")
+	public String updateMatchUser(Long matchId,Long userId,Integer type){
+		try{
+			adminMatchService.updateMatchUser(matchId,userId,type);
+		}catch(Exception e){
+			e.printStackTrace();
+			logger.error("后台管理——操作比赛球友出错。matchId="+matchId+"     "+ e );
+			return "admin/error";
+		}
+		return "redirect:editMatchUI?matchId="+matchId;
+	}
 
 }
