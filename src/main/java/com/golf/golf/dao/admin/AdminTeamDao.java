@@ -3,13 +3,9 @@ package com.golf.golf.dao.admin;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.db.IntegralConfig;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.MatchUserGroupMapping;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -117,4 +113,26 @@ public class AdminTeamDao extends CommonDao {
         hql.append("DELETE FROM IntegralConfig AS t WHERE t.icTeamId= "+teamId);
         dao.executeHql(hql.toString());
     }
+
+	/**
+	 * 删除比洞赛输赢表
+	 * @param teamId 球队id
+	 * @return
+	 */
+	public void delMatchHoleResultByTeamId(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchHoleResult AS t WHERE t.mhrTeamId= "+teamId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 删除球队积分
+	 * @param teamId 球队id
+	 * @return
+	 */
+	public void delTeamUserPointByTeamId(Long teamId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM TeamUserPoint AS t WHERE t.tupTeamId= "+teamId);
+		dao.executeHql(hql.toString());
+	}
 }

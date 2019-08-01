@@ -2959,6 +2959,7 @@ public class MatchService implements IBaseService {
 			matchScoreUserMapping.setMsumMatchId(matchId);
 			matchScoreUserMapping.setMsumGroupId(matchUserGroupMapping.getMugmGroupId());
 			matchScoreUserMapping.setMsumScoreUserId(otherUserId);
+			matchScoreUserMapping.setMsumType(0);
 			matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
 			matchDao.save(matchScoreUserMapping);
 		}

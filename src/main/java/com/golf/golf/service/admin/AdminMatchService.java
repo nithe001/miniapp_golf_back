@@ -3,23 +3,21 @@ package com.golf.golf.service.admin;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.bean.MatchGroupUserScoreBean;
-import com.golf.golf.bean.MatchTotalUserScoreBean;
+import com.golf.common.spring.mvc.WebUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.admin.AdminMatchDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
-import com.golf.golf.db.MatchUserGroupMapping;
+import com.golf.golf.db.MatchUserQrcode;
 import com.golf.golf.db.TeamInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 赛事活动
@@ -171,6 +169,25 @@ public class AdminMatchService implements IBaseService {
         dao.delMatchUserMapping(matchId);
 		//删除比赛对应的用户积分信息
 		dao.delMatchUserPointInfo(matchId);
+
+		//获取比赛对应的生成二维码信息
+		List<MatchUserQrcode> matchUserQrcodeList = dao.getMatchUserQRCodeList(matchId);
+		//删掉对应的二维码文件
+		if(matchUserQrcodeList != null && matchUserQrcodeList.size() >0){
+			for(MatchUserQrcode qrcode:matchUserQrcodeList){
+				String path = WebUtil.getPath();
+				String qrcodePath = qrcode.getMuqQrcodePath();
+				File file = new File(path, qrcodePath);
+				if(file.exists()){
+					file.delete();
+				}
+			}
+		}
+		//删除比赛对应的生成二维码信息
+		dao.delMatchQRCodeInfo(matchId);
+
+		//删除比赛对应的扫二维码信息
+		dao.delScanMatchQRCodeInfo(matchId);
     }
 	/**
 	 * 删除高球规则

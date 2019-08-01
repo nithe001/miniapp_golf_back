@@ -3,7 +3,6 @@ package com.golf.golf.service.admin;
 import com.golf.common.IBaseService;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.TeamDao;
@@ -12,12 +11,10 @@ import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
-import java.sql.Time;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,5 +153,10 @@ public class AdminTeamService implements IBaseService {
         adminTeamDao.delMatchScoreByTeamId(teamId);
         //删除成绩确认配置
         adminTeamDao.delMatchScoreSubmitConfigByTeamId(teamId);
+        //删除比洞赛输赢表
+		adminTeamDao.delMatchHoleResultByTeamId(teamId);
+		//删除球队积分
+		adminTeamDao.delTeamUserPointByTeamId(teamId);
+
     }
 }

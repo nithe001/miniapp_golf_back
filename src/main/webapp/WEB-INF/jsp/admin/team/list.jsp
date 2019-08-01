@@ -88,9 +88,12 @@
                                                     <c:if test="${teamInfo.valid == null || teamInfo.valid == 1}">注销</c:if>
                                                     <c:if test="${teamInfo.valid == 0 }">恢复</c:if>
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" onclick="delTeam(${teamInfo.tiId})" href="javascript:void(0)">
-                                                    删除
-                                                </a>
+                                                <c:if test="${teamInfo.valid == 0}">
+                                                    <a class="btn btn-danger" onclick="delTeam(${teamInfo.tiId})" href="javascript:void(0)">
+                                                        删除
+                                                    </a>
+                                                </c:if>
+
                                             </td>
                                         </tr>
                                     </c:forEach>

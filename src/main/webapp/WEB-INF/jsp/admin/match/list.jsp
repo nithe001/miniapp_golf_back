@@ -117,9 +117,11 @@
                                                     <c:if test="${matchInfo.miIsValid == null || matchInfo.miIsValid == 1}">注销</c:if>
                                                     <c:if test="${matchInfo.miIsValid == 0 }">恢复</c:if>
                                                 </a>&nbsp;
-                                                <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
-                                                    删除
-                                                </a>
+                                                <c:if test="${matchInfo.miIsValid == 0}">
+                                                    <a class="btn btn-danger" href="javascript:void(0);" onclick="delMatch(${matchInfo.miId})">
+                                                        删除
+                                                    </a>
+                                                </c:if>
                                             </td>
                                         </tr>
                                     </c:forEach>

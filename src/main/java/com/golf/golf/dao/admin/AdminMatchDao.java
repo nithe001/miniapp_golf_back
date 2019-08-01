@@ -3,10 +3,7 @@ package com.golf.golf.dao.admin;
 import com.golf.common.db.CommonDao;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
-import com.golf.golf.db.MatchInfo;
-import com.golf.golf.db.MatchRule;
-import com.golf.golf.db.MatchScoreUserMapping;
-import com.golf.golf.db.TeamUserPoint;
+import com.golf.golf.db.*;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -163,6 +160,36 @@ public class AdminMatchDao extends CommonDao {
 	public void delMatchUserPointInfo(Long matchId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("DELETE FROM TeamUserPoint AS t WHERE t.tupMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 删除比赛对应的生成二维码信息
+	 * @return
+	 */
+	public void delMatchQRCodeInfo(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchUserQrcode AS t WHERE t.muqMatchId = "+matchId);
+		dao.executeHql(hql.toString());
+	}
+
+	/**
+	 * 获取比赛对应的二维码信息
+	 * @return
+	 */
+	public List<MatchUserQrcode> getMatchUserQRCodeList(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM MatchUserQrcode as t WHERE t.muqMatchId = "+matchId);
+		return dao.createQuery(hql.toString());
+	}
+
+	/**
+	 * 删除比赛对应的扫描二维码信息
+	 * @return
+	 */
+	public void delScanMatchQRCodeInfo(Long matchId) {
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchScoreUserMapping AS t WHERE t.msumMatchId = "+matchId);
 		dao.executeHql(hql.toString());
 	}
 }
