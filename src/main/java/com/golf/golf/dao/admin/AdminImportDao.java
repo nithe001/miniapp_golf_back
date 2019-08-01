@@ -45,10 +45,14 @@ public class AdminImportDao extends CommonDao {
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public Long getTeamUserMappingByUserName(String userName) {
+	public TeamUserMapping getTeamUserMappingByUserId(Long userId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select count(*) FROM TeamUserMapping as t,UserInfo AS u WHERE t.tumUserId = u.uiId and u.uiRealName = '"+userName+"'");
-		return dao.createCountQuery(hql.toString());
+		hql.append(" FROM TeamUserMapping as t WHERE t.tumUserId = "+userId);
+		List<TeamUserMapping> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
 	}
 
 	/**

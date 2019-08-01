@@ -44,6 +44,8 @@
             </div>
             <div class="modal-body">
                 <input type="file" id="multiFileUpload" name="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                <br/>
+                <input type="image" src="static/images/loading.gif" style="width:70px;height:70px;" id="loadImg">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
@@ -55,8 +57,12 @@
 <jsp:include page="../include/adminlteJsInclude.jsp"/>
 <script type="text/javascript">
     $(document).ready(function () {
+        $("#loadImg").hide();
         $("#importBtn").bind("click", function () {
             $('#myFileModal').modal('show');
+            $("#multiFileUpload").bind("click", function () {
+                $("#loadImg").show();
+            })
             $('#multiFileUpload').fileupload({
                 type: "POST",
                 cache: false,
@@ -66,6 +72,7 @@
                 success: function (json) {
                     if (json.success) {
                         $('#myFileModal').modal('hide');
+                        $("#loadImg").hide();
                         alert("导入成功");
                     } else {
                         alert(json.msg);

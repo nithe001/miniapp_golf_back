@@ -127,6 +127,7 @@ public class UserController {
 
 	/**
 	 * 修改个人信息 同时更新其他表中有用到真实姓名的地方
+	 * 用真实姓名匹配导入的成绩
 	 * @return
 	 */
 	@ResponseBody

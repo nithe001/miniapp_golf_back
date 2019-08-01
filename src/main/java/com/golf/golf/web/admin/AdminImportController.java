@@ -49,10 +49,12 @@ public class AdminImportController {
 			int n = xwb.getNumberOfSheets();
 			//导入球队详情
 			List<String> joinTeamIdList = adminImportService.importTeamInfo(xwb);
-			//导入球队球友mapping
-			adminImportService.importTeamUserMapping(xwb);
 			//导入比赛详情
 			Long matchId = adminImportService.importMatchInfo(xwb,joinTeamIdList);
+			//导入用户
+			adminImportService.importUserInfo(xwb);
+			//导入球队球友mapping
+			adminImportService.importTeamUserMapping(xwb);
 			//导入比赛球友mapping
 			adminImportService.importMatchUserMapping(xwb,matchId);
 			//导入成绩

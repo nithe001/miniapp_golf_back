@@ -237,9 +237,9 @@ public class MatchService implements IBaseService {
 		if (groupList_ != null && groupList_.size() > 0) {
 			for (Map<String,Object> map : groupList_) {
 				MatchGroup matchGroup = new MatchGroup();
-				matchGroup.setMgMatchId((Long)map.get("matchId"));
-				matchGroup.setMgId((Long)map.get("groupId"));
-				matchGroup.setMgGroupName((String)map.get("groupName"));
+				matchGroup.setMgMatchId(getLongValue(map,"matchId"));
+				matchGroup.setMgId(getLongValue(map,"groupId"));
+				matchGroup.setMgGroupName(getIntegerValue(map,"groupName").toString());
 
 				MatchGroupBean matchGroupBean = new MatchGroupBean();
 				matchGroupBean.setMatchGroup(matchGroup);
