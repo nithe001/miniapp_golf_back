@@ -4,7 +4,9 @@ import com.golf.common.db.CommonDao;
 import com.golf.golf.db.*;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 导入成绩
@@ -28,13 +30,32 @@ public class AdminImportDao extends CommonDao {
 	}
 
 	/**
-	 * 根据球场名称获取球场信息
+	 * 获取球队
 	 * @return
 	 */
-	public TeamInfo getTeamInfoByName(String teamName) {
+	public TeamInfo getTeamInfoByName(String teamName,String teamNameAbbrev) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM TeamInfo as t WHERE t.tiName = '"+teamName+"'");
+		hql.append(" and t.tiAbbrev = '"+teamNameAbbrev+"'");
 		List<TeamInfo> list = dao.createQuery(hql.toString());
+		if(list != null && list.size() >0){
+			return list.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取球队
+	 * @return
+	 */
+	public TeamInfo getTeamInfoByAbbrevName(String teamNameAbbrev, List<Long> joinTeamIdList) {
+		Map<String,Object> parp = new HashMap<>();
+		parp.put("teamNameAbbrev",teamNameAbbrev);
+		parp.put("joinTeamIdList",joinTeamIdList);
+		StringBuilder hql = new StringBuilder();
+		hql.append(" FROM TeamInfo as t WHERE t.tiAbbrev = :teamNameAbbrev");
+		hql.append(" and t.tiId in (:joinTeamIdList)");
+		List<TeamInfo> list = dao.createQuery(hql.toString(),parp);
 		if(list != null && list.size() >0){
 			return list.get(0);
 		}
@@ -45,9 +66,9 @@ public class AdminImportDao extends CommonDao {
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public TeamUserMapping getTeamUserMappingByUserId(Long userId) {
+	public TeamUserMapping getTeamUserMappingByUserId(Long teamId,Long userId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append(" FROM TeamUserMapping as t WHERE t.tumUserId = "+userId);
+		hql.append(" FROM TeamUserMapping as t WHERE t.tumTeamId = "+teamId+" and t.tumUserId = "+userId);
 		List<TeamUserMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size() >0){
 			return list.get(0);
@@ -98,10 +119,11 @@ public class AdminImportDao extends CommonDao {
 	 * 查询是否存在比赛用户mapping
 	 * @return
 	 */
-	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId, Long userId) {
+	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId, Long groupId, Long userId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchUserGroupMapping as t WHERE t.mugmMatchId = "+matchId);
 		hql.append(" and t.mugmTeamId = "+teamId);
+		hql.append(" and t.mugmGroupId = "+groupId);
 		hql.append(" and t.mugmUserId = "+userId);
 		List<MatchUserGroupMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size() >0){

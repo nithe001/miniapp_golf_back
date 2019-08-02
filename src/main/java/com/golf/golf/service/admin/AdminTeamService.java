@@ -144,7 +144,8 @@ public class AdminTeamService implements IBaseService {
      * @return
      */
     public void delTeam(Long teamId) {
-        adminTeamDao.del(TeamInfo.class,teamId);
+		TeamInfo teamInfo = adminTeamDao.get(TeamInfo.class,teamId);
+        adminTeamDao.del(teamInfo);
         //删除球队用户配置
         adminTeamDao.delTeamUserMapping(teamId);
         //删除比赛用户配置中对应球队信息

@@ -81,14 +81,14 @@
                                         <th width="4%">序号</th>
                                         <th width="12%">标题</th>
                                         <th width="5%">类型</th>
-                                        <th width="5%">观战范围</th>
+                                        <th width="8%">观战范围</th>
                                         <th width="7%">参赛范围</th>
                                         <th width="8%">赛制</th>
                                         <th width="8%">开球时间</th>
                                         <th width="8%">创建时间</th>
                                         <th width="6%">创建人</th>
-                                        <th width="6%">比赛状态</th>
-                                        <th width="6%">是否有效</th>
+                                        <th width="8%">比赛状态</th>
+                                        <th width="8%">是否有效</th>
                                         <th><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>操作</th>
                                     </tr>
                                     </thead>

@@ -1,6 +1,7 @@
 package com.golf.golf.web.admin;
 
 import com.golf.common.gson.JsonWrapper;
+import com.golf.golf.db.MatchInfo;
 import com.golf.golf.service.admin.AdminImportService;
 import com.google.gson.JsonElement;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 导入成绩
@@ -40,6 +39,7 @@ public class AdminImportController {
 
 	/**
 	 * 导入比赛详情
+	 * 是否覆盖：1：是 0：否
 	 * @return
 	 */
 	@ResponseBody
@@ -47,27 +47,18 @@ public class AdminImportController {
 	public JsonElement importScore(MultipartFile file,Integer isCoverMatch,Integer isCoverTeam,Integer isCoverScore) throws IOException {
 		try {
 			XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
-			int n = xwb.getNumberOfSheets();
-			//导入球队详情
-			Map<String,Object> map = adminImportService.importTeamInfo(xwb);
-			//重名的球队
-
-			
-			List<String> joinTeamIdList = (List<String>)map.get("joinTeamIdList");
-			//导入比赛详情
-			Long matchId = adminImportService.importMatchInfo(xwb,joinTeamIdList,isCoverMatch);
-			if(matchId == 0L){
-				//有重名的比赛
-				return JsonWrapper.newDataInstance(matchId);
+//			int n = xwb.getNumberOfSheets();
+			//导入球队详情，返回球队idList
+			String joinTeamIdList = adminImportService.importTeamInfo(xwb,isCoverTeam);
+			//导入比赛详情,返回比赛id
+			MatchInfo matchInfo = adminImportService.importMatchInfo(xwb,joinTeamIdList,isCoverMatch);
+			if(matchInfo == null){
+				return JsonWrapper.newErrorInstance("比赛场地不存在。");
 			}
-			//导入用户
-			adminImportService.importUserInfo(xwb);
-			//导入球队球友mapping
-			adminImportService.importTeamUserMapping(xwb);
-			//导入比赛球友mapping
-			adminImportService.importMatchUserMapping(xwb,matchId);
-			//导入成绩
-			adminImportService.importScoreInfo(xwb,matchId);
+			//导入用户/球队球友mapping/比赛球友mapping、导入比赛分组
+			adminImportService.importData(xwb,matchInfo,isCoverScore);
+			//更新队长
+			adminImportService.updateTeamCap(xwb,joinTeamIdList);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			e.printStackTrace();

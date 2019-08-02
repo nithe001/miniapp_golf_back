@@ -160,7 +160,8 @@ public class AdminMatchService implements IBaseService {
 		//删除比赛输赢情况
 		adminMatchDao.delMatchWinOrLose(matchId);
 		//删除比赛信息
-        adminMatchDao.del(MatchInfo.class, matchId);
+		MatchInfo matchInfo = adminMatchDao.get(MatchInfo.class,matchId);
+        adminMatchDao.del(matchInfo);
 		//删除比赛观战信息
 		adminMatchDao.delMatchWatchInfo(matchId);
 		//删除比赛对应的用户比分

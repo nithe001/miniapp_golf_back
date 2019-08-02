@@ -22,6 +22,24 @@
                     <div class="box">
                         <div class="box-body">
                             <div class="box-header">
+                                <div class="form-group">
+                                    <span style="color:red;">请谨慎选择，一旦导入无法撤回</span>
+                                </div>
+                                <div class="form-group">
+                                    是否覆盖比赛信息：
+                                    <input type="radio" name="isCoverMatch" value="1">是
+                                    <input type="radio" name="isCoverMatch" value="0">否
+                                </div>
+                                <div class="form-group">
+                                    是否覆盖球队信息：
+                                    <input type="radio" name="isCoverTeam" value="1">是
+                                    <input type="radio" name="isCoverTeam" value="0">否
+                                </div>
+                                <div class="form-group">
+                                    是否覆盖比赛成绩信息：
+                                    <input type="radio" name="isCoverScore" value="1">是
+                                    <input type="radio" name="isCoverScore" value="0">否
+                                </div>
                                 <button type="button" class="btn btn-success" id="importBtn">导入</button>
                             </div>
                         </div>
@@ -59,6 +77,18 @@
     $(document).ready(function () {
         $("#loadImg").hide();
         $("#importBtn").bind("click", function () {
+            if(!$("input[name=isCoverMatch]:checked").val()){
+                alert("请选择是否覆盖比赛信息。");
+                return false;
+            }
+            if(!$("input[name=isCoverTeam]:checked").val()){
+                alert("请选择是否覆盖球队信息。");
+                return false;
+            }
+            if(!$("input[name=isCoverScore]:checked").val()){
+                alert("请选择是否覆盖比赛成绩信息。");
+                return false;
+            }
             $('#myFileModal').modal('show');
             $("#multiFileUpload").bind("click", function () {
                 $("#loadImg").show();
@@ -69,6 +99,9 @@
                 async: false,
                 dataType: "json",
                 url: 'admin/import/importScore',
+                formData:{isCoverMatch:$("input[name=isCoverMatch]:checked").val(),
+                    isCoverTeam:$("input[name=isCoverTeam]:checked").val(),
+                    isCoverScore:$("input[name=isCoverScore]:checked").val()},
                 success: function (json) {
                     if (json.success) {
                         $('#myFileModal').modal('hide');
