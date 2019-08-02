@@ -639,8 +639,12 @@ public class UserService implements IBaseService {
 				//删除这个导入用户
 				dao.del(importUserInfo);
 			}else if(importUserInfoList.size() > 1){
+				List<Long> userIdList = new ArrayList<>();
+				for(UserInfo u:importUserInfoList){
+					userIdList.add(u.getUiId());
+				}
 				//有重名的，选一下球队
-//				List<Map<String,Object>> teamList = dao.getUserJoinTeamList();
+				List<Map<String,Object>> teamList = dao.getUserJoinTeamList(userIdList);
 			}
 		}
 	}

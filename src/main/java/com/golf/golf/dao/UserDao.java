@@ -387,4 +387,12 @@ public class UserDao extends CommonDao {
 		hql.append("UPDATE TeamUserMapping AS t set t.tumUserId = "+myUserId+" where t.tumUserId ="+importUserId);
 		dao.executeHql(hql.toString());
 	}
+
+	/**
+	 * 获取这些用户加入的球队
+	 * @return
+	 */
+	public List<Map<String, Object>> getUserJoinTeamList(List<Long> userIdList) {
+		return null;
+	}
 }
