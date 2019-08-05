@@ -1138,7 +1138,7 @@ public class MatchDao extends CommonDao {
 				"user_info AS u " +
 				"WHERE " +
 				"g.mugm_user_id = u.ui_id " +
-				"AND g.mugm_match_id = :matchId and g.mugm_team_id = :teamId and g.mugm_is_auto_cap = 0 ");
+				"AND g.mugm_match_id = :matchId and g.mugm_team_id = :teamId and (g.mugm_is_auto_cap = 0 or g.mugm_is_auto_cap is null) ");
 		if(parp.get("keyword") != null){
 			sql.append(" and (u.ui_real_name like :keyword or u.ui_nick_name like :keyword) ");
 		}
