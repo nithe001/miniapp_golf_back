@@ -139,10 +139,6 @@ public class UserController {
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
 				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
 				userService.updateUser(userInfoBean, openid);
-				/*if(StringUtils.isNotEmpty(userInfoBean.getUiRealName())){
-					//匹配导入的成绩
-					userService.updateScoreByRealName(userInfoBean,openid);
-				}*/
 			}
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
@@ -243,6 +239,40 @@ public class UserController {
 			e.printStackTrace();
 			logger.error("前台-根据用户id获取高球规则失败。" ,e);
 			return JsonWrapper.newErrorInstance("根据用户id获取高球规则失败。");
+		}
+	}
+
+	/**
+	 * 查询是否有待认领的成绩
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("getHasScoreByClaim")
+	public JsonElement getHasScoreByClaim(String openid) {
+		try {
+			List<Map<String, Object>> result = userService.getHasScoreByClaim(openid);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-查询是否有待认领的成绩时失败。openid="+openid ,e);
+			return JsonWrapper.newErrorInstance("前台-查询是否有待认领的成绩时失败。openid="+openid);
+		}
+	}
+
+	/**
+	 * 认领成绩
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateClaimUserScore")
+	public JsonElement updateClaimUserScore(String openid,String chooseIds) {
+		try {
+			userService.updateClaimUserScore(openid,chooseIds);
+			return JsonWrapper.newSuccessInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-用户认领成绩失败。openid="+openid ,e);
+			return JsonWrapper.newErrorInstance("前台-用户认领成绩失败。openid="+openid);
 		}
 	}
 

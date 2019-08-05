@@ -23,9 +23,11 @@
                         <div class="box-body">
                             <div class="box-header">
                                 <div class="form-group">
+                                    <span style="color:red;">如果系统中存在同一个人名+球队的用户，并且已存在同一场比赛的成绩，数据会被覆盖，不存在的会新增。</span>
+                                    <br/>
                                     <span style="color:red;">请谨慎选择，一旦导入无法撤回</span>
                                 </div>
-                                <div class="form-group">
+                                <%--<div class="form-group">
                                     是否覆盖比赛信息：
                                     <input type="radio" name="isCoverMatch" value="1">是
                                     <input type="radio" name="isCoverMatch" value="0">否
@@ -39,7 +41,7 @@
                                     是否覆盖比赛成绩信息：
                                     <input type="radio" name="isCoverScore" value="1">是
                                     <input type="radio" name="isCoverScore" value="0">否
-                                </div>
+                                </div>--%>
                                 <button type="button" class="btn btn-success" id="importBtn">导入</button>
                             </div>
                         </div>
@@ -77,7 +79,7 @@
     $(document).ready(function () {
         $("#loadImg").hide();
         $("#importBtn").bind("click", function () {
-            if(!$("input[name=isCoverMatch]:checked").val()){
+            /*if(!$("input[name=isCoverMatch]:checked").val()){
                 alert("请选择是否覆盖比赛信息。");
                 return false;
             }
@@ -88,7 +90,7 @@
             if(!$("input[name=isCoverScore]:checked").val()){
                 alert("请选择是否覆盖比赛成绩信息。");
                 return false;
-            }
+            }*/
             $('#myFileModal').modal('show');
             $("#multiFileUpload").bind("click", function () {
                 $("#loadImg").show();
@@ -99,9 +101,9 @@
                 async: false,
                 dataType: "json",
                 url: 'admin/import/importScore',
-                formData:{isCoverMatch:$("input[name=isCoverMatch]:checked").val(),
-                    isCoverTeam:$("input[name=isCoverTeam]:checked").val(),
-                    isCoverScore:$("input[name=isCoverScore]:checked").val()},
+                // formData:{isCoverMatch:$("input[name=isCoverMatch]:checked").val(),
+                //     isCoverTeam:$("input[name=isCoverTeam]:checked").val(),
+                //     isCoverScore:$("input[name=isCoverScore]:checked").val()},
                 success: function (json) {
                     if (json.success) {
                         $('#myFileModal').modal('hide');

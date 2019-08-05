@@ -619,33 +619,43 @@ public class UserService implements IBaseService {
 		return dao.getWechatUserByOpenid(openid);
 	}
 
+
+	/**
+	 * 查询是否有待认领的成绩
+	 * 查询除了我之外，是否存在这个真实姓名 有未导入的数据
+	 * @return
+	 */
+	public List<Map<String, Object>> getHasScoreByClaim(String openid) {
+		UserInfo userInfo = getUserInfoByOpenId(openid);
+		return dao.getUserCountByRealName(userInfo.getUiRealName());
+	}
 	/**
 	 * 匹配导入的成绩
 	 * @return
 	 */
-	public void updateScoreByRealName(UserInfo userInfoBean, String openid) {
-		Long myUserId = getUserIdByOpenid(openid);
-		//查询是否有这个真实姓名
-		List<UserInfo> importUserInfoList = dao.getUserCountByRealName(userInfoBean.getUiRealName(),myUserId);
-		if(importUserInfoList != null && importUserInfoList.size()>0){
-			if(importUserInfoList.size() == 1){
-				UserInfo importUserInfo = importUserInfoList.get(0);
-				//更新这个导入用户的 比赛分组mapping 为db的id
-				dao.updateImportMatchMappingUserId(importUserInfo.getUiId(),myUserId);
-				//更新这个导入用户的 比赛成绩 的用户id为db的id
-				dao.updateImportMatchScoreUserId(importUserInfo.getUiId(),myUserId);
-				//更新这个导入用户的 球队分组mapping 为db的id
-				dao.updateImportTeamMappingUserId(importUserInfo.getUiId(),myUserId);
-				//删除这个导入用户
-				dao.del(importUserInfo);
-			}else if(importUserInfoList.size() > 1){
-				List<Long> userIdList = new ArrayList<>();
-				for(UserInfo u:importUserInfoList){
-					userIdList.add(u.getUiId());
-				}
-				//有重名的，选一下球队
-				List<Map<String,Object>> teamList = dao.getUserJoinTeamList(userIdList);
+	public void updateClaimUserScore(String openid,String chooseIds) {
+		UserInfo userInfo = getUserInfoByOpenId(openid);
+		Long myUesrId = userInfo.getUiId();
+		List<Map<String, Object>> list = dao.getUserCountByRealName(userInfo.getUiRealName());
+		if(list != null && list.size()>0){
+			Long chooseUserId = null;
+			Long chooseTeamId = null;
+			Long chooseMatchId = null;
+			if(StringUtils.isNotEmpty(chooseIds)){
+				String[] chooseIdStr = chooseIds.split(",");
+				chooseUserId = Long.parseLong(chooseIdStr[0]);
+				chooseTeamId = Long.parseLong(chooseIdStr[1]);
+				chooseMatchId = Long.parseLong(chooseIdStr[2]);
 			}
+			//更新这个导入用户的 比赛分组mapping 为db的id
+			dao.updateImportMatchMappingUserId(chooseUserId,myUesrId);
+			//更新这个导入用户的 比赛成绩 的用户id为db的id 并设置是否认领为1
+			dao.updateImportMatchScoreUserId(chooseUserId,myUesrId);
+			//更新这个导入用户的 球队分组mapping 为db的id
+			dao.updateImportTeamMappingUserId(chooseUserId,myUesrId);
+			//删除这个导入用户
+			UserInfo chooseUser = dao.get(UserInfo.class,chooseUserId);
+			dao.del(chooseUser);
 		}
 	}
 }

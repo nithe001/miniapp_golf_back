@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 导入成绩
@@ -37,7 +38,7 @@ public class AdminImportService implements IBaseService {
 	 * 是否覆盖：1：是 0：否
 	 * @return
 	 */
-	public String importTeamInfo(XSSFWorkbook xwb,Integer isCoverTeam) {
+	public String importTeamInfo(XSSFWorkbook xwb) {
 		//参赛球队id
 		String joinTeamIds = "";
 		//第2张工作表
@@ -55,21 +56,15 @@ public class AdminImportService implements IBaseService {
 			String teamNameAbbrev = row.getCell(1).toString();
 			//查询是否有该球队
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName,teamNameAbbrev);
-			if(teamInfo == null || isCoverTeam == 0){
-				//没有球队，或者设置的不覆盖
+			if(teamInfo == null){
 				teamInfo = new TeamInfo();
-			}
-			teamInfo.setTiName(teamName);
-			teamInfo.setTiAbbrev(teamNameAbbrev);
-			teamInfo.setTiIsValid(1);
-			if(isCoverTeam == 1 && teamInfo != null && teamInfo.getTiId() != null){
-				//覆盖，更新
-				teamInfo.setTiUpdateTime(System.currentTimeMillis());
-				teamInfo.setTiUpdateUserId(AdminUserUtil.getUserId());
-				teamInfo.setTiUpdateUserName(AdminUserUtil.getShowName());
-				adminImportDao.update(teamInfo);
-			}else{
-				//不覆盖，新增
+				teamInfo.setTiName(teamName);
+				teamInfo.setTiAbbrev(teamNameAbbrev);
+				teamInfo.setTiJoinOpenType(0);
+				teamInfo.setTiInfoOpenType(1);
+				teamInfo.setTiUserInfoType(0);
+				teamInfo.setTiMatchResultAuditType(0);
+				teamInfo.setTiIsValid(1);
 				teamInfo.setTiCreateTime(System.currentTimeMillis());
 				teamInfo.setTiCreateUserId(AdminUserUtil.getUserId());
 				teamInfo.setTiCreateUserName(AdminUserUtil.getShowName());
@@ -86,7 +81,7 @@ public class AdminImportService implements IBaseService {
 	 * 是否覆盖：1：是 0：否
 	 * @return
 	 */
-	public MatchInfo importMatchInfo(XSSFWorkbook xwb,String joinTeamIds,Integer isCoverMatch) throws Exception {
+	public MatchInfo importMatchInfo(XSSFWorkbook xwb,String joinTeamIds) throws Exception {
 		//第1张工作表
 		XSSFSheet sheet = xwb.getSheetAt(0);
 		//从第2行开始
@@ -111,32 +106,22 @@ public class AdminImportService implements IBaseService {
 		String[] matchTypeSplit = matchType.split(",");
 		//获取比赛信息
 		MatchInfo matchInfo = adminImportDao.getMatchInfoByMatchTitle(matchTitle);
-		if(matchInfo == null || isCoverMatch == 0){
-			//没有比赛，或者设置的不覆盖
+		if(matchInfo == null){
 			matchInfo = new MatchInfo();
-		}
-		matchInfo.setMiType(1);
-		matchInfo.setMiTitle(matchTitle);
-		matchInfo.setMiParkId(parkInfo.getPiId());
-		matchInfo.setMiParkName(parkInfo.getPiName());
-		matchInfo.setMiZoneBeforeNine(changdiSplit[0]);
-		matchInfo.setMiZoneAfterNine(changdiSplit[1]);
-		matchInfo.setMiMatchTime(matchTime);
-		matchInfo.setMiMatchOpenType(1);
-		matchInfo.setMiJoinOpenType(1);
-		matchInfo.setMiMatchFormat2(matchTypeSplit[0].equals("个人")?0:1);
-		matchInfo.setMiMatchFormat1(matchTypeSplit[1].equals("比杆")?0:1);
-		matchInfo.setMiJoinTeamIds(joinTeamIds);
-		matchInfo.setMiIsEnd(2);
-		matchInfo.setMiIsValid(1);
-		if(isCoverMatch == 1 && matchInfo != null && matchInfo.getMiId() != null){
-			//覆盖，更新
-			matchInfo.setMiUpdateTime(System.currentTimeMillis());
-			matchInfo.setMiUpdateUserId(AdminUserUtil.getUserId());
-			matchInfo.setMiUpdateUserName(AdminUserUtil.getShowName());
-			adminImportDao.update(matchInfo);
-		}else{
-			//不覆盖，新增
+			matchInfo.setMiType(1);
+			matchInfo.setMiTitle(matchTitle);
+			matchInfo.setMiParkId(parkInfo.getPiId());
+			matchInfo.setMiParkName(parkInfo.getPiName());
+			matchInfo.setMiZoneBeforeNine(changdiSplit[0]);
+			matchInfo.setMiZoneAfterNine(changdiSplit[1]);
+			matchInfo.setMiMatchTime(matchTime);
+			matchInfo.setMiMatchOpenType(1);
+			matchInfo.setMiJoinOpenType(1);
+			matchInfo.setMiMatchFormat2(matchTypeSplit[0].equals("个人")?0:1);
+			matchInfo.setMiMatchFormat1(matchTypeSplit[1].equals("比杆")?0:1);
+			matchInfo.setMiJoinTeamIds(joinTeamIds);
+			matchInfo.setMiIsEnd(2);
+			matchInfo.setMiIsValid(1);
 			matchInfo.setMiCreateTime(System.currentTimeMillis());
 			matchInfo.setMiCreateUserId(AdminUserUtil.getUserId());
 			matchInfo.setMiCreateUserName(AdminUserUtil.getShowName());
@@ -149,7 +134,7 @@ public class AdminImportService implements IBaseService {
 	 * 导入用户、导入用户球队mapping、导入用户比赛maping、导入比赛分组
 	 * @return
 	 */
-	public void importData(XSSFWorkbook xwb,MatchInfo matchInfo,Integer isCoverScore) {
+	public void importData(XSSFWorkbook xwb,MatchInfo matchInfo) {
 		//参赛队id
 		List<Long> joinTeamIdList = getLongList(matchInfo.getMiJoinTeamIds());
 		//Arrays.asList(matchInfo.getMiJoinTeamIds().split(",")).stream().map(s -> Long.parseLong(s.trim())).collect(Collectors.toList());
@@ -162,13 +147,31 @@ public class AdminImportService implements IBaseService {
 			//第4列 球友
 			String userName = row.getCell(3).toString().trim();
 			//第二列 球队
-			String teamAbbrevName = row.getCell(1).toString().trim();
+			String teamAbbrev = row.getCell(1).toString().trim();
 			//第3列 所在分组
 			String groupName = row.getCell(2).toString().trim();
-			//导入用户
-			UserInfo userInfo = this.importUser(userName);
-			//导入用户球队mapping
-			TeamInfo teamInfo = this.importTeamUserMap(teamAbbrevName,userInfo.getUiId(),joinTeamIdList);
+			//导入用户 按人名+球队识别
+			//查看是否有该球友
+			Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(userName,teamAbbrev);
+			Long userId = matchService.getLongValue(userTeamMapping,"userId");
+			Long teamId = matchService.getLongValue(userTeamMapping,"teamId");
+			UserInfo userInfo = null;
+			TeamInfo teamInfo = null;
+			if(userId == null){
+				userInfo = new UserInfo();
+				userInfo.setUiType(2);
+				userInfo.setUiIsValid(1);
+				userInfo.setUiRealName(userName);
+				userInfo.setUiCreateTime(System.currentTimeMillis());
+				userInfo.setUiCreateUserId(AdminUserUtil.getUserId());
+				userInfo.setUiCreateUserName(AdminUserUtil.getShowName());
+				adminImportDao.save(userInfo);
+				//导入用户球队mapping
+				teamInfo = this.importTeamUserMap(teamAbbrev,userInfo.getUiId(),joinTeamIdList);
+			}else{
+				userInfo = adminImportDao.get(UserInfo.class,userId);
+				teamInfo = adminImportDao.get(TeamInfo.class,teamId);
+			}
 			//导入用户比赛mapping
 			MatchGroup groupInfo = this.importMatchUserMap(matchInfo.getMiId(),teamInfo.getTiId(),groupName,userInfo.getUiId(),userName);
 
@@ -176,12 +179,12 @@ public class AdminImportService implements IBaseService {
 			//前9洞
 			for(int j = 4;j<13;j++){
 				Integer holeNum = j-3;
-				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,groupInfo,userInfo,0,isCoverScore);
+				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,groupInfo,userInfo,0);
 			}
 			//后9洞
 			for(int j = 14;j<23;j++){
 				Integer holeNum = j-13;
-				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,groupInfo,userInfo,1,isCoverScore);
+				saveOrUpdateUserScore(row,j,holeNum,matchInfo,teamInfo,groupInfo,userInfo,1);
 			}
 		}
 	}
@@ -197,7 +200,10 @@ public class AdminImportService implements IBaseService {
 		return list;
 	}
 
-	//导入用户比赛 mapping 和比赛group
+	/**
+	 * 导入用户比赛 mapping 和比赛group
+	 * @return
+	 */
 	private MatchGroup importMatchUserMap(Long matchId, Long teamId, String groupName, Long userId, String userName) {
 		Double d = Double.parseDouble(groupName);
 		groupName = d.intValue()+"";
@@ -234,7 +240,10 @@ public class AdminImportService implements IBaseService {
 		return matchGroup;
 	}
 
-	//导入用户球队mapping
+	/**
+	 * 导入用户球队mapping
+	 * @return
+	 */
 	private TeamInfo importTeamUserMap(String teamAbbrevName, Long userId, List<Long> joinTeamIdList) {
 		//获取球队id
 		TeamInfo teamInfo = adminImportDao.getTeamInfoByAbbrevName(teamAbbrevName,joinTeamIdList);
@@ -253,34 +262,13 @@ public class AdminImportService implements IBaseService {
 		return teamInfo;
 	}
 
-	//导入用户
-	private UserInfo importUser(String userName) {
-		//查看是否有该球友 可能有重名的情况
-		UserInfo userInfo = adminImportDao.getUserByRealName(userName);
-		if(userInfo == null){
-			userInfo = new UserInfo();
-		}
-		//不存在，新增
-		userInfo.setUiType(2);
-		userInfo.setUiIsValid(1);
-		userInfo.setUiRealName(userName);
-		if(userInfo != null && userInfo.getUiId() != null){
-			userInfo.setUiUpdateTime(System.currentTimeMillis());
-			userInfo.setUiUpdateUserId(AdminUserUtil.getUserId());
-			userInfo.setUiUpdateUserName(AdminUserUtil.getShowName());
-			adminImportDao.update(userInfo);
-		}else{
-			userInfo.setUiCreateTime(System.currentTimeMillis());
-			userInfo.setUiCreateUserId(AdminUserUtil.getUserId());
-			userInfo.setUiCreateUserName(AdminUserUtil.getShowName());
-			adminImportDao.save(userInfo);
-		}
-		return userInfo;
-	}
 
-	//新增或更新球友成绩
+	/**
+	 * 新增或更新球友成绩
+	 * @return
+	 */
 	private void saveOrUpdateUserScore(XSSFRow row, int j, Integer holeNum,MatchInfo matchInfo,TeamInfo teamInfo,
-									   MatchGroup matchGroup,UserInfo userInfo,Integer beforeAfter,Integer isCoverScore) {
+									   MatchGroup matchGroup,UserInfo userInfo,Integer beforeAfter) {
 		String scoreEveHole = row.getCell(j).toString().trim();
 		Integer score = null;
 		if(StringUtils.isNotEmpty(scoreEveHole)){
@@ -296,8 +284,8 @@ public class AdminImportService implements IBaseService {
 		}
 		ParkPartition parkPartition = adminImportDao.getParkPartition(matchInfo.getMiParkId(),holeNum,holeName);
 		MatchScore matchScore = adminImportDao.getMatchScoreByUser(
-				teamInfo.getTiId(),matchInfo.getMiId(),matchGroup.getMgGroupName(),userInfo.getUiRealName(),holeNum,holeName,beforeAfter);
-		if(matchScore == null || isCoverScore == 0){
+				teamInfo.getTiId(),matchInfo.getMiId(),matchGroup.getMgGroupName(),userInfo.getUiId(),holeNum,holeName,beforeAfter);
+		if(matchScore == null){
 			matchScore = new MatchScore();
 		}
 		matchScore.setMsTeamId(teamInfo.getTiId());
@@ -316,7 +304,7 @@ public class AdminImportService implements IBaseService {
 		matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
 		matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
 		matchScore.setMsRodCha(score-parkPartition.getPpHoleStandardRod());
-		if(isCoverScore == 1 && matchScore != null && matchScore.getMsId() != null){
+		if(matchScore != null && matchScore.getMsId() != null){
 			//覆盖，更新
 			matchScore.setMsUpdateTime(System.currentTimeMillis());
 			matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
@@ -324,6 +312,7 @@ public class AdminImportService implements IBaseService {
 			adminImportDao.update(matchScore);
 		}else{
 			//不覆盖，新增
+			matchScore.setMsIsClaim(0);
 			matchScore.setMsCreateTime(System.currentTimeMillis());
 			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
 			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
@@ -331,7 +320,10 @@ public class AdminImportService implements IBaseService {
 		}
 	}
 
-	//更新球队队长
+	/**
+	 * 更新球队队长
+	 * @return
+	 */
 	public void updateTeamCap(XSSFWorkbook xwb, String joinTeamIds) {
 		//参赛队id
 		List<Long> joinTeamIdList = getLongList(joinTeamIds);
@@ -346,13 +338,17 @@ public class AdminImportService implements IBaseService {
 				break;
 			}
 			//第一列参赛球队简称
-			String teamNameAbbrev = row.getCell(1).toString();
+			String teamAbbrev = row.getCell(1).toString();
+			TeamInfo teamInfo = adminImportDao.getTeamInfoByAbbrevName(teamAbbrev,joinTeamIdList);
 			//球队队长
 			String teamCaps = row.getCell(2).toString();
 			String[] teamCapsSplit = teamCaps.split(",");
 			for(String cap :teamCapsSplit){
-				UserInfo userInfo = adminImportDao.getUserByRealName(cap);
-				if(userInfo == null){
+				Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(cap,teamAbbrev);
+				Long userId = matchService.getLongValue(userTeamMapping,"userId");
+				UserInfo userInfo = null;
+				if(userId == null){
+					userInfo = new UserInfo();
 					//有的赛长没参加比赛
 					userInfo = new UserInfo();
 					userInfo.setUiType(2);
@@ -362,9 +358,10 @@ public class AdminImportService implements IBaseService {
 					userInfo.setUiCreateUserId(AdminUserUtil.getUserId());
 					userInfo.setUiCreateUserName(AdminUserUtil.getShowName());
 					adminImportDao.save(userInfo);
+				}else{
+					userInfo = adminImportDao.get(UserInfo.class,userId);
 				}
 
-				TeamInfo teamInfo = adminImportDao.getTeamInfoByAbbrevName(teamNameAbbrev,joinTeamIdList);
 				TeamUserMapping teamUserMapping = adminImportDao.getTeamUserMappingByUserId(teamInfo.getTiId(),userInfo.getUiId());
 				if(teamUserMapping == null){
 					teamUserMapping = new TeamUserMapping();

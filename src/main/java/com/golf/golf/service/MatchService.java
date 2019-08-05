@@ -977,7 +977,7 @@ public class MatchService implements IBaseService {
 
     /**
      * 比赛详情——赛长获取已报名人员——按球队分组
-     *
+     *不包括自动分配的赛长
      * @return
      */
     public Map<String, Object> getApplyUserByMatchId(Long matchId,String keyword) throws UnsupportedEncodingException {
@@ -989,7 +989,7 @@ public class MatchService implements IBaseService {
 		if(joinTeamIds != null && joinTeamIds.size()>0){
 			for(Long teamId:joinTeamIds){
 				TeamUserBean bean = new TeamUserBean();
-				//获取本参赛队的报名用户
+				//获取本参赛队的报名用户 不包括自动分配的赛长
 				List<Map<String, Object>> userList = matchDao.getUserListByMatchTeamId(matchId,teamId, keyword);
 				//用户昵称解码
 				decodeUserNickName(userList);
@@ -1072,7 +1072,10 @@ public class MatchService implements IBaseService {
                     if(teamId != null){
                         matchUserGroupMapping.setMugmTeamId(teamId);
                     }
-                    matchUserGroupMapping.setMugmIsAutoCap(null);
+                    //如果是自动分配的赛长，就取消自动分配
+                    if(matchUserGroupMapping.getMugmUserType() == 0 && matchUserGroupMapping.getMugmIsAutoCap() == 1){
+						matchUserGroupMapping.setMugmIsAutoCap(0);
+					}
                     matchUserGroupMapping.setMugmGroupId(groupId);
                     matchUserGroupMapping.setMugmGroupName(matchGroup.getMgGroupName());
                     matchUserGroupMapping.setMugmIsDel(0);
@@ -2246,6 +2249,7 @@ public class MatchService implements IBaseService {
 	public Map<String, Object> getTeamTotalScoreByMatchId(Long matchId, Integer mingci) {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		result.put("matchInfo",matchInfo);
 		List<Long> joinTeamIdList = null;
 		//参赛球队
 		if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds())){

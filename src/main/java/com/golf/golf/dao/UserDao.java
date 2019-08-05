@@ -2,6 +2,7 @@ package com.golf.golf.dao;
 
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.*;
+import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -348,14 +349,19 @@ public class UserDao extends CommonDao {
 	}
 
 	/**
-	 * 查询是否有这个真实姓名
+	 * 查询除了我之外，是否存在这个真实姓名
 	 * @return
 	 */
-	public List<UserInfo> getUserCountByRealName(String uiRealName,Long myUserId) {
+	public List<Map<String, Object>> getUserCountByRealName(String uiRealName) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("FROM UserInfo AS u WHERE u.uiRealName = '"+uiRealName+"'");
-		hql.append(" and u.uiId != "+myUserId);
-		return dao.createQuery(hql.toString());
+		hql.append("select u.uiId as userId,u.uiRealName as realName,s.msTeamId as teamId,t.tiAbbrev as teamName,s.msMatchId as matchId,s.msMatchTitle as matchTitle ");
+		hql.append(" from UserInfo as u,MatchScore as s,TeamInfo as t ");
+		hql.append(" where u.uiId = s.msUserId ");
+		hql.append(" and s.msTeamId = t.tiId ");
+		hql.append(" and u.uiRealName = '"+uiRealName+"'");
+		hql.append(" and s.msIsClaim = 0 ");
+		hql.append(" GROUP BY u.uiId ");
+		return dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
 	/**
@@ -370,11 +376,13 @@ public class UserDao extends CommonDao {
 
 	/**
 	 * 更新这个导入用户的成绩id为db的id
+	 * 并设置是否认领为1
 	 * @return
 	 */
 	public void updateImportMatchScoreUserId(Long importUserId, Long myUserId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("UPDATE MatchScore AS t set t.msUserId = "+myUserId+" where t.msUserId ="+importUserId);
+		hql.append("UPDATE MatchScore AS t set t.msUserId = "+myUserId+" , t.msIsClaim = 1 ");
+		hql.append(" where t.msUserId ="+importUserId);
 		dao.executeHql(hql.toString());
 	}
 

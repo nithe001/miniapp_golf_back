@@ -44,19 +44,20 @@ public class AdminImportController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = {"importScore"})
-	public JsonElement importScore(MultipartFile file,Integer isCoverMatch,Integer isCoverTeam,Integer isCoverScore) throws IOException {
+	public JsonElement importScore(MultipartFile file) throws IOException {
+//		,Integer isCoverMatch,Integer isCoverTeam,Integer isCoverScore
 		try {
 			XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
 //			int n = xwb.getNumberOfSheets();
 			//导入球队详情，返回球队idList
-			String joinTeamIdList = adminImportService.importTeamInfo(xwb,isCoverTeam);
+			String joinTeamIdList = adminImportService.importTeamInfo(xwb);
 			//导入比赛详情,返回比赛id
-			MatchInfo matchInfo = adminImportService.importMatchInfo(xwb,joinTeamIdList,isCoverMatch);
+			MatchInfo matchInfo = adminImportService.importMatchInfo(xwb,joinTeamIdList);
 			if(matchInfo == null){
 				return JsonWrapper.newErrorInstance("比赛场地不存在。");
 			}
 			//导入用户/球队球友mapping/比赛球友mapping、导入比赛分组
-			adminImportService.importData(xwb,matchInfo,isCoverScore);
+			adminImportService.importData(xwb,matchInfo);
 			//更新队长
 			adminImportService.updateTeamCap(xwb,joinTeamIdList);
 			return JsonWrapper.newSuccessInstance();

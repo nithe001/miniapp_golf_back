@@ -42,6 +42,7 @@ public class MatchScore implements java.io.Serializable {
 	private Integer msIsBomb;
 	private Integer msIsBogey;
     private Integer msIsTeamSubmit;
+	private Integer msIsClaim;
 	private Long msCreateUserId;
 	private String msCreateUserName;
 	private Long msCreateTime;
@@ -61,7 +62,7 @@ public class MatchScore implements java.io.Serializable {
 					  String msUserName, Integer msType, Integer msScore, Integer msBeforeAfter, String msHoleName,
 					  Integer msHoleNum, Integer msHoleStandardRod, Integer msRodCha, String msIsUp, Integer msRodNum,
 					  Integer msPushRodNum, Integer msIsPar, Integer msIsBird,Integer msIsEagle,Integer msIsOn, Integer msIsBomb,
-					  Integer msIsBogey, Integer msIsTeamSubmit, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
+					  Integer msIsBogey, Integer msIsTeamSubmit, Integer msIsClaim, Long msCreateUserId, String msCreateUserName, Long msCreateTime,
 					  Long msUpdateUserId, String msUpdateUserName, Long msUpdateTime) {
 		this.msTeamId = msTeamId;
 		this.msMatchId = msMatchId;
@@ -88,6 +89,7 @@ public class MatchScore implements java.io.Serializable {
 		this.msIsBomb = msIsBomb;
 		this.msIsBogey = msIsBogey;
 		this.msIsTeamSubmit = msIsTeamSubmit;
+		this.msIsClaim = msIsClaim;
 		this.msCreateUserId = msCreateUserId;
 		this.msCreateUserName = msCreateUserName;
 		this.msCreateTime = msCreateTime;
@@ -351,7 +353,16 @@ public class MatchScore implements java.io.Serializable {
         this.msIsTeamSubmit = msIsTeamSubmit;
     }
 
-    @Column(name = "ms_create_user_id")
+	@Column(name = "ms_is_claim")
+	public Integer getMsIsClaim() {
+		return msIsClaim;
+	}
+
+	public void setMsIsClaim(Integer msIsClaim) {
+		this.msIsClaim = msIsClaim;
+	}
+
+	@Column(name = "ms_create_user_id")
 	public Long getMsCreateUserId() {
 		return this.msCreateUserId;
 	}

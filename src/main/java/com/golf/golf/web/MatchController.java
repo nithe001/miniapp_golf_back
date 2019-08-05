@@ -394,6 +394,7 @@ public class MatchController {
 
     /**
      * 比赛详情——赛长获取已报名人员——按球队分组
+	 *  不包括自动分配的赛长
      * @return
      */
     @ResponseBody

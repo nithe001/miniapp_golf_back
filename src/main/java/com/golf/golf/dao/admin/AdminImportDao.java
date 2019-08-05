@@ -2,8 +2,10 @@ package com.golf.golf.dao.admin;
 
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.*;
+import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
+import javax.xml.crypto.dsig.Transform;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,10 +107,13 @@ public class AdminImportDao extends CommonDao {
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public UserInfo getUserByRealName(String userName) {
+	public Map<String,Object> getUserByRealName(String userName, String teamAbbrev) {
 		StringBuilder hql = new StringBuilder();
-		hql.append(" FROM UserInfo as t WHERE t.uiRealName = '"+userName+"'");
-		List<UserInfo> list = dao.createQuery(hql.toString());
+		hql.append("SELECT u.uiId as userId,t.tiId as teamId FROM TeamUserMapping as tum , UserInfo as u,TeamInfo as t WHERE tum.tumUserId = u.uiId ");
+		hql.append(" and tum.tumTeamId = t.tiId ");
+		hql.append(" and u.uiRealName = '"+userName+"'");
+		hql.append(" and t.tiAbbrev = '"+teamAbbrev+"'");
+		List<Map<String,Object>> list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		if(list != null && list.size() >0){
 			return list.get(0);
 		}
@@ -130,17 +135,6 @@ public class AdminImportDao extends CommonDao {
 			return list.get(0);
 		}
 		return null;
-	}
-
-	/**
-	 * 查询比赛用户的分组
-	 * @return
-	 */
-	public List<Object> getMatchUserMappingGroupList(Long matchId) {
-		StringBuilder hql = new StringBuilder();
-		hql.append("select t1.* from (select DISTINCT t.mugm_group_name+0 as gname from match_user_group_mapping as t where t.mugm_match_id =  "+matchId);
-		hql.append(" as t1 ORDER BY t1.gname ");
-		return dao.createSQLQuery(hql.toString());
 	}
 
 	/**
@@ -178,13 +172,13 @@ public class AdminImportDao extends CommonDao {
 	 * 获取该用户是否有该洞的成绩
 	 * @return
 	 */
-	public MatchScore getMatchScoreByUser(Long teamId, Long matchId, String groupName, String userName, Integer holeNum,
+	public MatchScore getMatchScoreByUser(Long teamId, Long matchId, String groupName, Long userId, Integer holeNum,
 										  String holeName,Integer beforeAfter) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchScore as t WHERE t.msTeamId = "+teamId);
 		hql.append(" and t.msMatchId = "+matchId);
 		hql.append(" and t.msGroupName = '"+groupName+"'");
-		hql.append(" and t.msUserName = '"+userName+"'");
+		hql.append(" and t.msUserId = "+userId);
 		hql.append(" and t.msBeforeAfter = "+beforeAfter);
 		hql.append(" and t.msHoleNum = "+holeNum);
 		hql.append(" and t.msHoleName = '"+holeName+"'");
