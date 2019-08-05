@@ -2315,38 +2315,49 @@ public class MatchService implements IBaseService {
 				Long maxCount = getLongValue(nMap,"maxCount");
 				//然后按照这个数字假如是5，计算各队前5人（双人是前5组）的总杆数及平均杆数并排名 ，
 				// 获取本比赛每个队的参赛人数 显示的是各队实际的参赛人数
-				List<Map<String,Object>> joinMatchUserList = matchDao.getJoinMatchUserList(matchId);
+				List<Map<String,Object>> joinMatchUserList = matchDao.getJoinMatchUserList(matchId,joinTeamIdList);
 				if(joinMatchUserList != null && joinMatchUserList.size() >0){
 					for(Map<String,Object> team:joinMatchUserList){
 						Long teamId = getLongValue(team,"teamId");
+						Integer userCount = getIntegerValue(team,"userCount");
 						MatchTeamRankingBean matchTeamRankingBean = new MatchTeamRankingBean();
 						matchTeamRankingBean.setTeamId(teamId);
 						matchTeamRankingBean.setTeamName(getName(team,"teamName"));
-						matchTeamRankingBean.setUserCount(getIntegerValue(team,"userCount"));
+						matchTeamRankingBean.setUserCount(userCount);
 						//获取本队参赛人数
-						List<Long> teamIdList = new ArrayList<>();
-						teamIdList.add(teamId);
-						List<Map<String,Object>> mapList = matchDao.getUserCountByMatchUserMappingTeamId(matchInfo.getMiId(),teamIdList);
-						Integer userCount = getIntegerValue(mapList.get(0),"userCount");
+//						List<Long> teamIdList = new ArrayList<>();
+//						teamIdList.add(teamId);
+//						List<Map<String,Object>> mapList = matchDao.getUserCountByMatchUserMappingTeamId(matchInfo.getMiId(),teamIdList);
 						Integer sumRodNumByN = 0;
 						//本球队参赛人数小于名次的N，并且小于最大参赛人数
-						if(userCount < mingci && userCount < maxCount){
-							// 如果有球队的参赛人数小于n,少的那几个人，每人杆数按110(Const.DEFAULT_ROD_NUM)计算
-							Long n = maxCount - userCount;
-							sumRodNumByN = n.intValue()*110;
-						}
-						//获取每个队前n名的成绩
-						List<Map<String, Object>> scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId,teamId,mingci);
-						if(scoreList != null && scoreList.size()>0){
-							if(sumRodNumByN > 0){
-								Integer sum = getIntegerValue(scoreList.get(0),"sumRodNum")+sumRodNumByN;
-								BigDecimal b = new BigDecimal((float)(sum/mingci));
-								Double avg = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
-								matchTeamRankingBean.setAvgRodNum(avg);
-								matchTeamRankingBean.setSumRodNum(sum);
+						if(userCount != 0){
+							if(userCount < mingci && userCount < maxCount){
+								// 如果有球队的参赛人数小于n,少的那几个人，每人杆数按110(Const.DEFAULT_ROD_NUM)计算
+								Long n = mingci.longValue() - userCount;
+								sumRodNumByN = n.intValue()*110;
+							}
+							//获取每个队前n名的成绩
+							List<Map<String, Object>> scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId,teamId,mingci);
+							if(scoreList != null && scoreList.size()>0){
+								Integer sumRodNum = getIntegerValue(scoreList.get(0),"sumRodNum");
+								if(sumRodNum != 0){
+									if(sumRodNumByN > 0){
+										Integer sum = sumRodNum+sumRodNumByN;
+										BigDecimal b = new BigDecimal((float)(sum/mingci));
+										Double avg = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
+										matchTeamRankingBean.setAvgRodNum(avg);
+										matchTeamRankingBean.setSumRodNum(sum);
+									}else{
+										matchTeamRankingBean.setAvgRodNum(getDoubleValue(scoreList.get(0),"avgRodNum"));
+										matchTeamRankingBean.setSumRodNum(getIntegerValue(scoreList.get(0),"sumRodNum"));
+									}
+								}else{
+									matchTeamRankingBean.setAvgRodNum(0.0);
+									matchTeamRankingBean.setSumRodNum(0);
+								}
 							}else{
-								matchTeamRankingBean.setAvgRodNum(getDoubleValue(scoreList.get(0),"avgRodNum"));
-								matchTeamRankingBean.setSumRodNum(getIntegerValue(scoreList.get(0),"sumRodNum"));
+								matchTeamRankingBean.setAvgRodNum(0.0);
+								matchTeamRankingBean.setSumRodNum(0);
 							}
 						}else{
 							matchTeamRankingBean.setAvgRodNum(0.0);
@@ -2358,6 +2369,9 @@ public class MatchService implements IBaseService {
 					Collections.sort(matchTeamRankingList,new Comparator<MatchTeamRankingBean>(){
 						@Override
 						public int compare(MatchTeamRankingBean bean1,MatchTeamRankingBean bean2){
+							if(bean1.getAvgRodNum() == 0){
+								return -1;
+							}
 							return new Double(bean1.getAvgRodNum()).compareTo(new Double(bean2.getAvgRodNum()));}
 					});
 				}

@@ -1754,15 +1754,25 @@ public class MatchDao extends CommonDao {
 	/**
 	 * 获取本比赛每个队的参赛人数 显示的是各队实际的参赛人数
 	 */
-	public List<Map<String, Object>> getJoinMatchUserList(Long matchId) {
+	public List<Map<String, Object>> getJoinMatchUserList(Long matchId,List<Long> joinTeamIdList) {
+		Map<String,Object> parp = new HashMap<>();
+		parp.put("matchId",matchId);
+		parp.put("joinTeamIdList",joinTeamIdList);
 		StringBuilder sql = new StringBuilder();
-		sql.append("select mugm.mugm_team_id as teamId,t.ti_name as teamName,count(mugm.mugm_user_id) as userCount " +
-				"FROM match_user_group_mapping AS mugm ,team_info as t ");
-		sql.append("where mugm.mugm_match_id = "+matchId);
-		sql.append(" and mugm.mugm_is_del !=1 ");
-		sql.append(" and t.ti_id = mugm.mugm_team_id ");
-		sql.append("GROUP BY mugm.mugm_team_id ");
-		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+		sql.append("SELECT t.ti_id as teamId, t.ti_name as teamName, u.matchId, u.isDel, count(u.userId) as userCount FROM team_info AS t ");
+		sql.append("LEFT JOIN ( ");
+		sql.append("SELECT " +
+					"m.mugm_match_id as matchId, " +
+					"m.mugm_team_id as tId, " +
+					"m.mugm_is_del as isDel, " +
+					"m.mugm_user_id as userId " +
+					"FROM match_user_group_mapping AS m  " +
+					"where m.mugm_team_id IN (:joinTeamIdList) " +
+					"AND m.mugm_match_id = :matchId " +
+					"GROUP BY m.mugm_team_id,m.mugm_user_id ");
+		sql.append(") AS u ON ( t.ti_id = u.tId AND u.isDel = 0 ) " +
+				"WHERE t.ti_id IN (:joinTeamIdList) GROUP BY t.ti_id ");
+		return dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
 	//获取本球队上报的球友

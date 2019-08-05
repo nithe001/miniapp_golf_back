@@ -47,6 +47,9 @@ public class MatchTeamRankingBean {
 	}
 
 	public Double getAvgRodNum() {
+		if(this.avgRodNum == null){
+			return 0.0;
+		}
 		return avgRodNum;
 	}
 
@@ -55,6 +58,9 @@ public class MatchTeamRankingBean {
 	}
 
 	public Integer getSumRodNum() {
+		if(this.sumRodNum == null){
+			return 0;
+		}
 		return sumRodNum;
 	}
 
