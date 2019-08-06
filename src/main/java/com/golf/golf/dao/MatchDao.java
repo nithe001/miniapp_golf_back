@@ -54,7 +54,7 @@ public class MatchDao extends CommonDao {
 		hql.append(" FROM match_info AS m ");
 		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id AND j.mjwi_type = 0) ");
 		hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
-		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
+		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON (mugm.mugm_match_id = m.mi_id and (mugm.mugm_is_auto_cap is null or mugm.mugm_is_auto_cap = 0)) ");
 		hql.append(" WHERE m.mi_is_valid = 1 ");
 
 		//0：全部比赛（除了不可用的比赛） 1：我参加的比赛（包括我参加的正在报名的比赛）
