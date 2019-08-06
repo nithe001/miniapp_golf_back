@@ -82,9 +82,10 @@ public class AdminImportDao extends CommonDao {
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public MatchInfo getMatchInfoByMatchTitle(String matchTitle) {
+	public MatchInfo getMatchInfoByMatchTitle(String matchTitle,String matchTime) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchInfo as t WHERE t.miTitle = '"+matchTitle+"'");
+		hql.append(" and t.miMatchTime = '"+matchTime+"'");
 		List<MatchInfo> list = dao.createQuery(hql.toString());
 		if(list != null && list.size() >0){
 			return list.get(0);

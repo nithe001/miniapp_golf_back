@@ -1073,7 +1073,8 @@ public class MatchService implements IBaseService {
                         matchUserGroupMapping.setMugmTeamId(teamId);
                     }
                     //如果是自动分配的赛长，就取消自动分配
-                    if(matchUserGroupMapping.getMugmUserType() == 0 && matchUserGroupMapping.getMugmIsAutoCap() == 1){
+                    if(matchUserGroupMapping.getMugmUserType() == 0 &&
+							matchUserGroupMapping.getMugmIsAutoCap() != null && matchUserGroupMapping.getMugmIsAutoCap() == 1){
 						matchUserGroupMapping.setMugmIsAutoCap(0);
 					}
                     matchUserGroupMapping.setMugmGroupId(groupId);

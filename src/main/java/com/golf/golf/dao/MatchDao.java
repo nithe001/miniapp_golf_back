@@ -1617,9 +1617,9 @@ public class MatchDao extends CommonDao {
                 "FROM " +
                 "match_user_group_mapping AS g, " +
                 "user_info AS u " +
-                "WHERE " +
-                "g.mugm_user_id = u.ui_id " +
+                "WHERE g.mugm_user_id = u.ui_id " +
                 "AND g.mugm_match_id = :matchId ");
+		sql.append("and (g.mugm_is_auto_cap = 0 or g.mugm_is_auto_cap is null) ");
         if(teamId != null){
 			sql.append(" AND g.mugm_team_id = :teamId ");
 		}

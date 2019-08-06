@@ -105,7 +105,7 @@ public class AdminImportService implements IBaseService {
 		String matchType = row.getCell(4).toString();
 		String[] matchTypeSplit = matchType.split(",");
 		//获取比赛信息
-		MatchInfo matchInfo = adminImportDao.getMatchInfoByMatchTitle(matchTitle);
+		MatchInfo matchInfo = adminImportDao.getMatchInfoByMatchTitle(matchTitle,matchTime);
 		if(matchInfo == null){
 			matchInfo = new MatchInfo();
 			matchInfo.setMiType(1);
