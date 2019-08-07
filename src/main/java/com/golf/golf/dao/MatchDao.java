@@ -1662,7 +1662,7 @@ public class MatchDao extends CommonDao {
 			hql.append(" and mm.mugm_team_id = :teamId ");
 		}
 		hql.append(" GROUP BY mm.mugm_user_id " +
-					"ORDER BY sumRod " +
+					"ORDER BY sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
 					"LIMIT 0,:mingci");
 		hql.append(") as t");
 		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);

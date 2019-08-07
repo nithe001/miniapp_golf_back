@@ -1048,7 +1048,8 @@ public class MatchService implements IBaseService {
                 if(jsonObject.get("teamId") != null){
                     teamId = Long.parseLong(jsonObject.get("teamId").toString());
                 }
-                MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatchUserMapping(matchId,teamId,userId);
+                //查询用户是否存在
+                MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatchUserMapping(matchId,null,userId);
                 if(matchUserGroupMapping == null){
                    //新增
                     matchUserGroupMapping = new MatchUserGroupMapping();

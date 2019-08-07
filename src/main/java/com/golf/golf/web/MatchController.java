@@ -1,11 +1,15 @@
 package com.golf.golf.web;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.golf.common.Const;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
+import com.golf.golf.bean.ChooseUserBean;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
@@ -27,6 +31,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -490,6 +495,70 @@ public class MatchController {
     }
 
 	/**
+	 * 比赛详情——赛长 添加用户至分组——筛选选中的用户是否有重复的
+	 * @param checkIds:选中的id（mappingid或者用户id）
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("checkChooseUserMutl")
+	public JsonElement checkChooseUserMutl(String checkIds, String mutlUserId) {
+		try {
+			JSONArray allArray = JSON.parseArray(checkIds);
+			JSONArray mutlUserIdArray = JSON.parseArray(mutlUserId);
+			List<ChooseUserBean> list = new ArrayList<>();
+			for(Object mutlObject:mutlUserIdArray){
+				ChooseUserBean bean = new ChooseUserBean();
+				List<JSONObject> objectList = new ArrayList<>();
+				for(int j =0;j<allArray.size();j++){
+					JSONObject allObj = allArray.getJSONObject(j);
+					if(mutlObject.equals(allObj.get("userId"))){
+						bean.setUserName(allObj.get("userName").toString());
+						objectList.add(allObj);
+					}
+				}
+				bean.setList(objectList);
+				list.add(bean);
+			}
+			return JsonWrapper.newDataInstance(list);
+		} catch (Exception e) {
+			String errmsg = "前台-筛选选中的用户是否有重复时出错。";
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+	}
+
+	public static void main(String[] args) {
+		String checkIds = "[{\"userId\":\"8\",\"userName\":\"宋建宁\",\"teamId\":\"5\",\"teamName\":\"北大队\"}," +
+				"{\"userId\":\"8\",\"userName\":\"宋建宁\",\"teamId\":\"10\",\"teamName\":\"光华队\"}," +
+				"{\"userId\":\"3\",\"userName\":\"张三\",\"teamId\":\"10\",\"teamName\":\"1队\"}," +
+				"{\"userId\":\"3\",\"userName\":\"张三\",\"teamId\":\"10\",\"teamName\":\"2队\"}" +
+				"]";
+		String mutlUserId = "[\"3\",\"8\"]";
+		JSONArray allArray = JSON.parseArray(checkIds);
+		System.out.println(allArray);
+		JSONArray mutlUserIdArray = JSON.parseArray(mutlUserId);
+		System.out.println(mutlUserIdArray);
+
+		List<ChooseUserBean> list = new ArrayList<>();
+
+		for(Object mutlObject:mutlUserIdArray){
+			ChooseUserBean bean = new ChooseUserBean();
+			List<JSONObject> objectList = new ArrayList<>();
+			for(int j =0;j<allArray.size();j++){
+				JSONObject allObj = allArray.getJSONObject(j);
+				if(mutlObject.equals(allObj.get("userId"))){
+					bean.setUserName(allObj.get("userName").toString());
+					objectList.add(allObj);
+				}
+			}
+			bean.setList(objectList);
+			list.add(bean);
+		}
+		System.out.println(111);
+	}
+
+	/**
 	 * 比赛详情——赛长 添加用户至分组
 	 * @param checkIds:选中的id（mappingid或者用户id）
 	 * @return
@@ -507,10 +576,6 @@ public class MatchController {
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
 	}
-
-    public static void main(String[] args) {
-
-    }
 
     /**
      * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
