@@ -9,7 +9,6 @@ import com.golf.common.util.QRCodeUtil;
 import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchRule;
-import com.golf.golf.db.MatchUserGroupMapping;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.admin.AdminMatchService;
