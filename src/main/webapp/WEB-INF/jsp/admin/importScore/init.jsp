@@ -23,7 +23,9 @@
                         <div class="box-body">
                             <div class="box-header">
                                 <div class="form-group">
-                                    <span style="color:red;">如果系统中存在同一个人名+球队的用户，并且已存在同一场比赛的成绩，数据会被覆盖，不存在的会新增。</span>
+                                    <span style="color:red;">比赛按名称和时间判断，球队按全称和简称判断，队员按人名和球队判断，已有的会更新，不存在的会新增。</span>
+                                    <br/>
+                                    <span style="color:red;">导入的表格最后一行后面不能有内容，球场名称和系统中的要完全一样。</span>
                                     <br/>
                                     <span style="color:red;">请谨慎选择，一旦导入无法撤回</span>
                                 </div>

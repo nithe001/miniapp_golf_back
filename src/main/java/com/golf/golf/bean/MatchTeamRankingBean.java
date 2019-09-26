@@ -9,6 +9,8 @@ public class MatchTeamRankingBean {
 	private Long teamId;
 	//球队名称
 	private String teamName;
+	//球队简称
+	private String teamAbbrev;
 	//参赛人数（实际）
 	private Integer userCount;
 	//平均杆数
@@ -36,6 +38,14 @@ public class MatchTeamRankingBean {
 
 	public void setTeamName(String teamName) {
 		this.teamName = teamName;
+	}
+
+	public String getTeamAbbrev() {
+		return teamAbbrev;
+	}
+
+	public void setTeamAbbrev(String teamAbbrev) {
+		this.teamAbbrev = teamAbbrev;
 	}
 
 	public Integer getUserCount() {

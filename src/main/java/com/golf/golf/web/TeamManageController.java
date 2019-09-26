@@ -374,8 +374,8 @@ public class TeamManageController {
 	@RequestMapping(value = "joinOrQuitTeamById")
 	public JsonElement joinOrQuitTeamById(Long teamId, Integer type, String openid) {
 		try {
-			teamService.joinOrQuitTeamById(teamId, type, openid);
-			return JsonWrapper.newSuccessInstance();
+			Long result=teamService.joinOrQuitTeamById(teamId, type, openid);
+			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("加入或退出该球队时出错。球队id="+teamId ,e);

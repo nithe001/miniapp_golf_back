@@ -138,10 +138,12 @@ public class UserController {
 			if(StringUtils.isNotEmpty(userInfo) && StringUtils.isNotEmpty(openid)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
 				UserInfo userInfoBean = (UserInfo) net.sf.json.JSONObject.toBean(jsonObject, UserInfo.class);
-				userService.updateUser(userInfoBean, openid);
+				String result = userService.updateUser(userInfoBean, openid);
+				//增加了一个返回值
+				return JsonWrapper.newDataInstance(result);
 			}
 			return JsonWrapper.newSuccessInstance();
-		} catch (Exception e) {
+			} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("更新用户信息时失败。", e);
 			return JsonWrapper.newErrorInstance("更新用户信息时失败");
@@ -260,7 +262,7 @@ public class UserController {
 	}
 
 	/**
-	 * 认领成绩
+	 * 我——认领成绩
 	 * @return
 	 */
 	@ResponseBody
@@ -276,5 +278,20 @@ public class UserController {
 		}
 	}
 
-
+	/**
+	 * 比赛中点头像——认领成绩
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("claimUserScore")
+	public JsonElement claimUserScore(String openid,String importUserId,String importUserRealName,String matchId) {
+		try {
+			String result = userService.claimUserScore(openid,importUserId,importUserRealName,matchId);
+			return JsonWrapper.newDataInstance(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-用户认领成绩失败。openid="+openid ,e);
+			return JsonWrapper.newErrorInstance("前台-用户认领成绩失败。openid="+openid);
+		}
+	}
 }

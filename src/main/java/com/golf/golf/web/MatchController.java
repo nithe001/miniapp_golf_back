@@ -985,6 +985,8 @@ public class MatchController {
      * **********注意比洞赛的积分公式和比杆赛不一样
 	 * @param matchId 比赛id,
 	 * @param teamId 上报球队id,
+	 * @param teamId 参赛球队id,      nhq
+	 * @param reportteamId 上报球队id,      nhq
 	 * @param scoreType 积分规则 1：杆差倍数  2：赢球奖分,
 	 * @param baseScore 基础分,
 	 * @param rodScore 杆差倍数,
@@ -993,10 +995,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("submitScoreByTeamId")
-	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Integer scoreType, Integer baseScore,
+	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Long reportteamId,Integer scoreType, Integer baseScore,
 										   Integer rodScore, Integer winScore, String openid) {
 		try {
-			matchService.submitScoreByTeamId(matchId, teamId, scoreType, baseScore, rodScore, winScore, openid);
+			matchService.submitScoreByTeamId(matchId, teamId, reportteamId,scoreType, baseScore, rodScore, winScore, openid);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
@@ -1014,9 +1016,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("cancelScoreByTeamId")
-	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId, String openid) {
+	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long reportteamId, String openid) {
 		try {
-			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,openid);
+			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,reportteamId,openid);
 			if(flag){
 				return JsonWrapper.newDataInstance(1);
 			}else{

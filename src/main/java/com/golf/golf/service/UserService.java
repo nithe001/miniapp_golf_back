@@ -7,6 +7,7 @@ import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.dao.MatchDao;
+import com.golf.golf.dao.TeamDao;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.*;
 import com.golf.golf.enums.UserTypeEnum;
@@ -14,6 +15,7 @@ import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpUser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,8 +42,10 @@ public class UserService implements IBaseService {
     protected WxMpService wxMpService;
     @Autowired
 	private MatchDao matchDao;
-    @Autowired
+	@Autowired
 	private MatchService matchService;
+	@Autowired
+	private TeamDao teamDao;
 
 	/**
 	 * 获取“我的”
@@ -100,11 +104,33 @@ public class UserService implements IBaseService {
 
     /**
      * 保存用户信息
+	 * 判断是否存在和我同一个球队的人有相同的真实姓名，如果有且是真实用户就拒绝改真名，有但是导入用户，就认领 nhq
      * @param user
      */
-    public void updateUser(UserInfo user, String openid) {
+    public String updateUser(UserInfo user, String openid) {
     	UserInfo db = dao.getUserInfoByOpenid(openid);
-    	db.setUiRealName(user.getUiRealName());
+    	//判断是否有同队队友重名
+    	Long userId = db.getUiId();
+    	Long teamId= null;
+    	if (user.getUiRealName()!= null) {
+			List<UserInfo> chooseuserList = dao.getUserIdByRealName(user.getUiRealName());
+			for (UserInfo chooseuser : chooseuserList) {
+				Long otherUserId = chooseuser.getUiId();
+				teamId = dao.getIsMyTeammate(userId,otherUserId);
+				if (teamId !=null ){
+					if(chooseuser.getUiOpenId() !=null){
+						break; //有同名真实用户，不让改
+					}else {
+						//同一队中有同名导入用户，认领他
+						updateClaimUserScore(openid, String.valueOf(otherUserId));
+						teamId = null;
+					}
+				}
+			}
+		}
+    	if (teamId == null ) {
+			db.setUiRealName(user.getUiRealName());
+		}
     	db.setUiAge(user.getUiAge());
     	db.setUiTelNo(user.getUiTelNo());
 		db.setUiEmail(user.getUiEmail());
@@ -123,21 +149,31 @@ public class UserService implements IBaseService {
         dao.update(db);
         //更新其他表有用到真实姓名的地方
 		//比赛积分计算配置表
-		dao.updateMatchIntegralConfigInfo(db.getUiId(),user.getUiRealName());
-		//比赛分组表
-		dao.updateMatchGroupInfo(db.getUiId(),user.getUiRealName());
-		//比赛表
-		dao.updateMatchInfo(db.getUiId(),user.getUiRealName());
-		//比赛成绩表
-		dao.updateMatchScore(db.getUiId(),user.getUiRealName());
-		//比赛用户分组表
-		dao.updateMatchUserGroupMapping(db.getUiId(),user.getUiRealName());
-		//球队表
-		dao.updateTeamInfo(db.getUiId(),user.getUiRealName());
-		//球队用户mapping表
-		dao.updateTeamUserMappingInfo(db.getUiId(),user.getUiRealName());
-		//球队用户积分表
-		dao.updateTeamUserPointInfo(db.getUiId(),user.getUiRealName());
+		if (teamId == null) {
+			dao.updateMatchIntegralConfigInfo(db.getUiId(), user.getUiRealName());
+			//比赛分组表
+			dao.updateMatchGroupInfo(db.getUiId(), user.getUiRealName());
+			//比赛表
+			dao.updateMatchInfo(db.getUiId(), user.getUiRealName());
+			//比赛成绩表
+			dao.updateMatchScore(db.getUiId(), user.getUiRealName());
+			//比赛用户分组表
+			dao.updateMatchUserGroupMapping(db.getUiId(), user.getUiRealName());
+			//球队表
+			dao.updateTeamInfo(db.getUiId(), user.getUiRealName());
+			//球队用户mapping表
+			dao.updateTeamUserMappingInfo(db.getUiId(), user.getUiRealName());
+			//球队用户积分表
+			dao.updateTeamUserPointInfo(db.getUiId(), user.getUiRealName());
+		}
+		String teamName = null;
+		if (teamId !=null){
+		TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
+		if(teamInfo != null ){
+			teamName = teamInfo.getTiName();
+		}
+		}
+		return teamName;
     }
 
 	/**
@@ -318,6 +354,8 @@ public class UserService implements IBaseService {
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUiOpenId(wechatUserInfo.getWuiOpenid());
 		userInfo.setUiNickName(wechatUserInfo.getWuiNickName());
+		//初始时把微信昵称设置为用户真实姓名  nhq
+		userInfo.setUiRealName(wechatUserInfo.getWuiNickName());
 		userInfo.setUiHeadimg(wechatUserInfo.getWuiHeadimgurl());
 		userInfo.setUiSex(wechatUserInfo.getWuiSex());
 		userInfo.setUiType(UserTypeEnum.PT.ordinal());
@@ -553,21 +591,21 @@ public class UserService implements IBaseService {
 			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
 
 			//被查看用户是否是本比赛的参赛人员
-			Long otherIsJoinMatchUser = matchDao.getIsMatchCaptain(matchId,otherUserInfo.getUiId());
+			Long otherIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,userId);
 			Long otherIsMatchCaptain = 0l;
 			Long otherIsMatchWatch = 0l;
 			if(otherIsJoinMatchUser>0){
 				//被查看用户是否是本比赛的赛长
-				otherIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,otherUserInfo.getUiId());
+				otherIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
 			}else{
 				//被查看用户是否是本比赛的围观人员
-				otherIsMatchWatch = matchDao.getIsWatch(otherUserInfo.getUiId(),matchId);
+				otherIsMatchWatch = matchDao.getIsWatch(userId,matchId);
 				//被查看用户是围观人员，我是参赛者
 				if(otherIsMatchWatch>0 && meIsJoinMatchUser >0){
 					//查询我所在的比赛分组
 					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,myUserId);
 					//被查看用户是否已经被邀请记分
-					MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, matchUserGroupMapping.getMugmGroupId(), otherUserInfo.getUiId());
+					MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, matchUserGroupMapping.getMugmGroupId(), userId);
 					if(matchScoreUserMapping == null){
 						result.put("otherIsInvitate",false);
 					}else{
@@ -619,7 +657,21 @@ public class UserService implements IBaseService {
 		return dao.getWechatUserByOpenid(openid);
 	}
 
-
+	/**
+	 * 比赛哪里点击用户头像来认领该用户 nhq
+	 * @return
+	 */
+	public String  claimUserScore(String openid,String importUserId,String importUserRealName,String matchId) {
+		//把自己的真实姓名改为被认领用户的真实姓名
+		UserInfo userInfo = getUserInfoByOpenId(openid);
+		Long myUserId = userInfo.getUiId();
+		userInfo.setUiRealName(importUserRealName);
+		//删除自己的作为观赛者的记录
+		dao.deleteImportMatchWatchUserId(openid, matchId);
+		//把被认领用户的ID替换为自己的，并把认领用户删除
+		updateClaimUserScore(openid, importUserId);
+		return String.valueOf(myUserId);
+	}
 	/**
 	 * 查询是否有待认领的成绩
 	 * 查询除了我之外，是否存在这个真实姓名 有未导入的数据
@@ -631,31 +683,48 @@ public class UserService implements IBaseService {
 	}
 	/**
 	 * 匹配导入的成绩
+	 * openid：认领者的openId，chooseIds,被认领者的userId串，由于导入时，同名但不同球队的人会分配不同的ID，所以
+	 * 不用再用TeamID ,来判断导入的人了  nhq
 	 * @return
 	 */
 	public void updateClaimUserScore(String openid,String chooseIds) {
 		UserInfo userInfo = getUserInfoByOpenId(openid);
-		Long myUesrId = userInfo.getUiId();
-		List<Map<String, Object>> list = dao.getUserCountByRealName(userInfo.getUiRealName());
-		if(list != null && list.size()>0){
-			Long chooseUserId = null;
-			Long chooseTeamId = null;
-			Long chooseMatchId = null;
-			if(StringUtils.isNotEmpty(chooseIds)){
-				String[] chooseIdStr = chooseIds.split(",");
-				chooseUserId = Long.parseLong(chooseIdStr[0]);
-				chooseTeamId = Long.parseLong(chooseIdStr[1]);
-				chooseMatchId = Long.parseLong(chooseIdStr[2]);
+		Long myUserId = userInfo.getUiId();
+		Long chooseUserId = null;
+		//Long chooseTeamId = null;
+		//Long chooseMatchId = null;
+		if (StringUtils.isNotEmpty(chooseIds)) {
+			String[] chooseIdStr = chooseIds.split(",");
+			for(int i=0;i<chooseIdStr.length; i++) {
+				chooseUserId = Long.parseLong(chooseIdStr[i]);
+				//chooseTeamId = Long.parseLong(chooseIdStr[1]);
+				//chooseMatchId = Long.parseLong(chooseIdStr[2]);
+
+				//如果存在我和导入的人存在同一个球队，则先删掉自己在该球队的信息
+				Long teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
+				while (teamId !=null){
+					teamDao.deleteFromTeamUserMapping(teamId,myUserId);
+					teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
+				}
+
+				//如果存在我和导入的人存在同一个比赛，则先删掉自己在该比赛中的信息
+				Long matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
+				while (matchId !=null){
+					matchService.quitMatch(matchId, openid);
+					matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
+				}
+
+
+				//更新这个导入用户的 比赛分组mapping 为真实用户的id
+				dao.updateImportMatchMappingUserId(chooseUserId, myUserId);
+				//更新这个导入用户的 比赛成绩 的用户id为真实用户的id 并设置是否认领为1
+				dao.updateImportMatchScoreUserId(chooseUserId, myUserId);
+				//更新这个导入用户的 球队及 成绩与积分teamuserpoint的记录 为真实用户的id
+				dao.updateImportTeamMappingUserId(chooseUserId, myUserId);
+				//删除这个导入用户
+				UserInfo chooseUser = dao.get(UserInfo.class, chooseUserId);
+				dao.del(chooseUser);
 			}
-			//更新这个导入用户的 比赛分组mapping 为db的id
-			dao.updateImportMatchMappingUserId(chooseUserId,myUesrId);
-			//更新这个导入用户的 比赛成绩 的用户id为db的id 并设置是否认领为1
-			dao.updateImportMatchScoreUserId(chooseUserId,myUesrId);
-			//更新这个导入用户的 球队分组mapping 为db的id
-			dao.updateImportTeamMappingUserId(chooseUserId,myUesrId);
-			//删除这个导入用户
-			UserInfo chooseUser = dao.get(UserInfo.class,chooseUserId);
-			dao.del(chooseUser);
 		}
-	}
+    }
 }

@@ -17,6 +17,8 @@ public class TeamUserPoint implements java.io.Serializable {
 	private Long tupTeamId;
 	private Long tupMatchId;
 	private Integer tupMatchPoint;
+	//增加如下字段nhq
+	private Integer tupMatchScore;
 	private Long tupUserId;
 	private Long tupCreateUserId;
 	private String tupCreateUserName;
@@ -33,12 +35,14 @@ public class TeamUserPoint implements java.io.Serializable {
 
 	/** full constructor */
 	public TeamUserPoint(Long tupTeamId, Long tupMatchId,
-						 Integer tupMatchPoint, Long tupUserId, Long tupCreateUserId,
+						 Integer tupMatchPoint,Integer tupMatchScore, Long tupUserId, Long tupCreateUserId,
 						 String tupCreateUserName, Long tupCreateTime, Long tupUpdateUserId,
 						 String tupUpdateUserName, Long tupUpdateTime) {
 		this.tupTeamId = tupTeamId;
 		this.tupMatchId = tupMatchId;
 		this.tupMatchPoint = tupMatchPoint;
+		//增加如下字段 nhq
+		this.tupMatchPoint = tupMatchScore;
 		this.tupUserId = tupUserId;
 		this.tupCreateUserId = tupCreateUserId;
 		this.tupCreateUserName = tupCreateUserName;
@@ -86,6 +90,17 @@ public class TeamUserPoint implements java.io.Serializable {
 	public void setTupMatchPoint(Integer tupMatchPoint) {
 		this.tupMatchPoint = tupMatchPoint;
 	}
+
+	//增加如下定义 nhq
+	@Column(name = "tup_match_Score")
+	public Integer getTupMatchScore() {
+		return this.tupMatchScore;
+	}
+
+	public void setTupMatchScore(Integer tupMatchScore) {
+		this.tupMatchScore = tupMatchScore;
+	}
+
 
 	@Column(name = "tup_user_id")
 	public Long getTupUserId() {

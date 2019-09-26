@@ -7,6 +7,7 @@ package com.golf.golf.bean;
 public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 	private Long teamId;
 	private String teamName;
+	private String teamAbbrev;
 	//0打平  1打赢
 	private Integer winNum;
 	private Integer pingNum;
@@ -26,6 +27,14 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 
 	public void setTeamName(String teamName) {
 		this.teamName = teamName;
+	}
+
+	public String getTeamAbbrev() {
+		return teamAbbrev;
+	}
+
+	public void setTeamAbbrev(String teamAbbrev) {
+		this.teamAbbrev = teamAbbrev;
 	}
 
 	public Integer getScore() {

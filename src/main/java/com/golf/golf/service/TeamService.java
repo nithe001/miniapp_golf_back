@@ -7,6 +7,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.TeamPointBean;
 import com.golf.golf.dao.TeamDao;
+import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
@@ -31,6 +32,9 @@ public class TeamService implements IBaseService {
 	private MatchService matchService;
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private UserDao userDao;
 
 	/**
 	 * 获取球队列表
@@ -208,8 +212,8 @@ public class TeamService implements IBaseService {
 	public Map<String, Object> getTeamPointByYear(Integer type, String date, Long teamId, Integer changCi) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
 		Map<String,Object> parp = new HashMap<>();
-		parp.put("startYear", TimeUtil.getYearFirst(Integer.parseInt(date)));
-		parp.put("endYear", TimeUtil.getYearLast(Integer.parseInt(date)));
+		parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
+		parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
 		parp.put("teamId", teamId);
 		parp.put("changCi", changCi);
 		TeamInfo teamInfo = teamDao.get(TeamInfo.class,teamId);
@@ -246,46 +250,70 @@ public class TeamService implements IBaseService {
 					//获取本球友代表此球队的参赛场次（有效的比赛）
 					parp.put("userId",userId);
 					List<Map<String, Object>> joinList = teamDao.getJoinMatchChangCiByYear(parp);
-					if(joinList!=null&& joinList.size()>0){
-						teamPointBean.setTotalMatchNum(matchService.getIntegerValue(joinList.get(0),"count"));
-					}else{
-						teamPointBean.setTotalMatchNum(joinList.size());
-					}
-					//查每个用户的得分 和 场次下的总积分
-					List<Map<String, Object>> sumList = teamDao.getUserSumRodScore(parp);
+                    Integer changCi1 =  matchService.getIntegerValue(joinList.get(0),"count");
+
+                    if (joinList!=null&& changCi1>changCi){
+                        teamPointBean.setTotalMatchNum(changCi);
+                    } else {
+                        if (joinList != null &&  changCi1> 0) {
+                            teamPointBean.setTotalMatchNum( changCi1);
+                        } else {
+                            teamPointBean.setTotalMatchNum(0);
+                        }
+                    }
+					//查每个用户的得分 和 场次下的总积分 不用从nhq
+					//List<Map<String, Object>> sumList = teamDao.getUserSumRodScore(parp);
+
                     if(type == 1){
 						//积分榜 获取本用户的前n场总积分 按照积分排名
                         List<Map<String, Object>> point = teamDao.getUserPointByChangci(parp);
-                        teamPointBean.setPoint(matchService.getIntegerValue(point.get(0),"sumPoint"));
+                        Integer sumpoint =matchService.getIntegerValue(point.get(0),"sumPoint");
+                        teamPointBean.setPoint(sumpoint);
+
 					}
-					Map<String, Object> sum = sumList.get(0);
+                    //获取本用户的前n场总成绩 按照成绩排名
+                    List<Map<String, Object>> score = teamDao.getUserScoreByChangci(parp);
+                    Integer sumrodnum=matchService.getIntegerValue(score.get(0),"sumRodNum");
+                    teamPointBean.setSumRodNum(sumrodnum);
+
+                    if (teamPointBean.getTotalMatchNum()>0 && sumrodnum >0){
+                        Integer avgrodnum = Math.round(sumrodnum/teamPointBean.getTotalMatchNum());
+                        teamPointBean.setAvgRodInteger(avgrodnum);
+                    } else  teamPointBean.setAvgRodInteger(99999);
+
+                    /*   nhq
+				    Map<String, Object> sum = sumList.get(0);
 					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
 					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
+                   */
 					list.add(teamPointBean);
 				}
 				//排序
+
 				if(type == 0){
 					//比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 					Collections.sort(list,new Comparator<TeamPointBean>(){
 						@Override
 						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
-							if(teamPointBean1.getAvgRodNum() != 0 && teamPointBean2.getAvgRodNum() != 0){
-								return new Double(teamPointBean1.getAvgRodNum()).compareTo(new Double(teamPointBean2.getAvgRodNum()));
-							}
-							return 0;
+							//if(teamPointBean1.getSumRodNum() != 0 || teamPointBean2.getSumRodNum() != 0){
+								//return new Double(teamPointBean1.getSumRodNum()).compareTo(new Double(teamPointBean2.getSumRodNum()));
+                           return  teamPointBean1.getAvgRodInteger().compareTo(teamPointBean2.getAvgRodInteger());
+							//}
+							//return 0;
 						}
 					});
-				}else{
-					//积分榜是积分多的排前面
-					Collections.sort(list,new Comparator<TeamPointBean>(){
-						@Override
-						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
-							return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());
-						}
-					});
-				}
+				}else {
+                    //积分榜是积分多的排前面
+                    Collections.sort(list, new Comparator<TeamPointBean>() {
+                        @Override
+                        public int compare(TeamPointBean teamPointBean1, TeamPointBean teamPointBean2) {
+                            return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());
+                        }
+                    });
+                }
 			}
+
 			result.put("yearList",list);
 		}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计  只列比赛结束且球队确认过的比赛 排序 按照离今天近的排序
@@ -358,25 +386,67 @@ public class TeamService implements IBaseService {
 		return userList;
 	}
 
+    /* 以下这个程序用UserService 里的同一个方法会异常，只好在这里搞一个类似副本 nhq
+    // 由于这个方法是用户在加入球队时调用，所以不存在和这个导入用户同时在同一球队或同一场比赛的情况。
+    */
+	public void updateClaimUserScoreById(String openid,Long importuserid) {
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
+		Long myUesrId = userInfo.getUiId();
+		//Long chooseUserId = null;
+		//Long chooseTeamId = null;
+		//Long chooseMatchId = null;
+		//if (StringUtils.isNotEmpty(importuserid)) {
+		if (importuserid !=null) {
+				//chooseUserId = Long.parseLong(importuserid);
+				//chooseTeamId = Long.parseLong(chooseIdStr[1]);
+				//chooseMatchId = Long.parseLong(chooseIdStr[2]);
+
+				//更新这个导入用户的 比赛分组mapping 为db的id
+				userDao.updateImportMatchMappingUserId(importuserid, myUesrId);
+				//更新这个导入用户的 比赛成绩 的用户id为db的id 并设置是否认领为1
+				userDao.updateImportMatchScoreUserId(importuserid, myUesrId);
+				//更新这个导入用户的 球队分组mapping 为db的id
+				userDao.updateImportTeamMappingUserId(importuserid, myUesrId);
+				//删除这个导入用户
+				UserInfo chooseUser = userDao.get(UserInfo.class, importuserid);
+				userDao.del(chooseUser);
+		}
+	}
+
 	/**
 	 * 申请加入或退出该球队
 	 * @param teamId:球队id
 	 * @param type:0加入 1退出
 	 * @return
 	 */
-	public void joinOrQuitTeamById(Long teamId, Integer type, String openid) {
+	public Long joinOrQuitTeamById(Long teamId, Integer type, String openid) {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		Long userId = userInfo.getUiId();
-		if(type == 0){
+		String myRealName = userInfo.getUiRealName();
+
+		if (type == 0) {
+			List<UserInfo> chooseuserList = userDao.getUserIdByRealName(myRealName);
+			//发现队内有同名用户，如果是导入用户，认领；如果不是导入用户，不能加入球队，直接退出 nhq
+			for (UserInfo chooseuser: chooseuserList) {
+				Long chooseuserid = chooseuser.getUiId();
+				String chooseuseropenid = chooseuser.getUiOpenId();
+				Long count = teamDao.isInTeamById(teamId, chooseuserid);
+				if (count >0 ) {
+					if (chooseuseropenid == null) {
+						updateClaimUserScoreById(openid, chooseuserid);
+						return null;
+					}if(chooseuseropenid !=openid) {return chooseuserid;}
+				}
+			}
 			TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
 			TeamUserMapping teamUserMapping = new TeamUserMapping();
 			teamUserMapping.setTumTeamId(teamId);
 			teamUserMapping.setTumUserId(userId);
 			//是否开启入队审核
-			if(teamInfo.getTiJoinOpenType() == 1){
+			if (teamInfo.getTiJoinOpenType() == 1) {
 				//申请入队
 				teamUserMapping.setTumUserType(2);
-			}else{
+			} else {
 				//直接入队
 				teamUserMapping.setTumUserType(1);
 			}
@@ -384,9 +454,10 @@ public class TeamService implements IBaseService {
 			teamUserMapping.setTumCreateUserName(userInfo.getUserName());
 			teamUserMapping.setTumCreateUserId(userId);
 			teamDao.save(teamUserMapping);
-		}else{
+		} else {
 			teamDao.deleteFromTeamUserMapping(teamId, userId);
 		}
+		return null;
 	}
 
 	/**

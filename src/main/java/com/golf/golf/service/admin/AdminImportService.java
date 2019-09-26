@@ -7,6 +7,7 @@ import com.golf.golf.dao.admin.AdminImportDao;
 import com.golf.golf.db.*;
 import com.golf.golf.service.MatchService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFCell; //nhq
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -38,6 +39,9 @@ public class AdminImportService implements IBaseService {
 	 * 是否覆盖：1：是 0：否
 	 * @return
 	 */
+    //为提高效率，如果导入数据时判断是是个新比赛，后面导入数据时就不先检索数据库判断存在不存在 nhq
+	int isnewMatch = 1;
+
 	public String importTeamInfo(XSSFWorkbook xwb) {
 		//参赛球队id
 		String joinTeamIds = "";
@@ -55,11 +59,18 @@ public class AdminImportService implements IBaseService {
 			//第一列参赛球队简称
 			String teamNameAbbrev = row.getCell(1).toString();
 			//查询是否有该球队
+			//加上队长信息来判断 nhq
+			String teamCaps = row.getCell(2).toString();
+			String[] teamCapsSplit = teamCaps.split(",");
+
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName,teamNameAbbrev);
+
+
 			if(teamInfo == null){
 				teamInfo = new TeamInfo();
 				teamInfo.setTiName(teamName);
 				teamInfo.setTiAbbrev(teamNameAbbrev);
+				teamInfo.setTiLogo("");
 				teamInfo.setTiJoinOpenType(0);
 				teamInfo.setTiInfoOpenType(1);
 				teamInfo.setTiUserInfoType(0);
@@ -104,12 +115,13 @@ public class AdminImportService implements IBaseService {
 		//赛制
 		String matchType = row.getCell(4).toString();
 		String[] matchTypeSplit = matchType.split(",");
-		//获取比赛信息
+		//按比赛名称和比赛时间查看比赛是否存在
 		MatchInfo matchInfo = adminImportDao.getMatchInfoByMatchTitle(matchTitle,matchTime);
 		if(matchInfo == null){
 			matchInfo = new MatchInfo();
 			matchInfo.setMiType(1);
 			matchInfo.setMiTitle(matchTitle);
+			matchInfo.setMiLogo("");
 			matchInfo.setMiParkId(parkInfo.getPiId());
 			matchInfo.setMiParkName(parkInfo.getPiName());
 			matchInfo.setMiZoneBeforeNine(changdiSplit[0]);
@@ -123,9 +135,17 @@ public class AdminImportService implements IBaseService {
 			matchInfo.setMiIsEnd(2);
 			matchInfo.setMiIsValid(1);
 			matchInfo.setMiCreateTime(System.currentTimeMillis());
-			matchInfo.setMiCreateUserId(AdminUserUtil.getUserId());
-			matchInfo.setMiCreateUserName(AdminUserUtil.getShowName());
+			//matchInfo.setMiCreateUserId(AdminUserUtil.getUserId());
+			//matchInfo.setMiCreateUserName(AdminUserUtil.getShowName());
+		    //把比赛创建者直接写成牛合庆，方便对比赛配置进行修改 nhq
+		    Long userId =Long.parseLong("3");
+			matchInfo.setMiCreateUserId(userId);
+		    matchInfo.setMiCreateUserName("牛合庆");
 			adminImportDao.save(matchInfo);
+		} else {
+			isnewMatch = 0; //比赛已存在
+			matchInfo.setMiJoinTeamIds(joinTeamIds);
+			adminImportDao.update(matchInfo);
 		}
 		return matchInfo;
 	}
@@ -141,6 +161,11 @@ public class AdminImportService implements IBaseService {
 		//第3张工作表
 		XSSFSheet sheet = xwb.getSheetAt(2);
 		XSSFRow row;
+		//第二张表，用于用简称找到全称
+        XSSFSheet sheet1 = xwb.getSheetAt(1);
+        XSSFRow row1;
+
+        XSSFCell cell;
 		for(int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
 			//从第3行开始
 			row = sheet.getRow(i);
@@ -149,10 +174,38 @@ public class AdminImportService implements IBaseService {
 			//第二列 球队
 			String teamAbbrev = row.getCell(1).toString().trim();
 			//第3列 所在分组
-			String groupName = row.getCell(2).toString().trim();
+            String groupName = null;
+            cell = row.getCell(2);
+            if (cell.getCellType() == 2) { //公式型,这部分为了解决单元格有公式
+                try {
+                    groupName = String.valueOf(cell.getNumericCellValue());
+                } catch (IllegalStateException e) {
+                    groupName = String.valueOf(cell.getRichStringCellValue());
+                }
+            }else{
+                groupName = row.getCell(2).toString().trim();
+            }
+            //如果这三列为空，这个用户不导入，避免出现空指针，导致导入失败
+            if (userName == null || teamAbbrev == null || groupName == null ||userName == "" || teamAbbrev == "" || groupName == "" ){continue;}
+
 			//导入用户 按人名+球队识别
-			//查看是否有该球友
-			Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(userName,teamAbbrev);
+			//得到球队全称
+
+			String teamName="";
+			String teamAbbrev1="";
+
+			for(int j = 1; j < sheet1.getPhysicalNumberOfRows(); j++) {
+				row1 = sheet1.getRow(j);
+				teamAbbrev1 = row1.getCell(1).toString().trim();
+				if(teamAbbrev.equals(teamAbbrev1 )) {
+					teamName = row1.getCell(0).toString().trim();
+					break;
+				}
+			}
+			//球队全称为空说明简称写错了，跳过
+			if(teamName == ""){ continue;}
+			//用球队全称查看是否有该球友
+			Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(userName,teamName,teamAbbrev);
 			Long userId = matchService.getLongValue(userTeamMapping,"userId");
 			Long teamId = matchService.getLongValue(userTeamMapping,"teamId");
 			UserInfo userInfo = null;
@@ -208,8 +261,8 @@ public class AdminImportService implements IBaseService {
 		Double d = Double.parseDouble(groupName);
 		groupName = d.intValue()+"";
 		//查询是否有分组
-		MatchGroup matchGroup = adminImportDao.getMatchGroupByName(matchId,groupName);
-		if(matchGroup == null){
+		    MatchGroup matchGroup = adminImportDao.getMatchGroupByName(matchId, groupName);
+			if(matchGroup == null){
 			matchGroup = new MatchGroup();
 			matchGroup.setMgMatchId(matchId);
 			matchGroup.setMgGroupName(groupName);
@@ -220,7 +273,10 @@ public class AdminImportService implements IBaseService {
 		}
 
 		//查询是否有用户比赛mapping
-		MatchUserGroupMapping matchUserGroupMapping = adminImportDao.getMatchUserMapping(matchId,teamId,matchGroup.getMgId(),userId);
+		MatchUserGroupMapping matchUserGroupMapping = null;
+		if(isnewMatch ==0) {
+			matchUserGroupMapping=adminImportDao.getMatchUserMapping(matchId, teamId, matchGroup.getMgId(), userId);
+		}
 		if(matchUserGroupMapping == null){
 			matchUserGroupMapping = new MatchUserGroupMapping();
 			matchUserGroupMapping.setMugmMatchId(matchId);
@@ -269,9 +325,19 @@ public class AdminImportService implements IBaseService {
 	 */
 	private void saveOrUpdateUserScore(XSSFRow row, int j, Integer holeNum,MatchInfo matchInfo,TeamInfo teamInfo,
 									   MatchGroup matchGroup,UserInfo userInfo,Integer beforeAfter) {
-		String scoreEveHole = row.getCell(j).toString().trim();
-		Integer score = null;
-		if(StringUtils.isNotEmpty(scoreEveHole)){
+		XSSFCell cell =row.getCell(j);
+		String scoreEveHole = null;
+		Integer score = 0;
+		if (cell.getCellType() == 2) { //公式型,这部分为了解决单元格有公式
+			try {
+				scoreEveHole = String.valueOf(cell.getNumericCellValue());
+			} catch (IllegalStateException e) {
+				scoreEveHole = String.valueOf(cell.getRichStringCellValue());
+			}
+		}else{
+				scoreEveHole = row.getCell(j).toString().trim();
+		}
+		if (StringUtils.isNotEmpty(scoreEveHole)) {
 			Double d = Double.parseDouble(scoreEveHole);
 			score = d.intValue();
 		}
@@ -283,41 +349,47 @@ public class AdminImportService implements IBaseService {
 			holeName = matchInfo.getMiZoneAfterNine();
 		}
 		ParkPartition parkPartition = adminImportDao.getParkPartition(matchInfo.getMiParkId(),holeNum,holeName);
-		MatchScore matchScore = adminImportDao.getMatchScoreByUser(
-				teamInfo.getTiId(),matchInfo.getMiId(),matchGroup.getMgGroupName(),userInfo.getUiId(),holeNum,holeName,beforeAfter);
-		if(matchScore == null){
-			matchScore = new MatchScore();
+		MatchScore matchScore = null;
+		if (isnewMatch == 0 ) {
+			matchScore = adminImportDao.getMatchScoreByUser(
+					teamInfo.getTiId(), matchInfo.getMiId(), matchGroup.getMgGroupName(), userInfo.getUiId(), holeNum, holeName, beforeAfter);
 		}
-		matchScore.setMsTeamId(teamInfo.getTiId());
-		matchScore.setMsMatchId(matchInfo.getMiId());
-		matchScore.setMsMatchTitle(matchInfo.getMiTitle());
-		matchScore.setMsMatchType(matchInfo.getMiType());
-		matchScore.setMsGroupId(matchGroup.getMgId());
-		matchScore.setMsGroupName(matchGroup.getMgGroupName());
-		matchScore.setMsUserId(userInfo.getUiId());
-		matchScore.setMsUserName(userInfo.getUiRealName());
-		matchScore.setMsType(0);
-		matchScore.setMsRodNum(score);
-		matchScore.setMsBeforeAfter(beforeAfter);
-		matchScore.setMsHoleName(parkPartition.getppName());
-		matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
-		matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
-		matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
-		matchScore.setMsRodCha(score-parkPartition.getPpHoleStandardRod());
-		if(matchScore != null && matchScore.getMsId() != null){
+		if(matchScore == null) {
+			matchScore = new MatchScore();
+			matchScore.setMsTeamId(teamInfo.getTiId());
+			matchScore.setMsMatchId(matchInfo.getMiId());
+			matchScore.setMsMatchTitle(matchInfo.getMiTitle());
+			matchScore.setMsMatchType(matchInfo.getMiType());
+			matchScore.setMsGroupId(matchGroup.getMgId());
+			matchScore.setMsGroupName(matchGroup.getMgGroupName());
+			matchScore.setMsUserId(userInfo.getUiId());
+			matchScore.setMsUserName(userInfo.getUiRealName());
+			matchScore.setMsType(0);
+			matchScore.setMsRodNum(score);
+			matchScore.setMsBeforeAfter(beforeAfter);
+			matchScore.setMsHoleName(parkPartition.getppName());
+			matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
+			matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
+			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
+			matchScore.setMsRodCha(score - parkPartition.getPpHoleStandardRod());
+			matchScore.setMsCreateTime(System.currentTimeMillis());
+			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
+			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
+			matchScore.setMsIsClaim(0);
+			adminImportDao.save(matchScore);
+		} else{
 			//覆盖，更新
+			matchScore.setMsGroupId(matchGroup.getMgId());
+			matchScore.setMsGroupName(matchGroup.getMgGroupName());
+			matchScore.setMsIsClaim(0);
+			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
+			matchScore.setMsRodCha(score - parkPartition.getPpHoleStandardRod());
 			matchScore.setMsUpdateTime(System.currentTimeMillis());
 			matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
 			matchScore.setMsUpdateUserName(AdminUserUtil.getShowName());
 			adminImportDao.update(matchScore);
-		}else{
-			//不覆盖，新增
-			matchScore.setMsIsClaim(0);
-			matchScore.setMsCreateTime(System.currentTimeMillis());
-			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
-			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
-			adminImportDao.save(matchScore);
 		}
+
 	}
 
 	/**
@@ -339,17 +411,18 @@ public class AdminImportService implements IBaseService {
 			}
 			//第一列参赛球队简称
 			String teamAbbrev = row.getCell(1).toString();
+			String teamName = row.getCell(0).toString();
+
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByAbbrevName(teamAbbrev,joinTeamIdList);
 			//球队队长
 			String teamCaps = row.getCell(2).toString();
 			String[] teamCapsSplit = teamCaps.split(",");
 			for(String cap :teamCapsSplit){
-				Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(cap,teamAbbrev);
+				Map<String,Object> userTeamMapping = adminImportDao.getUserByRealName(cap,teamName,teamAbbrev);
 				Long userId = matchService.getLongValue(userTeamMapping,"userId");
 				UserInfo userInfo = null;
 				if(userId == null){
-					userInfo = new UserInfo();
-					//有的赛长没参加比赛
+					//有的队长没参加比赛
 					userInfo = new UserInfo();
 					userInfo.setUiType(2);
 					userInfo.setUiIsValid(1);

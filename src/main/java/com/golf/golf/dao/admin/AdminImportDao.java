@@ -2,8 +2,12 @@ package com.golf.golf.dao.admin;
 
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.*;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
+import com.golf.golf.dao.TeamDao;
+
+
 
 import javax.xml.crypto.dsig.Transform;
 import java.util.HashMap;
@@ -40,9 +44,11 @@ public class AdminImportDao extends CommonDao {
 		hql.append(" FROM TeamInfo as t WHERE t.tiName = '"+teamName+"'");
 		hql.append(" and t.tiAbbrev = '"+teamNameAbbrev+"'");
 		List<TeamInfo> list = dao.createQuery(hql.toString());
+
 		if(list != null && list.size() >0){
-			return list.get(0);
-		}
+
+				return list.get(0);
+			}
 		return null;
 	}
 
@@ -95,24 +101,25 @@ public class AdminImportDao extends CommonDao {
 
 
 	/**
-	 * 根据用户名查询是否存在球队用户mapping
+	 * 根据用户名查询用户名单
 	 * @return
-	 */
+
 	public List<UserInfo> getUserListByRealName(String userName) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM UserInfo as t WHERE t.uiRealName = '"+userName+"'");
 		return dao.createQuery(hql.toString());
 	}
-
+*/
 	/**
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public Map<String,Object> getUserByRealName(String userName, String teamAbbrev) {
+	public Map<String,Object> getUserByRealName(String userName, String teamName, String teamAbbrev) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT u.uiId as userId,t.tiId as teamId FROM TeamUserMapping as tum , UserInfo as u,TeamInfo as t WHERE tum.tumUserId = u.uiId ");
 		hql.append(" and tum.tumTeamId = t.tiId ");
 		hql.append(" and u.uiRealName = '"+userName+"'");
+		hql.append(" and t.tiName = '"+teamName+"'");
 		hql.append(" and t.tiAbbrev = '"+teamAbbrev+"'");
 		List<Map<String,Object>> list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		if(list != null && list.size() >0){
@@ -171,6 +178,7 @@ public class AdminImportDao extends CommonDao {
 
 	/**
 	 * 获取该用户是否有该洞的成绩
+	 * 不用组名做判断 nhq
 	 * @return
 	 */
 	public MatchScore getMatchScoreByUser(Long teamId, Long matchId, String groupName, Long userId, Integer holeNum,
@@ -178,7 +186,7 @@ public class AdminImportDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchScore as t WHERE t.msTeamId = "+teamId);
 		hql.append(" and t.msMatchId = "+matchId);
-		hql.append(" and t.msGroupName = '"+groupName+"'");
+		//hql.append(" and t.msGroupName = '"+groupName+"'");
 		hql.append(" and t.msUserId = "+userId);
 		hql.append(" and t.msBeforeAfter = "+beforeAfter);
 		hql.append(" and t.msHoleNum = "+holeNum);

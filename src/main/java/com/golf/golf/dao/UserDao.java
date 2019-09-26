@@ -2,8 +2,10 @@ package com.golf.golf.dao;
 
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.*;
+import com.golf.golf.service.UserService;
 import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import org.hibernate.transform.Transformers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -17,6 +19,9 @@ import java.util.Map;
  */
 @Repository
 public class UserDao extends CommonDao {
+
+	@Autowired
+	private UserService userService;
 
 
     /**
@@ -347,20 +352,38 @@ public class UserDao extends CommonDao {
 		hql.append("UPDATE MatchGroup AS g set g.mgUpdateUserName = '"+uiRealName+"' where g.mgUpdateUserId ="+uiId);
 		dao.executeHql(hql.toString());
 	}
-
 	/**
-	 * 查询除了我之外，是否存在这个真实姓名
+	 * 用真名查询叫这个名字的用户信息,把真实用户排前面 nhq
 	 * @return
 	 */
-	public List<Map<String, Object>> getUserCountByRealName(String uiRealName) {
+	public List<UserInfo> getUserIdByRealName(String realName) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("select u.uiId as userId,u.uiRealName as realName,s.msTeamId as teamId,t.tiAbbrev as teamName,s.msMatchId as matchId,s.msMatchTitle as matchTitle ");
-		hql.append(" from UserInfo as u,MatchScore as s,TeamInfo as t ");
-		hql.append(" where u.uiId = s.msUserId ");
-		hql.append(" and s.msTeamId = t.tiId ");
-		hql.append(" and u.uiRealName = '"+uiRealName+"'");
-		hql.append(" and s.msIsClaim = 0 ");
-		hql.append(" GROUP BY u.uiId ");
+		hql.append(" FROM UserInfo as u WHERE u.uiRealName = '"+realName+"'");
+		hql.append(" and 1=1");
+		hql.append(" ORDER BY u.uiOpenId DESC");
+		return dao.createQuery(hql.toString());
+	}
+		/**
+         * 用我的真名查询除了我之外，叫此名的导入用户及所在球队，
+         * @return
+         */
+	public List<Map<String, Object>> getUserCountByRealName(String uiRealName ) {
+			StringBuilder hql = new StringBuilder();
+			//不从matchscore中找关联球队了，而是从teamusermapping 中找nhq
+			//hql.append("select u.uiId as userId,u.uiRealName as realName,s.msTeamId as teamId,t.tiAbbrev as teamName,s.msMatchId as matchId,s.msMatchTitle as matchTitle ");
+			hql.append("select u.uiId as userId,u.uiRealName as realName,t.tiName as teamName ");
+			//hql.append(" from UserInfo as u,MatchScore as s,TeamInfo as t ");
+			hql.append(" from UserInfo as u,TeamUserMapping as m,TeamInfo as t ");
+			//hql.append(" where u.uiId = s.msUserId ");
+			//hql.append(" and s.msTeamId = t.tiId ");
+			hql.append(" where u.uiId = m.tumUserId ");
+			hql.append(" and m.tumTeamId = t.tiId ");
+			hql.append(" and u.uiRealName='" + uiRealName + "'");
+			//只认领还没有openid的用户，只有这样的用户才是导入用户 nhq
+			hql.append(" and u.uiOpenId = null");
+			//hql.append(" and s.msIsClaim = 0 ");
+			hql.append(" GROUP BY u.uiId ");
+
 		return dao.createQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
@@ -394,8 +417,25 @@ public class UserDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("UPDATE TeamUserMapping AS t set t.tumUserId = "+myUserId+" where t.tumUserId ="+importUserId);
 		dao.executeHql(hql.toString());
-	}
+        //同时修改 teamuserpoint nhq
+		StringBuilder hql1 = new StringBuilder();
+		hql1.append("UPDATE TeamUserPoint AS t set t.tupUserId = "+myUserId+" where t.tupUserId ="+importUserId);
+		dao.executeHql(hql1.toString());
 
+	}
+	/**
+	 * 删除用户的 观赛者记录 nhq
+	 */
+	public void deleteImportMatchWatchUserId(String openid, String matchid) {
+		Long matchId = Long.parseLong(matchid);
+		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
+		Long myUserId = userInfo.getUiId();
+
+		StringBuilder hql = new StringBuilder();
+		hql.append("DELETE FROM MatchJoinWatchInfo AS t WHERE t.mjwiMatchId =" + matchId);
+		hql.append("and t.mjwiUserId =" + myUserId);
+		dao.executeHql(hql.toString());
+	}
 	/**
 	 * 获取这些用户加入的球队
 	 * @return
@@ -403,4 +443,5 @@ public class UserDao extends CommonDao {
 	public List<Map<String, Object>> getUserJoinTeamList(List<Long> userIdList) {
 		return null;
 	}
-}
+
+	}
