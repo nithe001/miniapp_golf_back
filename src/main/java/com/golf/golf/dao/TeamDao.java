@@ -74,7 +74,8 @@ public class TeamDao extends CommonDao {
 	public POJOPageInfo getMyCreateTeamList(SearchBean searchBean, POJOPageInfo pageInfo) {
 		Map<String, Object> parp = searchBean.getParps();
 		StringBuilder hql = new StringBuilder();
-		hql.append("from team_info as t LEFT JOIN ( ");
+		//hql.append("from team_info as t LEFT JOIN ( ");
+        hql.append("from team_info as t LEFT JOIN ( ");
 		hql.append("select count(tm.tum_user_id) as userCount,tm.tum_team_id as tum_team_id ");
 		hql.append("from team_user_mapping as tm where tm.tum_user_type != 2 GROUP BY tum_team_id ");
 		hql.append(")as tum on t.ti_id = tum.tum_team_id ");
@@ -90,6 +91,7 @@ public class TeamDao extends CommonDao {
 
 		hql.append("where t.ti_is_valid = 1 ");
 		hql.append("AND t.ti_create_user_id = :userId ");
+
 
 		if(parp.get("keyword") != null){
 			hql.append("AND t.ti_name LIKE :keyword ");

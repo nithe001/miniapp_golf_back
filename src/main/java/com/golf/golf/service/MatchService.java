@@ -565,9 +565,10 @@ public class MatchService implements IBaseService {
 		matchInfoDb.setMiReportScoreTeamId(matchInfo.getMiReportScoreTeamId());
 		matchInfoDb.setMiContent(matchInfo.getMiContent());
 		matchInfoDb.setMiTitle(matchInfo.getMiTitle());
-		if (!matchInfo.getMiLogo().contains(matchInfoDb.getMiLogo())) {
+    	if (!matchInfo.getMiLogo().equals(matchInfoDb.getMiLogo())) {
 			matchInfoDb.setMiLogo(matchInfo.getMiLogo());
 		}
+
 		if(matchInfoDb.getMiIsEnd() == 0){
 			matchInfoDb.setMiParkName(parkName);
 			if (parkInfo != null) {
@@ -2001,7 +2002,8 @@ public class MatchService implements IBaseService {
             //已经围观
             return true;
         }
-        //没有围观
+        //没有围观,并且不是访客
+        if(openid !="guest"){
         if(matchInfo.getMiMatchOpenType() == 1){
             //1、公开 球友均可见； 直接加入围观用户
             MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
@@ -2011,12 +2013,12 @@ public class MatchService implements IBaseService {
             matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
             matchDao.save(matchJoinWatchInfo);
             return true;
-        }else if(matchInfo.getMiMatchOpenType() == 2){
+        }else if(matchInfo.getMiMatchOpenType() == 2) {
             //2、队内公开：参赛者的队友可见 查询是否是参赛球队的队员
             List<Long> teamIdList = getLongTeamIdList(matchInfo.getMiJoinTeamIds());
-            if(teamIdList != null && teamIdList.size()>0){
-                Long joinCount = matchDao.getIsJoinTeamsUser(userId,teamIdList);
-                if(joinCount > 0){
+            if (teamIdList != null && teamIdList.size() > 0) {
+                Long joinCount = matchDao.getIsJoinTeamsUser(userId, teamIdList);
+                if (joinCount > 0) {
                     //是参赛队的队员，加入围观用户
                     MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
                     matchJoinWatchInfo.setMjwiUserId(userId);
@@ -2027,6 +2029,7 @@ public class MatchService implements IBaseService {
                     return true;
                 }
             }
+        }
         }
         return false;
 	}
@@ -2186,9 +2189,9 @@ public class MatchService implements IBaseService {
 		//比赛信息
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		result.put("matchInfo", matchInfo);
-		Long userId = userService.getUserIdByOpenid(openid);
 
-		//所有球洞
+        Long  userId = userService.getUserIdByOpenid(openid);
+        //所有球洞
 		List<MatchTotalUserScoreBean> parkHoleList = new ArrayList<>();
 		//每洞杆数
 		List<MatchTotalUserScoreBean> parkRodList = new ArrayList<>();
