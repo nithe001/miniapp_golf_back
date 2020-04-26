@@ -1025,14 +1025,15 @@ public class MatchDao extends CommonDao {
 				"s.ms_is_bird as is_bird,s.ms_is_eagle as is_eagle,s.ms_is_on as is_on " +
 				"from park_partition as p LEFT JOIN match_score as s on (" +
 				"s.ms_hole_name = p.pp_name and s.ms_hole_num = p.pp_hole_num ");
-		sql.append("and s.ms_match_id = :matchId ");
-		sql.append(" and s.ms_user_id = :userId  ");
-		sql.append(" and s.ms_before_after = :type  ");
-		sql.append(" and s.ms_type = 0 ");
 		if(teamId != null){
 			sql.append(" and s.ms_team_id = :teamId  ");
 		}
-		sql.append(" )) as t ");
+		sql.append(" ) ");
+		sql.append(" where s.ms_user_id = :userId  ");
+		sql.append(" and s.ms_type = 0 ");
+		sql.append(" and s.ms_match_id = :matchId ");
+		sql.append(" and s.ms_before_after = :type  ");
+		sql.append(" ) as t ");
 		sql.append("where t.pp_name = :holeName and t.pp_p_id = :parkId  ");
 		sql.append(" GROUP BY t.pp_hole_num ORDER BY t.pp_name, t.pp_hole_num ");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
