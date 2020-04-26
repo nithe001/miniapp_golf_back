@@ -77,8 +77,12 @@ public class AdminImportService implements IBaseService {
 				teamInfo.setTiMatchResultAuditType(0);
 				teamInfo.setTiIsValid(1);
 				teamInfo.setTiCreateTime(System.currentTimeMillis());
-				teamInfo.setTiCreateUserId(AdminUserUtil.getUserId());
-				teamInfo.setTiCreateUserName(AdminUserUtil.getShowName());
+				//teamInfo.setTiCreateUserId(AdminUserUtil.getUserId());
+				//teamInfo.setTiCreateUserName(AdminUserUtil.getShowName());
+                //把新球队创建者直接写成牛合庆，方便对比赛配置进行修改 nhq
+                Long userId =Long.parseLong("3");
+                teamInfo.setTiCreateUserId(userId);
+                teamInfo.setTiCreateUserName("牛合庆");
 				adminImportDao.save(teamInfo);
 			}
 			joinTeamIds += teamInfo.getTiId().toString()+",";
