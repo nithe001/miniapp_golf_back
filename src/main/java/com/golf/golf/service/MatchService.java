@@ -930,15 +930,15 @@ public class MatchService implements IBaseService {
 	public MatchGroup addGroupByTeamId(Long matchId, String openid){
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		//获取最大组
-		String maxGroupName = matchDao.getMaxGroupByMatchId(matchId);
-		Integer maxGroupNum = 1;
-		if(StringUtils.isNotEmpty(maxGroupName)){
-			maxGroupNum = Integer.parseInt(maxGroupName);
-			maxGroupNum++;
-		}
+		Integer maxGroupName = matchDao.getMaxGroupByMatchId(matchId);
+		if(maxGroupName !=null){
+            maxGroupName++;
+		}else{
+            maxGroupName = 1;
+        }
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
-		group.setMgGroupName(maxGroupNum.toString());
+		group.setMgGroupName(maxGroupName.toString());
 		group.setMgCreateUserId(userInfo.getUiId());
 		group.setMgCreateUserName(userInfo.getUserName());
 		group.setMgCreateTime(System.currentTimeMillis());
