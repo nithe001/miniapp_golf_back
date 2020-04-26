@@ -407,7 +407,10 @@ public class MatchService implements IBaseService {
 		Map<String, Object> result = new HashMap<>();
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+		//数据库中没有logo 用 ""表示，而小程序前端则用 null表示
+		if ( !matchInfo.getMiLogo().equals("") ) {
+            matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+        } else { matchInfo.setMiLogo(null);}
 		result.put("matchInfo", matchInfo);
 		if(matchInfo.getMiParkName().length()>11){
 			result.put("parkNameShow", matchInfo.getMiParkName().substring(0,9)+"...");
@@ -417,10 +420,12 @@ public class MatchService implements IBaseService {
 		//球场信息
 		ParkInfo parkInfo = matchDao.get(ParkInfo.class, matchInfo.getMiParkId());
 		result.put("parkInfo", parkInfo);
-		if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
-			String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
-			result.put("toMyDistance", Integer.parseInt(distance));
-		}
+		if (StringUtils.isNotEmpty(userInfo.getUiLongitude()) &&  StringUtils.isNotEmpty(userInfo.getUiLatitude())) {
+            if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
+                String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
+                result.put("toMyDistance", Integer.parseInt(distance));
+            }
+        }
 		//获取比赛球队信息
 		String joinTeamIds = matchInfo.getMiJoinTeamIds();
         List<Long> teamIdList = getLongTeamIdList(joinTeamIds);

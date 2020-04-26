@@ -126,7 +126,8 @@ public class MatchController {
 									 String afterZoneName, String reportTeamIds, String chooseTeamId, String openid) {
 		try {
 			MatchInfo m = null;
-			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
+			//if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
+            if(StringUtils.isNotEmpty(matchInfo) ){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
 				matchInfoBean.setMiLogo(logoPath);

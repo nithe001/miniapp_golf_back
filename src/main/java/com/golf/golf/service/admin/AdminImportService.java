@@ -71,6 +71,9 @@ public class AdminImportService implements IBaseService {
 				teamInfo.setTiName(teamName);
 				teamInfo.setTiAbbrev(teamNameAbbrev);
 				teamInfo.setTiLogo("");
+				teamInfo.setTiSignature("");
+				teamInfo.setTiDigest("");
+				teamInfo.setTiAddress("");
 				teamInfo.setTiJoinOpenType(0);
 				teamInfo.setTiInfoOpenType(1);
 				teamInfo.setTiUserInfoType(0);
