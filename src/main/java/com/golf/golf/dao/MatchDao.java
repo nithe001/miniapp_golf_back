@@ -1015,7 +1015,7 @@ public class MatchDao extends CommonDao {
 		parp.put("teamId", teamId);
 
 		StringBuilder sql = new StringBuilder();
-		sql.append("select * from (select p.*,s.ms_id as ms_id,s.ms_user_id as ms_user_id,s.ms_user_name as ms_user_name," +
+		sql.append("select p.*,s.ms_id as ms_id,s.ms_user_id as ms_user_id,s.ms_user_name as ms_user_name," +
 				"s.ms_score AS score," +
 				"s.ms_hole_name AS hole_name," +
 				"s.ms_hole_num AS hole_num," +
@@ -1028,14 +1028,13 @@ public class MatchDao extends CommonDao {
 		if(teamId != null){
 			sql.append(" and s.ms_team_id = :teamId  ");
 		}
-		sql.append(" ) ");
-		sql.append(" where s.ms_user_id = :userId  ");
+		sql.append(" and s.ms_user_id = :userId  ");
 		sql.append(" and s.ms_type = 0 ");
 		sql.append(" and s.ms_match_id = :matchId ");
 		sql.append(" and s.ms_before_after = :type  ");
-		sql.append(" ) as t ");
-		sql.append("where t.pp_name = :holeName and t.pp_p_id = :parkId  ");
-		sql.append(" GROUP BY t.pp_hole_num ORDER BY t.pp_name, t.pp_hole_num ");
+		sql.append(" ) ");
+		sql.append(" where p.pp_name = :holeName and p.pp_p_id = :parkId  ");
+		sql.append(" ORDER BY p.pp_name, p.pp_hole_num");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
