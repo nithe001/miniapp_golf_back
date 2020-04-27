@@ -378,7 +378,8 @@ public class AdminImportService implements IBaseService {
 			matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
 			matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
 			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
-			matchScore.setMsRodCha(score - parkPartition.getPpHoleStandardRod());
+			Integer rodCha = score - parkPartition.getPpHoleStandardRod();
+			matchScore.setMsRodCha(rodCha<0?0:rodCha);
 			matchScore.setMsCreateTime(System.currentTimeMillis());
 			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
 			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
@@ -390,7 +391,8 @@ public class AdminImportService implements IBaseService {
 			matchScore.setMsGroupName(matchGroup.getMgGroupName());
 			matchScore.setMsIsClaim(0);
 			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
-			matchScore.setMsRodCha(score - parkPartition.getPpHoleStandardRod());
+			Integer rodCha = score - parkPartition.getPpHoleStandardRod();
+			matchScore.setMsRodCha(rodCha<0?0:rodCha);
 			matchScore.setMsUpdateTime(System.currentTimeMillis());
 			matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
 			matchScore.setMsUpdateUserName(AdminUserUtil.getShowName());
