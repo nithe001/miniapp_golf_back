@@ -32,10 +32,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 比赛活动Controller
@@ -906,7 +903,7 @@ public class MatchController {
 		try {
 			//判断本组比赛是否结束
 			MatchGroup group = matchService.getMatchGroupById(groupId);
-			if(group != null && group.getMgIsEnd() ==2){
+			if(group != null && group.getMgIsEnd() != null && group.getMgIsEnd() ==2){
 				//结束
 				return JsonWrapper.newErrorInstance("本组比赛已经结束");
 			}
