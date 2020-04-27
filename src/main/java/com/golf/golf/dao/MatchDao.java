@@ -485,10 +485,10 @@ public class MatchDao extends CommonDao {
 	 * 获取比赛最大组
 	 * @return
 	 */
-	public String getMaxGroupByMatchId(Long matchId) {
+	public Integer getMaxGroupByMatchId(Long matchId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT MAX(g.mgGroupName) FROM MatchGroup as g where g.mgMatchId = "+matchId);
-		List<String> list = dao.createQuery(sql.toString());
+		sql.append("SELECT MAX(g.mgGroupName+0) FROM MatchGroup as g where g.mgMatchId = "+matchId);
+		List<Integer> list = dao.createQuery(sql.toString());
 		if(list != null && list.size()>0){
 			return list.get(0);
 		}else{
