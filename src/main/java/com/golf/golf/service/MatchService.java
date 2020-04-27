@@ -3238,4 +3238,19 @@ public class MatchService implements IBaseService {
 			matchDao.save(matchScoreUserMapping);
 		}
 	}
+
+	public MatchGroup getMatchGroupById(Long groupId) {
+		return matchDao.get(MatchGroup.class,groupId);
+	}
+
+
+	/**
+	 * 比赛——某一组——记分卡——结束该组比赛
+	 * 防止一场比赛比多天的时候，前一天结束后改成绩
+	 */
+	public void updateMatchGroupStateByGroupId(Long groupId) {
+		MatchGroup group = matchDao.get(MatchGroup.class,groupId);
+		group.setMgIsEnd(2);
+		matchDao.update(group);
+	}
 }

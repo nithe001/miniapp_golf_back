@@ -11,6 +11,7 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.bean.ChooseUserBean;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.db.MatchGroup;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchDoubleRodService;
@@ -259,6 +260,13 @@ public class MatchController {
 			//我是否是赛长
 			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
 
+			//20200427-nmy-判断本组比赛是否已经结束（对于一场比赛比多天，防止前一天比完的组偷摸改成绩）
+			if(groupId != null){
+				MatchGroup matchgroup = matchService.getMatchGroupById(groupId);
+				if(matchgroup != null && matchgroup.getMgIsEnd() != null && matchgroup.getMgIsEnd() == 2){
+					matchInfo.setMiIsEnd(2);
+				}
+			}
             Map<String,Object> map = new HashMap<>();
             map.put("matchInfo",matchInfo);
             map.put("meIsInGroup",meIsInGroup);
@@ -578,32 +586,6 @@ public class MatchController {
 		}
 	}
 
-    /**
-     * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
-     * @param matchId 比赛id
-     * @param groupId 本赛分组id
-     * @param matchUserId 被记分人id
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("addScoreInit")
-    public JsonElement addScoreInit(Long matchId, Long groupId, Long matchUserId) {
-        try {
-            SearchBean searchBean = new SearchBean();
-            searchBean.addParpField("matchId", matchId);
-            searchBean.addParpField("groupId", groupId);
-            searchBean.addParpField("matchUserId", matchUserId);
-            searchBean.addParpField("userId", UserUtil.getUserId());
-            return JsonWrapper.newDataInstance(matchService.getScoreType(searchBean));
-        } catch (Exception e) {
-			String errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
-            e.printStackTrace();
-            logger.error(errmsg ,e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-
 	/**
 	 * 获取本组比赛结果详情
 	 * @return
@@ -922,6 +904,13 @@ public class MatchController {
                                          String isUp, Integer rod, String rodCha,
 										 Integer pushRod, Integer beforeAfter, String openid, String userIds) {
 		try {
+			//判断本组比赛是否结束
+			MatchGroup group = matchService.getMatchGroupById(groupId);
+			if(group != null && group.getMgIsEnd() ==2){
+				//结束
+				return JsonWrapper.newErrorInstance("本组比赛已经结束");
+			}
+
 			if(userId != 0L){
 				matchService.saveOrUpdateScore(userId, matchId, groupId,
 						holeId,
@@ -1333,5 +1322,30 @@ public class MatchController {
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
+	}
+
+
+	/**
+	 * 比赛——某一组——记分卡——赛长结束该组比赛
+	 * 防止一场比赛比多天的时候，前一天结束后改成绩
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateMatchGroupStateByGroupId")
+	public JsonElement updateMatchGroupStateByGroupId(Long matchId, Long groupId, String openid) {
+		try {
+			//我是否是赛长
+			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
+			if(meIsCap){
+				matchService.updateMatchGroupStateByGroupId(groupId);
+				return JsonWrapper.newSuccessInstance();
+			}
+		} catch (Exception e) {
+			String errmsg = "前台-结束该组比赛时出错。groupId="+groupId+" 操作用户openid="+openid;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newErrorInstance("抱歉您不是赛长，没有权限操作。");
 	}
 }
