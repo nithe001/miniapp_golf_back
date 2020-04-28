@@ -1143,7 +1143,7 @@ public class MatchService implements IBaseService {
 		//本组用户
 		List<Map<String, Object>> userList = null;
 		if(matchInfo.getMiType() == 1){
-			userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
+			userList = matchDao.getUserListByScoreCard(matchId, groupId);
 		}else{
 			//单练
 			userList = matchDao.getSingleUserListById(matchId, groupId);

@@ -601,28 +601,18 @@ public class MatchDao extends CommonDao {
 	 * 记分卡——获取本组用户
 	 * 同一球队的分在一行
 	 */
-	public List<Map<String, Object>> getUserListByScoreCard(Long matchId, Long groupId, Long teamId) {
+	public List<Map<String, Object>> getUserListByScoreCard(Long matchId, Long groupId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("select mugm.mugm_user_id AS uiId, " +
-				"u.ui_real_name AS uiRealName, " +
-				"u.ui_nick_name AS uiNickName, " +
-				"u.ui_headimg AS uiHeadimg, " +
-				"mugm.mugm_team_id AS team_id, " +
-				"mugm.mugm_group_id AS group_id, " +
-				"sum(s.ms_rod_num) AS sumRodNum, " +
-				"sum(s.ms_rod_cha) AS sumRodCha ");
-		sql.append("from match_user_group_mapping as mugm LEFT JOIN match_score AS s on ");
-		sql.append("(mugm.mugm_match_id = s.ms_match_id and mugm.mugm_group_id = s.ms_group_id) ");
-		sql.append("LEFT JOIN user_info AS u ON mugm.mugm_user_id = u.ui_id ");
-		sql.append("where mugm.mugm_match_id = "+matchId);
-		sql.append(" and mugm.mugm_is_del != 1 ");
-		if(groupId != null){
-			sql.append(" and mugm.mugm_group_id = "+groupId);
-		}
-		if(teamId != null){
-			sql.append(" and mugm.mugm_team_id = "+teamId);
-		}
-		sql.append(" GROUP BY mugm.mugm_team_id,mugm.mugm_user_id ORDER BY mugm.mugm_team_id,mugm.mugm_user_id");
+		sql.append("select s.ms_user_id AS uiId, " +
+				"u.ui_real_name AS uiRealName," +
+				"u.ui_nick_name AS uiNickName," +
+				"u.ui_headimg AS uiHeadimg," +
+				"s.ms_team_id as team_id," +
+				"s.ms_group_id as group_id ");
+		sql.append(" from match_score AS s LEFT JOIN user_info AS u ON s.ms_user_id = u.ui_id ");
+		sql.append(" where s.ms_match_id = "+matchId);
+		sql.append(" and s.ms_group_id = "+groupId);
+		sql.append(" GROUP BY s.ms_team_id,s.ms_user_id ORDER BY s.ms_team_id,s.ms_user_id");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -2147,5 +2137,15 @@ public class MatchDao extends CommonDao {
 			return list.get(0);
 		}
 		return null;
+	}
+
+	//双人比杆赛记分卡——总计
+	public List<Map<String, Object>> getSum(Long matchId, Long groupId, Long userId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
+		sql.append("FROM match_score AS s ");
+		sql.append("where s.ms_match_id = "+matchId+" AND s.ms_group_id = "+groupId);
+		sql.append(" AND s.ms_user_id = "+userId );
+		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 }
