@@ -2174,4 +2174,23 @@ public class MatchDao extends CommonDao {
 		sql.append("ORDER BY score.sumRodNum !=0 desc,score.sumRodNum ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
+
+    //查询是否在比分表有数据（对于从后台导入的比赛信息，有得分记录，如果调整了分组，match_score表要同步调整分组）
+    public Long getUserMatchScoreCountById(Long userId, Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select count(*) from MatchScore as s ");
+        sql.append("where s.msMatchId = "+matchId );
+        sql.append(" and s.msUserId = "+userId );
+        return dao.createCountQuery(sql.toString());
+    }
+
+    //调整分组的同时更新match_score表的分组id
+    public void updateGroupIdWithMatchScore(Long userId, Long matchId, Long groupId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("update MatchScore as s ");
+        sql.append(" set s.msGroupId = "+groupId );
+        sql.append(" where s.msMatchId = "+matchId );
+        sql.append(" and s.msUserId = "+userId );
+        dao.executeHql(sql.toString());
+    }
 }

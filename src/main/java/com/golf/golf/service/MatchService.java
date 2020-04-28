@@ -1092,6 +1092,11 @@ public class MatchService implements IBaseService {
                     matchUserGroupMapping.setMugmUpdateTime(time);
                     matchDao.update(matchUserGroupMapping);
                 }
+                //查询是否在比分表有数据（对于从后台导入的比赛信息，有得分记录，如果调整了分组，match_score表要同步调整分组）
+                Long userMatchScoreCount = matchDao.getUserMatchScoreCountById(userId, matchId);
+                if(userMatchScoreCount > 0){
+                    matchDao.updateGroupIdWithMatchScore(userId, matchId, groupId);
+                }
             }
         }
 	}

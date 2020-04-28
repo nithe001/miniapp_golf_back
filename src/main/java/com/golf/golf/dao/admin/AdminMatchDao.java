@@ -217,7 +217,7 @@ public class AdminMatchDao extends CommonDao {
 	 */
 	public void delUserFromTeamUserMapping(Long matchId, Long userId) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("DELETE FROM MatchGroupUserMapping AS t WHERE t.mugmMatchId= "+matchId);
+		hql.append("DELETE FROM MatchUserGroupMapping AS t WHERE t.mugmMatchId= "+matchId);
 		hql.append(" and t.mugmUserId= "+userId);
 		dao.executeHql(hql.toString());
 	}
