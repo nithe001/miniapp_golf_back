@@ -2078,7 +2078,15 @@ public class MatchService implements IBaseService {
 
 
 		//比赛的所有用户和其总杆数，为0的排后面(首列显示)
-		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,null);
+		List<Map<String, Object>> userList = null;
+		//参赛球队
+		String joinTeamIds = matchInfo.getMiJoinTeamIds();
+		if(StringUtils.isNotEmpty(joinTeamIds)){
+			userList = matchDao.getUserListById(matchId, null,null);
+		}else{
+			//没有参赛球队
+			userList = matchDao.getUserListByIdWithOutTeam(matchId);
+		}
 		//用户昵称解码
 		decodeUserNickName(userList);
 		//用户名

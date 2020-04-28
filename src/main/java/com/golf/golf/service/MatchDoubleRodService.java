@@ -140,16 +140,22 @@ public class MatchDoubleRodService implements IBaseService {
 
 		//总计
 		List<Map<String, Object>> totalScoreList = new ArrayList<>();
-		Long userId0 = matchService.getLongValue(userList0.get(0),"uiId");
-		List<Map<String, Object>> mapss0 = matchDao.getSum(matchId, groupId,userId0);
-		Long userId1 = matchService.getLongValue(userList1.get(0),"uiId");
-		List<Map<String, Object>> mapss1 = matchDao.getSum(matchId, groupId,userId1);
-		if(mapss0.size()>0){
-			totalScoreList.add(mapss0.get(0));
+		if(userList0 != null && userList0.size() >0){
+			Long userId0 = matchService.getLongValue(userList0.get(0),"uiId");
+			List<Map<String, Object>> mapss0 = matchDao.getSum(matchId, groupId,userId0);
+			if(mapss0.size()>0){
+				totalScoreList.add(mapss0.get(0));
+			}
 		}
-		if(mapss1.size()>0){
-			totalScoreList.add(mapss1.get(0));
+		if(userList1 != null && userList1.size() >0){
+			Long userId1 = matchService.getLongValue(userList1.get(0),"uiId");
+			List<Map<String, Object>> mapss1 = matchDao.getSum(matchId, groupId,userId1);
+			if(mapss1.size()>0){
+				totalScoreList.add(mapss1.get(0));
+			}
 		}
+
+
 		result.put("totalScoreList", totalScoreList);
 		return result;
 	}
