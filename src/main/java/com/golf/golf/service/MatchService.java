@@ -2042,7 +2042,7 @@ public class MatchService implements IBaseService {
 	/**
 	 * 比赛——group——总比分
 	 * 罗列每个参赛球友的记分卡。其中的数字“蓝色是Par,红色是小鸟，灰色是高于标准杆的。黑色是老鹰”
-	 *
+	 * @param matchId 比赛id
 	 * @return
 	 */
 	public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws UnsupportedEncodingException {
@@ -2100,7 +2100,7 @@ public class MatchService implements IBaseService {
 	}
 
 	//格式化用户半场得分
-	private void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
+	public void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
 		Integer totalRod = 0;
 		//杆差
 		Integer totalRodCha = 0;
@@ -2292,7 +2292,7 @@ public class MatchService implements IBaseService {
 	/**
 	 * 获取用户在每个球洞的得分情况
 	 */
-	private void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
+	public void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
 		if (userList != null && userList.size() > 0) {
 			for (Map<String, Object> user : userList) {
 				Long uiId = getLongValue(user, "uiId");

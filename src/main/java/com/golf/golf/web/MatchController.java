@@ -14,10 +14,7 @@ import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchGroup;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
-import com.golf.golf.service.MatchDoubleRodService;
-import com.golf.golf.service.MatchHoleService;
-import com.golf.golf.service.MatchService;
-import com.golf.golf.service.UserService;
+import com.golf.golf.service.*;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,6 +53,11 @@ public class MatchController {
 	//比洞赛记分卡service 每组4人 同一个球队的放一行
 	@Autowired
 	protected MatchHoleService matchHoleService;
+
+	//净杆相关
+    @Autowired
+    protected MatchScoreService matchScoreService;
+
 
 
 
@@ -142,6 +144,8 @@ public class MatchController {
 					m = matchService.updateMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
 				}else{
 					m = matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+					//生成计算净杆的球洞
+                    matchScoreService.saveMatchNetRodHole(m);
 				}
 			}
 			return JsonWrapper.newDataInstance(m);
@@ -1057,13 +1061,21 @@ public class MatchController {
 
 	/**
 	 * 比赛——group——总比分
+     * @param matchId 比赛id
+     * @param orderType 排序类型：0：按照总分排序  1:按照净杆排序（必须是已结束的比赛）
+     *                  这六个洞对每场比赛来说是固定的，不同的比赛是不同的。另外算好后显示的时候要判断下是在记分截止以后。
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getTotalScoreByMatchId")
-	public JsonElement getTotalScoreByMatchId(Long matchId) {
+	public JsonElement getTotalScoreByMatchId(Long matchId,Integer orderType) {
 		try {
-			Map<String,Object> scoreList = matchService.getTotalScoreByMatchId(matchId);
+			Map<String,Object> scoreList = null;
+			if(orderType == null || orderType == 0){
+				scoreList = matchService.getTotalScoreByMatchId(matchId);
+			}else{
+				scoreList = matchScoreService.getTotalScoreByMatchId(matchId);
+			}
 			return JsonWrapper.newDataInstance(scoreList);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取总比分时出错。matchId="+matchId;
