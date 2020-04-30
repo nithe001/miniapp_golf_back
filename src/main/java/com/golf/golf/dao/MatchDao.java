@@ -635,7 +635,7 @@ public class MatchDao extends CommonDao {
 				" u.ui_real_name AS uiRealName," +
 				" u.ui_headimg AS uiHeadimg,score.* from (" );
 		sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id," +
-					"sum(s.ms_rod_num) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
+					"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
 		sql.append("FROM match_user_group_mapping as m LEFT JOIN match_score AS s " +
 			//	"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and s.ms_type = 0) "); nhq
 				"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_team_id=s.ms_team_id and s.ms_type = 0) ");
@@ -1016,6 +1016,7 @@ public class MatchDao extends CommonDao {
 				"s.ms_score AS score," +
 				"s.ms_hole_name AS hole_name," +
 				"s.ms_hole_num AS hole_num," +
+				"s.ms_hole_standard_rod AS hole_standard_rod," +
 				"s.ms_is_up AS is_up," +
 				"s.ms_rod_num AS rod_num," +
 				"s.ms_push_rod_num AS push_num, s.ms_rod_cha as rod_cha,0 as before_after,s.ms_is_par as is_par," +
@@ -2164,7 +2165,7 @@ public class MatchDao extends CommonDao {
 				" u.ui_real_name AS uiRealName," +
 				" u.ui_headimg AS uiHeadimg,score.* from (" );
 		sql.append("select m.mugm_user_id AS uiId,m.mugm_group_id AS group_id," +
-				"sum(s.ms_rod_num) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
+				"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
 		sql.append("FROM match_user_group_mapping as m LEFT JOIN match_score AS s " +
 					"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and s.ms_type = 0) ");
 		sql.append("where m.mugm_match_id = "+matchId );

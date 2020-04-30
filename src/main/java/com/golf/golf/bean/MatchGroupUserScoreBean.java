@@ -16,6 +16,7 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 	private List<String> parkHoleList;
     private Integer totalRodScore;
 	private Integer totalPushRodScore;
+	private double totalNetRodScore;//净杆
 
 	public Long getUserId() {
 		return userId;
@@ -71,6 +72,14 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 
 	public void setParkHoleList(List<String> parkHoleList) {
 		this.parkHoleList = parkHoleList;
+	}
+
+	public double getTotalNetRodScore() {
+		return totalNetRodScore;
+	}
+
+	public void setTotalNetRodScore(double totalNetRodScore) {
+		this.totalNetRodScore = totalNetRodScore;
 	}
 
 	@Override

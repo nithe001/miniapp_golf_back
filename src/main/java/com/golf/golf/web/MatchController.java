@@ -1071,6 +1071,7 @@ public class MatchController {
 	public JsonElement getTotalScoreByMatchId(Long matchId,Integer orderType) {
 		try {
 			Map<String,Object> scoreList = null;
+			orderType = 1;
 			if(orderType == null || orderType == 0){
 				scoreList = matchService.getTotalScoreByMatchId(matchId);
 			}else{

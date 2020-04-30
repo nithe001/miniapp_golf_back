@@ -2110,7 +2110,7 @@ public class MatchService implements IBaseService {
 			totalRod += rodNum;
 			//杆数
 			bean.setRodNum(rodNum);
-			bean.setHoleStandardRod(getIntegerValue(map,"pp_hole_standard_rod"));
+			bean.setHoleStandardRod(getIntegerValue(map,"hole_standard_rod"));
 			userScoreList.add(bean);
 		}
 		//每个半场的总杆数
