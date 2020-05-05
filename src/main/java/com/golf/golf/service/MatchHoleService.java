@@ -41,7 +41,7 @@ public class MatchHoleService implements IBaseService {
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		result.put("matchInfo", matchInfo);
 		//固定的首列：本组用户
-		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
+		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId);
 		//解码用户昵称
 		matchService.decodeUserNickName(userList);
 		//设置用户名

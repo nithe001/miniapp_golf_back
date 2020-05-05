@@ -407,7 +407,10 @@ public class MatchService implements IBaseService {
 		Map<String, Object> result = new HashMap<>();
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-		matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+		//数据库中没有logo 用 ""表示，而小程序前端则用 null表示
+		if ( !matchInfo.getMiLogo().equals("") ) {
+            matchInfo.setMiLogo(PropertyConst.DOMAIN + matchInfo.getMiLogo());
+        } else { matchInfo.setMiLogo(null);}
 		result.put("matchInfo", matchInfo);
 		if(matchInfo.getMiParkName().length()>11){
 			result.put("parkNameShow", matchInfo.getMiParkName().substring(0,9)+"...");
@@ -417,10 +420,12 @@ public class MatchService implements IBaseService {
 		//球场信息
 		ParkInfo parkInfo = matchDao.get(ParkInfo.class, matchInfo.getMiParkId());
 		result.put("parkInfo", parkInfo);
-		if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
-			String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
-			result.put("toMyDistance", Integer.parseInt(distance));
-		}
+		if (StringUtils.isNotEmpty(userInfo.getUiLongitude()) &&  StringUtils.isNotEmpty(userInfo.getUiLatitude())) {
+            if (StringUtils.isNotEmpty(parkInfo.getPiLat()) && StringUtils.isNotEmpty(parkInfo.getPiLng())) {
+                String distance = MapUtil.getDistance(userInfo.getUiLatitude(), userInfo.getUiLongitude(), parkInfo.getPiLat(), parkInfo.getPiLng());
+                result.put("toMyDistance", Integer.parseInt(distance));
+            }
+        }
 		//获取比赛球队信息
 		String joinTeamIds = matchInfo.getMiJoinTeamIds();
         List<Long> teamIdList = getLongTeamIdList(joinTeamIds);
@@ -925,15 +930,15 @@ public class MatchService implements IBaseService {
 	public MatchGroup addGroupByTeamId(Long matchId, String openid){
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		//获取最大组
-		String maxGroupName = matchDao.getMaxGroupByMatchId(matchId);
-		Integer maxGroupNum = 1;
-		if(StringUtils.isNotEmpty(maxGroupName)){
-			maxGroupNum = Integer.parseInt(maxGroupName);
-			maxGroupNum++;
-		}
+		Integer maxGroupName = matchDao.getMaxGroupByMatchId(matchId);
+		if(maxGroupName !=null){
+            maxGroupName++;
+		}else{
+            maxGroupName = 1;
+        }
 		MatchGroup group = new MatchGroup();
 		group.setMgMatchId(matchId);
-		group.setMgGroupName(maxGroupNum.toString());
+		group.setMgGroupName(maxGroupName.toString());
 		group.setMgCreateUserId(userInfo.getUiId());
 		group.setMgCreateUserName(userInfo.getUserName());
 		group.setMgCreateTime(System.currentTimeMillis());
@@ -1138,7 +1143,7 @@ public class MatchService implements IBaseService {
 		//本组用户
 		List<Map<String, Object>> userList = null;
 		if(matchInfo.getMiType() == 1){
-			userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
+			userList = matchDao.getUserListByScoreCard(matchId, groupId);
 		}else{
 			//单练
 			userList = matchDao.getSingleUserListById(matchId, groupId);
@@ -2037,7 +2042,7 @@ public class MatchService implements IBaseService {
 	/**
 	 * 比赛——group——总比分
 	 * 罗列每个参赛球友的记分卡。其中的数字“蓝色是Par,红色是小鸟，灰色是高于标准杆的。黑色是老鹰”
-	 *
+	 * @param matchId 比赛id
 	 * @return
 	 */
 	public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws UnsupportedEncodingException {
@@ -2073,7 +2078,15 @@ public class MatchService implements IBaseService {
 
 
 		//比赛的所有用户和其总杆数，为0的排后面(首列显示)
-		List<Map<String, Object>> userList = matchDao.getUserListById(matchId, null,null);
+		List<Map<String, Object>> userList = null;
+		//参赛球队
+		String joinTeamIds = matchInfo.getMiJoinTeamIds();
+		if(StringUtils.isNotEmpty(joinTeamIds)){
+			userList = matchDao.getUserListById(matchId, null,null);
+		}else{
+			//没有参赛球队
+			userList = matchDao.getUserListByIdWithOutTeam(matchId);
+		}
 		//用户昵称解码
 		decodeUserNickName(userList);
 		//用户名
@@ -2087,7 +2100,7 @@ public class MatchService implements IBaseService {
 	}
 
 	//格式化用户半场得分
-	private void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
+	public void createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList) {
 		Integer totalRod = 0;
 		//杆差
 		Integer totalRodCha = 0;
@@ -2097,7 +2110,7 @@ public class MatchService implements IBaseService {
 			totalRod += rodNum;
 			//杆数
 			bean.setRodNum(rodNum);
-			bean.setHoleStandardRod(getIntegerValue(map,"pp_hole_standard_rod"));
+			bean.setHoleStandardRod(getIntegerValue(map,"hole_standard_rod"));
 			userScoreList.add(bean);
 		}
 		//每个半场的总杆数
@@ -2279,7 +2292,7 @@ public class MatchService implements IBaseService {
 	/**
 	 * 获取用户在每个球洞的得分情况
 	 */
-	private void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
+	public void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
 		if (userList != null && userList.size() > 0) {
 			for (Map<String, Object> user : userList) {
 				Long uiId = getLongValue(user, "uiId");
@@ -3232,5 +3245,20 @@ public class MatchService implements IBaseService {
 			matchScoreUserMapping.setMsumCreateTime(System.currentTimeMillis());
 			matchDao.save(matchScoreUserMapping);
 		}
+	}
+
+	public MatchGroup getMatchGroupById(Long groupId) {
+		return matchDao.get(MatchGroup.class,groupId);
+	}
+
+
+	/**
+	 * 比赛——某一组——记分卡——结束该组比赛
+	 * 防止一场比赛比多天的时候，前一天结束后改成绩
+	 */
+	public void updateMatchGroupStateByGroupId(Long groupId) {
+		MatchGroup group = matchDao.get(MatchGroup.class,groupId);
+		group.setMgIsEnd(2);
+		matchDao.update(group);
 	}
 }

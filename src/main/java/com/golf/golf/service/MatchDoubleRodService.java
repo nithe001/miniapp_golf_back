@@ -1,14 +1,10 @@
 package com.golf.golf.service;
 
 import com.golf.common.IBaseService;
-import com.golf.golf.bean.DoubleRodUserScoreBean;
-import com.golf.golf.bean.HoleMatchScoreResultBean;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.UserInfo;
-import com.golf.golf.enums.MatchResultEnum;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +23,7 @@ public class MatchDoubleRodService implements IBaseService {
 	@Autowired
 	protected MatchService matchService;
 
+
 	/**
 	 * 双人比杆赛记分卡 每组4人 每2人一个小组 同一个球队的放一行
      * 	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，
@@ -41,7 +38,7 @@ public class MatchDoubleRodService implements IBaseService {
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         result.put("matchInfo", matchInfo);
 		//固定的首列：本组用户
-		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId,null);
+		List<Map<String, Object>> userList = matchDao.getUserListByScoreCard(matchId, groupId);
 		//解码用户昵称
 		matchService.decodeUserNickName(userList);
 		//设置用户名
@@ -63,11 +60,20 @@ public class MatchDoubleRodService implements IBaseService {
 				Long teamIdTemp = null;
 				for(Iterator<Map<String,Object>> userListIterator = (Iterator<Map<String, Object>>) userList.iterator(); userListIterator.hasNext();){
 					Map<String,Object> groupUser = userListIterator.next();
-					Long teamId = matchService.getLongValue(groupUser,"team_id");
-					if(teamIdTemp == null || teamId.equals(teamIdTemp)){
-						teamIdTemp = teamId;
-						userList0.add(groupUser);
-						userListIterator.remove();
+					if(joinTeamIdList.size() == 1){
+						//同一个参赛球队
+						if(userList0.size() < 2){
+							userList0.add(groupUser);
+							userListIterator.remove();
+						}
+					}else{
+						//不是同一个队伍 把一个球队的放一起
+						Long teamId = matchService.getLongValue(groupUser,"team_id");
+						if(teamIdTemp == null || teamId.equals(teamIdTemp)){
+							teamIdTemp = teamId;
+							userList0.add(groupUser);
+							userListIterator.remove();
+						}
 					}
 				}
 				userList1.addAll(userList);
@@ -132,38 +138,24 @@ public class MatchDoubleRodService implements IBaseService {
 		Long totalStandardRod = matchDao.getTotalRod(matchInfo);
 		result.put("totalStandardRod", totalStandardRod);
 
-		//用户总分 按球队来分组
-		List<Map<String, Object>> totalScoreList = null;
-		if(matchInfo.getMiMatchFormat2() == 1 && matchInfo.getMiMatchFormat1() == 0
-				&& StringUtils.isEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isEmpty(matchInfo.getMiJoinTeamIds().trim())){
-			//双人比杆公开赛
-			totalScoreList = matchDao.getTotalScoreWithUserByGroup(matchId, groupId);
-		}else{
-			totalScoreList = matchDao.getTotalScoreWithUserByGroupTeam(matchId, groupId);
-		}
-		//去重
-        if(totalScoreList != null && totalScoreList.size() >0){
-			if(StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds()) && StringUtils.isNotEmpty(matchInfo.getMiJoinTeamIds().trim())){
-				Long teamIdTemp = 0l;
-				for(Iterator<Map<String,Object>> userIterator = (Iterator<Map<String, Object>>) totalScoreList.iterator(); userIterator.hasNext();){
-					Map<String,Object> map = userIterator.next();
-					Long teamId = matchService.getLongValue(map,"team_id");
-					if(teamId.equals(teamIdTemp)){
-						userIterator.remove();
-					}
-					teamIdTemp = teamId;
-				}
-			}else{
-				if(totalScoreList.size() > 2){
-					if(totalScoreList.size() == 3){
-						totalScoreList.remove(totalScoreList.get(0));
-					}else if(totalScoreList.size() == 4){
-						totalScoreList.remove(totalScoreList.get(0));
-						totalScoreList.remove(totalScoreList.get(1));
-					}
-				}
+		//总计
+		List<Map<String, Object>> totalScoreList = new ArrayList<>();
+		if(userList0 != null && userList0.size() >0){
+			Long userId0 = matchService.getLongValue(userList0.get(0),"uiId");
+			List<Map<String, Object>> mapss0 = matchDao.getSum(matchId, groupId,userId0);
+			if(mapss0.size()>0){
+				totalScoreList.add(mapss0.get(0));
 			}
-        }
+		}
+		if(userList1 != null && userList1.size() >0){
+			Long userId1 = matchService.getLongValue(userList1.get(0),"uiId");
+			List<Map<String, Object>> mapss1 = matchDao.getSum(matchId, groupId,userId1);
+			if(mapss1.size()>0){
+				totalScoreList.add(mapss1.get(0));
+			}
+		}
+
+
 		result.put("totalScoreList", totalScoreList);
 		return result;
 	}

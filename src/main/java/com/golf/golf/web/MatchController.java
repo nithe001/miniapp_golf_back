@@ -11,12 +11,10 @@ import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.bean.ChooseUserBean;
 import com.golf.golf.common.security.UserUtil;
+import com.golf.golf.db.MatchGroup;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
-import com.golf.golf.service.MatchDoubleRodService;
-import com.golf.golf.service.MatchHoleService;
-import com.golf.golf.service.MatchService;
-import com.golf.golf.service.UserService;
+import com.golf.golf.service.*;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,10 +29,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 比赛活动Controller
@@ -58,6 +53,11 @@ public class MatchController {
 	//比洞赛记分卡service 每组4人 同一个球队的放一行
 	@Autowired
 	protected MatchHoleService matchHoleService;
+
+	//净杆相关
+    @Autowired
+    protected MatchScoreService matchScoreService;
+
 
 
 
@@ -126,7 +126,8 @@ public class MatchController {
 									 String afterZoneName, String reportTeamIds, String chooseTeamId, String openid) {
 		try {
 			MatchInfo m = null;
-			if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
+			//if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
+            if(StringUtils.isNotEmpty(matchInfo) ){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
 				matchInfoBean.setMiLogo(logoPath);
@@ -143,6 +144,8 @@ public class MatchController {
 					m = matchService.updateMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
 				}else{
 					m = matchService.saveMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
+					//生成计算净杆的球洞
+                    matchScoreService.saveMatchNetRodHole(m);
 				}
 			}
 			return JsonWrapper.newDataInstance(m);
@@ -258,6 +261,13 @@ public class MatchController {
 			//我是否是赛长
 			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
 
+			//20200427-nmy-判断本组比赛是否已经结束（对于一场比赛比多天，防止前一天比完的组偷摸改成绩）
+			if(groupId != null){
+				MatchGroup matchgroup = matchService.getMatchGroupById(groupId);
+				if(matchgroup != null && matchgroup.getMgIsEnd() != null && matchgroup.getMgIsEnd() == 2){
+					matchInfo.setMiIsEnd(2);
+				}
+			}
             Map<String,Object> map = new HashMap<>();
             map.put("matchInfo",matchInfo);
             map.put("meIsInGroup",meIsInGroup);
@@ -577,32 +587,6 @@ public class MatchController {
 		}
 	}
 
-    /**
-     * 点击组内用户头像，判断是否能给该用户记分 跳转记分卡页面
-     * @param matchId 比赛id
-     * @param groupId 本赛分组id
-     * @param matchUserId 被记分人id
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("addScoreInit")
-    public JsonElement addScoreInit(Long matchId, Long groupId, Long matchUserId) {
-        try {
-            SearchBean searchBean = new SearchBean();
-            searchBean.addParpField("matchId", matchId);
-            searchBean.addParpField("groupId", groupId);
-            searchBean.addParpField("matchUserId", matchUserId);
-            searchBean.addParpField("userId", UserUtil.getUserId());
-            return JsonWrapper.newDataInstance(matchService.getScoreType(searchBean));
-        } catch (Exception e) {
-			String errmsg = "前台-跳转记分卡页面时出错。userId="+UserUtil.getUserId();
-            e.printStackTrace();
-            logger.error(errmsg ,e);
-            return JsonWrapper.newErrorInstance(errmsg);
-        }
-    }
-
-
 	/**
 	 * 获取本组比赛结果详情
 	 * @return
@@ -921,6 +905,13 @@ public class MatchController {
                                          String isUp, Integer rod, String rodCha,
 										 Integer pushRod, Integer beforeAfter, String openid, String userIds) {
 		try {
+			//判断本组比赛是否结束
+			MatchGroup group = matchService.getMatchGroupById(groupId);
+			if(group != null && group.getMgIsEnd() != null && group.getMgIsEnd() ==2){
+				//结束
+				return JsonWrapper.newErrorInstance("本组比赛已经结束");
+			}
+
 			if(userId != 0L){
 				matchService.saveOrUpdateScore(userId, matchId, groupId,
 						holeId,
@@ -1070,13 +1061,21 @@ public class MatchController {
 
 	/**
 	 * 比赛——group——总比分
+     * @param matchId 比赛id
+     * @param orderType 排序类型：0：按照总分排序  1:按照净杆排序（必须是已结束的比赛）
+     *                  这六个洞对每场比赛来说是固定的，不同的比赛是不同的。另外算好后显示的时候要判断下是在记分截止以后。
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("getTotalScoreByMatchId")
-	public JsonElement getTotalScoreByMatchId(Long matchId) {
+	public JsonElement getTotalScoreByMatchId(Long matchId,Integer orderType) {
 		try {
-			Map<String,Object> scoreList = matchService.getTotalScoreByMatchId(matchId);
+			Map<String,Object> scoreList = null;
+			if(orderType == null || orderType == 0){
+				scoreList = matchService.getTotalScoreByMatchId(matchId);
+			}else{
+				scoreList = matchScoreService.getTotalScoreByMatchId(matchId);
+			}
 			return JsonWrapper.newDataInstance(scoreList);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取总比分时出错。matchId="+matchId;
@@ -1332,5 +1331,30 @@ public class MatchController {
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
+	}
+
+
+	/**
+	 * 比赛——某一组——记分卡——赛长结束该组比赛
+	 * 防止一场比赛比多天的时候，前一天结束后改成绩
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("updateMatchGroupStateByGroupId")
+	public JsonElement updateMatchGroupStateByGroupId(Long matchId, Long groupId, String openid) {
+		try {
+			//我是否是赛长
+			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
+			if(meIsCap){
+				matchService.updateMatchGroupStateByGroupId(groupId);
+				return JsonWrapper.newSuccessInstance();
+			}
+		} catch (Exception e) {
+			String errmsg = "前台-结束该组比赛时出错。groupId="+groupId+" 操作用户openid="+openid;
+			e.printStackTrace();
+			logger.error(errmsg ,e);
+			return JsonWrapper.newErrorInstance(errmsg);
+		}
+		return JsonWrapper.newErrorInstance("抱歉您不是赛长，没有权限操作。");
 	}
 }

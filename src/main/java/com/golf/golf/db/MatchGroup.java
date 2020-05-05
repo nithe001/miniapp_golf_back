@@ -19,6 +19,8 @@ public class MatchGroup implements java.io.Serializable {
 	private Long mgUpdateUserId;
 	private String mgUpdateUserName;
 	private Long mgUpdateTime;
+	//nmy-添加字段，控制本组已经比赛完
+	private Integer mgIsEnd;
 
 	// Constructors
 
@@ -29,7 +31,7 @@ public class MatchGroup implements java.io.Serializable {
 	/** full constructor */
 	public MatchGroup(Long mgMatchId, String mgGroupName, Long mgCreateUserId,
 					  String mgCreateUserName, Long mgCreateTime, Long mgUpdateUserId,
-					  String mgUpdateUserName, Long mgUpdateTime) {
+					  String mgUpdateUserName, Long mgUpdateTime,Integer mgIsEnd) {
 		this.mgMatchId = mgMatchId;
 		this.mgGroupName = mgGroupName;
 		this.mgCreateUserId = mgCreateUserId;
@@ -38,6 +40,7 @@ public class MatchGroup implements java.io.Serializable {
 		this.mgUpdateUserId = mgUpdateUserId;
 		this.mgUpdateUserName = mgUpdateUserName;
 		this.mgUpdateTime = mgUpdateTime;
+		this.mgIsEnd = mgIsEnd;
 	}
 
 	// Property accessors
@@ -122,5 +125,14 @@ public class MatchGroup implements java.io.Serializable {
 
 	public void setMgUpdateTime(Long mgUpdateTime) {
 		this.mgUpdateTime = mgUpdateTime;
+	}
+
+	@Column(name = "mg_is_End")
+	public Integer getMgIsEnd() {
+		return mgIsEnd;
+	}
+
+	public void setMgIsEnd(Integer mgIsEnd) {
+		this.mgIsEnd = mgIsEnd;
 	}
 }
