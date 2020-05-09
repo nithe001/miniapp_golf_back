@@ -25,69 +25,80 @@ public class MatchDao extends CommonDao {
 	 * 比赛按时间最近优先和位置最近优先排序；选“我的比赛”只列我参加的比赛，其他一样
 	 * @return
 	 */
-	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
-		Map<String, Object> parp = searchBean.getParps();
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT m.mi_type as mi_type,m.mi_id AS mi_id," +
-				"m.mi_logo as mi_logo," +
-				"m.mi_title AS mi_title," +
-				"m.mi_park_name AS mi_park_name," +
-				"m.mi_match_time AS mi_match_time," +
-				"m.mi_apply_end_time AS mi_apply_end_time," +
-				"m.mi_is_end AS mi_is_end," +
-				"j.mjwi_type AS type," +
-				"count(DISTINCT(j.mjwi_user_id)) AS userWatchCount," +
-				"count(mugm.mugm_user_id) AS userCount,"+
-				"m.mi_match_format_1 as mi_match_format_1," +
-				"m.mi_match_format_2 as mi_match_format_2 ");
-		if(parp.get("myLat") != null && parp.get("myLng") != null ){
 
-			hql.append(",( 6371 * acos (" +
-					"      cos ( radians(:myLat) ) " +
-					"      * cos( radians( p.pi_lat ) ) " +
-					"      * cos( radians( p.pi_lng ) - radians(:myLng) ) " +
-					"      + sin ( radians(:myLat) ) " +
-					"      * sin( radians( p.pi_lat ) ) " +
-					"  ) " +
-					"  ) AS distance ");
-		}
-		hql.append(" FROM match_info AS m ");
-		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id AND j.mjwi_type = 0) ");
-		hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
-		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON (mugm.mugm_match_id = m.mi_id and (mugm.mugm_is_auto_cap is null or mugm.mugm_is_auto_cap = 0)) ");
-		hql.append(" WHERE m.mi_is_valid = 1 ");
+    public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
+        Map<String, Object> parp = searchBean.getParps();
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT m.mi_type as mi_type,m.mi_id AS mi_id," +
+                "m.mi_logo as mi_logo," +
+                "m.mi_title AS mi_title," +
+                "m.mi_park_name AS mi_park_name," +
+                "m.mi_match_time AS mi_match_time," +
+                "m.mi_apply_end_time AS mi_apply_end_time," +
+                "m.mi_is_end AS mi_is_end," +
+                "j.mjwi_type AS type," +
+//				"count(DISTINCT(j.mjwi_user_id)) AS userWatchCount," +
+                "sum(j.mjwi_watch_num) AS userWatchCount," +
+                "mugm.userCount,"+
+                "m.mi_match_format_1 as mi_match_format_1," +
+                "m.mi_match_format_2 as mi_match_format_2 ");
+        if(parp.get("myLat") != null && parp.get("myLng") != null ){
 
-		//0：全部比赛（除了不可用的比赛） 1：我参加的比赛（包括我参加的正在报名的比赛）
-		if((Integer)parp.get("type") == 1){
-			//比分——我的比赛 包括我的单练
-			hql.append(" AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
-		}else{
-			//比分——全部比赛（除了不可用的比赛）
-			hql.append(" AND m.mi_type = 1 ");
-		}
-		if(parp.get("keyword") != null){
-			hql.append(" AND m.mi_title LIKE :keyword ");
-		}
-		hql.append(" GROUP BY m.mi_id ");
-		Long count = dao.createSQLCountQuery("SELECT COUNT(*) from ("+hql.toString()+") as t", parp);
-		if (count == null || count.intValue() == 0) {
-			pageInfo.setItems(new ArrayList<MatchInfo>());
-			pageInfo.setCount(0);
-			return pageInfo;
-		}
-		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
+            hql.append(",( 6371 * acos (" +
+                    "      cos ( radians(:myLat) ) " +
+                    "      * cos( radians( p.pi_lat ) ) " +
+                    "      * cos( radians( p.pi_lng ) - radians(:myLng) ) " +
+                    "      + sin ( radians(:myLat) ) " +
+                    "      * sin( radians( p.pi_lat ) ) " +
+                    "  ) " +
+                    "  ) AS distance ");
+        }
+        hql.append(" FROM match_info AS m ");
+        hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id AND j.mjwi_type = 0) ");
+        hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
+        hql.append(" LEFT JOIN " +
+                " (SELECT DISTINCT " +
+                " mg.mugm_match_id," +
+                " count(mg.mugm_user_id) AS userCount " +
+                " FROM " +
+                " match_user_group_mapping AS mg " +
+                " WHERE " +
+                " mg.mugm_is_auto_cap IS NULL " +
+                " OR mg.mugm_is_auto_cap = 0 " +
+                " GROUP BY mg.mugm_match_id) AS mugm " +
+                "ON mugm.mugm_match_id = m.mi_id ");
+        hql.append(" WHERE m.mi_is_valid = 1 ");
+
+        //0：全部比赛（除了不可用的比赛） 1：我参加的比赛（包括我参加的正在报名的比赛）
+        if((Integer)parp.get("type") == 1){
+            //比分——我的比赛 包括我的单练
+            hql.append(" AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
+        }else{
+            //比分——全部比赛（除了不可用的比赛）
+            hql.append(" AND m.mi_type = 1 ");
+        }
+        if(parp.get("keyword") != null){
+            hql.append(" AND m.mi_title LIKE :keyword ");
+        }
+        hql.append(" GROUP BY m.mi_id ");
+        Long count = dao.createSQLCountQuery("SELECT COUNT(*) from ("+hql.toString()+") as t", parp);
+        if (count == null || count.intValue() == 0) {
+            pageInfo.setItems(new ArrayList<MatchInfo>());
+            pageInfo.setCount(0);
+            return pageInfo;
+        }
+        hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		/*if(parp.get("type") != null && (Integer)parp.get("type") == 1){
 			//比分下 我的比赛按时间排序，距离今天越近的排前面
 		}else{
 			hql.append(" ORDER BY IF(ISNULL(distance),1,0),distance,m.mi_is_end, abs(DATEDIFF(m.mi_match_time,now()))  ");
 		}*/
-		List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
-				pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
-		pageInfo.setCount(count.intValue());
-		pageInfo.setItems(list);
-		return pageInfo;
-	}
-
+        List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
+                pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
+        pageInfo.setCount(count.intValue());
+        pageInfo.setItems(list);
+        return pageInfo;
+    }
 	/**
 	 * 获取比赛列表 3:已报名的比赛 包括我创建的正在报名中的比赛 不管是否加入分组
 	 * 比赛按时间最近优先和位置最近优先排序；选“我的比赛”只列我参加的比赛，其他一样
@@ -196,13 +207,27 @@ public class MatchDao extends CommonDao {
 				"m.mi_apply_end_time AS mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end," +
 				"j.mjwi_type AS type," +
-				"count(j.mjwi_user_id) AS userWatchCount," +
+				"sum(j.mjwi_watch_num) AS userWatchCount," +
+                //"count(j.mjwi_user_id) AS userWatchCount,"
 				"count(mugm.mugm_user_id) AS userCount,"+
 				"m.mi_match_format_1 as mi_match_format_1," +
 				"m.mi_match_format_2 as mi_match_format_2 ");
 		hql.append(" FROM match_info AS m ");
 		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
 		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
+/* 下面这段代码是为了用新的方法计算访问数量，在getMatchList哪里可以，这里不行，先不管了 nhq
+        hql.append(" LEFT JOIN " +
+                " (SELECT DISTINCT " +
+                " mg.mugm_match_id," +
+                " count(mg.mugm_user_id) AS userCount " +
+                " FROM " +
+                " match_user_group_mapping AS mg " +
+                " WHERE " +
+                " mg.mugm_is_auto_cap IS NULL " +
+                " OR mg.mugm_is_auto_cap = 0 " +
+                " GROUP BY mg.mugm_match_id) AS mugm " +
+                "ON mugm.mugm_match_id = m.mi_id ");
+                */
 		hql.append(" WHERE m.mi_is_valid = 1 ");
 		hql.append(" AND m.mi_create_user_id = :userId ");
 		if(parp.get("keyword") != null){
@@ -229,7 +254,7 @@ public class MatchDao extends CommonDao {
      */
     public List<Map<String, Object>> getWatchUserListByMatchId(Long matchId) {
         StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiId as uiId,u.uiHeadimg as uiHeadimg,u.uiRealName as uiRealName,u.uiNickName as uiNickName ");
+		hql.append("SELECT u.uiId as uiId,u.uiHeadimg as uiHeadimg,u.uiRealName as uiRealName,u.uiNickName as uiNickName,j.mjwiWatchNum as watchNum");
         hql.append(" FROM MatchJoinWatchInfo AS j,UserInfo AS u WHERE 1=1 ");
         hql.append(" and j.mjwiUserId = u.uiId and j.mjwiType = 0 ");
         hql.append(" and j.mjwiMatchId = "+matchId);
@@ -1176,6 +1201,29 @@ public class MatchDao extends CommonDao {
 		return dao.createCountQuery(sql.toString());
 	}
 
+    /**
+     * 查询浏览数量
+     * @return
+     */
+    public Long getWatchNum(Long userId, Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT mjwiWatchNum FROM MatchJoinWatchInfo as j ");
+        sql.append("where j.mjwiMatchId = "+matchId);
+        sql.append(" and j.mjwiUserId = "+userId);
+        return dao.createCountQuery(sql.toString());
+    }
+    /**
+     * 更改浏览次数
+     */
+    public void updateWatchNum(Long userId,Long matchId,Long watchNum) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE MatchJoinWatchInfo AS m set m.mjwiWatchNum =" + watchNum);
+        sql.append(" WHERE mjwiMatchId = " + matchId);
+        sql.append(" and m.mjwiUserId= " + userId);
+
+        dao.executeHql(sql.toString());
+    }
+
 	/**
 	 * 普通用户——查询自己是否已经报名
 	 * @return
@@ -1365,6 +1413,7 @@ public class MatchDao extends CommonDao {
 		sql.append("select g.mugm_group_id AS groupId,g.mugm_group_name as groupName,count(DISTINCT(g.mugm_team_id)) AS count " +
 				"from match_user_group_mapping as g " +
 				"where g.mugm_match_id =" +matchId+
+                " and g.mugm_group_name is not null " +
 				" and g.mugm_is_del !=1 ");
 		if(groupId != null){
 			sql.append(" and g.mugm_group_id = "+groupId);
@@ -1913,11 +1962,12 @@ public class MatchDao extends CommonDao {
         return dao.createCountQuery("select count(*) "+sql.toString());
     }
 
-    //获取比赛的前n组，按顺序排
+    //获取比赛的前n组，按顺序排 暂时不用名次
 	public List<Long> getGroupIdByMingci(Long matchId, Integer mingci) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("select m.mugm_group_id from match_user_group_mapping as m where m.mugm_match_id = "+matchId+
-				" GROUP BY m.mugm_group_id ORDER BY m.mugm_group_id "+
+                " and  m.mugm_group_name is not null" +
+				" GROUP BY m.mugm_group_id ORDER BY m.mugm_group_id " +
 				" limit 0,"+mingci);
 		return dao.createSQLQuery(sql.toString());
 	}
@@ -2175,4 +2225,5 @@ public class MatchDao extends CommonDao {
 		sql.append("ORDER BY score.sumRodNum !=0 desc,score.sumRodNum ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
+
 }

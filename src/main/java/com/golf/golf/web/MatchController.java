@@ -261,7 +261,7 @@ public class MatchController {
 			//我是否是赛长
 			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
 
-			//20200427-nmy-判断本组比赛是否已经结束（对于一场比赛比多天，防止前一天比完的组偷摸改成绩）
+			//20200427-nmy-判断本组比赛是否已经结束,组是否结束放到了 matchInfo.setMiIsEnd(2)中
 			if(groupId != null){
 				MatchGroup matchgroup = matchService.getMatchGroupById(groupId);
 				if(matchgroup != null && matchgroup.getMgIsEnd() != null && matchgroup.getMgIsEnd() == 2){
@@ -1343,18 +1343,18 @@ public class MatchController {
 	@RequestMapping("updateMatchGroupStateByGroupId")
 	public JsonElement updateMatchGroupStateByGroupId(Long matchId, Long groupId, String openid) {
 		try {
-			//我是否是赛长
-			boolean meIsCap = matchService.getIsCaptain(matchId,openid);
-			if(meIsCap){
+			//组员提交成绩，结束比赛
+			//boolean meIsCap = matchService.getIsCaptain(matchId,openid);
+			//if(meIsCap){
 				matchService.updateMatchGroupStateByGroupId(groupId);
 				return JsonWrapper.newSuccessInstance();
-			}
+			//}
 		} catch (Exception e) {
 			String errmsg = "前台-结束该组比赛时出错。groupId="+groupId+" 操作用户openid="+openid;
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
 		}
-		return JsonWrapper.newErrorInstance("抱歉您不是赛长，没有权限操作。");
+		//return JsonWrapper.newErrorInstance("抱歉您不是赛长，没有权限操作。");
 	}
 }

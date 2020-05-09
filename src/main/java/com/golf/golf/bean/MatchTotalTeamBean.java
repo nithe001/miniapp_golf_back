@@ -11,7 +11,7 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 	//0打平  1打赢
 	private Integer winNum;
 	private Integer pingNum;
-	private Integer score;
+	private Double score;
 
 	public Long getTeamId() {
 		return teamId;
@@ -37,11 +37,11 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 		this.teamAbbrev = teamAbbrev;
 	}
 
-	public Integer getScore() {
+	public Double getScore() {
 		return score;
 	}
 
-	public void setScore(Integer score) {
+	public void setScore(Double score) {
 		this.score = score;
 	}
 
@@ -62,7 +62,19 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
     }
 
     @Override
-	public int compareTo(MatchTotalTeamBean bean) {
-		return bean.getScore() - this.score;
-	}
+    public int compareTo(MatchTotalTeamBean bean) {
+//    return bean.getScore().intValue() - this.score.intValue();
+        Double d1 = bean.getScore();
+        Double d2 = this.score;
+        if((d1 == null || d1 == 0) && (d2 == null || d2 == 0)){
+            return 0;
+        }
+        if(d1 == null || d1 == 0){
+            return 1;
+        }
+        if(d2 == null || d2 == 0){
+            return -1;
+        }
+        return new Double(d1).compareTo(new Double(d2));
+    }
 }

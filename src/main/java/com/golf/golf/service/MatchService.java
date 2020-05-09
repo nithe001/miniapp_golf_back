@@ -137,12 +137,15 @@ public class MatchService implements IBaseService {
 				MatchInfo matchInfo = new MatchInfo();
 				matchInfo.setMiType(getIntegerValue(result, "mi_type"));
 				matchInfo.setMiId(getLongValue(result, "mi_id"));
-				if(matchInfo.getMiType() == 1){
-					matchInfo.setMiLogo(PropertyConst.DOMAIN + getName(result, "mi_logo"));
-				}else{
-					matchInfo.setMiLogo(getName(result, "mi_logo"));
-				}
-				matchInfo.setMiTitle(getName(result, "mi_title"));
+
+				String miLogo = getName(result, "mi_logo");
+				if ("".equals(miLogo)) {miLogo = null;}
+               if (matchInfo.getMiType() == 1) {
+                  matchInfo.setMiLogo(PropertyConst.DOMAIN + miLogo);
+                 } else{
+                  matchInfo.setMiLogo(miLogo);
+                }
+               matchInfo.setMiTitle(getName(result, "mi_title"));
 				matchInfo.setMiParkName(getName(result, "mi_park_name"));
 				matchInfo.setMiMatchTime(getName(result, "mi_match_time"));
 				matchInfo.setMiMatchFormat1(getIntegerValue(result, "mi_match_format_1"));
@@ -222,8 +225,11 @@ public class MatchService implements IBaseService {
             result.put("joinTeamList",joinTeamList);
         }
 		//围观
+        Long  watchNum =0l;
 		List<Map<String, Object>> watchList = matchDao.getWatchUserListByMatchId(matchId);
-
+       for (Map<String,Object> map : watchList) {
+            watchNum =watchNum+getLongValue(map,"watchNum");
+        }
 		//赛长
 		List<Map<String, Object>> captainList = matchDao.getCaptainListByMatchId(matchId);
 		//用户昵称解码
@@ -277,6 +283,7 @@ public class MatchService implements IBaseService {
 		result.put("userCountAlreadyGroup", userCountAlreadyGroup);
 		result.put("allApplyUserCount", allApplyUserCount);
 		result.put("isJoinMatchUser", isJoinMatchUser);
+        result.put("watchNum", watchNum);
 		return result;
 	}
 
@@ -1510,6 +1517,7 @@ public class MatchService implements IBaseService {
 	 * @return
 	 */
 	public String checkBeforeUpdateMatchState(Long matchId, Integer state) {
+
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		String joinTeamIds = matchInfo.getMiJoinTeamIds();
 		List<Long> joinTeamIdList = getLongTeamIdList(joinTeamIds);
@@ -1587,6 +1595,7 @@ public class MatchService implements IBaseService {
 				}
 			}
 		}
+
 		return "true";
 	}
 
@@ -1986,6 +1995,7 @@ public class MatchService implements IBaseService {
 
 	/**
 	 * 如果不是参赛人员，则加入围观用户
+     * 增加了每个人的观看次数 nhq
 	 * @return
 	 */
 	public boolean saveOrUpdateWatch(MatchInfo matchInfo, String openid) {
@@ -1994,6 +2004,7 @@ public class MatchService implements IBaseService {
 		Long matchId = matchInfo.getMiId();
 		//观战范围：3、封闭：参赛队员可见 并且不是参赛人员
 		Long isJoinMatch = matchDao.getIsContestants(userId, matchId);
+
 		if(matchInfo.getMiMatchOpenType() == 3 && isJoinMatch <=0){
 			return false;
 		}
@@ -2005,16 +2016,19 @@ public class MatchService implements IBaseService {
         Long watchCount = matchDao.getIsWatch(userId,matchId);
         if(watchCount > 0){
             //已经围观
+            Long watchNum = matchDao.getWatchNum(userId,matchId);
+            watchNum +=1;
+            matchDao.updateWatchNum(userId,matchId,watchNum);
             return true;
         }
-        //没有围观,并且不是访客
-        if(openid !="guest"){
+        //没有围观
+        MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
         if(matchInfo.getMiMatchOpenType() == 1){
             //1、公开 球友均可见； 直接加入围观用户
-            MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
             matchJoinWatchInfo.setMjwiUserId(userId);
             matchJoinWatchInfo.setMjwiMatchId(matchId);
             matchJoinWatchInfo.setMjwiType(0);
+            matchJoinWatchInfo.setMjwiWatchNum(1l);
             matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
             matchDao.save(matchJoinWatchInfo);
             return true;
@@ -2025,16 +2039,15 @@ public class MatchService implements IBaseService {
                 Long joinCount = matchDao.getIsJoinTeamsUser(userId, teamIdList);
                 if (joinCount > 0) {
                     //是参赛队的队员，加入围观用户
-                    MatchJoinWatchInfo matchJoinWatchInfo = new MatchJoinWatchInfo();
                     matchJoinWatchInfo.setMjwiUserId(userId);
                     matchJoinWatchInfo.setMjwiMatchId(matchId);
                     matchJoinWatchInfo.setMjwiType(0);
+                    matchJoinWatchInfo.setMjwiWatchNum(1l);
                     matchJoinWatchInfo.setMjwiCreateTime(System.currentTimeMillis());
                     matchDao.save(matchJoinWatchInfo);
                     return true;
                 }
             }
-        }
         }
         return false;
 	}
@@ -2506,7 +2519,7 @@ public class MatchService implements IBaseService {
                     matchTotalTeamBean.setWinNum(winNum);
                     matchTotalTeamBean.setPingNum(pingNum);
 					BigDecimal score = new BigDecimal(winNum.floatValue() + pingNum.floatValue() * 0.5).setScale(1, BigDecimal.ROUND_HALF_UP);
-					matchTotalTeamBean.setScore(score.intValue());
+					matchTotalTeamBean.setScore(score.doubleValue());
                 }
                 beanList.add(matchTotalTeamBean);
             }

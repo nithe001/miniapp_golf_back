@@ -14,6 +14,8 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 	private Long mjwiUserId;
 	private Long mjwiCreateTime;
 
+    private Long mjwiWatchNum;
+
 	// Constructors
 
 	/** default constructor */
@@ -22,11 +24,12 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 
 	/** full constructor */
 	public MatchJoinWatchInfo(Integer mjwiType, Long mjwiMatchId,
-							  Long mjwiUserId, Long mjwiCreateTime) {
+							  Long mjwiUserId, Long mjwiCreateTime, Long mjwiWatchNum) {
 		this.mjwiType = mjwiType;
 		this.mjwiMatchId = mjwiMatchId;
 		this.mjwiUserId = mjwiUserId;
 		this.mjwiCreateTime = mjwiCreateTime;
+        this.mjwiWatchNum = mjwiWatchNum;
 	}
 
 	// Property accessors
@@ -76,4 +79,14 @@ public class MatchJoinWatchInfo implements java.io.Serializable{
 	public void setMjwiCreateTime(Long mjwiCreateTime) {
 		this.mjwiCreateTime = mjwiCreateTime;
 	}
+
+	//增加观赛次数 nhq
+    @Column(name = "mjwi_watch_num")
+    public Long getMjwiWatchNum() {
+        return this.mjwiWatchNum;
+    }
+
+    public void setMjwiWatchNum(Long mjwiWatchNum) {
+        this.mjwiWatchNum = mjwiWatchNum;
+    }
 }
