@@ -801,14 +801,14 @@ public class MatchController {
 				logger.info("成功获取照片");
 				String fileName = file.getOriginalFilename();
 				String type = null;
-				type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length()) : null;
+				type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1) : null;
 				logger.info("图片初始名称为：" + fileName + " 类型为：" + type);
 				if (type != null) {
 					if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
 						// 项目在容器中实际发布运行的根路径
 						String realPath = WebUtil.getRealPath(PropertyConst.MATHC_LOGO_PATH);
 						// 自定义的文件名称
-						String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
+						String trueFileName = System.currentTimeMillis() + "."+type;
 						File targetFile = new File(realPath, trueFileName);
 						if(!targetFile.exists()){
 							targetFile.mkdirs();
@@ -1223,6 +1223,23 @@ public class MatchController {
 		}
 	}
 
+    /**
+     * 比赛——报名页面——底部按钮——报名待分组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("updateGroupNotice")
+    public JsonElement updateGroupNotice(Long groupId, String groupNotice) {
+        try {
+            matchService.updateGroupNotice(groupId, groupNotice);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "比赛——报名更新组公告时出错groupId="+groupId;
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 
 	/**
 	 * 比赛——生成二维码：邀请记分、邀请加入

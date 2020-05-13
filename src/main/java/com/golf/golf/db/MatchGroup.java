@@ -13,7 +13,8 @@ public class MatchGroup implements java.io.Serializable {
 	private Long mgId;
 	private Long mgMatchId;
 	private String mgGroupName;
-	private Long mgCreateUserId;
+    private String mgGroupNotice;
+    private Long mgCreateUserId;
 	private String mgCreateUserName;
 	private Long mgCreateTime;
 	private Long mgUpdateUserId;
@@ -34,6 +35,7 @@ public class MatchGroup implements java.io.Serializable {
 					  String mgUpdateUserName, Long mgUpdateTime,Integer mgIsEnd) {
 		this.mgMatchId = mgMatchId;
 		this.mgGroupName = mgGroupName;
+        this.mgGroupNotice = mgGroupNotice;
 		this.mgCreateUserId = mgCreateUserId;
 		this.mgCreateUserName = mgCreateUserName;
 		this.mgCreateTime = mgCreateTime;
@@ -72,7 +74,14 @@ public class MatchGroup implements java.io.Serializable {
 	public void setMgGroupName(String mgGroupName) {
 		this.mgGroupName = mgGroupName;
 	}
+    @Column(name = "mg_group_notice", length = 64)
+    public String getMgGroupNotice() {
+        return this.mgGroupNotice;
+    }
 
+    public void setMgGroupNotice(String mgGroupNotice) {
+        this.mgGroupNotice = mgGroupNotice;
+    }
 	@Column(name = "mg_create_user_id")
 	public Long getMgCreateUserId() {
 		return this.mgCreateUserId;

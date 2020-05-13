@@ -495,10 +495,10 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		if(matchState == 0){
 			//报名中，显示所有的分组
-			sql.append("select t.mgMatchId as matchId,t.mgId as groupId,t.mgGroupName+0 as groupName FROM MatchGroup AS t WHERE t.mgMatchId = "+matchId);
+			sql.append("select t.mgMatchId as matchId,t.mgId as groupId,t.mgGroupName+0 as groupName,t.mgGroupNotice as groupNotice FROM MatchGroup AS t WHERE t.mgMatchId = "+matchId);
 		}else{
 			//比赛中、结束 只显示有人的分组
-			sql.append("select t.mgMatchId as matchId,t.mgId as groupId,t.mgGroupName+0 as groupName FROM MatchGroup AS t,MatchUserGroupMapping as m WHERE t.mgMatchId = m.mugmMatchId and t.mgId = m.mugmGroupId ");
+			sql.append("select t.mgMatchId as matchId,t.mgId as groupId,t.mgGroupName+0 as groupName ,t.mgGroupNotice as groupNotice FROM MatchGroup AS t,MatchUserGroupMapping as m WHERE t.mgMatchId = m.mugmMatchId and t.mgId = m.mugmGroupId ");
 			sql.append("AND t.mgMatchId = "+matchId);
 			sql.append("  GROUP BY t.mgId ");
 		}

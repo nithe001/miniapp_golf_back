@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -246,7 +247,7 @@ public class MatchService implements IBaseService {
 				matchGroup.setMgMatchId(getLongValue(map,"matchId"));
 				matchGroup.setMgId(getLongValue(map,"groupId"));
 				matchGroup.setMgGroupName(getIntegerValue(map,"groupName").toString());
-
+                matchGroup.setMgGroupNotice(getName(map,"groupNotice"));
 				MatchGroupBean matchGroupBean = new MatchGroupBean();
 				matchGroupBean.setMatchGroup(matchGroup);
 				List<Map<String, Object>> groupUserList = matchDao.getMatchGroupListByGroupId(matchId, matchGroup.getMgId());
@@ -296,11 +297,8 @@ public class MatchService implements IBaseService {
 			return false;
 		}
 		Long captainCount = matchDao.getIsMatchCaptain(matchId, userInfo.getUiId());
-		if (captainCount > 0) {
-			return true;
-		}
-		return false;
-	}
+        return captainCount > 0;
+    }
 
 	/**
 	 * 获取值
@@ -548,11 +546,8 @@ public class MatchService implements IBaseService {
 		}
 		//判断是否可记分
 		Long count = matchDao.getScoreTypeCount(searchBean);
-		if (count > 0) {
-			return true;
-		}
-		return false;
-	}
+        return count > 0;
+    }
 	/**
 	 * 更新比赛详情
 	 * 报名期间都可以改，但比赛开始后，就只能改 观战范围，成绩上报 和 比赛说明。
@@ -2733,7 +2728,16 @@ public class MatchService implements IBaseService {
 			matchDao.save(myMugm);
 		}
 	}
+/**
+ * 更新组公告 nhq
+ */
+public void updateGroupNotice( Long groupId, String groupNotice) {
+    MatchGroup matchGroup = matchDao.get(MatchGroup.class, groupId);
+    matchGroup.setMgGroupNotice(groupNotice);
+    matchGroup.setMgUpdateTime(System.currentTimeMillis());
+    matchDao.update(matchGroup);
 
+}
 
 	/**
 	 * 要设置disableHtmlEscaping，否则会在转换成json的时候自作多情地转义一些特殊字符，如"="
@@ -2888,11 +2892,8 @@ public class MatchService implements IBaseService {
 		}
 		//如果不是本组参赛球友，查询是否是被邀请给该组记分
 		MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, groupId, userId);
-		if(matchScoreUserMapping != null){
-			return true;
-		}
-		return false;
-	}
+        return matchScoreUserMapping != null;
+    }
 
 	/**
 	 * 获取单练的groupId
@@ -2946,7 +2947,7 @@ public class MatchService implements IBaseService {
 					//用户昵称解码
 					decodeUserNickName(userList);
 					//如果有多条我的记录，去掉我的那个不是我代表队的那条
-					for(Iterator<Map<String,Object>> userIterator = (Iterator<Map<String, Object>>) userList.iterator(); userIterator.hasNext();){
+					for(Iterator<Map<String,Object>> userIterator = userList.iterator(); userIterator.hasNext();){
 						Map<String,Object> map = userIterator.next();
 						Long userId = getLongValue(map,"uiId");
 						Long teamId_ = getLongValue(map,"tiId");
@@ -3149,7 +3150,7 @@ public class MatchService implements IBaseService {
 
 		//我是否报名
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatchUserMapping(matchId,null,myUserId);
-		result.put("isInMatch",matchUserGroupMapping == null?false:true);
+		result.put("isInMatch", matchUserGroupMapping != null);
 		return result;
 	}
 
@@ -3166,7 +3167,7 @@ public class MatchService implements IBaseService {
 					String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
 					Boolean isLegal = realName.matches(base64Pattern);
 					if (isLegal) {
-						realName = new String(Base64.decodeBase64(realName.getBytes()),"utf-8");
+						realName = new String(Base64.decodeBase64(realName.getBytes()), StandardCharsets.UTF_8);
 						if(StringUtils.isNotEmpty(realName)){
 							user.put("uiRealName",realName);
 						}
@@ -3175,7 +3176,7 @@ public class MatchService implements IBaseService {
 					String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
 					Boolean isLegal = nickName.matches(base64Pattern);
 					if (isLegal) {
-						nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+						nickName = new String(Base64.decodeBase64(nickName.getBytes()), StandardCharsets.UTF_8);
 						if(StringUtils.isNotEmpty(nickName)){
 							user.put("uiNickName",nickName);
 						}
@@ -3192,7 +3193,7 @@ public class MatchService implements IBaseService {
 		if (!isLegal) {
 			System.out.println("输入的不是Base64编码的字符串。");
 		}else{
-			String nickName = new String(Base64.decodeBase64(inputStr.getBytes()),"utf-8");
+			String nickName = new String(Base64.decodeBase64(inputStr.getBytes()), StandardCharsets.UTF_8);
 			System.out.println(nickName);
 		}
 	}
