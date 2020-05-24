@@ -487,7 +487,7 @@ public class MatchController {
 	}
 
     /**
-     * 普通球友 换组
+     * 普通球友 换组 这个方法似乎没用，而是有另一个方法applyMatch 完成的
      * @return
      */
     @ResponseBody
@@ -873,7 +873,7 @@ public class MatchController {
 	}
 
 	/**
-	 * 通过matchid和groupid查询本组记分卡信息——单人比洞 每组2个人
+	 * 通过matchid和groupid查询本组记分卡信息——比洞赛，单人、两球、四球都用这个方法
 	 * @return
 	 */
 	@ResponseBody
@@ -911,17 +911,7 @@ public class MatchController {
 				//结束
 				return JsonWrapper.newErrorInstance("本组比赛已经结束");
 			}
-
-			if(userId != 0L){
-				matchService.saveOrUpdateScore(userId, matchId, groupId,
-						holeId,
-						isUp, rod, rodCha, pushRod, beforeAfter, openid,userIds);
-			}else{
-				//双人比杆公开赛
-				matchService.saveOrUpdateScoreDoubleRod(matchId, groupId,
-						holeId,
-						isUp, rod, rodCha, pushRod, beforeAfter, openid,userIds);
-			}
+			matchService.saveOrUpdateScore(userId, matchId, groupId, holeId, isUp, rod, rodCha, pushRod, beforeAfter, openid,userIds);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—保存或更新计分数据时出错。";
@@ -986,10 +976,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("submitScoreByTeamId")
-	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Long reportteamId,Integer scoreType, Integer baseScore,
-										   Integer rodScore, Integer winScore, String openid) {
+	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Long reportteamId,Integer baseScore,
+										   Integer rodScore, Integer winScore, Integer scoreType,String openid) {
 		try {
-			matchService.submitScoreByTeamId(matchId, teamId, reportteamId,scoreType, baseScore, rodScore, winScore, openid);
+			matchService.submitScoreByTeamId(matchId, teamId, reportteamId,baseScore, rodScore, winScore, scoreType,openid);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
@@ -1007,9 +997,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("cancelScoreByTeamId")
-	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long reportteamId, String openid) {
+	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long reportteamId, Integer scoreType,String openid) {
 		try {
-			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,reportteamId,openid);
+			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,reportteamId,scoreType,openid);
 			if(flag){
 				return JsonWrapper.newDataInstance(1);
 			}else{
@@ -1224,7 +1214,7 @@ public class MatchController {
 	}
 
     /**
-     * 比赛——报名页面——底部按钮——报名待分组
+     * 比赛——报名页面——底部按钮——更新组公告
      * @return
      */
     @ResponseBody
@@ -1241,6 +1231,23 @@ public class MatchController {
         }
     }
 
+    /**
+     * 比赛——报名页面——底部按钮——更新助威组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("updateGroupIsGuest")
+    public JsonElement updateGroupIsGuest(Long groupId, Integer groupIsGuest) {
+        try {
+            matchService.updateGroupIsGuest(groupId, groupIsGuest);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "比赛——报名更新助威组时出错groupId="+groupId;
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
 	/**
 	 * 比赛——生成二维码：邀请记分、邀请加入
 	 * @param matchId 比赛id

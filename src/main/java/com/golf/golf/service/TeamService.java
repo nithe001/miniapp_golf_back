@@ -6,8 +6,10 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.TeamPointBean;
+import com.golf.golf.bean.TeamUserPointBean;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.dao.UserDao;
+import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.db.TeamUserMapping;
 import com.golf.golf.db.UserInfo;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -35,7 +38,8 @@ public class TeamService implements IBaseService {
 
 	@Autowired
 	private UserDao userDao;
-
+    @Autowired
+    private UserDao matchDao;
 	/**
 	 * 获取球队列表
 	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队(显示待审核人数)
@@ -207,10 +211,10 @@ public class TeamService implements IBaseService {
 	 * 积分榜那里的平均杆数是指每场（18洞）的平均杆数，不是每洞的。
 	 * 球队比分排名杆数少的排前面，积分榜是积分多的排前面
 	 * @param teamId:球队id
-	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分，方法另附 2获取比赛榜 列出当年所有本球队相关的比赛情况统计
+	 * @param type:0比分榜 按平均杆排名 1积分榜:按北大发明的积分方法积分 2获取比赛榜 列出当年所有本球队相关的比赛情况统计 3球队积分榜
 	 * @return
 	 */
-	public Map<String, Object> getTeamPointByYear(Integer type, String date, Long teamId, Integer changCi) throws UnsupportedEncodingException {
+	public Map<String, Object> getTeamPointByYear(Integer type,Integer scoreType, String date, Long teamId, Integer changCi) throws UnsupportedEncodingException {
 		Map<String,Object> result = new HashMap<>();
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
@@ -222,104 +226,114 @@ public class TeamService implements IBaseService {
 
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-			List<TeamPointBean> list = new ArrayList<>();
-			//获取本球队所有的球友
-			List<TeamUserMapping> userList = teamDao.getTeamUserList(parp);
-			if(userList != null && userList.size()>0){
-				for(TeamUserMapping user:userList){
-					TeamPointBean teamPointBean = new TeamPointBean();
-					Long userId = user.getTumUserId();
-					UserInfo userInfo = teamDao.get(UserInfo.class,userId);
-					teamPointBean.setUserId(userId);
-					teamPointBean.setRealName(userInfo.getUiRealName());
+            if (scoreType ==0) { //计算球员积分
+                List<TeamUserPointBean> list = new ArrayList<>();
+                //获取本球队所有的球友
+                List<TeamUserMapping> userList = teamDao.getTeamUserList(parp);
+                if (userList != null && userList.size() > 0) {
+                    for (TeamUserMapping user : userList) {
+                        TeamUserPointBean teamUserPointBean = new TeamUserPointBean();
+                        Long userId = user.getTumUserId();
+                        UserInfo userInfo = teamDao.get(UserInfo.class, userId);
+                        teamUserPointBean.setUserId(userId);
+                        teamUserPointBean.setRealName(userInfo.getUiRealName());
 
-					String nickName = userInfo.getUiNickName();
-					//用户昵称解码
-					if(StringUtils.isNotEmpty(nickName)){
-						String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
-						Boolean isLegal = nickName.matches(base64Pattern);
-						if (isLegal) {
-							nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
-							if(StringUtils.isNotEmpty(nickName)){
-								teamPointBean.setNickName(nickName);
-							}
-						}else{
-							teamPointBean.setNickName(userInfo.getUiNickName());
-						}
-					}
-
-					//获取本球友代表此球队的参赛场次（有效的比赛）
-					parp.put("userId",userId);
-					List<Map<String, Object>> joinList = teamDao.getJoinMatchChangCiByYear(parp);
-                    Integer changCi1 =  matchService.getIntegerValue(joinList.get(0),"count");
-
-                    if (joinList!=null&& changCi1>changCi){
-                        teamPointBean.setTotalMatchNum(changCi);
-                    } else {
-                        if (joinList != null &&  changCi1> 0) {
-                            teamPointBean.setTotalMatchNum( changCi1);
-                        } else {
-                            teamPointBean.setTotalMatchNum(0);
+                        String nickName = userInfo.getUiNickName();
+                        //用户昵称解码
+                        if (StringUtils.isNotEmpty(nickName)) {
+                            String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
+                            Boolean isLegal = nickName.matches(base64Pattern);
+                            if (isLegal) {
+                                nickName = new String(Base64.decodeBase64(nickName.getBytes()), StandardCharsets.UTF_8);
+                                if (StringUtils.isNotEmpty(nickName)) {
+                                    teamUserPointBean.setNickName(nickName);
+                                }
+                            } else {
+                                teamUserPointBean.setNickName(userInfo.getUiNickName());
+                            }
                         }
-                    }
-					//查每个用户的得分 和 场次下的总积分 不用从nhq
-					//List<Map<String, Object>> sumList = teamDao.getUserSumRodScore(parp);
 
-                    if(type == 1){
-						//积分榜 获取本用户的前n场总积分 按照积分排名
-                        List<Map<String, Object>> point = teamDao.getUserPointByChangci(parp);
-                        Integer sumpoint =matchService.getIntegerValue(point.get(0),"sumPoint");
-                        teamPointBean.setPoint(sumpoint);
+                        //获取本球友代表此球队的参赛场次（有效的比赛）
+                        parp.put("userId", userId);
+                        List<Map<String, Object>> joinList = teamDao.getJoinMatchChangCiByYear(parp);
+                        Integer changCi1 = matchService.getIntegerValue(joinList.get(0), "count");
 
-					}
-                    //获取本用户的前n场总成绩 按照成绩排名
-                    List<Map<String, Object>> score = teamDao.getUserScoreByChangci(parp);
-                    Integer sumrodnum=matchService.getIntegerValue(score.get(0),"sumRodNum");
-                    teamPointBean.setSumRodNum(sumrodnum);
+                        if (joinList != null && changCi1 > changCi) {
+                            teamUserPointBean.setTotalMatchNum(changCi);
+                        } else {
+                            if (joinList != null && changCi1 > 0) {
+                                teamUserPointBean.setTotalMatchNum(changCi1);
+                            } else {
+                                teamUserPointBean.setTotalMatchNum(0);
+                            }
+                        }
+                        //查每个用户的得分 和 场次下的总积分 不用从nhq
+                        //List<Map<String, Object>> sumList = teamDao.getUserSumRodScore(parp);
 
-                    if (teamPointBean.getTotalMatchNum()>0 && sumrodnum >0){
-                        Integer avgrodnum = Math.round(sumrodnum/teamPointBean.getTotalMatchNum());
-                        teamPointBean.setAvgRodInteger(avgrodnum);
-                    } else  teamPointBean.setAvgRodInteger(99999);
+                        if (type == 1) {
+                            //积分榜 获取本用户的前n场总积分 按照积分排名
+                            List<Map<String, Object>> point = teamDao.getUserPointByChangci(parp);
+                            Integer sumpoint = matchService.getIntegerValue(point.get(0), "sumPoint");
+                            teamUserPointBean.setPoint(sumpoint);
+
+                        }
+                        //获取本用户的前n场总成绩 按照成绩排名
+                        List<Map<String, Object>> score = teamDao.getUserScoreByChangci(parp);
+                        Integer sumrodnum = matchService.getIntegerValue(score.get(0), "sumRodNum");
+                        teamUserPointBean.setSumRodNum(sumrodnum);
+
+                        if (teamUserPointBean.getTotalMatchNum() > 0 && sumrodnum > 0) {
+                            Integer avgrodnum = Math.round(sumrodnum / teamUserPointBean.getTotalMatchNum());
+                            teamUserPointBean.setAvgRodInteger(avgrodnum);
+                        } else teamUserPointBean.setAvgRodInteger(99999);
 
                     /*   nhq
 				    Map<String, Object> sum = sumList.get(0);
-					teamPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
-					teamPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
-					teamPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
+					teamUserPointBean.setAvgRodNum(matchService.getDoubleValue(sum,"avgRodNum"));
+					teamUserPointBean.setAvgRodInteger(matchService.getIntegerDoubleValue(sum,"avgRodNum"));
+					teamUserPointBean.setSumRodNum(matchService.getIntegerValue(sum,"sumRodNum"));
                    */
-					list.add(teamPointBean);
-				}
-				//排序
+                        list.add(teamUserPointBean);
+                    }
+                    //排序
 
-				if(type == 0){
-					//比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
-					Collections.sort(list,new Comparator<TeamPointBean>(){
-						@Override
-						public int compare(TeamPointBean teamPointBean1,TeamPointBean teamPointBean2){
-							//if(teamPointBean1.getSumRodNum() != 0 || teamPointBean2.getSumRodNum() != 0){
-								//return new Double(teamPointBean1.getSumRodNum()).compareTo(new Double(teamPointBean2.getSumRodNum()));
-                           return  teamPointBean1.getAvgRodInteger().compareTo(teamPointBean2.getAvgRodInteger());
-							//}
-							//return 0;
-						}
-					});
-				}else {
-                    //积分榜是积分多的排前面
-                    Collections.sort(list, new Comparator<TeamPointBean>() {
-                        @Override
-                        public int compare(TeamPointBean teamPointBean1, TeamPointBean teamPointBean2) {
-                            return teamPointBean2.getPoint().compareTo(teamPointBean1.getPoint());
-                        }
-                    });
+                    if (type == 0) {
+                        //比分榜 球队比分排名杆数少的排前面，积分榜是积分多的排前面
+                        Collections.sort(list, new Comparator<TeamUserPointBean>() {
+                            @Override
+                            public int compare(TeamUserPointBean teamUserPointBean1, TeamUserPointBean teamUserPointBean2) {
+                                //if(teamUserPointBean1.getSumRodNum() != 0 || teamUserPointBean2.getSumRodNum() != 0){
+                                //return new Double(teamUserPointBean1.getSumRodNum()).compareTo(new Double(teamUserPointBean2.getSumRodNum()));
+                                return teamUserPointBean1.getAvgRodInteger().compareTo(teamUserPointBean2.getAvgRodInteger());
+                                //}
+                                //return 0;
+                            }
+                        });
+                    } else {
+                        //积分榜是积分多的排前面
+                        Collections.sort(list, new Comparator<TeamUserPointBean>() {
+                            @Override
+                            public int compare(TeamUserPointBean teamUserPointBean1, TeamUserPointBean teamUserPointBean2) {
+                                return teamUserPointBean2.getPoint().compareTo(teamUserPointBean1.getPoint());
+                            }
+                        });
+                    }
                 }
-			}
+                result.put("yearList",list);
+            }else{
+                //球队积分榜 列出当年每个球队的积分统计  并排序
+                parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
+                parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
+                parp.put("scoreType",scoreType);
+                List<Map<String, Object>> list= teamDao.getTeamPointByYear(parp);
 
-			result.put("yearList",list);
-		}else{
+                result.put("yearList",list);
+                 }
+			}else{
 			//比赛榜 列出当年所有本球队相关的比赛情况统计  只列比赛结束且球队确认过的比赛 排序 按照离今天近的排序
 			parp.put("startYear", TimeUtil.longToString(TimeUtil.getYearFirst(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
 			parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
+            parp.put("scoreType",scoreType);
 			List<Map<String, Object>> yearList = teamDao.getTeamMatchByYear(parp);
 			result.put("yearList",yearList);
 		}
@@ -503,17 +517,14 @@ public class TeamService implements IBaseService {
 	 */
 	public boolean getHasDetail(String openid) {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
-		if(StringUtils.isNotEmpty(userInfo.getUiRealName()) && userInfo.getUiAge() != null && StringUtils.isNotEmpty(userInfo.getUiTelNo())
-			&& StringUtils.isNotEmpty(userInfo.getUiEmail()) && StringUtils.isNotEmpty(userInfo.getUiGraduateSchool())
-				&& StringUtils.isNotEmpty(userInfo.getUiGraduateDepartment())
-				&& StringUtils.isNotEmpty(userInfo.getUiGraduateTime())
-				&& StringUtils.isNotEmpty(userInfo.getUiMajor())
-				&& StringUtils.isNotEmpty(userInfo.getUiWorkUnit())
-				&& StringUtils.isNotEmpty(userInfo.getUiPost()) && StringUtils.isNotEmpty(userInfo.getUiAddress())){
-			return true;
-		}
-		return false;
-	}
+        return StringUtils.isNotEmpty(userInfo.getUiRealName()) && userInfo.getUiAge() != null && StringUtils.isNotEmpty(userInfo.getUiTelNo())
+                && StringUtils.isNotEmpty(userInfo.getUiEmail()) && StringUtils.isNotEmpty(userInfo.getUiGraduateSchool())
+                && StringUtils.isNotEmpty(userInfo.getUiGraduateDepartment())
+                && StringUtils.isNotEmpty(userInfo.getUiGraduateTime())
+                && StringUtils.isNotEmpty(userInfo.getUiMajor())
+                && StringUtils.isNotEmpty(userInfo.getUiWorkUnit())
+                && StringUtils.isNotEmpty(userInfo.getUiPost()) && StringUtils.isNotEmpty(userInfo.getUiAddress());
+    }
 
 
 

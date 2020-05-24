@@ -25,7 +25,8 @@ public class MatchDoubleRodService implements IBaseService {
 
 
 	/**
-	 * 双人比杆赛记分卡 每组4人 每2人一个小组 同一个球队的放一行
+	 * 暂时不需要实现双人比杆比赛，直接采用单人比杆记分卡 nhq
+     * 双人比杆赛记分卡 每组4人 每2人一个小组 同一个球队的放一行
      * 	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，
      * 	 每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
      * 	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
@@ -58,7 +59,7 @@ public class MatchDoubleRodService implements IBaseService {
 			//有参赛队的，按照队伍分组
 			if(joinTeamIdList != null && joinTeamIdList.size() >0){
 				Long teamIdTemp = null;
-				for(Iterator<Map<String,Object>> userListIterator = (Iterator<Map<String, Object>>) userList.iterator(); userListIterator.hasNext();){
+				for(Iterator<Map<String,Object>> userListIterator = userList.iterator(); userListIterator.hasNext();){
 					Map<String,Object> groupUser = userListIterator.next();
 					if(joinTeamIdList.size() == 1){
 						//同一个参赛球队

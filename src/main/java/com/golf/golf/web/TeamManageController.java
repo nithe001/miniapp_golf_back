@@ -204,14 +204,14 @@ public class TeamManageController {
 				logger.info("成功获取照片");
 				String fileName = file.getOriginalFilename();
 				String type = null;
-				type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length()) : null;
+				type = fileName.indexOf(".") != -1 ? fileName.substring(fileName.lastIndexOf(".") + 1) : null;
 				logger.info("图片初始名称为：" + fileName + " 类型为：" + type);
 				if (type != null) {
 					if ("GIF".equals(type.toUpperCase())||"PNG".equals(type.toUpperCase())||"JPG".equals(type.toUpperCase())) {
 						// 项目在容器中实际发布运行的根路径
 						String realPath = WebUtil.getRealPath(PropertyConst.TEAM_LOGO_PATH);
 						// 自定义的文件名称
-						String trueFileName = String.valueOf(System.currentTimeMillis()) + "."+type;
+						String trueFileName = System.currentTimeMillis() + "."+type;
 
 						File targetFile = new File(realPath, trueFileName);
 						if(!targetFile.exists()){
@@ -296,9 +296,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamPointByYear")
-	public JsonElement getTeamPointByYear(Integer type, String date, Long teamId, Integer changci) {
+	public JsonElement getTeamPointByYear(Integer type, Integer scoreType,String date, Long teamId, Integer changci) {
 		try {
-			Map<String, Object> result = teamService.getTeamPointByYear(type, date, teamId, changci);
+			Map<String, Object> result = teamService.getTeamPointByYear(type, scoreType,date, teamId, changci);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();

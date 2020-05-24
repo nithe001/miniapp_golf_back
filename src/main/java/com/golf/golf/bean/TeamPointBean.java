@@ -1,49 +1,44 @@
 package com.golf.golf.bean;
 
 /**
- * 球队——比分榜、积分榜 bean
+ * 用于计算球队的积分——比分榜、积分榜,这个bean目前没有用 nhq 2020.5.16
  * Created by dev on 17-2-10
  */
 public class TeamPointBean implements Comparable<TeamPointBean> {
 	//用户id
-	private Long userId;
+	private Long teamId;
 	//真实姓名
-	private String realName;
+	private String teamName;
 	//昵称
-	private String nickName;
+	private String teamAbbrev;
 	//参赛场次
 	private Integer totalMatchNum;
-	//平均杆数
-	private Double avgRodNum;
-	//平均杆数
-	private Integer avgRodInteger;
-	//总杆数
-	private Integer sumRodNum;
 	//积分
-	private Integer point;
+	private Double teamPoint;
 
-	public Long getUserId() {
-		return userId;
+
+	public Long getTeamId() {
+		return teamId;
 	}
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
+	public void setTeamId(Long teamId) {
+		this.teamId =teamId;
 	}
 
-	public String getRealName() {
-		return realName;
+	public String getTeamName() {
+		return teamName;
 	}
 
-	public void setRealName(String realName) {
-		this.realName = realName;
+	public void setTeamName(String teamName) {
+		this.teamName = teamName;
 	}
 
-	public String getNickName() {
-		return nickName;
+	public String getTeamAbbrev() {
+		return teamAbbrev;
 	}
 
-	public void setNickName(String nickName) {
-		this.nickName = nickName;
+	public void setTeamAbbrev(String teamAbbrev) {
+		this.teamAbbrev = teamAbbrev;
 	}
 
 	public Integer getTotalMatchNum() {
@@ -54,40 +49,31 @@ public class TeamPointBean implements Comparable<TeamPointBean> {
 		this.totalMatchNum = totalMatchNum;
 	}
 
-	public Double getAvgRodNum() {
-		return avgRodNum;
+	public Double getTeamPoint() {
+		return teamPoint;
 	}
 
-	public void setAvgRodNum(Double avgRodNum) {
-		this.avgRodNum = avgRodNum;
+	public void setTeamPoint(Double teamPoint) {
+		this.teamPoint = teamPoint;
 	}
 
-	public Integer getSumRodNum() {
-		return sumRodNum;
-	}
 
-	public void setSumRodNum(Integer sumRodNum) {
-		this.sumRodNum = sumRodNum;
-	}
-
-	public Integer getPoint() {
-		return point;
-	}
-
-	public void setPoint(Integer point) {
-		this.point = point;
-	}
-
-	public Integer getAvgRodInteger() {
-		return avgRodInteger;
-	}
-
-	public void setAvgRodInteger(Integer avgRodInteger) {
-		this.avgRodInteger = avgRodInteger;
-	}
 
 	@Override
 	public int compareTo(TeamPointBean teamPointBean) {
-		return this.avgRodInteger - teamPointBean.avgRodInteger;
+		//return this.teamPoint - teamPointBean.teamPoint;
+        Double d1 = this.teamPoint;
+        Double d2 =  teamPointBean.teamPoint;
+        if((d1 == null || d1 == 0) && (d2 == null || d2 == 0)){
+            return 0;
+        }
+        if(d1 == null || d1 == 0){
+            return 1;
+        }
+        if(d2 == null || d2 == 0){
+            return -1;
+        }
+        return new Double(d1).compareTo(new Double(d2));
 	}
+
 }

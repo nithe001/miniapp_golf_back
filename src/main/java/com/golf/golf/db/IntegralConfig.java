@@ -17,12 +17,14 @@ public class IntegralConfig implements java.io.Serializable {
 	// Fields
 
 	private Long icId;
+    private Integer icScoreType;
 	private Long icMatchId;
 	private Long icReportTeamId;
 	private Long icTeamId;
 	private Integer icBaseScore;
 	private Integer icRodCha;
 	private Integer icWinScore;
+    private Double icTeamPoint;
 	private Long icCreateTime;
 	private Long icCreateUserId;
 	private String icCreateUserName;
@@ -37,16 +39,18 @@ public class IntegralConfig implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public IntegralConfig(Long icMatchId, Long icReportTeamId,Long icTeamId, Integer icBaseScore,
-			Integer icRodCha, Integer icWinScore, Long icCreateTime,
+	public IntegralConfig(Long icMatchId, Integer icScoreType, Long icReportTeamId,Long icTeamId, Integer icBaseScore,
+			Integer icRodCha, Integer icWinScore, Double icTeamPoint,Long icCreateTime,
 			Long icCreateUserId, String icCreateUserName, Long icUpdateTime,
 			Long icUpdateUserId, String icUpdateUserName) {
 		this.icMatchId = icMatchId;
+        this.icScoreType = icScoreType;
 		this.icReportTeamId = icReportTeamId;
 		this.icTeamId = icTeamId;
 		this.icBaseScore = icBaseScore;
 		this.icRodCha = icRodCha;
 		this.icWinScore = icWinScore;
+        this.icTeamPoint =  icTeamPoint;
 		this.icCreateTime = icCreateTime;
 		this.icCreateUserId = icCreateUserId;
 		this.icCreateUserName = icCreateUserName;
@@ -66,6 +70,15 @@ public class IntegralConfig implements java.io.Serializable {
 	public void setIcId(Long icId) {
 		this.icId = icId;
 	}
+
+    @Column(name = "ic_score_type")
+    public Integer getIcScoreType() {
+        return this.icScoreType;
+    }
+
+    public void setIcScoreType(Integer icScoreType) {
+        this.icScoreType = icScoreType;
+    }
 
 	@Column(name = "ic_match_id")
 	public Long getIcMatchId() {
@@ -112,16 +125,25 @@ public class IntegralConfig implements java.io.Serializable {
 		this.icRodCha = icRodCha;
 	}
 
-	@Column(name = "ic_win_score")
-	public Integer getIcWinScore() {
-		return this.icWinScore;
+    @Column(name = "ic_win_score")
+    public Integer getIcWinScore() {
+        return this.icWinScore;
+    }
+
+    public void setIcWinScore(Integer icWinScore) {
+        this.icWinScore = icWinScore;
+    }
+
+	@Column(name = "ic_team_point")
+	public Double getIcTeamPoint() {
+		return this.icTeamPoint;
 	}
 
-	public void setIcWinScore(Integer icWinScore) {
-		this.icWinScore = icWinScore;
+	public void setIcTeamPoint(Double icTeamPoint) {
+		this.icTeamPoint = icTeamPoint;
 	}
 
-	@Column(name = "ic_create_time")
+    @Column(name = "ic_create_time")
 	public Long getIcCreateTime() {
 		return this.icCreateTime;
 	}

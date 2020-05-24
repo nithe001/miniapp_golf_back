@@ -394,17 +394,39 @@ public class TeamDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
 					"team.ti_abbrev as teamAbbrev,c.ic_base_score as baseScore," +
-					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore " +
+					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore,c.ic_team_point as teamPoint " +
 				  	"FROM integral_config AS c,match_info as m,team_info as team " +
 					//"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +  nhq
 				    "WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = team.ti_id " +
 					"and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
+                    "and c.ic_score_type = :scoreType "+
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
 		//排序 按照离今天近的排序
 		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
+
+    /**
+     * 获取各球队全年积分排行榜
+     * 排序 按照离今天近的排序
+     * 把当前球队当作上报球队来取 nhq
+     * @return
+     */
+    public List<Map<String, Object>> getTeamPointByYear(Map<String, Object> parp) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT COUNT(c.ic_id) as totalMatchNum,team.ti_abbrev as teamAbbrev,sum(c.ic_team_point) as teamPoint " +
+                  "FROM integral_config AS c,match_info as m,team_info as team " +
+                //"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +  nhq
+                "WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = team.ti_id " +
+                "and c.ic_score_type = :scoreType "+
+                "and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
+        //排序 按照离今天近的排序
+        hql.append("  GROUP BY c.ic_team_id ORDER BY teamPoint DESC  ");
+        List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
+        return list;
+    }
+
 
 	/**
 	 * 是否是该球队队长
@@ -478,6 +500,7 @@ public class TeamDao extends CommonDao {
 		sql.append(" and t.tumUserId = "+userId);
         return dao.createCountQuery("select count(*) "+sql.toString());
     }
+
 
 
 }
