@@ -1,4 +1,8 @@
 package com.golf.golf.bean;
+import java.util.List;
+import java.util.Map;
+
+import com.golf.golf.db.MatchHoleResult;
 
 /**
  * 比赛——分队统计bean
@@ -12,6 +16,7 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 	private Integer winNum;
 	private Integer pingNum;
 	private Double score;
+    private  List<Map<String, Object>>  teamGroupResult;
 
 	public Long getTeamId() {
 		return teamId;
@@ -60,6 +65,13 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
     public void setPingNum(Integer pingNum) {
         this.pingNum = pingNum;
     }
+
+    public  List<Map<String, Object>> getTeamGroupResult() {
+        return teamGroupResult;
+    }
+
+    public void setTeamGroupResult( List<Map<String, Object>>  teamGroupResult) {
+        this.teamGroupResult = teamGroupResult;}
 
     @Override
     public int compareTo(MatchTotalTeamBean bean) {

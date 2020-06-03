@@ -12,9 +12,13 @@ public class MatchHoleResult implements java.io.Serializable {
 
 	private Long mhrId;
 	private Long mhrMatchId;
+    private Integer mhrMatchChildId;
 	private Long mhrGroupId;
 	private Long mhrTeamId;
+    private String mhrUserName1;
+    private String mhrUserName0;
 	private Integer mhrResult;
+    private Integer mhrHoleLeft;
 	private Integer mhrIsSubmit;
 
 
@@ -29,13 +33,17 @@ public class MatchHoleResult implements java.io.Serializable {
 	/**
 	 * full constructor
 	 */
-	public MatchHoleResult(Long mhrId, Long mhrMatchId, Long mhrGroupId, Long mhrTeamId,
-						   Integer mhrResult,Integer mhrIsSubmit) {
+	public MatchHoleResult(Long mhrId, Long mhrMatchId,Integer mhrMatchChildId, Long mhrGroupId, Long mhrTeamId,String mhrUserName1,String mhrUserName0,
+						   Integer mhrResult,Integer mhrHoleLeft,Integer mhrIsSubmit) {
 		this.mhrId = mhrId;
 		this.mhrMatchId = mhrMatchId;
+        this.mhrMatchChildId = mhrMatchChildId;
 		this.mhrGroupId = mhrGroupId;
 		this.mhrTeamId = mhrTeamId;
-		this.mhrResult = mhrResult;
+        this.mhrUserName1 = mhrUserName1;
+        this.mhrUserName0 = mhrUserName0;
+        this.mhrResult = mhrResult;
+        this.mhrHoleLeft = mhrHoleLeft;
 		this.mhrIsSubmit = mhrIsSubmit;
 	}
 
@@ -60,6 +68,15 @@ public class MatchHoleResult implements java.io.Serializable {
 		this.mhrMatchId = mhrMatchId;
 	}
 
+    @Column(name = "mhr_match_child_id")
+    public Integer getMhrMatchChildId() {
+        return mhrMatchChildId;
+    }
+
+    public void setMhrMatchChildId(Integer mhrMatchChildId) {
+        this.mhrMatchChildId = mhrMatchChildId;
+    }
+
 	@Column(name = "mhr_group_id")
 	public Long getMhrGroupId() {
 		return mhrGroupId;
@@ -78,16 +95,39 @@ public class MatchHoleResult implements java.io.Serializable {
 		this.mhrTeamId = mhrTeamId;
 	}
 
-	@Column(name = "mhr_result")
-	public Integer getMhrResult() {
-		return mhrResult;
-	}
+    @Column(name = "mhr_user_name1")
+    public String getMhrUserName1() {
+        return mhrUserName1;
+    }
 
-	public void setMhrResult(Integer mhrResult) {
-		this.mhrResult = mhrResult;
-	}
+    public void setMhrUserName1(String mhrUserName1) {
+        this.mhrUserName1 = mhrUserName1;
+    }
 
-	@Column(name = "mhr_is_submit")
+    @Column(name = "mhr_user_name0")
+    public String getMhrUserName0() {
+        return mhrUserName0;
+    }
+
+    public void setMhrUserName0(String mhrUserName0) {
+        this.mhrUserName0 = mhrUserName0;
+    }
+
+    @Column(name = "mhr_result")
+    public Integer getMhrResult() {
+        return mhrResult;
+    }
+
+    public void setMhrResult(Integer mhrResult) {
+        this.mhrResult = mhrResult;
+    }
+
+    @Column(name = "mhr_hole_left")
+    public Integer getMhrHoleLeft() { return mhrHoleLeft; }
+
+    public void setMhrHoleLeft(Integer mhrHoleLeft) { this.mhrHoleLeft = mhrHoleLeft; }
+
+    @Column(name = "mhr_is_submit")
 	public Integer getMhrIsSubmit() {
 		return mhrIsSubmit;
 	}

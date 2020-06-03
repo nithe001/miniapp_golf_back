@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,8 +75,8 @@ public class MatchDao extends CommonDao {
             //比分——我的比赛 包括我的单练
             hql.append(" AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
         }else{
-            //比分——全部比赛（除了不可用的比赛）
-            hql.append(" AND m.mi_type = 1 ");
+            //比分——全部比赛（除了不可用的比赛,包括选择公开的单练）
+            hql.append(" AND ( m.mi_type = 1 OR (m.mi_type = 0 AND m.mi_match_open_type = 1 ))");
         }
         if(parp.get("keyword") != null){
             hql.append(" AND m.mi_title LIKE :keyword ");
@@ -1460,9 +1461,10 @@ public class MatchDao extends CommonDao {
 	public void updateMatchState(Long matchId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("UPDATE MatchInfo AS m set m.miIsValid = 0");
-		sql.append("WHERE m.miId = " +matchId);
+		sql.append(" WHERE m.miId = " +matchId);
 		dao.executeHql(sql.toString());
 	}
+
 
 	/**
 	 * 记分卡 初始化 查询我是否可以记分
@@ -1791,14 +1793,14 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 队际赛：双人赛：获取最少的组数
+	 * 队际赛：双人赛：获取最少的组数，
 	 */
 	public List<Map<String,Object>> getUserCountByMatchGroupTeamId(Long matchId, List<Long> joinTeamIdList) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
 		parp.put("joinTeamIdList",joinTeamIdList);
 		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT count(mugm.mugm_group_id) as groupCount FROM match_user_group_mapping AS mugm ");
+		sql.append("SELECT count(distinct mugm.mugm_group_id) as groupCount FROM match_user_group_mapping AS mugm ");
 		sql.append("where mugm.mugm_match_id =:matchId ");
 		sql.append("and mugm.mugm_team_id in(:joinTeamIdList) ");
 		sql.append("and mugm.mugm_is_del !=1 ");
@@ -1875,16 +1877,6 @@ public class MatchDao extends CommonDao {
 		return null;
 	}
 
-	//获取比洞赛输赢结果
-	public MatchHoleResult getMatchHoleResult(Long matchId, Long groupId, Long teamId) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("FROM MatchHoleResult AS t where t.mhrMatchId = "+matchId+" and t.mhrTeamId ="+teamId+" and t.mhrGroupId = "+groupId);
-		List<MatchHoleResult> list = dao.createQuery(sql.toString());
-		if(list != null && list.size()>0){
-			return list.get(0);
-		}
-		return null;
-	}
 
 	//获取球友的得分
     public MatchScore getMatchScoreByIds(Long userId_, Long matchId, Long groupId, Long teamId,Integer beforeAfter, String holeName,
@@ -1907,28 +1899,53 @@ public class MatchDao extends CommonDao {
         return null;
     }
 
-    //从matchUserMapping表中获取参赛队
-    public List<Map<String,Object>> getJoinTeamMappingList(Long matchId,List<Long> groupList) {
+    //从matchHoleResult表中获取参赛队
+    public List<Map<String,Object>> getJoinTeamMappingList(Long matchId, Integer childId) {
 		Map<String, Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
-		parp.put("groupList",groupList);
+        parp.put("childId",childId);
+
 	    StringBuilder sql = new StringBuilder();
-        sql.append("select mugm.mugm_team_id as teamId from match_user_group_mapping as mugm where mugm.mugm_match_id = :matchId  " +
-				"and mugm.mugm_group_id in (:groupList)" +
-				"GROUP BY mugm.mugm_team_id ");
+        sql.append("select mhr.mhr_team_id as teamId from match_hole_result as mhr where mhr.mhr_match_id = :matchId  " +
+					"  and mhr.mhr_match_child_id = :childId GROUP BY mhr.mhr_team_id ");
         return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
-    //获取该球队在本比赛中的平、赢组个数
-    public List<Map<String, Object>> getPingWinNumList(Long matchId, Long teamId) {
+    //从matchHoleResult表中获取子比赛列表
+    public List<Map<String,Object>> getChildMappingList(Long matchId) {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+               StringBuilder sql = new StringBuilder();
+        sql.append("select mhr.mhr_match_child_id as childId, ti.ti_abbrev as teamAbbrev ");
+        sql.append(" from match_hole_result as mhr ,team_info as ti  where mhr.mhr_match_id = :matchId  " +
+                "  and mhr.mhr_team_id = ti.ti_id GROUP BY mhr.mhr_match_child_id, mhr.mhr_team_id ORDER by mhr.mhr_match_child_id ");
+        return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
+
+    //从matchHoleResult表中获取参赛队各组情况
+    public List<Map<String,Object>> getTeamGroupResult(Long matchId,Integer childId, Long teamId) {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("childId",childId);
+        parp.put("teamId",teamId);
         StringBuilder sql = new StringBuilder();
-        sql.append("select sum(CASE WHEN mhr.mhr_team_id = "+teamId+" and mhr.mhr_result =1 then 1 else 0 end) AS winNum, ");
+        sql.append("select mhr.mhr_group_id as groupId, mhr.mhr_user_name0 as userName0, mhr.mhr_user_name1 as userName1, mhr.mhr_result as result,mhr.mhr_hole_left as holeLeft ");
+        sql.append(" from match_hole_result as mhr ");
+        sql.append(" Where mhr.mhr_match_id = :matchId  and  mhr.mhr_match_child_id = :childId and mhr.mhr_team_id = :teamId ");
+        sql.append(" ORDER BY mhr.mhr_group_id ");
+        return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
+
+    //获取matchHoleResult该球队在本比赛中的平、赢组个数
+    public List<Map<String, Object>> getPingWinNumList(Long matchId,Integer childId, Long teamId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select sum(CASE WHEN mhr.mhr_team_id = "+teamId+" and mhr.mhr_result >0 then 1 else 0 end) AS winNum, ");
         sql.append("sum(CASE WHEN mhr.mhr_team_id = "+teamId+"  and mhr.mhr_result =0 then 1 else 0 end) AS pingNum ");
-        sql.append("from match_hole_result as mhr where mhr.mhr_match_id = "+matchId);
+        sql.append("from match_hole_result as mhr where mhr.mhr_match_id = "+matchId+ " and mhr.mhr_match_child_id = "+childId);
         return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
-    //获取本球队在本比赛中的输球组和赢球组列表
+    //获取matchHoleResult本球队在本比赛中的输球组和赢球组列表
     public List<MatchHoleResult> getMatchHoleWinOrLoseList(Long matchId, Long teamId) {
         StringBuilder sql = new StringBuilder();
         sql.append("from MatchHoleResult as mhr " +
@@ -1938,6 +1955,51 @@ public class MatchDao extends CommonDao {
 		}
         return dao.createQuery(sql.toString());
     }
+
+    //获取matchHoleResult比洞赛输赢结果
+    public MatchHoleResult getMatchHoleResult(Long matchId, Long groupId, Long teamId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("FROM MatchHoleResult AS t where t.mhrMatchId = "+matchId+" and t.mhrTeamId ="+teamId+" and t.mhrGroupId = "+groupId);
+        List<MatchHoleResult> list = dao.createQuery(sql.toString());
+        if(list != null && list.size()>0){
+            return list.get(0);
+        }
+        return null;
+    }
+
+    //获取matchHoleResult多队比洞赛的子比赛最大序号
+    public Integer getMaxMatchChildId(Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT MAX(m.mhrMatchChildId) FROM MatchHoleResult as m where m.mhrMatchId = "+matchId);
+        List<Integer> list = dao.createQuery(sql.toString());
+        if(list != null && list.size()>0){
+            return list.get(0);
+        }else{
+            return null;
+        }
+    }
+
+
+    //获取matchHoleResult中该两队是否已存在childId
+    public Integer  childExist(Long matchId,Long teamId0,Long teamId1) {
+        Map<String, Object> parp = new HashMap<String, Object>();
+        parp.put("matchId", matchId);
+        parp.put("teamId0", teamId0);
+        parp.put("teamId1", teamId1);
+        StringBuffer hql = new StringBuffer();
+
+        hql.append("SELECT m.mhrMatchChildId FROM MatchHoleResult as m WHERE m.mhrMatchId = :matchId  and m.mhrTeamId = :teamId0 ");
+        hql.append("AND m.mhrGroupId IN ( ");
+        hql.append("select m1.mhrGroupId from MatchHoleResult as m1 where m1.mhrMatchId = :matchId  and m1.mhrTeamId = :teamId1 ");
+        hql.append(") ");
+        List<Integer> list = dao.createQuery(hql.toString(), parp);
+        if(list != null && list.size()>0){
+            return list.get(0);
+        }else{
+            return 0;
+        }
+    }
+
 
     //查询我的观战数据
     public MatchJoinWatchInfo getMatchWatchInfo(Long matchId, Long userId) {
@@ -1962,29 +2024,6 @@ public class MatchDao extends CommonDao {
         return dao.createCountQuery("select count(*) "+sql.toString());
     }
 
-    //获取比赛的前n组，按顺序排 暂时不用名次
-	public List<Long> getGroupIdByMingci(Long matchId, Integer mingci) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("select m.mugm_group_id from match_user_group_mapping as m where m.mugm_match_id = "+matchId+
-                " and  m.mugm_group_name is not null" +
-				" GROUP BY m.mugm_group_id ORDER BY m.mugm_group_id " +
-				" limit 0,"+mingci);
-		return dao.createSQLQuery(sql.toString());
-	}
-/*
-    //获取比赛的前n组，按顺序排 暂时不用名次,不要助威组
-    public List<Long> getGroupIdByMingci(Long matchId, Integer mingci) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("select m.mugm_group_id from match_user_group_mapping as m ,match_group as g where m.mugm_match_id = "+matchId+
-                " and  m.mugm_group_name is not null" +
-                " and m.mugm_match_id = g.mg_match_id" +
-                " and m.mugm_group_name = g.mg_group_name" +
-                " and g.mg_is_guest !=1 " +
-                " GROUP BY m.mugm_group_id ORDER BY m.mugm_group_id ");
-               // " limit 0,"+mingci);
-        return dao.createSQLQuery(sql.toString());
-    }
-*/
 	/**
 	 * 进一步筛选用是否在这些上报球队中，查询球队的id
 	 */
@@ -2266,5 +2305,15 @@ public class MatchDao extends CommonDao {
         dao.executeHql(sql.toString());
     }
 
+    /**
+     * 修改比赛结束状态
+     */
+
+    public void updateMatchIsEnd(Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE MatchInfo AS m set m.miIsEnd = 2 ");
+        sql.append(" WHERE m.miId = " + matchId);
+        dao.executeHql(sql.toString());
+    }
 
 }

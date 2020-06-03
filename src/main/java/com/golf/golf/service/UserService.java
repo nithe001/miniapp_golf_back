@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -211,7 +212,7 @@ public class UserService implements IBaseService {
 
 	public static void main(String[] args) throws UnsupportedEncodingException {
 		String name = "8J+NlPCfjZ/wn42V";
-		String nickName = new String(Base64.decodeBase64(name.getBytes()),"utf-8");
+		String nickName = new String(Base64.decodeBase64(name.getBytes()), StandardCharsets.UTF_8);
 		System.out.println(nickName);
 	}
 
@@ -222,7 +223,7 @@ public class UserService implements IBaseService {
 		if(userInfo != null){
 			String nickName = userInfo.getUiNickName();
 			if(StringUtils.isNotEmpty(nickName)){
-				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+				nickName = new String(Base64.decodeBase64(nickName.getBytes()), StandardCharsets.UTF_8);
 				if(StringUtils.isNotEmpty(nickName)){
 					userInfo.setUiNickName(nickName);
 				}
@@ -237,7 +238,7 @@ public class UserService implements IBaseService {
 		if(wechatUserInfo != null){
 			String nickName = wechatUserInfo.getWuiNickName();
 			if(StringUtils.isNotEmpty(nickName)){
-				nickName = new String(Base64.decodeBase64(nickName.getBytes()),"utf-8");
+				nickName = new String(Base64.decodeBase64(nickName.getBytes()), StandardCharsets.UTF_8);
 				if(StringUtils.isNotEmpty(nickName)){
 					wechatUserInfo.setWuiNickName(nickName);
 				}
@@ -254,9 +255,7 @@ public class UserService implements IBaseService {
         Long teamId = dao.getIsMyTeammate(getUserIdByOpenid(openid),userId);
         if(teamId != null){
             TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
-            if(teamInfo != null && teamInfo.getTiUserInfoType() == 1){
-                return true;
-            }
+            return teamInfo != null && teamInfo.getTiUserInfoType() == 1;
         }
         return false;
     }
@@ -290,7 +289,7 @@ public class UserService implements IBaseService {
 			nickName = jsonObject.get("nickName").toString();
 			boolean hasEmoji = EmojiFilterUtil.containsEmoji(nickName);
 			if(hasEmoji){
-				nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+				nickName = Base64.encodeBase64String(nickName.getBytes(StandardCharsets.UTF_8));
 			}
 		}
 		wechatUserInfo.setWuiNickName(nickName);
@@ -324,7 +323,7 @@ public class UserService implements IBaseService {
 			nickName = jsonObject.get("nickName").toString();
 			boolean hasEmoji = EmojiFilterUtil.containsEmoji(nickName);
 			if(hasEmoji){
-				nickName = Base64.encodeBase64String(nickName.getBytes("utf-8"));
+				nickName = Base64.encodeBase64String(nickName.getBytes(StandardCharsets.UTF_8));
 			}
 		}
 		wechatUserInfo.setWuiOpenid(openid);
@@ -567,8 +566,8 @@ public class UserService implements IBaseService {
 			Long elseIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
 			//我是否是本队队长
 			Long meIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,myUserId);
-			result.put("elseIsTeamCaptain",elseIsTeamCaptain >0 ?true:false);
-			result.put("meIsTeamCaptain",meIsTeamCaptain >0 ?true:false);
+			result.put("elseIsTeamCaptain", elseIsTeamCaptain > 0);
+			result.put("meIsTeamCaptain", meIsTeamCaptain > 0);
 		}else if(StringUtils.isNotEmpty(matchIdStr)){
 			Long matchId = Long.parseLong(matchIdStr);
 			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
@@ -586,9 +585,9 @@ public class UserService implements IBaseService {
 					meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
 				}
 			}
-			result.put("meIsMatchWatch",meIsMatchWatch >0 ?true:false);
-			result.put("meIsJoinMatchUser",meIsJoinMatchUser >0 ?true:false);
-			result.put("meIsMatchCaptain",meIsMatchCaptain >0 ?true:false);
+			result.put("meIsMatchWatch", meIsMatchWatch > 0);
+			result.put("meIsJoinMatchUser", meIsJoinMatchUser > 0);
+			result.put("meIsMatchCaptain", meIsMatchCaptain > 0);
 
 			//被查看用户是否是本比赛的参赛人员
 			Long otherIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,userId);
@@ -613,9 +612,9 @@ public class UserService implements IBaseService {
 					}
 				}
 			}
-			result.put("otherIsJoinMatchUser",otherIsJoinMatchUser >0 ?true:false);
-			result.put("otherIsMatchCaptain",otherIsMatchCaptain >0 ?true:false);
-			result.put("otherIsMatchWatch",otherIsMatchWatch >0 ?true:false);
+			result.put("otherIsJoinMatchUser", otherIsJoinMatchUser > 0);
+			result.put("otherIsMatchCaptain", otherIsMatchCaptain > 0);
+			result.put("otherIsMatchWatch", otherIsMatchWatch > 0);
 		}
 		return result;
 	}
@@ -683,7 +682,7 @@ public class UserService implements IBaseService {
 	}
 	/**
 	 * 匹配导入的成绩
-	 * openid：认领者的openId，chooseIds,被认领者的userId串，由于导入时，同名但不同球队的人会分配不同的ID，所以
+	 * openid：认领者的openId，chooseIds：被认领者的userId串，由于导入时，同名但不同球队的人会分配不同的ID，所以
 	 * 不用再用TeamID ,来判断导入的人了  nhq
 	 * @return
 	 */

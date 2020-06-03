@@ -13,6 +13,7 @@ import com.golf.golf.bean.*;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
+import com.golf.golf.enums.MatchResultEnum;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.*;
 import java.util.*;
 
 /**
@@ -106,9 +108,10 @@ public class MatchService implements IBaseService {
 	/**
 	 * 获取比赛列表
 	 * 0：全部比赛 1：我参加的比赛  2：可报名的比赛 3:已报名的比赛  4：我创建的比赛
+     * //改了个名子（原来叫getMatchList，因为get打头的函数会设为只读数据库，但pullMatchList里需修改比赛结束状态
 	 * @return
 	 */
-	public POJOPageInfo getMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
+	public POJOPageInfo pullMatchList(SearchBean searchBean, POJOPageInfo pageInfo) throws ParseException {
 		UserInfo userInfo = matchDao.get(UserInfo.class, (Long)searchBean.getParps().get("userId"));
 		if(userInfo.getUiLatitude() != null && userInfo.getUiLatitude() != null){
 			searchBean.getParps().put("myLat",userInfo.getUiLatitude());
@@ -136,9 +139,28 @@ public class MatchService implements IBaseService {
 			List<MatchInfo> matchInfoList = new ArrayList<>();
 			for (Map<String, Object> result : (List<Map<String, Object>>) pageInfo.getItems()) {
 				MatchInfo matchInfo = new MatchInfo();
-				matchInfo.setMiType(getIntegerValue(result, "mi_type"));
-				matchInfo.setMiId(getLongValue(result, "mi_id"));
 
+                matchInfo.setMiType(getIntegerValue(result, "mi_type"));
+                matchInfo.setMiId(getLongValue(result, "mi_id"));
+
+                //处理过期未关闭的比赛，超过比赛日5天自动关闭
+                String  matchTime=getName(result, "mi_match_time");
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                Date mTime = formatter.parse(matchTime);
+                Calendar cTime1 = Calendar.getInstance();   //当前日期
+                Calendar cTime2 = Calendar.getInstance();
+                cTime2.setTime(mTime);
+                int today = cTime1.get(Calendar.DAY_OF_YEAR);
+                int matchday = cTime2.get(Calendar.DAY_OF_YEAR);
+
+                Integer matchIsEnd = getIntegerValue(result, "mi_is_end");
+                if ((today-matchday)>4 && matchIsEnd ==1 ){
+                    matchIsEnd = 2;
+                   matchDao.updateMatchIsEnd( matchInfo.getMiId());
+                }
+
+
+               //处理LOGO
 				String miLogo = getName(result, "mi_logo");
 				if ("".equals(miLogo)) {miLogo = null;}
                if (matchInfo.getMiType() == 1) {
@@ -146,6 +168,7 @@ public class MatchService implements IBaseService {
                  } else{
                   matchInfo.setMiLogo(miLogo);
                 }
+
                matchInfo.setMiTitle(getName(result, "mi_title"));
 				matchInfo.setMiParkName(getName(result, "mi_park_name"));
 				matchInfo.setMiMatchTime(getName(result, "mi_match_time"));
@@ -153,7 +176,7 @@ public class MatchService implements IBaseService {
 				matchInfo.setMiMatchFormat2(getIntegerValue(result, "mi_match_format_2"));
 				matchInfo.setMiHit(getIntegerValue(result, "userWatchCount"));
 				matchInfo.setUserCount(getIntegerValue(result, "userCount"));
-				matchInfo.setMiIsEnd(getIntegerValue(result, "mi_is_end"));
+                matchInfo.setMiIsEnd(matchIsEnd);
 				matchInfo.setStateStr(matchInfo.getStateStr());
 				//是否是赛长（显示创建比赛列表时用）
 				matchInfoList.add(matchInfo);
@@ -730,7 +753,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiCreateUserId(myUserInfo.getUiId());
 		matchInfo.setMiCreateUserName(myUserInfo.getUserName());
 		matchInfo.setMiIsValid(1);
-		//0：报名中  1进行中  2结束
+        //0：报名中  1进行中  2结束
 		matchInfo.setMiIsEnd(0);
 		matchDao.save(matchInfo);
 
@@ -820,7 +843,7 @@ public class MatchService implements IBaseService {
 	 *
 	 * @return
 	 */
-	public Map<String, Object> saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
+	public Map<String, Object> saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum, Integer openType, String digest,
 											  String beforeZoneName, String afterZoneName, String openid) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -841,6 +864,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiType(0);
 		matchInfo.setMiMatchTime(playTime);
 		matchInfo.setMiPeopleNum(peopleNum);
+        matchInfo.setMiMatchOpenType(openType);
 		matchInfo.setMiDigest(digest);
 		matchInfo.setMiJoinOpenType(3);
 //		赛制1( 0:比杆 、1:比洞)
@@ -1938,6 +1962,7 @@ public class MatchService implements IBaseService {
 	 * 计算公式为：球友积分=基础积分+赢球奖分
 	 * @param teamType 0：参赛队，1：上报队
 	 *  增加参数   reportteamId     nhq
+     *                 需要考虑多队比洞赛的情况，这个还没有改，参照holematch 的改法，增加了个matchchildid   nhq
 	 */
 	private boolean updatePointByHoleScore(Long captainUserId, Long matchId, Long teamId,Long reportteamId, List<Long> userIdList, Integer baseScore,
 										   Integer winScore, Integer teamType) {
@@ -2396,7 +2421,7 @@ public class MatchService implements IBaseService {
      * 助威组成绩不做统计 nhq
 	 * @return
 	 */
-	public Map<String, Object> getTeamTotalScoreByMatchId(Long matchId, Integer mingci) {
+	public Map<String, Object> getTeamTotalScoreByMatchId(Long matchId,Integer childId, Integer mingci) {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		result.put("matchInfo",matchInfo);
@@ -2413,7 +2438,7 @@ public class MatchService implements IBaseService {
 		} else {
 			//比洞赛 n就按按分组顺序取前n组，还按原来的表头计算
 			//如果是两个队比洞的话，把每队各组的分相加，其中赢的组得1分，输的组得0分，平的组各得0.5分。一个队队内，及多个队之间没法进行比洞赛
-			holeMatch(matchId,result,mingci,matchInfo,joinTeamIdList);
+			holeMatch(matchId,childId,result,mingci,matchInfo,joinTeamIdList);
 		}
 		return result;
 	}
@@ -2542,11 +2567,14 @@ public class MatchService implements IBaseService {
 	 * 如果是比洞赛，n就按按分组顺序取前n组，还按原来的表头计算
 	 * 比洞赛：用不同的表。（球队、获胜组、打平组、得分、排名）
 	 * 如果是两个队比洞的话，把每队各组的分相加，其中赢的组得1分，输的组得0分，平的组各得0.5分。一个队队内，及多个队之间没法进行比洞赛
-     * 助威组不做统计 nhq
+     * 助威组不做统计 实际显示记分卡的时候并未往比赛结果中放，nhq
 	 */
-	private void holeMatch(Long matchId,Map<String, Object> result, Integer mingci,MatchInfo matchInfo, List<Long> joinTeamIdList) {
-		//取前n组
-		List<Map<String,Object>> nList = new ArrayList<>();
+	private void holeMatch(Long matchId,Integer childId, Map<String, Object> result, Integer mingci,MatchInfo matchInfo, List<Long> joinTeamIdList) {
+
+	  /*
+	    //取前n组
+
+        List<Map<String,Object>> nList = new ArrayList<>();
 		Map<String,Object> nMap = new HashMap<>();
 		if(mingci == null || mingci == 0){
 			//N的list
@@ -2555,11 +2583,11 @@ public class MatchService implements IBaseService {
 		}else{
 			getNList(nList,matchInfo,joinTeamIdList,nMap);
 		}
-		//获取前n组的比赛情况
-		List<Long> groupList = matchDao.getGroupIdByMingci(matchId,mingci);
-		//获取参赛队(有可能是公开赛，所以要从matchuserMapping表中获取参赛队)
-        List<Map<String,Object>> teamInfoList = matchDao.getJoinTeamMappingList(matchId,groupList);
-        //要显示的列表
+        result.put("mingciArray",nList);
+
+		//获取参赛队
+        List<Map<String,Object>> teamInfoList = matchDao.getJoinTeamMappingList(matchId);
+        //计算队的得分情况
         List<MatchTotalTeamBean> beanList = new ArrayList<>();
         if(teamInfoList != null && teamInfoList.size()>0){
             for(Map<String,Object> teamMap:teamInfoList){
@@ -2580,12 +2608,101 @@ public class MatchService implements IBaseService {
 					BigDecimal score = new BigDecimal(winNum.floatValue() + pingNum.floatValue() * 0.5).setScale(1, BigDecimal.ROUND_HALF_UP);
 					matchTotalTeamBean.setScore(score.doubleValue());
                 }
+                //取每队各组的情况
+                List <MatchHoleResult> teamGroupResult=matchDao.getTeamGroupResult(matchId,teamId);
+                //为前台显示格式化数据
+                matchTotalTeamBean.setTeamGroupResult(teamGroupResult);
                 beanList.add(matchTotalTeamBean);
             }
             Collections.sort(beanList);
         }
 		result.put("scoreList",beanList);
 		result.put("mingciArray",nList);
+*/
+
+
+          //获取子比赛列表
+          List<Map<String,Object>> childList = matchDao.getChildMappingList(matchInfo.getMiId());
+          result.put("childList",childList);
+
+
+            //获取参赛队
+          List<Map<String,Object>> teamInfoList = matchDao.getJoinTeamMappingList(matchId, childId );
+        //计算队的得分情况
+
+        if(teamInfoList != null && teamInfoList.size()>1) {
+            //第一个队
+            Long teamId = getLongValue(teamInfoList.get(0), "teamId");
+            //每个球队的平、赢组个数
+            MatchTotalTeamBean teamGroup1 = new MatchTotalTeamBean();
+            teamGroup1.setTeamId(teamId);
+            TeamInfo teamInfo = matchDao.get(TeamInfo.class, teamId);
+            teamGroup1.setTeamName(teamInfo.getTiName());
+            teamGroup1.setTeamAbbrev(teamInfo.getTiAbbrev());
+            List<Map<String, Object>> numList = matchDao.getPingWinNumList(matchId, childId, teamId);
+            if (numList != null && numList.size() > 0) {
+                Map<String, Object> map = numList.get(0);
+                Integer winNum = getIntegerValue(map, "winNum");
+                Integer pingNum = getIntegerValue(map, "pingNum");
+                teamGroup1.setWinNum(winNum);
+                teamGroup1.setPingNum(pingNum);
+                BigDecimal score = new BigDecimal(winNum.floatValue() + pingNum.floatValue() * 0.5).setScale(1, BigDecimal.ROUND_HALF_UP);
+                teamGroup1.setScore(score.doubleValue());
+            }
+            //取第一队组的情况
+            List<Map<String, Object>> teamGroupResult = matchDao.getTeamGroupResult(matchId, childId,teamId);
+            teamGroup1.setTeamGroupResult(teamGroupResult);
+            result.put("teamGroup1", teamGroup1);
+
+            //用第一队数据形成成绩列表和剩洞列表
+            List<HoleMatchScoreResultBean> chengjiList = new ArrayList<>();
+            List<Integer> holeLeftList = new ArrayList<>();
+            int res = 0;
+            for (Map<String, Object> teamResult : teamGroupResult) {
+                HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
+                res = getIntegerValue(teamResult, "result");
+                if (res == 0) {
+                    bean.setNum(null);
+                    bean.setUpDnAs(MatchResultEnum.AS.text());
+                } else if (res > 0) {
+                    bean.setNum(res);
+                    bean.setUpDnAs(MatchResultEnum.UP.text());
+                } else if (res < 0) {
+                    bean.setNum(Math.abs(res));
+                    bean.setUpDnAs(MatchResultEnum.DN.text());
+                }
+                chengjiList.add(bean);
+                holeLeftList.add(getIntegerValue(teamResult, "holeLeft"));
+            }
+            result.put("chengjiList", chengjiList);
+            result.put("holeLeftList", holeLeftList);
+
+
+            //第二个队
+            teamId = getLongValue(teamInfoList.get(1), "teamId");
+            //每个球队的平、赢组个数
+            MatchTotalTeamBean teamGroup2 = new MatchTotalTeamBean();
+            teamGroup2.setTeamId(teamId);
+            teamInfo = matchDao.get(TeamInfo.class, teamId);
+            teamGroup2.setTeamName(teamInfo.getTiName());
+            teamGroup2.setTeamAbbrev(teamInfo.getTiAbbrev());
+            numList = matchDao.getPingWinNumList(matchId, childId, teamId);
+            if (numList != null && numList.size() > 0) {
+                Map<String, Object> map = numList.get(0);
+                Integer winNum = getIntegerValue(map, "winNum");
+                Integer pingNum = getIntegerValue(map, "pingNum");
+                teamGroup2.setWinNum(winNum);
+                teamGroup2.setPingNum(pingNum);
+                BigDecimal score = new BigDecimal(winNum.floatValue() + pingNum.floatValue() * 0.5).setScale(1, BigDecimal.ROUND_HALF_UP);
+                teamGroup2.setScore(score.doubleValue());
+            }
+            //取第二队组的情况
+            teamGroupResult = matchDao.getTeamGroupResult(matchId, childId,teamId);
+            teamGroup2.setTeamGroupResult(teamGroupResult);
+            result.put("teamGroup2", teamGroup2);
+
+        }
+
 	}
 
 	/**

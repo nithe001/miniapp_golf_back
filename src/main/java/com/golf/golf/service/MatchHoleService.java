@@ -139,6 +139,7 @@ public class MatchHoleService implements IBaseService {
        // if (userList0 != null && userList0.size() > 0 && userList1 != null && userList1.size() > 0 ) {
             //第一对儿用户 得分
             Long userId0 = matchService.getLongValue(userList0.get(0), "uiId");
+            String userName00 = matchService.getName(userList0.get(0), "uiRealName");
             Long teamId0 = matchService.getLongValue(userList0.get(0),"team_id");
             List<Map<String, Object>> uscoreList00 = matchDao.getScoreByUserId(groupId, userId0, matchInfo, teamId0);
             for(int i=0;i<18;i++){
@@ -146,9 +147,11 @@ public class MatchHoleService implements IBaseService {
             }
             List<Map<String, Object>> uscoreList0 = new ArrayList<Map<String,Object>>();
             result.put("uscoreList00", uscoreList00);
-            if(userList0.size() ==1 ){ uscoreList0 = uscoreList00;}
+            String userName01 = null;
+        if(userList0.size() ==1 ){ uscoreList0 = uscoreList00;}
             else{
                 userId0 = matchService.getLongValue(userList0.get(1), "uiId");
+                userName01 = matchService.getName(userList0.get(1), "uiRealName");
                 teamId0 = matchService.getLongValue(userList0.get(1),"team_id");
                 List<Map<String, Object>> uscoreList01 = matchDao.getScoreByUserId(groupId, userId0, matchInfo, teamId0);
                 result.put("uscoreList01", uscoreList01);
@@ -185,6 +188,7 @@ public class MatchHoleService implements IBaseService {
             //第二对儿用户 得分
             if (userList1.size()>0) {
                 Long userId1 = matchService.getLongValue(userList1.get(0), "uiId");
+                String userName10 = matchService.getName(userList1.get(0), "uiRealName");
                 Long teamId1 = matchService.getLongValue(userList1.get(0), "team_id");
                 List<Map<String, Object>> uscoreList10 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
                 List<Map<String, Object>> uscoreList1 = new ArrayList<Map<String, Object>>();
@@ -192,10 +196,12 @@ public class MatchHoleService implements IBaseService {
                     uscoreList10.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
                 }
                 result.put("uscoreList10", uscoreList10);
+                String userName11 = null;
                 if (userList1.size() == 1) {
                     uscoreList1 = uscoreList10;
                 } else {
                     userId1 = matchService.getLongValue(userList1.get(1), "uiId");
+                    userName11 = matchService.getName(userList1.get(1), "uiRealName");
                     teamId1 = matchService.getLongValue(userList1.get(1), "team_id");
                     List<Map<String, Object>> uscoreList11 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
                     result.put("uscoreList11", uscoreList11);
@@ -230,7 +236,8 @@ public class MatchHoleService implements IBaseService {
                 }
 
                 //最终成绩
-                Integer score = 0;
+                Integer score = 0; //成绩
+                Integer holeLeft = 18; //剩余洞数
                 for (Map<String, Object> map0 : uscoreList0) {
                     //第一对儿用户 杆数
                     Integer rodNum0 = matchService.getIntegerValueWithNull(map0, "rod_num");
@@ -248,6 +255,7 @@ public class MatchHoleService implements IBaseService {
                         if (holeNum0.equals(holeNum1) && holeName0.equals(holeName1)) {
                             HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
                             if (rodNum0 != null && rodNum1 != null) {
+                                holeLeft -=1;
 //                你设一个“得分”变量，初始值为0，
 //                A1洞，双方平，则得分=等分+0，
 //                A2洞，上方赢，则得分=得分+1=1，
@@ -276,13 +284,58 @@ public class MatchHoleService implements IBaseService {
                                 }
                                 BeanUtils.copyProperties(bean, endTrChengji);
                                 //同时更新比洞赛输赢表
-                                if (matchDao.groupIsGuest(groupId) == 1) { // 助威组，记个临时球队
-                                    teamId0 = 999999l;
-                                    teamId1 = 999998l;
-                                }
+                                if (matchDao.groupIsGuest(groupId) != 1) { // 比赛组，
+                                    //看有没有子比赛
+                                    Integer childId = matchDao.childExist(matchInfo.getMiId(),teamId0,teamId1);
+                                    Integer childMax = matchDao.getMaxMatchChildId(matchInfo.getMiId());
+                                    if (childMax == null ){childMax = 0; }
+                                   //更新第一队记录
+                                    MatchHoleResult matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId0);
+                                    if (matchHoleResult == null) {
+                                        matchHoleResult = new MatchHoleResult();
+                                        matchHoleResult.setMhrMatchId(matchInfo.getMiId());
+                                        if ( childId==0) {
+                                            matchHoleResult.setMhrMatchChildId(childMax + 1);
+                                        } else {
+                                            matchHoleResult.setMhrMatchChildId(childId);
+                                        }
+                                        matchHoleResult.setMhrGroupId(groupId);
+                                        matchHoleResult.setMhrTeamId(teamId0);
+                                    }
+                                    matchHoleResult.setMhrUserName0(userName00);
+                                    matchHoleResult.setMhrUserName1(userName01);
+                                    matchHoleResult.setMhrHoleLeft(holeLeft);
+                                    matchHoleResult.setMhrResult(score);
 
-                                saveOrUpdateMatchHoleResult(bean, matchInfo.getMiId(), groupId, teamId0, 0);
-                                saveOrUpdateMatchHoleResult(bean, matchInfo.getMiId(), groupId, teamId1, 1);
+                                    if(matchHoleResult.getMhrId() == null) {
+                                        matchDao.save(matchHoleResult);
+                                    }else{
+                                        matchDao.update(matchHoleResult);
+                                    }
+                                   //更新第二队记录
+                                    matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId1);
+                                    if (matchHoleResult == null) {
+                                        matchHoleResult = new MatchHoleResult();
+                                        matchHoleResult.setMhrMatchId(matchInfo.getMiId());
+                                        if ( childId==0) {
+                                            matchHoleResult.setMhrMatchChildId(childMax + 1);
+                                        } else {
+                                            matchHoleResult.setMhrMatchChildId(childId);
+                                        }
+                                        matchHoleResult.setMhrGroupId(groupId);
+                                        matchHoleResult.setMhrTeamId(teamId1);
+                                    }
+                                    matchHoleResult.setMhrUserName0(userName10);
+                                    matchHoleResult.setMhrUserName1(userName11);
+                                    matchHoleResult.setMhrHoleLeft(holeLeft);
+                                    matchHoleResult.setMhrResult(-score);
+
+                                    if(matchHoleResult.getMhrId() == null) {
+                                        matchDao.save(matchHoleResult);
+                                    }else{
+                                        matchDao.update(matchHoleResult);
+                                    }
+                                }
                             }
                             chengjiList.add(bean);
                             break;
@@ -292,40 +345,6 @@ public class MatchHoleService implements IBaseService {
             }
        // }
     }
-
-	//更新比洞赛结果输赢表 n:0:第一对儿用户  1：第二对儿用户
-	public void saveOrUpdateMatchHoleResult(HoleMatchScoreResultBean bean,Long matchId, Long groupId, Long teamId,Integer n) {
-		MatchHoleResult matchHoleResult = matchDao.getMatchHoleResult(matchId,groupId,teamId);
-		if(matchHoleResult == null) {
-			matchHoleResult = new MatchHoleResult();
-			matchHoleResult.setMhrMatchId(matchId);
-			matchHoleResult.setMhrGroupId(groupId);
-			matchHoleResult.setMhrTeamId(teamId);
-		}
-		//比赛结果（0：打平 1：打赢  2：打输）
-		if(bean.getUpDnAs().equals(MatchResultEnum.AS.text())){
-			matchHoleResult.setMhrResult(0);
-		}else if(bean.getUpDnAs().equals(MatchResultEnum.UP.text())){
-			if(n == 0){
-				//第一个赢，第二个就记输
-				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.UP.value()));
-			}else{
-				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.DN.value()));
-			}
-		}else if(bean.getUpDnAs().equals(MatchResultEnum.DN.text())){
-			if(n == 0){
-				//第一个输，第二个就记赢
-				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.DN.value()));
-			}else{
-				matchHoleResult.setMhrResult(Integer.parseInt(MatchResultEnum.UP.value()));
-			}
-		}
-		if(matchHoleResult.getMhrId() == null) {
-			matchDao.save(matchHoleResult);
-		}else{
-			matchDao.update(matchHoleResult);
-		}
-	}
 
 
 }

@@ -84,7 +84,7 @@ public class MatchController {
 			searchBean.addParpField("type", type);
 			Long userId = userService.getUserIdByOpenid(openid);
 			searchBean.addParpField("userId", userId);
-			pageInfo = matchService.getMatchList(searchBean, pageInfo);
+			pageInfo = matchService.pullMatchList(searchBean, pageInfo); //改了个名子，因为get打头的函数会设为只读数据库，但pullMatchList里需修改比赛结束状态
 		} catch (Exception e) {
 			e.printStackTrace();
 			String errmsg = "前台-获取比赛列表出错。openid="+openid;
@@ -655,10 +655,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
-	public JsonElement saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum, String digest,
+	public JsonElement saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum,  Integer openType,String digest,
 									  String beforeZoneName, String afterZoneName, String openid) {
 		try {
-			Map<String,Object> result = matchService.saveSinglePlay(matchTitle, parkId, parkName, playTime, peopleNum, digest,
+			Map<String,Object> result = matchService.saveSinglePlay(matchTitle, parkId, parkName, playTime, peopleNum, openType, digest,
 										beforeZoneName, afterZoneName, openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
@@ -1126,9 +1126,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamTotalScoreByMatchId")
-	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer mingci) {
+	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer childId, Integer mingci) {
 		try {
-			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, mingci);
+			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, childId, mingci);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队统计时出错。matchId="+matchId;
