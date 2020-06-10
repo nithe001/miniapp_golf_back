@@ -71,10 +71,10 @@ public class AdminImportDao extends CommonDao {
 	}
 
 	/**
-	 * 根据用户名查询是否存在球队用户mapping
+	 * 根据用户ID及球队ID查询是否存在球队用户mapping
 	 * @return
 	 */
-	public TeamUserMapping getTeamUserMappingByUserId(Long teamId,Long userId) {
+	public TeamUserMapping getTeamUserMappingByTeamId(Long teamId,Long userId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM TeamUserMapping as t WHERE t.tumTeamId = "+teamId+" and t.tumUserId = "+userId);
 		List<TeamUserMapping> list = dao.createQuery(hql.toString());
@@ -84,7 +84,26 @@ public class AdminImportDao extends CommonDao {
 		return null;
 	}
 
-	/**
+    /**
+     * 根据用户ID及所有参赛队查询是否存在球队用户mapping，有多个只取第一个
+     * @return
+     */
+    public Map<String,Object> findTeamUserMappingByUserName(String userName, List<Long> joinTeamIdList) {
+        Map<String,Object> parp = new HashMap<>();
+        parp.put("userName",userName);
+        parp.put("joinTeamIdList",joinTeamIdList);
+        StringBuilder hql = new StringBuilder();
+        hql.append(" SELECT  t.tumUserId as userId, t.tumTeamId as teamId, t.tumUserType as userType FROM TeamUserMapping as t, UserInfo as u WHERE u.uiRealName = :userName and t.tumUserId = u.uiId ");
+        hql.append(" and t.tumTeamId in (:joinTeamIdList)");
+        List<Map<String,Object>> list = dao.createQuery(hql.toString(),parp,Transformers.ALIAS_TO_ENTITY_MAP);
+        if(list != null && list.size() >0){
+            return list.get(0);
+        }
+        return null;
+    }
+
+
+    /**
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
@@ -114,9 +133,9 @@ public class AdminImportDao extends CommonDao {
 	 * 根据用户名查询是否存在球队用户mapping
 	 * @return
 	 */
-	public Map<String,Object> getUserByRealName(String userName, String teamName, String teamAbbrev) {
+	public Map<String,Object> getUserByRealNameTeamName(String userName, String teamName, String teamAbbrev) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiId as userId,t.tiId as teamId FROM TeamUserMapping as tum , UserInfo as u,TeamInfo as t WHERE tum.tumUserId = u.uiId ");
+		hql.append("SELECT u.uiId as userId,t.tiId as teamId, tum.tumUserType as userType FROM TeamUserMapping as tum , UserInfo as u,TeamInfo as t WHERE tum.tumUserId = u.uiId ");
 		hql.append(" and tum.tumTeamId = t.tiId ");
 		hql.append(" and u.uiRealName = '"+userName+"'");
 		hql.append(" and t.tiName = '"+teamName+"'");
@@ -128,15 +147,27 @@ public class AdminImportDao extends CommonDao {
 		return null;
 	}
 
+    /**
+     * 根据用户名查询整个系统中是否存在该用户
+     * @return
+     */
+    public Map<String,Object> getUserByRealName(String userName) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT u.uiId as userId FROM UserInfo as u WHERE  u.uiRealName = '"+userName+"'");
+        List<Map<String,Object>> list = dao.createQuery(hql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+        if(list != null && list.size() >0){
+            return list.get(0);
+        }
+        return null;
+    }
 	/**
 	 * 查询是否存在比赛用户mapping
 	 * @return
 	 */
-	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId, Long groupId, Long userId) {
+	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId,  Long userId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchUserGroupMapping as t WHERE t.mugmMatchId = "+matchId);
 		hql.append(" and t.mugmTeamId = "+teamId);
-		hql.append(" and t.mugmGroupId = "+groupId);
 		hql.append(" and t.mugmUserId = "+userId);
 		List<MatchUserGroupMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size() >0){

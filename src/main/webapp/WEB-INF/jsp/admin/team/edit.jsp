@@ -26,6 +26,7 @@
 		            <div class="box box-info">
 			            <div class="box-header with-border">
 			              <h3 class="box-title">球队详细信息</h3>
+                            <button type="button" class="btn btn-success" id="teamClaim">整队认领</button>
 			            </div>
 						<form class="form-horizontal" id="calendarForm" action="admin/team/teamEdit" method="post">
 							<jsp:include page="form.jsp"></jsp:include>

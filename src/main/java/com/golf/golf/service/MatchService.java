@@ -12,8 +12,10 @@ import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.*;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.dao.TeamDao;
+import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.*;
 import com.golf.golf.enums.MatchResultEnum;
+import com.golf.golf.service.admin.AdminImportService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -42,12 +44,16 @@ public class MatchService implements IBaseService {
 	private MatchDao matchDao;
 	@Autowired
 	private TeamDao teamDao;
+    @Autowired
+    private UserDao userDao;
 	@Autowired
 	private TeamService teamService;
 	@Autowired
 	protected WxMaService wxMaService;
 	@Autowired
 	protected UserService userService;
+    @Autowired
+    protected AdminImportService adminImportService;
 
 	/**
 	 * 查询球场列表——区域
@@ -1127,6 +1133,65 @@ public class MatchService implements IBaseService {
             }
         }
 	}
+
+
+    /**
+     * 报名——赛长 添加用户至报名表
+     * @param
+     * @return
+     */
+    public void addUserToApply(Long matchId,Long teamId,  String userName,  String openid){
+        List<UserInfo> userInfo = userDao.getUserIdByRealName(userName);
+        UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
+        TeamUserMapping teamUserMapping = null;
+        UserInfo user=null;
+        Long userId = null;
+
+        //如果没有这个名字的用户，先建一个
+        if (userInfo.size() <1){
+            user = new UserInfo();
+            user.setUiType(2);
+            user.setUiIsValid(1);
+            user.setUiRealName(userName);
+            user.setUiCreateTime(System.currentTimeMillis());
+            user.setUiCreateUserId(myUserInfo.getUiId());
+            user.setUiCreateUserName(myUserInfo.getUserName());
+            userDao.save(user);
+            userInfo.add(user);
+            userId = user.getUiId();
+        }
+      //找到这个参赛队的这个人
+       for (int i=0;i< userInfo.size(); i++){
+         teamUserMapping=  teamDao.getTeamUserMapping(teamId, userInfo.get(i).getUiId());
+         if (teamUserMapping != null){
+             userId = userInfo.get(i).getUiId();
+            break;
+         }
+        }
+       if (teamUserMapping == null ) {
+            //如果没找到，把第一个该名字的用户加入球队，发送一条入队申请
+            userId = userInfo.get(0).getUiId();
+            TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
+            teamUserMapping = new TeamUserMapping();
+            teamUserMapping.setTumTeamId(teamId);
+            teamUserMapping.setTumUserId(userInfo.get(0).getUiId());
+            //是否有加入审核(1、是（队长审批）  0、否)
+            if (teamInfo.getTiJoinOpenType() == 1) {
+                teamUserMapping.setTumUserType(2);
+            } else {
+                teamUserMapping.setTumUserType(1);
+            }
+            teamUserMapping.setTumCreateUserId(myUserInfo.getUiId());
+            teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+            teamUserMapping.setTumCreateUserName(myUserInfo.getUserName());
+            matchDao.save(teamUserMapping);
+        }
+        //让该用户加入比赛
+        adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName,1,myUserInfo.getUiId(),myUserInfo.getUserName());
+
+
+
+    }
 
     /**
      * 普通球友 换组 这个方法好像被applymatch替代了

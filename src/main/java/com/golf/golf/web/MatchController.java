@@ -371,7 +371,26 @@ public class MatchController {
 		}
 	}
 
-	/**
+    /**
+     * 比赛详情——添加分组 添加组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("addUserToApply")
+    public JsonElement addUserToApply(Long matchId,Long teamId, String userName, String openid) {
+        try {
+            matchService.addUserToApply(matchId,teamId, userName,openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "前台-添加用户到报名表时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+
+    /**
 	 * 比赛详情——赛长获取本组用户，包括自己
 	 * @return
 	 */

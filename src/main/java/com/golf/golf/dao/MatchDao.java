@@ -1757,12 +1757,12 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT count(t.mugmUserId) FROM MatchUserGroupMapping as t ");
 		sql.append("where t.mugmMatchId ="+matchId+" and t.mugmIsDel = 0 ");
-		sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
+		//sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
 		return dao.createCountQuery(sql.toString());
 	}
 
 	/**
-	 * 获取本比赛的报名（参赛）用户人数(去掉自动设置的赛长)
+	 * 获取本比赛的报名（参赛）用户人数
 	 */
 	public Long getAllMatchApplyUserCount(Long matchId,Long userId) {
 		Map<String,Object> parp = new HashMap<>();
@@ -1771,7 +1771,7 @@ public class MatchDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT count(t.mugmUserId) FROM MatchUserGroupMapping as t ");
 		sql.append("where t.mugmMatchId = :matchId ");
-		sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
+		//sql.append("and (t.mugmIsAutoCap is null or t.mugmIsAutoCap = 0) ");
 		return dao.createCountQuery(sql.toString(),parp);
 	}
 
