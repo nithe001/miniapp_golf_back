@@ -21,7 +21,8 @@ public class IntegralConfig implements java.io.Serializable {
 	private Long icMatchId;
 	private Long icReportTeamId;
 	private Long icTeamId;
-	private Integer icBaseScore;
+    private Long icGuestTeamId;
+	private Double icBaseScore;
 	private Integer icRodCha;
 	private Integer icWinScore;
     private Double icTeamPoint;
@@ -39,7 +40,7 @@ public class IntegralConfig implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public IntegralConfig(Long icMatchId, Integer icScoreType, Long icReportTeamId,Long icTeamId, Integer icBaseScore,
+	public IntegralConfig(Long icMatchId, Integer icScoreType, Long icReportTeamId,Long icTeamId,Long icGuestTeamId, Double icBaseScore,
 			Integer icRodCha, Integer icWinScore, Double icTeamPoint,Long icCreateTime,
 			Long icCreateUserId, String icCreateUserName, Long icUpdateTime,
 			Long icUpdateUserId, String icUpdateUserName) {
@@ -47,6 +48,7 @@ public class IntegralConfig implements java.io.Serializable {
         this.icScoreType = icScoreType;
 		this.icReportTeamId = icReportTeamId;
 		this.icTeamId = icTeamId;
+        this.icGuestTeamId = icGuestTeamId;
 		this.icBaseScore = icBaseScore;
 		this.icRodCha = icRodCha;
 		this.icWinScore = icWinScore;
@@ -107,12 +109,21 @@ public class IntegralConfig implements java.io.Serializable {
 		this.icTeamId = icTeamId;
 	}
 
+    @Column(name = "ic_guest_team_id")
+    public Long getIcGuestTeamId() {
+        return icGuestTeamId;
+    }
+
+    public void setIcGuestTeamId(Long icGuestTeamId) {
+        this.icGuestTeamId = icGuestTeamId;
+    }
+
 	@Column(name = "ic_base_score")
-	public Integer getIcBaseScore() {
+	public Double getIcBaseScore() {
 		return this.icBaseScore;
 	}
 
-	public void setIcBaseScore(Integer icBaseScore) {
+	public void setIcBaseScore(Double icBaseScore) {
 		this.icBaseScore = icBaseScore;
 	}
 

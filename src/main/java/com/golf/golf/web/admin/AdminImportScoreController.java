@@ -21,9 +21,9 @@ import java.io.IOException;
  * 2016年10月31日
  */
 @Controller
-@RequestMapping(value = "/admin/import")
-public class AdminImportController {
-	private final static Logger logger = LoggerFactory.getLogger(AdminImportController.class);
+@RequestMapping(value = "/admin/importScore")
+public class AdminImportScoreController {
+	private final static Logger logger = LoggerFactory.getLogger(AdminImportScoreController.class);
 
 	@Autowired
 	private AdminImportService adminImportService;

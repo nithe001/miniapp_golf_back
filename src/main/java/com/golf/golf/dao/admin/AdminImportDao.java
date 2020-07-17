@@ -167,7 +167,9 @@ public class AdminImportDao extends CommonDao {
 	public MatchUserGroupMapping getMatchUserMapping(Long matchId, Long teamId,  Long userId) {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" FROM MatchUserGroupMapping as t WHERE t.mugmMatchId = "+matchId);
-		hql.append(" and t.mugmTeamId = "+teamId);
+		if(teamId != null) {
+            hql.append(" and t.mugmTeamId = " + teamId);
+        }
 		hql.append(" and t.mugmUserId = "+userId);
 		List<MatchUserGroupMapping> list = dao.createQuery(hql.toString());
 		if(list != null && list.size() >0){

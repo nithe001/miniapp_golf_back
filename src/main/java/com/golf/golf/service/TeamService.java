@@ -177,7 +177,7 @@ public class TeamService implements IBaseService {
             teamInfo.setTiLogo(PropertyConst.DOMAIN + teamInfo.getTiLogo());
         } else{teamInfo.setTiLogo(null);}
 		result.put("teamInfo",teamInfo);
-		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId);
+		List<Map<String, Object>> userList = teamDao.getTeamUserListByTeamId(teamId,14);
 		//解码用户昵称
 		matchService.decodeUserNickName(userList);
 		//取用户名
@@ -335,6 +335,18 @@ public class TeamService implements IBaseService {
 			parp.put("endYear", TimeUtil.longToString(TimeUtil.getYearLast(Integer.parseInt(date)),TimeUtil.FORMAT_DATE));
             parp.put("scoreType",scoreType);
 			List<Map<String, Object>> yearList = teamDao.getTeamMatchByYear(parp);
+			/*
+			for (Map<String, Object>match:yearList){
+			    Double res=matchService.getDoubleValue(match,"baseScore");
+
+			    if (res ==1d) {
+                    match.put("resultSign","胜");
+                } else if (res ==2d){
+                    match.put("resultSign","负");
+                } else  match.put("resultSign","平");
+
+            }
+            */
 			result.put("yearList",yearList);
 		}
 		return result;
@@ -523,7 +535,7 @@ public class TeamService implements IBaseService {
                 && StringUtils.isNotEmpty(userInfo.getUiGraduateTime())
                 && StringUtils.isNotEmpty(userInfo.getUiMajor())
                 && StringUtils.isNotEmpty(userInfo.getUiWorkUnit())
-                && StringUtils.isNotEmpty(userInfo.getUiPost()) && StringUtils.isNotEmpty(userInfo.getUiAddress());
+                && StringUtils.isNotEmpty(userInfo.getUiAddress()) && StringUtils.isNotEmpty(userInfo.getUiAddress());
     }
 
 

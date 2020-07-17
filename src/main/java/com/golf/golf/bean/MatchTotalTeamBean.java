@@ -16,6 +16,8 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 	private Integer winNum;
 	private Integer pingNum;
 	private Double score;
+    private Integer totalScore;
+
     private  List<Map<String, Object>>  teamGroupResult;
 
 	public Long getTeamId() {
@@ -50,9 +52,13 @@ public class MatchTotalTeamBean implements Comparable<MatchTotalTeamBean> {
 		this.score = score;
 	}
 
-    public Integer getWinNum() {
-        return winNum;
+    public Integer getTotalScore() { return totalScore; }
+
+    public void setTotalScore(Integer totalScore) {
+        this.totalScore = totalScore;
     }
+
+    public Integer getWinNum() { return winNum; }
 
     public void setWinNum(Integer winNum) {
         this.winNum = winNum;

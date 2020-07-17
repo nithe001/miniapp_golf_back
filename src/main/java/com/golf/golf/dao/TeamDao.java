@@ -230,15 +230,20 @@ public class TeamDao extends CommonDao {
 	 * 获取本球队的前14个队员
 	 * @return
 	 */
-	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId) {
+	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId,Integer num) {
 		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiNickName as uiNickName,u.uiHeadimg as uiHeadimg,m.tumUserType as tumUserType  ");
+		hql.append("SELECT u.uiId as uiId,u.uiRealName as uiRealName,u.uiNickName as uiNickName,u.uiHeadimg as uiHeadimg,m.tumUserType as tumUserType,u.uiOpenId as openId  ");
 		hql.append("FROM TeamUserMapping AS m,UserInfo AS u WHERE 1=1 ");
 		hql.append("AND m.tumTeamId = "+teamId);
 		hql.append(" and m.tumUserId = u.uiId ");
 		hql.append(" and m.tumUserType != 2 ");
 		hql.append("ORDER BY m.tumCreateTime DESC,m.tumUserType ");
-		List<Map<String, Object>> list = dao.createQuery(hql.toString(),0, 14,Transformers.ALIAS_TO_ENTITY_MAP);
+        List<Map<String, Object>> list;
+		if (num>0) {
+            list = dao.createQuery(hql.toString(), 0, 14, Transformers.ALIAS_TO_ENTITY_MAP);
+        } else {
+            list = dao.createQuery(hql.toString(),  Transformers.ALIAS_TO_ENTITY_MAP);
+        }
 		return list;
 	}
 
@@ -393,12 +398,11 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
-					"team.ti_abbrev as teamAbbrev,c.ic_base_score as baseScore," +
+					"t.ti_abbrev as teamAbbrev,gt.ti_abbrev as guestTeamAbbrev,c.ic_base_score as baseScore," +
 					"c.ic_rod_cha as rodCha,c.ic_win_score as winScore,c.ic_team_point as teamPoint " +
-				  	"FROM integral_config AS c,match_info as m,team_info as team " +
-					//"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +  nhq
-				    "WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = team.ti_id " +
-					"and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
+				  	"FROM integral_config AS c,match_info as m,team_info as t ,team_info as gt " +
+					"WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = t.ti_id " +
+					"and c.ic_guest_team_id = gt.ti_id and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
                     "and c.ic_score_type = :scoreType "+
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
 		//排序 按照离今天近的排序

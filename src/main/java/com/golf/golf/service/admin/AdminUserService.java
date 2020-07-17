@@ -137,10 +137,6 @@ public class AdminUserService implements IBaseService {
 		return parp;
 	}
 
-	//导入用户-根据信息查询用户是否存在
-	public UserInfo getUserByInfo(String userName, String hospital, String telNo) {
-		return dao.getUserByInfo(userName,hospital,telNo);
-	}
 
 	/**
 	 * 设置微信用户为赛事管理员
@@ -177,9 +173,9 @@ public class AdminUserService implements IBaseService {
 			db.setUiMajor(user.getUiMajor());
 			db.setUiStudentId(user.getUiStudentId());
 			db.setUiWorkUnit(user.getUiWorkUnit());
-			db.setUiPost(user.getUiPost());
 			db.setUiAddress(user.getUiAddress());
-			db.setUiHomeCourt(user.getUiHomeCourt());
+			db.setUiAddress(user.getUiAddress());
+			db.setUiHomeCourse(user.getUiHomeCourse());
 			db.setUiType(user.getUiType());
 			user.setUiUpdateUserName(AdminUserUtil.getShowName());
 			user.setUiUpdateUserId(AdminUserUtil.getUserId());
@@ -192,4 +188,5 @@ public class AdminUserService implements IBaseService {
 			dao.save(user);
 		}
 	}
+
 }

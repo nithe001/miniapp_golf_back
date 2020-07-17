@@ -6,10 +6,12 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.TeamDao;
+import com.golf.golf.dao.UserDao;
 import com.golf.golf.dao.admin.AdminTeamDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.TeamService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,8 +33,12 @@ public class AdminTeamService implements IBaseService {
     private AdminTeamDao adminTeamDao;
 	@Autowired
 	private MatchService matchService;
+    @Autowired
+    private TeamService teamService;
 	@Autowired
 	private TeamDao teamDao;
+    @Autowired
+    private UserDao userDao;
 
 	/**
 	 * 球队列表
@@ -175,4 +181,22 @@ public class AdminTeamService implements IBaseService {
 			adminTeamDao.delUserFromTeamUserMapping(teamId,userId);
 		}
 	}
+	// 整球队认领用户
+    public void claimTeamUser(Long teamId) {
+	    List<Map<String,Object>> openIdList = userDao.getAllOpenIdUser();
+        List<Map<String,Object>>teamUserList = teamDao.getTeamUserListByTeamId(teamId,0);
+        for (Map<String,Object> oUser:openIdList){
+            Long userId = matchService.getLongValue(oUser,"userId");
+            String userName =  matchService.getName(oUser,"userName");
+            String openId =  matchService.getName(oUser,"openId");
+            for (Map<String,Object> tUser:teamUserList){
+                Long tUserId = matchService.getLongValue(tUser,"uiId");
+                String tUserName =  matchService.getName(tUser,"uiRealName");
+                String tOpenId =  matchService.getName(tUser,"openId");
+                if (userName.equals(tUserName) && userId !=tUserId && tOpenId ==null){
+                    teamService.updateClaimUserScoreById(openId,tUserId);
+                }
+            }
+        }
+    }
 }

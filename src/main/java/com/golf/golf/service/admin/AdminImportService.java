@@ -4,8 +4,10 @@ import com.golf.common.IBaseService;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminImportDao;
+import com.golf.golf.dao.admin.AdminUserDao;
 import com.golf.golf.db.*;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.MatchScoreService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xssf.usermodel.XSSFCell; //nhq
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -31,8 +33,13 @@ public class AdminImportService implements IBaseService {
 
 	@Autowired
 	private AdminImportDao adminImportDao;
+    @Autowired
+    private AdminUserDao adminUserDao;
 	@Autowired
 	private MatchService matchService;
+    @Autowired
+    private MatchScoreService matchScoreService;
+
 
 	/**
 	 * 导入球队详情
@@ -165,6 +172,7 @@ public class AdminImportService implements IBaseService {
 			matchInfo.setMiJoinTeamIds(joinTeamIds);
 			adminImportDao.update(matchInfo);
 		}
+        matchScoreService.saveMatchNetRodHole(matchInfo); //生成计算净杆的随机六个洞
 		return matchInfo;
 	}
 
@@ -375,6 +383,7 @@ public class AdminImportService implements IBaseService {
 			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
 			matchUserGroupMapping.setMugmCreateUserId(cUserId);
 			matchUserGroupMapping.setMugmCreateUserName(cUserName);
+            matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
 			adminImportDao.save(matchUserGroupMapping);
 		} else {
             matchUserGroupMapping.setMugmUserName(userName);
@@ -391,6 +400,7 @@ public class AdminImportService implements IBaseService {
             } else {
                 matchUserGroupMapping.setMugmIsDel(1);
             }
+            matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
             adminImportDao.update(matchUserGroupMapping);
         }
 	    if (matchGroup ==null) {
@@ -568,5 +578,146 @@ public class AdminImportService implements IBaseService {
 			}
 		}
 	}
+    public void importMember(XSSFWorkbook xwb) {
+        //第1张工作表
+        XSSFSheet sheet = xwb.getSheetAt(0);
+        XSSFRow row;
+        //第一行
+        row = sheet.getRow(0);
+        String teamName = row.getCell(0).toString();
+        //第3行
+        row = sheet.getRow(2);
+        //姓名
+        String realName = row.getCell(1).toString();
+        //性别
+        String sex = row.getCell(3).toString();
+        //出生年月
+        String birthday = row.getCell(5).toString();
+        //第4行
+        row = sheet.getRow(3);
+        //常住地
+        String address = row.getCell(1).toString();
+        //学历
+        String degree = row.getCell(3).toString();
+        //专业
+        String major = row.getCell(5).toString();
+        //第5行
+        row = sheet.getRow(4);
+        //毕业院系
+        String department = row.getCell(1).toString();
+        //毕业时间
+        row.getCell(3).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String graduateTime = row.getCell(3).toString();
+        //学号
+        row.getCell(5).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String studentId = row.getCell(5).getStringCellValue();
 
+        //第6行
+        row = sheet.getRow(5);
+        //电话
+        row.getCell(1).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String telNo = row.getCell(1).getStringCellValue();
+        //邮件
+        String email = row.getCell(3).toString();
+        //微信
+        row.getCell(5).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String wechat = row.getCell(5).getStringCellValue();
+
+        //第7行
+        row = sheet.getRow(6);
+        //校友卡号
+        row.getCell(1).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String alumniCard = row.getCell(1).getStringCellValue();
+        //第8行
+        row = sheet.getRow(7);
+        //工作单位
+        String workUnit = row.getCell(1).toString();
+        //职务
+        String occupation = row.getCell(3).toString();
+
+        //第9行
+        row = sheet.getRow(8);
+        //差点
+        row.getCell(1).setCellType(XSSFCell.CELL_TYPE_STRING);
+        String handicap = row.getCell(1).getStringCellValue();
+        //主场
+        String homeCourse = row.getCell(3).toString();
+
+        //存入库中
+        UserInfo userInfo = null;
+        Map<String, Object> userTeamMapping = null;
+        String teamAbbrev = null;
+        Map<String, Object> user = adminImportDao.getUserByRealName(realName);
+        Long userId = matchService.getLongValue(user, "userId");
+
+        if ( userId == null) {
+            userInfo = new UserInfo();
+            userInfo.setUiType(2);
+            userInfo.setUiIsValid(1);
+            userInfo.setUiCreateTime(System.currentTimeMillis());
+            userInfo.setUiCreateUserId(AdminUserUtil.getUserId());
+            userInfo.setUiCreateUserName(AdminUserUtil.getShowName());
+
+            userInfo.setUiWechat(wechat);
+            userInfo.setUiRealName(realName);
+            userInfo.setUiSex(sex);
+            userInfo.setUiBirthday(birthday);
+            userInfo.setUiTelNo(telNo);
+            userInfo.setUiEmail(email);
+            userInfo.setUiGraduateDepartment(department);
+            userInfo.setUiGraduateTime(graduateTime);
+            userInfo.setUiMajor(major);
+            userInfo.setUiDegree(degree);
+            userInfo.setUiStudentId(studentId);
+            userInfo.setUiAlumniCard(alumniCard);
+            userInfo.setUiWorkUnit(workUnit);
+            userInfo.setUiOccupation(occupation);
+            userInfo.setUiAddress(address);
+            userInfo.setUiHomeCourse(homeCourse);
+            userInfo.setUiHandicap(handicap);
+
+            adminImportDao.save(userInfo);
+            } else{
+               if (teamName.contains("北京大学")) {
+                   teamName = "北大校友高尔夫球队";
+                   teamAbbrev = "北大队";
+                   userTeamMapping = adminImportDao.getUserByRealNameTeamName(realName, teamName, teamAbbrev);
+                   if (userTeamMapping != null) {
+                       userId = matchService.getLongValue(userTeamMapping, "userId");
+                   }
+               }
+                userInfo = adminUserDao.getUserById(userId);
+                userInfo.setUiWechat(wechat);
+                userInfo.setUiRealName(realName);
+                userInfo.setUiSex(sex);
+                userInfo.setUiBirthday(birthday);
+                userInfo.setUiTelNo(telNo);
+                userInfo.setUiEmail(email);
+                userInfo.setUiGraduateDepartment(department);
+                userInfo.setUiGraduateTime(graduateTime);
+                userInfo.setUiMajor(major);
+                userInfo.setUiDegree(degree);
+                userInfo.setUiStudentId(studentId);
+                userInfo.setUiAlumniCard(alumniCard);
+                userInfo.setUiWorkUnit(workUnit);
+                userInfo.setUiOccupation(occupation);
+                userInfo.setUiAddress(address);
+                userInfo.setUiHomeCourse(homeCourse);
+                userInfo.setUiHandicap(handicap);
+
+                adminImportDao.update(userInfo);
+        }
+        if (teamAbbrev != null &&  userTeamMapping == null) {
+            //放到北大队中
+            TeamInfo teamInfo=adminImportDao.getTeamInfoByName(teamName,teamAbbrev);
+            TeamUserMapping teamUserMapping = new TeamUserMapping();
+            teamUserMapping.setTumUserType(1);
+            teamUserMapping.setTumTeamId(teamInfo.getTiId());
+            teamUserMapping.setTumUserId(userId);
+            teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+            teamUserMapping.setTumCreateUserId(AdminUserUtil.getUserId());
+            teamUserMapping.setTumCreateUserName(AdminUserUtil.getShowName());
+            adminImportDao.save(teamUserMapping);
+        }
+	}
 }

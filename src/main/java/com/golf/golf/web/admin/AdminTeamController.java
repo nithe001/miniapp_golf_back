@@ -183,5 +183,20 @@ public class AdminTeamController {
 		return "redirect:editTeamUI?teamId="+teamId;
 	}
 
-
+    /**
+     * 整球队认领用户
+     * @param teamId 球队id
+     * @return
+     */
+    @RequestMapping("claimTeamUser")
+    public String claimTeamUser(Long teamId){
+        try{
+            adminTeamService.claimTeamUser(teamId);
+        }catch(Exception e){
+            e.printStackTrace();
+            logger.error("整球队认领出错。"+ e );
+            return "admin/error";
+        }
+        return "redirect:list";
+    }
 }

@@ -18,6 +18,7 @@ public class MatchHoleResult implements java.io.Serializable {
     private String mhrUserName1;
     private String mhrUserName0;
 	private Integer mhrResult;
+    private Integer mhrRodResult;
     private Integer mhrHoleLeft;
 	private Integer mhrIsSubmit;
 
@@ -34,7 +35,7 @@ public class MatchHoleResult implements java.io.Serializable {
 	 * full constructor
 	 */
 	public MatchHoleResult(Long mhrId, Long mhrMatchId,Integer mhrMatchChildId, Long mhrGroupId, Long mhrTeamId,String mhrUserName1,String mhrUserName0,
-						   Integer mhrResult,Integer mhrHoleLeft,Integer mhrIsSubmit) {
+						   Integer mhrResult,Integer mhrRodResult,Integer mhrHoleLeft,Integer mhrIsSubmit) {
 		this.mhrId = mhrId;
 		this.mhrMatchId = mhrMatchId;
         this.mhrMatchChildId = mhrMatchChildId;
@@ -43,6 +44,7 @@ public class MatchHoleResult implements java.io.Serializable {
         this.mhrUserName1 = mhrUserName1;
         this.mhrUserName0 = mhrUserName0;
         this.mhrResult = mhrResult;
+        this.mhrRodResult = mhrRodResult;
         this.mhrHoleLeft = mhrHoleLeft;
 		this.mhrIsSubmit = mhrIsSubmit;
 	}
@@ -120,6 +122,15 @@ public class MatchHoleResult implements java.io.Serializable {
 
     public void setMhrResult(Integer mhrResult) {
         this.mhrResult = mhrResult;
+    }
+
+    @Column(name = "mhr_rod_result")
+    public Integer getMhrRodResult() {
+        return mhrRodResult;
+    }
+
+    public void setMhrRodResult(Integer mhrRodResult) {
+        this.mhrRodResult = mhrRodResult;
     }
 
     @Column(name = "mhr_hole_left")

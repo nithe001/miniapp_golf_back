@@ -675,7 +675,7 @@ public class MatchDao extends CommonDao {
 		sql.append(" and m.mugm_is_del != 1 ");
 		sql.append(" GROUP BY m.mugm_user_id " );
 		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-		sql.append("ORDER BY score.sumRodNum !=0 desc,score.sumRodNum ");
+		sql.append("ORDER BY score.sumRodNum !=0 and  score.sumRodNum > 67 desc,score.sumRodNum ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
@@ -1243,12 +1243,13 @@ public class MatchDao extends CommonDao {
 	 * 增加了上报球队的参数
 	 * @return
 	 */
-	public IntegralConfig getSubmitScoreConfig(Long matchId, Long teamId, Long reportteamId, Integer scoreType) {
+	public IntegralConfig getSubmitScoreConfig(Long matchId, Long teamId, Long guestTeamId, Long reportteamId, Integer scoreType) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("FROM IntegralConfig as c ");
 		sql.append("where c.icMatchId = "+matchId);
         sql.append(" and c.icScoreType = "+scoreType);
 		sql.append(" and c.icTeamId = "+teamId);
+        sql.append(" and c.icGuestTeamId = "+guestTeamId);
 		sql.append(" and c.icReportTeamId = "+reportteamId);
 		//sql.append(" and c.icCreateUserId = "+captainUserId); nhq
 		List<IntegralConfig> list = dao.createQuery(sql.toString());
@@ -1700,43 +1701,59 @@ public class MatchDao extends CommonDao {
         return list;
     }
 
-	/**
-	 * 单队比赛，取前n名的成绩 (参赛人数 显示的是各队实际的参赛人数)
-	 * 平均杆：前N的总杆数除以n
-	 * @return
-	 */
-	public List<Map<String, Object>> getMatchRodTotalScoreByMingci(Long matchId,Long teamId, Integer mingci) {
-		Map<String,Object> parp = new HashMap<>();
-		parp.put("matchId",matchId);
-		parp.put("teamId",teamId);
-		parp.put("mingci",mingci);
-		StringBuilder hql = new StringBuilder();
-		hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum ");
-		hql.append("FROM ( ");
-		hql.append("SELECT " +
-					"mm.mugm_match_id AS matchId, " +
-					"mm.mugm_group_id AS groupId, " +
-					"mm.mugm_user_id AS userId, " +
-					"sum(s.ms_rod_num) AS sumRod " +
-					"FROM match_user_group_mapping AS mm " +
-					"LEFT JOIN match_score AS s ON ( " +
-						"s.ms_team_id = mm.mugm_team_id " +
-						"AND s.ms_match_id = mm.mugm_match_id " +
-						"AND s.ms_group_id = mm.mugm_group_id " +
-						"AND s.ms_user_id = mm.mugm_user_id " +
-					") " +
-					"WHERE mm.mugm_match_id =:matchId ");
-		if(teamId != null){
-			hql.append(" and mm.mugm_team_id = :teamId ");
-		}
-		hql.append(" GROUP BY mm.mugm_user_id " +
-					"ORDER BY sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
-					"LIMIT 0,:mingci");
-		hql.append(") as t");
-		return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
-	}
 
-	/**
+    /**
+     * 单队比赛，取前n名的成绩 (参赛人数 显示的是各队实际的参赛人数)
+     * 平均杆：前N的总杆数除以n
+     * @return
+     */
+    public List<Map<String, Object>> getMatchRodTotalScoreByMingci(Long matchId,Long teamId, Integer mingci) {
+        Map<String,Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("teamId",teamId);
+        parp.put("mingci",mingci);
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum ");
+        hql.append("FROM ( ");
+        hql.append("SELECT " +
+                "mm.mugm_match_id AS matchId, " +
+                "mm.mugm_group_id AS groupId, " +
+                "mm.mugm_user_id AS userId, " +
+                "sum(s.ms_rod_num) AS sumRod " +
+                "FROM match_user_group_mapping AS mm " +
+                "LEFT JOIN match_score AS s ON ( " +
+                "s.ms_team_id = mm.mugm_team_id " +
+                "AND s.ms_match_id = mm.mugm_match_id " +
+                "AND s.ms_group_id = mm.mugm_group_id " +
+                "AND s.ms_user_id = mm.mugm_user_id " +
+                ") " +
+                "WHERE mm.mugm_match_id =:matchId ");
+        if(teamId != null){
+            hql.append(" and mm.mugm_team_id = :teamId ");
+        }
+        hql.append(" GROUP BY mm.mugm_user_id " +
+             "ORDER BY sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
+             "LIMIT 0,:mingci");
+        hql.append(") as t");
+        return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
+    //两人或四人比杆，结果从matchHoleResult中取
+
+    public List<Map<String,Object>> getMatchDoubleRodScoreByMingci(Long matchId,Long teamId, Integer mingci)  {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("teamId",teamId);
+        parp.put("mingci",mingci);
+        StringBuilder sql = new StringBuilder();
+        //sql.append("SELECT round(SUM(mhr.mhr_result)/:mingci, 2) AS avgRodNum,SUM(mhr.mhr_result) AS sumRodNum ");
+        sql.append("SELECT count(mhr_id) AS groupNum,SUM(mhr.mhr_rod_result) AS sumRodNum ");
+        sql.append(" from match_hole_result as mhr ");
+        sql.append(" Where mhr.mhr_match_id = :matchId  and  mhr.mhr_team_id = :teamId ");
+        sql.append(" ORDER BY sum(mhr.mhr_rod_result) != 0 desc,sum(mhr.mhr_rod_result)") ;
+       //            " LIMIT 0,:mingci");
+        return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
+    /**
 	 * 获取单练记分卡的总计
 	 */
 	public List<Map<String, Object>> getSingleTotalScoreWithUser(Long matchId, Long groupId) {
@@ -1929,15 +1946,15 @@ public class MatchDao extends CommonDao {
         parp.put("childId",childId);
         parp.put("teamId",teamId);
         StringBuilder sql = new StringBuilder();
-        sql.append("select mhr.mhr_group_id as groupId, mhr.mhr_user_name0 as userName0, mhr.mhr_user_name1 as userName1, mhr.mhr_result as result,mhr.mhr_hole_left as holeLeft ");
+        sql.append("select mhr.mhr_group_id as groupId, mhr.mhr_user_name0 as userName0, mhr.mhr_user_name1 as userName1, mhr.mhr_result as result,mhr.mhr_rod_result as rodResult,mhr.mhr_hole_left as holeLeft ");
         sql.append(" from match_hole_result as mhr ");
         sql.append(" Where mhr.mhr_match_id = :matchId  and  mhr.mhr_match_child_id = :childId and mhr.mhr_team_id = :teamId ");
         sql.append(" ORDER BY mhr.mhr_group_id ");
         return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
-    //获取matchHoleResult该球队在本比赛中的平、赢组个数
-    public List<Map<String, Object>> getPingWinNumList(Long matchId,Integer childId, Long teamId) {
+    //获取matchHoleResult该球队在本两球或四球比洞比赛中的平、赢组个数
+    public List<Map<String, Object>> getHoleMatchPingWinNumList(Long matchId,Integer childId, Long teamId) {
         StringBuilder sql = new StringBuilder();
         sql.append("select sum(CASE WHEN mhr.mhr_team_id = "+teamId+" and mhr.mhr_result >0 then 1 else 0 end) AS winNum, ");
         sql.append("sum(CASE WHEN mhr.mhr_team_id = "+teamId+"  and mhr.mhr_result =0 then 1 else 0 end) AS pingNum ");
@@ -1945,6 +1962,14 @@ public class MatchDao extends CommonDao {
         return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
+    //获取matchHoleResult该球队在本两球或四球比杆比赛中的平、赢组个数
+    public List<Map<String, Object>> getRodMatchPingWinNumList(Long matchId,Integer childId, Long teamId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select sum(CASE WHEN mhr.mhr_team_id = "+teamId+" and mhr.mhr_result >0 then 1 else 0 end) AS winNum, ");
+        sql.append("sum(CASE WHEN mhr.mhr_team_id = "+teamId+"  and mhr.mhr_result =0 then 1 else 0 end) AS pingNum ");
+        sql.append("from match_hole_result as mhr where mhr.mhr_match_id = "+matchId+ " and mhr.mhr_match_child_id = "+childId);
+        return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
+    }
     //获取matchHoleResult本球队在本比赛中的输球组和赢球组列表
     public List<MatchHoleResult> getMatchHoleWinOrLoseList(Long matchId, Long teamId) {
         StringBuilder sql = new StringBuilder();
@@ -2274,7 +2299,7 @@ public class MatchDao extends CommonDao {
 		sql.append(" and m.mugm_is_del != 1 ");
 		sql.append(" GROUP BY m.mugm_user_id " );
 		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-		sql.append("ORDER BY score.sumRodNum !=0 desc,score.sumRodNum ");
+		sql.append("ORDER BY score.sumRodNum !=0 and score.sumRodNum > 67 desc,score.sumRodNum ");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
     //查询是否在比分表有数据（对于从后台导入的比赛信息，有得分记录，如果调整了分组，match_score表要同步调整分组）

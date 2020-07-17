@@ -90,7 +90,6 @@ public class AdminUserDao extends CommonDao {
 		return pageInfo;
 	}
 
-
 	/**
 	 * 查看用户名是否已经存在
 	 * @param name
@@ -101,12 +100,7 @@ public class AdminUserDao extends CommonDao {
 		parp.put("auUserName", name);
 		String sql = "SELECT COUNT(*) FROM AdminUser u WHERE u.auUserName = :auUserName";
 		Long count = dao.createCountQuery(sql,parp);
-		if(count == null || count.intValue() == 0){
-			return false;
-		}else{
-			//用户名已存在
-			return true;
-		}
+        return count != null && count.intValue() != 0;
 	}
 
 	//用户id获取用户微信信息
@@ -121,23 +115,15 @@ public class AdminUserDao extends CommonDao {
 		return list.get(0);
 	}
 
-	//导入用户-根据信息查询用户是否存在
-	public UserInfo getUserByInfo(String userName, String hospital, String telNo) {
-		Map<String, Object> parp = new HashMap<String,Object>();
-		parp.put("userName", userName.replaceAll("\"",""));
-		String sql = "FROM UserInfo AS t WHERE t.cuUserName = :userName ";
-		if(StringUtils.isNotEmpty(telNo)){
-			parp.put("telNo", telNo);
-			sql = sql+"AND t.cuTelNo = :telNo ";
-		}
-		if(StringUtils.isNotEmpty(hospital)){
-			parp.put("hospital", hospital);
-			sql = sql+"AND t.cuHospital = :hospital ";
-		}
-		List<UserInfo> list = dao.createQuery(sql,parp);
-		if(list == null || list.size() ==0){
-			return null;
-		}
-		return list.get(0);
-	}
+	//导入用户ID查用户信息-
+
+    public UserInfo getUserById(Long userId) {
+        StringBuilder hql = new StringBuilder();
+        hql.append(" FROM UserInfo as t  WHERE  t.uiId = " +userId);
+        List <UserInfo> list = dao.createQuery(hql.toString());
+        if(list == null || list.size() ==0){
+            return null;
+        }
+        return list.get(0);
+    }
 }

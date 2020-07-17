@@ -14,6 +14,7 @@ public class UserInfo implements java.io.Serializable {
 
 	private Long uiId;
 	private String uiOpenId;
+    private String uiWechat;
 	private Integer uiType;
 	private String uiHeadimg;
 	private String uiPersonalizedSignature;
@@ -23,17 +24,21 @@ public class UserInfo implements java.io.Serializable {
 	private String uiNickName;
 	private String uiSex;
 	private Integer uiAge;
+    private String uiBirthday;
 	private String uiTelNo;
 	private String uiEmail;
 	private String uiGraduateSchool;
 	private String uiGraduateDepartment;
 	private String uiGraduateTime;
 	private String uiMajor;
+    private String uiDegree;
 	private String uiStudentId;
+    private String uiAlumniCard;
 	private String uiWorkUnit;
-	private String uiPost;
+    private String uiOccupation;
 	private String uiAddress;
-	private String uiHomeCourt;
+	private String uiHomeCourse;
+    private String uiHandicap;
 	private Integer uiIsValid;
 	private Long uiCreateTime;
 	private String uiCreateUserName;
@@ -49,15 +54,17 @@ public class UserInfo implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public UserInfo(String uiOpenId, Integer uiType, String uiHeadimg,
+	public UserInfo(String uiOpenId, String uiWechat, Integer uiType, String uiHeadimg,
 					String uiPersonalizedSignature, String uiLongitude,
-					String uiLatitude, String uiRealName, String uiNickName, String uiSex, Integer uiAge,
+					String uiLatitude, String uiRealName, String uiNickName, String uiSex, Integer uiAge,String uiBirthday,
 					String uiTelNo, String uiEmail, String uiGraduateSchool,
-					String uiGraduateDepartment, String uiGraduateTime, String uiMajor,String uiStudentId,
-					String uiWorkUnit, String uiPost, String uiAddress, String uiHomeCourt, Integer uiIsValid,
+					String uiGraduateDepartment, String uiGraduateTime, String uiMajor,String uiDegree,String uiStudentId,String uiAlumniCard,
+					String uiWorkUnit,String uiOccupation, String uiAddress, String uiHomeCourse,String uiHandicap, Integer uiIsValid,
 					Long uiCreateTime, String uiCreateUserName, Long uiCreateUserId,
 					Long uiUpdateTime, String uiUpdateUserName, Long uiUpdateUserId) {
-		this.uiOpenId = uiOpenId;
+
+	    this.uiOpenId = uiOpenId;
+        this.uiWechat = uiWechat;
 		this.uiType = uiType;
 		this.uiHeadimg = uiHeadimg;
 		this.uiPersonalizedSignature = uiPersonalizedSignature;
@@ -67,17 +74,21 @@ public class UserInfo implements java.io.Serializable {
 		this.uiNickName = uiNickName;
 		this.uiSex = uiSex;
 		this.uiAge = uiAge;
+        this.uiBirthday = uiBirthday;
 		this.uiTelNo = uiTelNo;
 		this.uiEmail = uiEmail;
 		this.uiGraduateSchool = uiGraduateSchool;
 		this.uiGraduateDepartment = uiGraduateDepartment;
 		this.uiGraduateTime = uiGraduateTime;
 		this.uiMajor = uiMajor;
+        this.uiDegree = uiDegree;
 		this.uiStudentId = uiStudentId;
+        this.uiAlumniCard = uiAlumniCard;
 		this.uiWorkUnit = uiWorkUnit;
-		this.uiPost = uiPost;
+        this.uiOccupation = uiOccupation;
 		this.uiAddress = uiAddress;
-		this.uiHomeCourt = uiHomeCourt;
+		this.uiHomeCourse = uiHomeCourse;
+        this.uiHandicap = uiHandicap;
 		this.uiIsValid = uiIsValid;
 		this.uiCreateTime = uiCreateTime;
 		this.uiCreateUserName = uiCreateUserName;
@@ -99,7 +110,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiId = uiId;
 	}
 
-	@Column(name = "ui_open_id", length = 128)
+	@Column(name = "ui_open_id")
 	public String getUiOpenId() {
 		return this.uiOpenId;
 	}
@@ -107,6 +118,15 @@ public class UserInfo implements java.io.Serializable {
 	public void setUiOpenId(String uiOpenId) {
 		this.uiOpenId = uiOpenId;
 	}
+
+    @Column(name = "ui_wechat")
+    public String getUiWechat() {
+        return this.uiWechat;
+    }
+
+    public void setUiWechat(String Wechat) {
+        this.uiWechat = uiWechat;
+    }
 
 	@Column(name = "ui_type")
 	public Integer getUiType() {
@@ -126,7 +146,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiHeadimg = uiHeadimg;
 	}
 
-	@Column(name = "ui_personalized_signature", length = 512)
+	@Column(name = "ui_personalized_signature")
 	public String getUiPersonalizedSignature() {
 		return this.uiPersonalizedSignature;
 	}
@@ -135,7 +155,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiPersonalizedSignature = uiPersonalizedSignature;
 	}
 
-	@Column(name = "ui_longitude", length = 128)
+	@Column(name = "ui_longitude")
 	public String getUiLongitude() {
 		return this.uiLongitude;
 	}
@@ -144,7 +164,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiLongitude = uiLongitude;
 	}
 
-	@Column(name = "ui_latitude", length = 128)
+	@Column(name = "ui_latitude")
 	public String getUiLatitude() {
 		return this.uiLatitude;
 	}
@@ -153,7 +173,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiLatitude = uiLatitude;
 	}
 
-	@Column(name = "ui_real_name", length = 128)
+	@Column(name = "ui_real_name")
 	public String getUiRealName() {
 		return this.uiRealName;
 	}
@@ -162,7 +182,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiRealName = uiRealName;
 	}
 
-	@Column(name = "ui_nick_name", length = 128)
+	@Column(name = "ui_nick_name")
 	public String getUiNickName() {
 		return uiNickName;
 	}
@@ -171,7 +191,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiNickName = uiNickName;
 	}
 
-	@Column(name = "ui_sex", length = 64)
+	@Column(name = "ui_sex")
 	public String getUiSex() {
 		return uiSex;
 	}
@@ -189,7 +209,16 @@ public class UserInfo implements java.io.Serializable {
 		this.uiAge = uiAge;
 	}
 
-	@Column(name = "ui_tel_no", length = 128)
+    @Column(name = "ui_birthday")
+    public String getUiBirthday() {
+        return this.uiBirthday;
+    }
+
+    public void setUiBirthday(String uiBirthday) {
+        this.uiBirthday = uiBirthday;
+    }
+
+	@Column(name = "ui_tel_no")
 	public String getUiTelNo() {
 		return this.uiTelNo;
 	}
@@ -198,7 +227,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiTelNo = uiTelNo;
 	}
 
-	@Column(name = "ui_email", length = 128)
+	@Column(name = "ui_email")
 	public String getUiEmail() {
 		return this.uiEmail;
 	}
@@ -225,7 +254,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiGraduateDepartment = uiGraduateDepartment;
 	}
 
-	@Column(name = "ui_graduate_time", length = 128)
+	@Column(name = "ui_graduate_time")
 	public String getUiGraduateTime() {
 		return this.uiGraduateTime;
 	}
@@ -234,32 +263,86 @@ public class UserInfo implements java.io.Serializable {
 		this.uiGraduateTime = uiGraduateTime;
 	}
 
-	@Column(name = "ui_major")
-	public String getUiMajor() {
-		return this.uiMajor;
+    @Column(name = "ui_major")
+    public String getUiMajor() {
+        return this.uiMajor;
+    }
+
+    public void setUiMajor(String uiMajor) {
+        this.uiMajor = uiMajor;
+    }
+
+	@Column(name = "ui_degree")
+	public String getUiDegree() {
+		return this.uiDegree;
 	}
 
-	public void setUiMajor(String uiMajor) {
-		this.uiMajor = uiMajor;
+	public void setUiDegree(String uiDegree) {
+		this.uiDegree = uiDegree;
 	}
 
-	@Column(name = "ui_work_unit")
-	public String getUiWorkUnit() {
-		return this.uiWorkUnit;
-	}
+    @Column(name = "ui_student_id")
+    public String getUiStudentId() {
+        return uiStudentId;
+    }
 
-	public void setUiWorkUnit(String uiWorkUnit) {
-		this.uiWorkUnit = uiWorkUnit;
-	}
+    public void setUiStudentId(String uiStudentId) {
+        this.uiStudentId = uiStudentId;
+    }
 
-	@Column(name = "ui_address")
-	public String getUiAddress() {
-		return this.uiAddress;
-	}
+    @Column(name = "ui_alumni_card")
+    public String getUiAlumniCard() {
+        return uiAlumniCard;
+    }
 
-	public void setUiAddress(String uiAddress) {
-		this.uiAddress = uiAddress;
-	}
+    public void setUiAlumniCard(String uiAlumniCard) {
+        this.uiAlumniCard = uiAlumniCard;
+    }
+
+    @Column(name = "ui_work_unit")
+    public String getUiWorkUnit() {
+        return this.uiWorkUnit;
+    }
+
+    public void setUiWorkUnit(String uiWorkUnit) {
+        this.uiWorkUnit = uiWorkUnit;
+    }
+
+    @Column(name = "ui_occupation")
+    public String getUiOccupation() {
+        return this.uiOccupation;
+    }
+
+    public void setUiOccupation(String uiOccupation) {
+        this.uiOccupation = uiOccupation;
+    }
+
+    @Column(name = "ui_address")
+    public String getUiAddress() {
+        return uiAddress;
+    }
+
+    public void setUiAddress(String uiAddress) {
+        this.uiAddress = uiAddress;
+    }
+
+    @Column(name = "ui_home_course")
+    public String getUiHomeCourse() {
+        return uiHomeCourse;
+    }
+
+    public void setUiHomeCourse(String uiHomeCourse) {
+        this.uiHomeCourse = uiHomeCourse;
+    }
+
+    @Column(name = "ui_handicap")
+    public String getUiHandicap() {
+        return uiHandicap;
+    }
+
+    public void setUiHandicap(String uiHandicap) {
+        this.uiHandicap = uiHandicap;
+    }
 
 	@Column(name = "ui_is_valid")
 	public Integer getUiIsValid() {
@@ -306,7 +389,7 @@ public class UserInfo implements java.io.Serializable {
 		this.uiUpdateTime = uiUpdateTime;
 	}
 
-	@Column(name = "ui_update_user_name", length = 128)
+	@Column(name = "ui_update_user_name")
 	public String getUiUpdateUserName() {
 		return this.uiUpdateUserName;
 	}
@@ -322,33 +405,6 @@ public class UserInfo implements java.io.Serializable {
 
 	public void setUiUpdateUserId(Long uiUpdateUserId) {
 		this.uiUpdateUserId = uiUpdateUserId;
-	}
-
-	@Column(name = "ui_student_id", length = 255)
-	public String getUiStudentId() {
-		return uiStudentId;
-	}
-
-	public void setUiStudentId(String uiStudentId) {
-		this.uiStudentId = uiStudentId;
-	}
-
-	@Column(name = "ui_post", length = 255)
-	public String getUiPost() {
-		return uiPost;
-	}
-
-	public void setUiPost(String uiPost) {
-		this.uiPost = uiPost;
-	}
-
-	@Column(name = "ui_home_court", length = 255)
-	public String getUiHomeCourt() {
-		return uiHomeCourt;
-	}
-
-	public void setUiHomeCourt(String uiHomeCourt) {
-		this.uiHomeCourt = uiHomeCourt;
 	}
 
 	private String userName;

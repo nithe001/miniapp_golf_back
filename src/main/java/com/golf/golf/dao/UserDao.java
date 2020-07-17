@@ -36,7 +36,17 @@ public class UserDao extends CommonDao {
         hql.append("FROM WechatUserInfo WHERE wuiOpenid = :openid");
         return dao.findOne(hql.toString(), parp);
     }
-
+    /**
+     * 查出系统所有微信授权用户信息
+     * @param openid
+     * @return
+     */
+    public List<Map<String,Object>>  getAllOpenIdUser(){
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT u.ui_open_id as openId, u.ui_id as userId, u.ui_real_name as userName ");
+        hql.append(" FROM user_info as u WHERE u.ui_open_id  is not null " );
+        return dao.createSQLQuery(hql.toString() ,Transformers.ALIAS_TO_ENTITY_MAP);
+    }
 
     /**
      * 根据telNo，取得用户的信息

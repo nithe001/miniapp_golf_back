@@ -1,5 +1,7 @@
 <%@ page language="java" import="java.util.*" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -23,11 +25,12 @@
                         <div class="box-body">
                             <div class="box-header">
                                 <div class="form-group">
-                                    <span style="color:red;">比赛按名称和时间判断，球队按全称和简称判断，队员按人名判断，已有的会更新，不存在的会新增。</span>
+                                    <span style="color:red;">导入会员详细资料，可以导入一个资料文件或者把所选文件所在目录下的其他资料文件批量导入</span>
                                     <br/>
-                                    <span style="color:red;">导入的表格最后一行后面不能有内容，球场名称和系统中的要完全一样。报名可以只有名字，也可以带球队和分组</span>
+                                    <span style="color:red;">已经存在的会员详细信息将被覆盖</span>
                                     <br/>
                                     <span style="color:red;">请谨慎选择，一旦导入无法撤回</span>
+
                                 </div>
                                 <%--<div class="form-group">
                                     是否覆盖比赛信息：
@@ -65,7 +68,7 @@
                 <h4 class="modal-title" id="myFileModalLabel">提示</h4>
             </div>
             <div class="modal-body">
-                <input type="file" id="multiFileUpload" name="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                <input type="file" id="multiFileUpload" name="files[]" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"  multiple/>
                 <br/>
                 <input type="image" src="static/images/loading.gif" style="width:70px;height:70px;" id="loadImg">
             </div>
@@ -98,13 +101,15 @@
             $("#multiFileUpload").bind("click", function () {
                 $("#loadImg").show();
             });
-            $('#multiFileUpload').fileupload({
+
+           $('#multiFileUpload').fileupload({
                 type: "POST",
                 cache: false,
                 async: false,
                 dataType: "json",
-                url: 'admin/importScore/importScore',
-                // formData:{isCoverMatch:$("input[name=isCoverMatch]:checked").val(),
+                singleFileUploads: false,
+                url: 'admin/importMember/importMember',
+                //formData:{choice:$("input[name=fileChoice]:checked").val()},
                 //     isCoverTeam:$("input[name=isCoverTeam]:checked").val(),
                 //     isCoverScore:$("input[name=isCoverScore]:checked").val()},
                 success: function (json) {
@@ -117,8 +122,10 @@
                     }
                 }
             });
+
         });
     });
+
 </script>
 </body>
 </html>

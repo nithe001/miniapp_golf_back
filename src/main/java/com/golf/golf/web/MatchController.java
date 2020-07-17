@@ -46,13 +46,13 @@ public class MatchController {
 	@Autowired
 	private UserService userService;
 
-	//双人比杆记分卡service 每组4人  同一个球队的放一行
-	@Autowired
-	protected MatchDoubleRodService matchDoubleRodService;
-
 	//比洞赛记分卡service 每组4人 同一个球队的放一行
 	@Autowired
 	protected MatchHoleService matchHoleService;
+
+    //双人比杆记分卡service 每组4人  同一个球队的放一行(取代上面那个MatchDoubleRodService
+    @Autowired
+    protected MatchRodService matchRodService;
 
 	//净杆相关
     @Autowired
@@ -873,25 +873,26 @@ public class MatchController {
 		}
 	}
 
-	/**
-	 * 通过matchid和groupid查询本组记分卡信息——双人比杆 每组4个人 每2个人一组
-	 * @return
-	 */
-	@ResponseBody
-	@RequestMapping("getDoubleRodScoreCard")
-	public JsonElement getDoubleRodScoreCardByGroupId(Long matchId, Long groupId) {
-		try {
-			Map<String,Object> groupInfoList = matchDoubleRodService.getDoubleRodScoreCardByGroupId(matchId,groupId);
-			return JsonWrapper.newDataInstance(groupInfoList);
-		} catch (Exception e) {
-			String errmsg = "前台-比赛—通过matchid和groupid查询本组双人比杆记分卡信息时出错。";
-			e.printStackTrace();
-			logger.error(errmsg ,e);
-			return JsonWrapper.newErrorInstance(errmsg);
-		}
-	}
 
-	/**
+    /**
+     * 通过matchid和groupid查询本组记分卡信息——双人比杆 每组4个人 每2个人一组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("getRodScoreCard")
+    public JsonElement getRodScoreCard(Long matchId, Long groupId) {
+        try {
+            Map<String,Object> groupInfoList = matchRodService.updateOrGetRodScoreCardByGroupId(matchId,groupId);
+            return JsonWrapper.newDataInstance(groupInfoList);
+        } catch (Exception e) {
+            String errmsg = "前台-比赛—通过matchid和groupid查询本组双人比杆记分卡信息时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
+    /**
 	 * 通过matchid和groupid查询本组记分卡信息——比洞赛，单人、两球、四球都用这个方法
 	 * @return
 	 */
@@ -995,10 +996,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("submitScoreByTeamId")
-	public JsonElement submitScoreByTeamId(Long matchId, Long teamId, Long reportteamId,Integer baseScore,
-										   Integer rodScore, Integer winScore, Integer scoreType,String openid) {
+	public JsonElement submitScoreByTeamId(Long matchId, Long teamId,Long guestTeamId, Long reportteamId,Double baseScore,
+										   Integer rodScore, Integer winScore, Integer scoreType, Integer mingci,String openid) {
 		try {
-			matchService.submitScoreByTeamId(matchId, teamId, reportteamId,baseScore, rodScore, winScore, scoreType,openid);
+			matchService.submitScoreByTeamId(matchId, teamId, guestTeamId,reportteamId,baseScore, rodScore, winScore, scoreType,mingci,openid);
 		} catch (Exception e) {
 			String errmsg = "前台-比赛—成绩上报时出错。matchId="+matchId;
 			e.printStackTrace();
@@ -1016,9 +1017,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("cancelScoreByTeamId")
-	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long reportteamId, Integer scoreType,String openid) {
+	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long guestTeamId,  Long reportteamId, Integer scoreType,String openid) {
 		try {
-			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId,reportteamId,scoreType,openid);
+			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId, guestTeamId,reportteamId,scoreType,openid);
 			if(flag){
 				return JsonWrapper.newDataInstance(1);
 			}else{
@@ -1145,9 +1146,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamTotalScoreByMatchId")
-	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer childId, Integer mingci) {
+	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer childId, Integer mingci,String openid) {
 		try {
-			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, childId, mingci);
+			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, childId, mingci,openid);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			String errmsg = "比赛——group——获取分队统计时出错。matchId="+matchId;

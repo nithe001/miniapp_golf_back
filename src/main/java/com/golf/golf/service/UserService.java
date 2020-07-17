@@ -141,9 +141,9 @@ public class UserService implements IBaseService {
 		db.setUiGraduateTime(user.getUiGraduateTime());
 		db.setUiStudentId(user.getUiStudentId());
 		db.setUiWorkUnit(user.getUiWorkUnit());
-		db.setUiPost(user.getUiPost());
 		db.setUiAddress(user.getUiAddress());
-		db.setUiHomeCourt(user.getUiHomeCourt());
+		db.setUiAddress(user.getUiAddress());
+		db.setUiHomeCourse(user.getUiHomeCourse());
 		db.setUiUpdateTime(System.currentTimeMillis());
 		db.setUiUpdateUserId(db.getUiId());
 		db.setUiUpdateUserName(db.getUiRealName());
