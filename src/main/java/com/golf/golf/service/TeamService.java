@@ -418,7 +418,7 @@ public class TeamService implements IBaseService {
     */
 	public void updateClaimUserScoreById(String openid,Long importuserid) {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
-		Long myUesrId = userInfo.getUiId();
+		Long myUserId = userInfo.getUiId();
 		//Long chooseUserId = null;
 		//Long chooseTeamId = null;
 		//Long chooseMatchId = null;
@@ -429,11 +429,11 @@ public class TeamService implements IBaseService {
 				//chooseMatchId = Long.parseLong(chooseIdStr[2]);
 
 				//更新这个导入用户的 比赛分组mapping 为db的id
-				userDao.updateImportMatchMappingUserId(importuserid, myUesrId);
+				userDao.updateImportMatchMappingUserId(importuserid,  myUserId);
 				//更新这个导入用户的 比赛成绩 的用户id为db的id 并设置是否认领为1
-				userDao.updateImportMatchScoreUserId(importuserid, myUesrId);
+				userDao.updateImportMatchScoreUserId(importuserid,  myUserId);
 				//更新这个导入用户的 球队分组mapping 为db的id
-				userDao.updateImportTeamMappingUserId(importuserid, myUesrId);
+				userDao.updateImportTeamMappingUserId(importuserid,  myUserId);
 				//删除这个导入用户
 				UserInfo chooseUser = userDao.get(UserInfo.class, importuserid);
 				userDao.del(chooseUser);
@@ -462,25 +462,26 @@ public class TeamService implements IBaseService {
 					if (chooseuseropenid == null) {
 						updateClaimUserScoreById(openid, chooseuserid);
 						return null;
-					}if(chooseuseropenid !=openid) {return chooseuserid;}
+					}
+					if(chooseuseropenid !=openid) {return chooseuserid;}
 				}
 			}
 			TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
-			TeamUserMapping teamUserMapping = new TeamUserMapping();
-			teamUserMapping.setTumTeamId(teamId);
-			teamUserMapping.setTumUserId(userId);
-			//是否开启入队审核
-			if (teamInfo.getTiJoinOpenType() == 1) {
-				//申请入队
-				teamUserMapping.setTumUserType(2);
-			} else {
-				//直接入队
-				teamUserMapping.setTumUserType(1);
-			}
-			teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-			teamUserMapping.setTumCreateUserName(userInfo.getUserName());
-			teamUserMapping.setTumCreateUserId(userId);
-			teamDao.save(teamUserMapping);
+            TeamUserMapping teamUserMapping = new TeamUserMapping();
+            teamUserMapping.setTumTeamId(teamId);
+            teamUserMapping.setTumUserId(userId);
+            //是否开启入队审核
+            if (teamInfo.getTiJoinOpenType() == 1) {
+                //申请入队
+                teamUserMapping.setTumUserType(2);
+            } else {
+                //直接入队
+                teamUserMapping.setTumUserType(1);
+            }
+            teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+            teamUserMapping.setTumCreateUserName(userInfo.getUserName());
+            teamUserMapping.setTumCreateUserId(userId);
+            teamDao.save(teamUserMapping);
 		} else {
 			teamDao.deleteFromTeamUserMapping(teamId, userId);
 		}

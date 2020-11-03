@@ -191,7 +191,7 @@ public class AdminTeamController {
     @RequestMapping("claimTeamUser")
     public String claimTeamUser(Long teamId){
         try{
-            adminTeamService.claimTeamUser(teamId);
+           adminTeamService.claimTeamUser(teamId);
         }catch(Exception e){
             e.printStackTrace();
             logger.error("整球队认领出错。"+ e );

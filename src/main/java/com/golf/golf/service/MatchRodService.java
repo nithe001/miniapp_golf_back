@@ -194,157 +194,159 @@ public class MatchRodService implements IBaseService {
             result.put("uscoreList0", uscoreList0);
 
             //第二对儿用户 得分
+        if (userList1.size()>0) {
             List<Map<String, Object>> uscoreList1 = new ArrayList<Map<String, Object>>();
             Long userId1 = matchService.getLongValue(userList1.get(0), "uiId");
             String userName10 = matchService.getName(userList1.get(0), "uiRealName");
             String userName11 = null;
             Long teamId1 = matchService.getLongValue(userList1.get(0), "team_id");
 
-            if (userList1.size()>0) {
 
-                List<Map<String, Object>> uscoreList10 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
+            List<Map<String, Object>> uscoreList10 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
+
+            for (int i = 0; i < 18; i++) {
+                uscoreList10.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
+            }
+            result.put("uscoreList10", uscoreList10);
+
+            if (userList1.size() == 1) {
+                uscoreList1 = uscoreList10;
+            } else {
+                userId1 = matchService.getLongValue(userList1.get(1), "uiId");
+                userName11 = matchService.getName(userList1.get(1), "uiRealName");
+                teamId1 = matchService.getLongValue(userList1.get(1), "team_id");
+                List<Map<String, Object>> uscoreList11 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
+                result.put("uscoreList11", uscoreList11);
 
                 for (int i = 0; i < 18; i++) {
-                    uscoreList10.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
-                }
-                result.put("uscoreList10", uscoreList10);
+                    uscoreList11.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
+                    Integer rodNum10 = matchService.getIntegerValueWithNull(uscoreList10.get(i), "rod_num");
+                    Integer rodNum11 = matchService.getIntegerValueWithNull(uscoreList11.get(i), "rod_num");
+                    Map<String, Object> map = new HashMap<String, Object>();
 
-                if (userList1.size() == 1) {
-                    uscoreList1 = uscoreList10;
-                } else {
-                    userId1 = matchService.getLongValue(userList1.get(1), "uiId");
-                    userName11 = matchService.getName(userList1.get(1), "uiRealName");
-                    teamId1 = matchService.getLongValue(userList1.get(1), "team_id");
-                    List<Map<String, Object>> uscoreList11 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
-                    result.put("uscoreList11", uscoreList11);
-
-                    for (int i = 0; i < 18; i++) {
-                        uscoreList11.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
-                        Integer rodNum10 = matchService.getIntegerValueWithNull(uscoreList10.get(i), "rod_num");
-                        Integer rodNum11 = matchService.getIntegerValueWithNull(uscoreList11.get(i), "rod_num");
-                        Map<String, Object> map = new HashMap<String, Object>();
-
-                        if ( rodNum10 !=null){
-                            if(  rodNum11 !=null){
-                                if (rodNum10 < rodNum11) {
-                                    map.putAll(uscoreList10.get(i));
-                                } else {
-                                    map.putAll(uscoreList11.get(i));
-                                }
-                            } else {
+                    if (rodNum10 != null) {
+                        if (rodNum11 != null) {
+                            if (rodNum10 < rodNum11) {
                                 map.putAll(uscoreList10.get(i));
+                            } else {
+                                map.putAll(uscoreList11.get(i));
                             }
                         } else {
-                            map.putAll(uscoreList11.get(i));
+                            map.putAll(uscoreList10.get(i));
                         }
-
-                        //球洞号
-                        Integer holeNum1 = matchService.getIntegerValue(uscoreList10.get(i), "pp_hole_num");
-                        //球洞名称
-                        String holeName1 = matchService.getName(uscoreList10.get(i), "pp_name");
-                        map.put("pp_hole_num", holeNum1);
-                        map.put("pp_name", holeName1);
-                        uscoreList1.add(map);
-                     }
-                  }
-              }
-                result.put("uscoreList1", uscoreList1);
-
-                //以下和比洞赛的计算不一样了
-                //最终成绩
-                Integer totalRodNum0 = 0; //第一对用户最好总成绩
-                Integer totalRodNum1 = 0; //第二对用户最好总成绩
-
-                Integer totalRodCha0 = 0; //第一对用户最好杆差
-                Integer totalRodCha1 = 0; //第二对用户最好杆差
-
-                for (Map<String, Object> map0 : uscoreList0) {
-                    //第一对儿用户 杆数
-                    Integer rodNum= matchService.getIntegerValueWithNull(map0, "rod_num");
-                    Integer rodCha= matchService.getIntegerValueWithNull(map0, "rod_cha");
-                    if (rodNum !=null) {
-                        totalRodNum0 += rodNum;
-                        totalRodCha0 += rodCha;
+                    } else {
+                        map.putAll(uscoreList11.get(i));
                     }
+
+                    //球洞号
+                    Integer holeNum1 = matchService.getIntegerValue(uscoreList10.get(i), "pp_hole_num");
+                    //球洞名称
+                    String holeName1 = matchService.getName(uscoreList10.get(i), "pp_name");
+                    map.put("pp_hole_num", holeNum1);
+                    map.put("pp_name", holeName1);
+                    uscoreList1.add(map);
                 }
-                result.put("totalRodNum0",totalRodNum0);
-                result.put("totalRodCha0",totalRodCha0);
+            }
 
+            result.put("uscoreList1", uscoreList1);
 
-                for (Map<String, Object> map1 : uscoreList1) {
-                    //第二对儿用户 杆数
-                    Integer rodNum= matchService.getIntegerValueWithNull(map1, "rod_num");
-                    Integer rodCha= matchService.getIntegerValueWithNull(map1, "rod_cha");
+            //以下和比洞赛的计算不一样了
+            //最终成绩
+            Integer totalRodNum0 = 0; //第一对用户最好总成绩
+            Integer totalRodNum1 = 0; //第二对用户最好总成绩
 
-                    if (rodNum !=null) {
-                        totalRodNum1 += rodNum;
-                        totalRodCha1 += rodCha;
-                    }
+            Integer totalRodCha0 = 0; //第一对用户最好杆差
+            Integer totalRodCha1 = 0; //第二对用户最好杆差
+
+            for (Map<String, Object> map0 : uscoreList0) {
+                //第一对儿用户 杆数
+                Integer rodNum = matchService.getIntegerValueWithNull(map0, "rod_num");
+                Integer rodCha = matchService.getIntegerValueWithNull(map0, "rod_cha");
+                if (rodNum != null) {
+                    totalRodNum0 += rodNum;
+                    totalRodCha0 += rodCha;
                 }
-                result.put("totalRodNum1",totalRodNum1);
-                result.put("totalRodCha1",totalRodCha1);
+            }
+            result.put("totalRodNum0", totalRodNum0);
+            result.put("totalRodCha0", totalRodCha0);
 
-                //组胜负结果
-                Integer groupResult =0;
-                if (totalRodNum0<totalRodNum1){
-                    groupResult = 1;
-                } else if(totalRodNum0>totalRodNum1){
-                    groupResult = -1;
+
+            for (Map<String, Object> map1 : uscoreList1) {
+                //第二对儿用户 杆数
+                Integer rodNum = matchService.getIntegerValueWithNull(map1, "rod_num");
+                Integer rodCha = matchService.getIntegerValueWithNull(map1, "rod_cha");
+
+                if (rodNum != null) {
+                    totalRodNum1 += rodNum;
+                    totalRodCha1 += rodCha;
                 }
+            }
+            result.put("totalRodNum1", totalRodNum1);
+            result.put("totalRodCha1", totalRodCha1);
 
-                if (matchDao.groupIsGuest(groupId) != 1) { // 比赛组，
-                    //看有没有子比赛
-                    Integer childId = matchDao.childExist(matchInfo.getMiId(),teamId0,teamId1);
-                    Integer childMax = matchDao.getMaxMatchChildId(matchInfo.getMiId());
-                    if (childMax == null ){childMax = 0; }
-                    //更新第一队记录
-                    MatchHoleResult matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId0);
-                    if (matchHoleResult == null) {
-                        matchHoleResult = new MatchHoleResult();
-                        matchHoleResult.setMhrMatchId(matchInfo.getMiId());
-                        if ( childId==0) {
-                            matchHoleResult.setMhrMatchChildId(childMax + 1);
-                        } else {
-                            matchHoleResult.setMhrMatchChildId(childId);
-                        }
-                        matchHoleResult.setMhrGroupId(groupId);
-                        matchHoleResult.setMhrTeamId(teamId0);
-                    }
-                    matchHoleResult.setMhrUserName0(userName00);
-                    matchHoleResult.setMhrUserName1(userName01);
-                    matchHoleResult.setMhrResult(groupResult);
-                    matchHoleResult.setMhrRodResult(totalRodNum0);
+            //组胜负结果
+            Integer groupResult = 0;
+            if (totalRodNum0 < totalRodNum1) {
+                groupResult = 1;
+            } else if (totalRodNum0 > totalRodNum1) {
+                groupResult = -1;
+            }
 
-                    if(matchHoleResult.getMhrId() == null) {
-                        matchDao.save(matchHoleResult);
-                    }else{
-                        matchDao.update(matchHoleResult);
-                    }
-                    //更新第二队记录
-                    matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId1);
-                    if (matchHoleResult == null) {
-                        matchHoleResult = new MatchHoleResult();
-                        matchHoleResult.setMhrMatchId(matchInfo.getMiId());
-                        if ( childId==0) {
-                            matchHoleResult.setMhrMatchChildId(childMax + 1);
-                        } else {
-                            matchHoleResult.setMhrMatchChildId(childId);
-                        }
-                        matchHoleResult.setMhrGroupId(groupId);
-                        matchHoleResult.setMhrTeamId(teamId1);
-                    }
-                    matchHoleResult.setMhrUserName0(userName10);
-                    matchHoleResult.setMhrUserName1(userName11);
-                    matchHoleResult.setMhrResult(-groupResult);
-                    matchHoleResult.setMhrRodResult(totalRodNum1);
-
-                    if(matchHoleResult.getMhrId() == null) {
-                        matchDao.save(matchHoleResult);
-                    }else{
-                        matchDao.update(matchHoleResult);
-                    }
+            if (matchDao.groupIsGuest(groupId) != 1) { // 比赛组，
+                //看有没有子比赛
+                Integer childId = matchDao.childExist(matchInfo.getMiId(), teamId0, teamId1);
+                Integer childMax = matchDao.getMaxMatchChildId(matchInfo.getMiId());
+                if (childMax == null) {
+                    childMax = 0;
                 }
+                //更新第一队记录
+                MatchHoleResult matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId0);
+                if (matchHoleResult == null) {
+                    matchHoleResult = new MatchHoleResult();
+                    matchHoleResult.setMhrMatchId(matchInfo.getMiId());
+                    if (childId == 0) {
+                        matchHoleResult.setMhrMatchChildId(childMax + 1);
+                    } else {
+                        matchHoleResult.setMhrMatchChildId(childId);
+                    }
+                    matchHoleResult.setMhrGroupId(groupId);
+                    matchHoleResult.setMhrTeamId(teamId0);
+                }
+                matchHoleResult.setMhrUserName0(userName00);
+                matchHoleResult.setMhrUserName1(userName01);
+                matchHoleResult.setMhrResult(groupResult);
+                matchHoleResult.setMhrRodResult(totalRodNum0);
 
+                if (matchHoleResult.getMhrId() == null) {
+                    matchDao.save(matchHoleResult);
+                } else {
+                    matchDao.update(matchHoleResult);
+                }
+                //更新第二队记录
+                matchHoleResult = matchDao.getMatchHoleResult(matchInfo.getMiId(), groupId, teamId1);
+                if (matchHoleResult == null) {
+                    matchHoleResult = new MatchHoleResult();
+                    matchHoleResult.setMhrMatchId(matchInfo.getMiId());
+                    if (childId == 0) {
+                        matchHoleResult.setMhrMatchChildId(childMax + 1);
+                    } else {
+                        matchHoleResult.setMhrMatchChildId(childId);
+                    }
+                    matchHoleResult.setMhrGroupId(groupId);
+                    matchHoleResult.setMhrTeamId(teamId1);
+                }
+                matchHoleResult.setMhrUserName0(userName10);
+                matchHoleResult.setMhrUserName1(userName11);
+                matchHoleResult.setMhrResult(-groupResult);
+                matchHoleResult.setMhrRodResult(totalRodNum1);
+
+                if (matchHoleResult.getMhrId() == null) {
+                    matchDao.save(matchHoleResult);
+                } else {
+                    matchDao.update(matchHoleResult);
+                }
+            }
+        }
     }
 
 }

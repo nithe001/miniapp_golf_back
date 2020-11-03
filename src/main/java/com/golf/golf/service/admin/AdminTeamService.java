@@ -10,8 +10,8 @@ import com.golf.golf.dao.UserDao;
 import com.golf.golf.dao.admin.AdminTeamDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
+import com.golf.golf.db.UserInfo;
 import com.golf.golf.service.MatchService;
-import com.golf.golf.service.TeamService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,13 +33,10 @@ public class AdminTeamService implements IBaseService {
     private AdminTeamDao adminTeamDao;
 	@Autowired
 	private MatchService matchService;
-    @Autowired
-    private TeamService teamService;
 	@Autowired
 	private TeamDao teamDao;
     @Autowired
     private UserDao userDao;
-
 	/**
 	 * 球队列表
 	 * @param pageInfo
@@ -181,22 +178,46 @@ public class AdminTeamService implements IBaseService {
 			adminTeamDao.delUserFromTeamUserMapping(teamId,userId);
 		}
 	}
-	// 整球队认领用户
+
+
+    /**
+     * 整队认领 用小程序中所有注册用户认领所选球队中和其实名一样的导入用户
+     * @param teamId 球队id
+     * @return
+     */
     public void claimTeamUser(Long teamId) {
-	    List<Map<String,Object>> openIdList = userDao.getAllOpenIdUser();
-        List<Map<String,Object>>teamUserList = teamDao.getTeamUserListByTeamId(teamId,0);
-        for (Map<String,Object> oUser:openIdList){
-            Long userId = matchService.getLongValue(oUser,"userId");
-            String userName =  matchService.getName(oUser,"userName");
-            String openId =  matchService.getName(oUser,"openId");
-            for (Map<String,Object> tUser:teamUserList){
-                Long tUserId = matchService.getLongValue(tUser,"uiId");
-                String tUserName =  matchService.getName(tUser,"uiRealName");
-                String tOpenId =  matchService.getName(tUser,"openId");
-                if (userName.equals(tUserName) && userId !=tUserId && tOpenId ==null){
-                    teamService.updateClaimUserScoreById(openId,tUserId);
+        //获取系统所有微信授权用户的信息
+        List<Map<String,Object>> userList = userDao.getAllOpenIdUser();
+        //获取本队所有用户的信息
+        List<Map<String, Object>> teamUserList=teamDao.getTeamUserListByTeamId(teamId,0);
+        for (Map<String, Object> user:userList) {
+            String userName = matchService.getName(user,"userName");
+            Long myUserId =  matchService.getLongValue(user,"userId");
+            for (Map<String, Object> tuser:teamUserList) {
+                String tuserName = matchService.getName(tuser,"uiRealName");
+                Long importUserId =  matchService.getLongValue(tuser,"uiId");
+                String importOpenId =  matchService.getName(tuser,"openId");
+                if (userName.equals(tuserName) && importOpenId == null) {
+                    //更新这个导入用户的 比赛分组mapping 为db的id
+                    userDao.updateImportMatchMappingUserId(importUserId, myUserId);
+                    //更新这个导入用户的 比赛成绩 的用户id为db的id 并设置是否认领为1
+                    userDao.updateImportMatchScoreUserId(importUserId, myUserId);
+                    //更新这个导入用户的 球队分组mapping 为db的id 以及积分表
+                    userDao.updateImportTeamMappingUserId(importUserId, myUserId);
+                    //删除这个导入用户
+                    //UserInfo chooseUser = userDao.getUserInfoByUserId(importUserId);
+                    UserInfo chooseUser = userDao.get(UserInfo.class, importUserId);
+                    userDao.del(chooseUser);
                 }
             }
         }
+    }
+
+    /**
+     * 查询球友球队
+     * @return
+     */
+    public List<Map<String, Object>> getUserTeamList() {
+        return adminTeamDao.getUserTeamList();
     }
 }

@@ -11,6 +11,8 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 
     private Long userId;
     private String userName;
+    private String groupName;
+    private String teamAbbrev;
     private List<Map<String, Object>>  userScoreList;
 	private List<MatchTotalUserScoreBean>  userScoreTotalList;
 	private List<String> parkHoleList;
@@ -34,7 +36,23 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
 		this.userName = userName;
 	}
 
-	public List<Map<String, Object>> getUserScoreList() {
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public String getTeamAbbrev() {
+        return teamAbbrev;
+    }
+
+    public void setTeamAbbrev(String teamAbbrev) {
+        this.teamAbbrev = teamAbbrev;
+    }
+
+    public List<Map<String, Object>> getUserScoreList() {
 		return userScoreList;
 	}
 

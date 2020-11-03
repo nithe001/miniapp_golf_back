@@ -657,16 +657,19 @@ public class MatchDao extends CommonDao {
 	public List<Map<String, Object>> getUserListById(Long matchId, Long groupId, Long teamId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("select " +
+                " t.ti_abbrev AS teamAbbrev, score1.* from (" +
+                "select " +
 				" u.ui_nick_name AS uiNickName," +
 				" u.ui_real_name AS uiRealName," +
 				" u.ui_headimg AS uiHeadimg,score.* from (" );
-		sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id," +
-					"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
+		//sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id," +
+        sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id,m.mugm_group_name AS groupName, " +
+					"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha, COUNT(s.ms_id) AS holeCount ");
 		sql.append("FROM match_user_group_mapping as m LEFT JOIN match_score AS s " +
-			//	"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and s.ms_type = 0) "); nhq
-				"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_team_id=s.ms_team_id and s.ms_type = 0) ");
+      				//"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_team_id=s.ms_team_id and s.ms_type = 0) ");
+                "on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_group_id=s.ms_group_id and s.ms_type = 0) ");
 		sql.append("where m.mugm_match_id = "+matchId );
-		if(groupId != null){
+      	if(groupId != null){
 			sql.append(" and m.mugm_group_id = "+groupId);
 		}
 		if(teamId != null){
@@ -675,7 +678,9 @@ public class MatchDao extends CommonDao {
 		sql.append(" and m.mugm_is_del != 1 ");
 		sql.append(" GROUP BY m.mugm_user_id " );
 		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-		sql.append("ORDER BY score.sumRodNum !=0 and  score.sumRodNum > 67 desc,score.sumRodNum ");
+        sql.append(" )score1 LEFT JOIN team_info AS t ON score1.team_id = t.ti_id ");
+		//sql.append("ORDER BY score1.sumRodNum !=0 and  score1.sumRodNum > 67 desc,score1.sumRodNum ");
+        sql.append("ORDER BY score1.holeCount desc, score1.sumRodNum !=0  desc,score1.sumRodNum");
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
@@ -975,6 +980,7 @@ public class MatchDao extends CommonDao {
 				"s.ms_team_id AS teamId, " +
 				"s.ms_user_id AS userId, " +
 				"s.ms_user_name AS userName, " +
+                "COUNT(s.ms_id) AS holeCount, " +
 				"SUM(s.ms_rod_num) as sumRodNum, " +
 				"SUM(s.ms_push_rod_num) as sumPushNum ");
 		sql.append("FROM match_score AS s ");
@@ -1713,13 +1719,16 @@ public class MatchDao extends CommonDao {
         parp.put("teamId",teamId);
         parp.put("mingci",mingci);
         StringBuilder hql = new StringBuilder();
-        hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum ");
+        hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum, COUNT(userId) AS userCount ");
         hql.append("FROM ( ");
         hql.append("SELECT " +
                 "mm.mugm_match_id AS matchId, " +
                 "mm.mugm_group_id AS groupId, " +
                 "mm.mugm_user_id AS userId, " +
-                "sum(s.ms_rod_num) AS sumRod " +
+                "sum(s.ms_rod_num) AS sumRod, " +
+
+                "COUNT(s.ms_id) AS holeCount " +
+
                 "FROM match_user_group_mapping AS mm " +
                 "LEFT JOIN match_score AS s ON ( " +
                 "s.ms_team_id = mm.mugm_team_id " +
@@ -1732,9 +1741,10 @@ public class MatchDao extends CommonDao {
             hql.append(" and mm.mugm_team_id = :teamId ");
         }
         hql.append(" GROUP BY mm.mugm_user_id " +
-             "ORDER BY sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
-             "LIMIT 0,:mingci");
-        hql.append(") as t");
+              "ORDER BY  holeCount desc, sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
+              "LIMIT 0,:mingci");
+       hql.append(") as t WHERE  t.sumRod != 0");
+       // hql.append(") as t ");
         return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
     //两人或四人比杆，结果从matchHoleResult中取
@@ -1860,6 +1870,7 @@ public class MatchDao extends CommonDao {
 		return dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
+
 	//获取给定球队参与比赛的的球友
 	public List<Long> getScoreUserList(Long matchId, Long teamId) {
 		StringBuilder sql = new StringBuilder();
@@ -1883,9 +1894,9 @@ public class MatchDao extends CommonDao {
 		return dao.createQuery(hql.toString());
 	}
 	//获取球友本次比赛的积分
-	public TeamUserPoint getTeamUserPoint(Long matchId, Long teamId, Long userId, Long captainUserId) {
+	public TeamUserPoint getTeamUserPoint(Long matchId, Long teamId,Long reportTeamId, Long userId, Long captainUserId) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("FROM TeamUserPoint AS t where t.tupMatchId = "+matchId+" and t.tupTeamId ="+teamId+" and t.tupUserId = "+userId);
+		sql.append("FROM TeamUserPoint AS t where t.tupMatchId = "+matchId+" and t.tupTeamId ="+teamId+" and t.tupReportTeamId ="+reportTeamId+" and t.tupUserId = "+userId);
 		//sql.append(" and t.tupCreateUserId = "+captainUserId); nhq 不需要把队长作为判断条件
 		List<TeamUserPoint> list = dao.createQuery(sql.toString());
 		if(list != null && list.size()>0){
@@ -2284,24 +2295,7 @@ public class MatchDao extends CommonDao {
 		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
 	}
 
-	//比赛——比分榜——比赛的所有用户和其总杆数（没有参赛队的情况下）
-	public List<Map<String, Object>> getUserListByIdWithOutTeam(Long matchId) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("select " +
-				" u.ui_nick_name AS uiNickName," +
-				" u.ui_real_name AS uiRealName," +
-				" u.ui_headimg AS uiHeadimg,score.* from (" );
-		sql.append("select m.mugm_user_id AS uiId,m.mugm_group_id AS group_id," +
-				"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha ");
-		sql.append("FROM match_user_group_mapping as m LEFT JOIN match_score AS s " +
-					"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and s.ms_type = 0) ");
-		sql.append("where m.mugm_match_id = "+matchId );
-		sql.append(" and m.mugm_is_del != 1 ");
-		sql.append(" GROUP BY m.mugm_user_id " );
-		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-		sql.append("ORDER BY score.sumRodNum !=0 and score.sumRodNum > 67 desc,score.sumRodNum ");
-		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
-	}
+
     //查询是否在比分表有数据（对于从后台导入的比赛信息，有得分记录，如果调整了分组，match_score表要同步调整分组）
     public Long getUserMatchScoreCountById(Long userId, Long matchId) {
         StringBuilder sql = new StringBuilder();

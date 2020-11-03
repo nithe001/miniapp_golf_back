@@ -227,7 +227,7 @@ public class TeamDao extends CommonDao {
 
 
 	/**
-	 * 获取本球队的前14个队员
+	 * 获取本球队的前14个队员，num为0则获取所有队员
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamUserListByTeamId(Long teamId,Integer num) {
@@ -281,7 +281,7 @@ public class TeamDao extends CommonDao {
 	public List<Map<String, Object>>getJoinMatchChangCiByYear (Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
 		hql.append("select count(t.matchId) as count from (select s.tup_match_id as matchId from team_user_point as s,match_info as m " +
-				"where s.tup_match_id = m.mi_id and s.tup_team_id = :teamId and s.tup_user_id = :userId " +
+				"where s.tup_match_id = m.mi_id and s.tup_report_team_id = :teamId and s.tup_user_id = :userId " +
 			    "and m.mi_is_valid = 1 "+
 				" and m.mi_match_time>=:startYear and m.mi_match_time<=:endYear " +
 				" GROUP BY s.tup_match_id) as t ");
@@ -423,7 +423,7 @@ public class TeamDao extends CommonDao {
                   "FROM integral_config AS c,match_info as m,team_info as team " +
                 //"WHERE c.ic_match_id = m.mi_id and c.ic_team_id = :teamId and c.ic_team_id = team.ti_id " +  nhq
                 "WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = team.ti_id " +
-                "and c.ic_score_type = :scoreType "+
+                "and c.ic_score_type != 0 "+
                 "and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
         //排序 按照离今天近的排序
         hql.append("  GROUP BY c.ic_team_id ORDER BY teamPoint DESC  ");
@@ -469,7 +469,7 @@ public class TeamDao extends CommonDao {
         hql.append("FROM team_user_point AS tup,match_info as m " +
                 "WHERE tup.tup_match_id = m.mi_id and m.mi_is_valid = 1 " +
 				"and tup.tup_user_id = :userId " +
-                "AND tup.tup_team_id = :teamId " +
+                "AND tup.tup_report_team_id = :teamId " +
 				"and m.mi_match_time >= :startYear " +
 				"and m.mi_match_time <= :endYear " +
 				"ORDER BY tup.tup_match_point DESC " +
@@ -487,7 +487,7 @@ public class TeamDao extends CommonDao {
         hql.append("FROM team_user_point AS tup,match_info as m " +
                 "WHERE tup.tup_match_id = m.mi_id and m.mi_is_valid = 1 " +
                 "and tup.tup_user_id = :userId " +
-                "AND tup.tup_team_id = :teamId " +
+                "AND tup.tup_report_team_id = :teamId " +
                 "and m.mi_match_time >= :startYear " +
                 "and m.mi_match_time <= :endYear " +
                 "ORDER BY tup.tup_match_score " +

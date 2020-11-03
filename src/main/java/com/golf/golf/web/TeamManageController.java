@@ -170,7 +170,7 @@ public class TeamManageController {
 	@RequestMapping(value = "saveTeamInfo")
 	public JsonElement saveTeamInfo(String teamInfo, String logoPath, String signature, String digest, String openid) {
 		try {
-			if(StringUtils.isNotEmpty(teamInfo) && StringUtils.isNotEmpty(logoPath)){
+			if(StringUtils.isNotEmpty(teamInfo)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
 				teamInfoBean.setTiLogo(logoPath);

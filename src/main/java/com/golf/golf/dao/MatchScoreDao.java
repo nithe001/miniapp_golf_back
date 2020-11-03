@@ -53,7 +53,7 @@ public class MatchScoreDao extends CommonDao {
 	//获取本场地18洞的总标准杆
 	public Long getSumStandardRod(MatchInfo matchInfo) {
 		StringBuilder sql = new StringBuilder();
-		sql.append("select sum(p.pp_hole_standard_rod) as sumRod from park_partition as p where p.pp_p_id = "+matchInfo.getMiId());
+		sql.append("select sum(p.pp_hole_standard_rod) as sumRod from park_partition as p where p.pp_p_id = "+matchInfo.getMiParkId());
 		sql.append(" and (p.pp_name = '"+matchInfo.getMiZoneBeforeNine()+"' or p.pp_name = '"+matchInfo.getMiZoneAfterNine()+"')");
 		List<Object> obj = dao.createSQLQuery(sql.toString());
 		if(obj != null && obj.size() >0){

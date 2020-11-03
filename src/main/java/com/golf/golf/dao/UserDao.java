@@ -37,7 +37,7 @@ public class UserDao extends CommonDao {
         return dao.findOne(hql.toString(), parp);
     }
     /**
-     * 查出系统所有微信授权用户信息
+     * 查出系统所有微信授权用户信息,在整队认领时使用
      * @param openid
      * @return
      */
@@ -135,6 +135,15 @@ public class UserDao extends CommonDao {
 		return dao.findOne(hql.toString(), null);
 	}
 
+    /**
+     * 根据USERID获取用户信息 nhq
+     * @return
+     */
+    public UserInfo getUserInfoByUserId(Long userId) {
+        StringBuffer hql = new StringBuffer();
+        hql.append("FROM UserInfo as u WHERE u.uiId = '" +userId+"'");
+        return dao.findOne(hql.toString(), null);
+    }
     /**
      * 是否是我的队友（入队审核通过的）
      * @return

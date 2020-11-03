@@ -167,17 +167,26 @@ public class MatchScoreService implements IBaseService {
 
                 //不防作弊时用户的18洞总杆数
                 Long sumRod = matchScoreDao.getSumRod(userId,matchId);
+                //防作弊18洞总杆数
+                Integer sumRodXxbly = beforeTotalRodNum+afterTotalRodNum;
+                if (sumRod <67) {
+                    //有球洞没记分，就不计算差点
+                    sumRod = 0L;
+                }
                 if(sumRod != null && sumRod != 0){
                     //本用户随机抽取的6个洞总杆数
                     //Long radomSumRod = matchScoreDao.getRandomSumRod(userId,matchInfo,beforeHoleNum,afterHoleNum);
-                    //防作弊18洞总杆数
-                    Integer sumRodXxbly = beforeTotalRodNum+afterTotalRodNum;
+
                     //差点 加个提示
 
                     BigDecimal ch = new BigDecimal((sumRodXxbly*1.5 - sum18)*0.8).setScale(2, BigDecimal.ROUND_HALF_UP);
                     double cha = ch.doubleValue();
+
                     //净杆
                     double netRod = sumRod.doubleValue() - cha;
+                    //保留两位小数
+                    netRod=(double) Math.round(netRod * 100) / 100;
+
                     user.put("sumRodNum",netRod);
                     bean.setTotalNetRodScore(netRod);
                 }else{
@@ -248,7 +257,10 @@ public class MatchScoreService implements IBaseService {
         Integer totalRodCha = 0;
         for(Map<String, Object> map:uScoreList){
             MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
-            //本洞记录id
+
+            /*
+            //当有人某洞没记分时，下面这段的各变量会为空，所以改进以下，用pp开头的变量代替
+             //本洞记录id
             Long msId = matchService.getLongValue(map,"ms_id");
 
             //本洞号码
@@ -259,9 +271,23 @@ public class MatchScoreService implements IBaseService {
 
             //本洞标准杆
             Integer standardRodNum = matchService.getIntegerValue(map,"hole_standard_rod");
+            */
+
+            //本洞号码
+            Integer holeNum = matchService.getIntegerValue(map,"pp_hole_num");
+
+            //本洞名字
+            String holeName = matchService.getName(map,"pp_name");
+
+            //本洞标准杆
+            Integer standardRodNum = matchService.getIntegerValue(map,"pp_hole_standard_rod");
 
             //本洞打出的杆数
             Integer rodNum = matchService.getIntegerValue(map,"rod_num");
+            //如果某洞没记分，则这洞按double par-1 处理
+            if (rodNum ==0) {
+                rodNum= 2*standardRodNum-1;
+            }
             //下面算法的原理是对所有的洞做去顶的处理求和 然后减去抽去六洞的不去顶的和。
             if ((holeName.equals(scoreNetHole.getMsntHoleBeforeName()) && holeNum !=scoreNetHole.getMsntHoleBeforeNum1() && holeNum !=scoreNetHole.getMsntHoleBeforeNum2()
                  && holeNum !=scoreNetHole.getMsntHoleBeforeNum3()) ||(holeName.equals(scoreNetHole.getMsntHoleAfterName()) && holeNum !=scoreNetHole.getMsntHoleAfterNum1()

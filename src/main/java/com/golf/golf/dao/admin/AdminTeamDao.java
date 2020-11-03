@@ -163,4 +163,19 @@ public class AdminTeamDao extends CommonDao {
 		hql.append(" and t.tumUserId= "+userId);
 		dao.executeHql(hql.toString());
 	}
+
+    /**
+     * 查询球友球队
+     * @return
+     */
+    public List<Map<String, Object>> getUserTeamList() {
+        StringBuilder hql = new StringBuilder();
+        hql.append("SELECT tum.tum_user_id as userId,u.ui_real_name as userName,t.ti_name as teamName ");
+        hql.append("FROM (team_info AS t LEFT JOIN team_user_mapping AS tum  on t.ti_id = tum.tum_team_id) ");
+        hql.append("LEFT JOIN user_info AS u ");
+        hql.append("ON tum.tum_user_id = u.ui_id ");
+        hql.append("order by teamName,userName");
+        List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(),Transformers.ALIAS_TO_ENTITY_MAP);
+        return list;
+    }
 }
