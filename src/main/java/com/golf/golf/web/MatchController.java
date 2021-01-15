@@ -10,7 +10,6 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.spring.mvc.WebUtil;
 import com.golf.common.util.PropertyConst;
 import com.golf.golf.bean.ChooseUserBean;
-import com.golf.golf.common.security.UserUtil;
 import com.golf.golf.db.MatchGroup;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.TeamInfo;
@@ -21,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,12 +70,12 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchList")
-	public JsonElement getMatchList(String page, Integer type, String keyword,String openid) {
-		Integer nowPage = 1;
-		if (StringUtils.isNotEmpty(page) && Integer.parseInt(page) > 0) {
-			nowPage = Integer.parseInt(page);
-		}
-		POJOPageInfo pageInfo = new POJOPageInfo<MatchInfo>(Const.ROWSPERPAGE , nowPage);
+	public JsonElement getMatchList(@RequestAttribute("page") Integer page,
+									@RequestAttribute("type") Integer type,
+									@RequestAttribute("keyword") String keyword,
+									@RequestAttribute("openid") String openid) {
+		page = page != null && page > 0 ? page : 1;
+		POJOPageInfo pageInfo = new POJOPageInfo<MatchInfo>(Const.ROWSPERPAGE , page);
 		try {
 			SearchBean searchBean = new SearchBean();
 			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
@@ -103,7 +103,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getCaptainTeamIdList")
-	public JsonElement getCaptainTeamIdList(String joinTeamIds,String openid) {
+	public JsonElement getCaptainTeamIdList(@RequestAttribute("joinTeamIds")String joinTeamIds,@RequestAttribute("openid")String openid) {
 		try {
 			List<TeamInfo> list = matchService.getCaptainTeamIdList(joinTeamIds,openid);
 			return JsonWrapper.newDataInstance(list);
@@ -122,15 +122,26 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveMatchInfo")
-	public JsonElement saveMatchInfo(String matchInfo, String logoPath, String joinTeamIds, String parkName, String beforeZoneName,
-									 String afterZoneName, String reportTeamIds, String chooseTeamId, String openid) {
+	public JsonElement saveMatchInfo(@RequestAttribute("matchInfo")String matchInfo,
+									 @RequestAttribute("logoPath")String logoPath,
+									 @RequestAttribute("joinTeamIds")String joinTeamIds,
+									 @RequestAttribute("parkName")String parkName,
+									 @RequestAttribute("beforeZoneName")String beforeZoneName,
+									 @RequestAttribute("afterZoneName")String afterZoneName,
+									 @RequestAttribute("reportTeamIds")String reportTeamIds,
+									 @RequestAttribute("chooseTeamId")String chooseTeamId,
+									 @RequestAttribute("openid")String openid) {
 		try {
 			MatchInfo m = null;
 			//if(StringUtils.isNotEmpty(matchInfo) && StringUtils.isNotEmpty(logoPath)){
             if(StringUtils.isNotEmpty(matchInfo) ){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(matchInfo);
 				MatchInfo matchInfoBean = (MatchInfo) net.sf.json.JSONObject.toBean(jsonObject, MatchInfo.class);
-				matchInfoBean.setMiLogo(logoPath);
+				if(StringUtils.isNotEmpty(logoPath) && logoPath.contains(PropertyConst.DOMAIN)){
+					matchInfoBean.setMiLogo(logoPath.substring(logoPath.indexOf("up")));
+				}else{
+					matchInfoBean.setMiLogo(logoPath);
+				}
 				matchInfoBean.setMiJoinTeamIds(joinTeamIds);
 				if(StringUtils.isNotEmpty(joinTeamIds)){
 					matchInfoBean.setMiJoinOpenType(2);
@@ -165,7 +176,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "setMatchCaptainByUserId")
-	public JsonElement setMatchCaptainByUserId(Long matchId, Long userId, String openid) {
+	public JsonElement setMatchCaptainByUserId(@RequestAttribute("matchId")Long matchId,
+											   @RequestAttribute("userId")Long userId,
+											   @RequestAttribute("openid")String openid) {
 		try {
 			boolean flag = matchService.setMatchCaptainByUserId(matchId, userId, openid);
 			return JsonWrapper.newDataInstance(flag);
@@ -183,7 +196,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "delMatchById")
-	public JsonElement delMatchById(Long matchId, String openid) {
+	public JsonElement delMatchById(@RequestAttribute("matchId")Long matchId, @RequestAttribute("openid")String openid) {
 		try {
 			boolean flag = matchService.delMatchById(matchId, openid);
 			if(flag){
@@ -205,7 +218,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchDetail")
-	public JsonElement getMatchDetail(Long matchId, Integer count, String openid) {
+	public JsonElement getMatchDetail(@RequestAttribute("matchId")Long matchId, @RequestAttribute("count")Integer count,
+									  @RequestAttribute("openid")String openid) {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
@@ -232,7 +246,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("delMatchGroupByGroupId")
-	public JsonElement delMatchGroupByGroupId(Long groupId) {
+	public JsonElement delMatchGroupByGroupId(@RequestAttribute("groupId")Long groupId) {
 		try {
 			matchService.delMatchGroupByGroupId(groupId);
 			return JsonWrapper.newSuccessInstance();
@@ -252,7 +266,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchInfoById")
-	public JsonElement getMatchInfoById(Long matchId,Long groupId,String openid) {
+	public JsonElement getMatchInfoById(@RequestAttribute("matchId")Long matchId,@RequestAttribute("groupId")Long groupId,
+										@RequestAttribute("openid")String openid) {
 		try {
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
@@ -286,7 +301,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getSingleMatchGroupIdByMatchId")
-	public JsonElement getSingleMatchGroupIdByMatchId(Long matchId) {
+	public JsonElement getSingleMatchGroupIdByMatchId(@RequestAttribute("matchId") Long matchId) {
 		try {
 			Long groupId = matchService.getSingleMatchGroupIdByMatchId(matchId);
 			return JsonWrapper.newDataInstance(groupId);
@@ -305,7 +320,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getIsCaptain")
-	public JsonElement getIsCaptain(Long matchId, String openid) {
+	public JsonElement getIsCaptain(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			boolean isCaptain = matchService.getIsCaptain(matchId, openid);
 			return JsonWrapper.newDataInstance(isCaptain);
@@ -323,7 +338,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getMoreWatchUserList")
-    public JsonElement getMoreWatchUserList(Long matchId) {
+    public JsonElement getMoreWatchUserList(@RequestAttribute("matchId") Long matchId) {
         try {
 			List<Map<String, Object>> watchList = matchService.getMoreWatchUserList(matchId);
 			return JsonWrapper.newDataInstance(watchList);
@@ -341,7 +356,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchDetailInfo")
-	public JsonElement getMatchDetailInfo(Long matchId, String openid) {
+	public JsonElement getMatchDetailInfo(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String, Object> matchDetailInfo = matchService.getMatchDetailInfo(matchId, openid);
 			return JsonWrapper.newDataInstance(matchDetailInfo);
@@ -359,7 +374,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("addGroupByTeamId")
-	public JsonElement addGroupByTeamId(Long matchId, String openid) {
+	public JsonElement addGroupByTeamId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			matchService.addGroupByTeamId(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -377,7 +392,10 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("addUserToApply")
-    public JsonElement addUserToApply(Long matchId,Long teamId, String userName, String openid) {
+    public JsonElement addUserToApply(@RequestAttribute("matchId") Long matchId,
+									  @RequestAttribute("teamId") Long teamId,
+									  @RequestAttribute("userName") String userName,
+									  @RequestAttribute("openid") String openid) {
         try {
             matchService.addUserToApply(matchId,teamId, userName,openid);
             return JsonWrapper.newSuccessInstance();
@@ -396,7 +414,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserListByGroupId")
-	public JsonElement getUserListByGroupId(Long matchId, Long groupId) {
+	public JsonElement getUserListByGroupId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId) {
 		try {
 			Map<String, Object> result = matchService.getUserListByGroupId(matchId, groupId);
 			return JsonWrapper.newDataInstance(result);
@@ -414,7 +432,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getAllApplyUserByMatchId")
-	public JsonElement getAllApplyUserByMatchId(Long matchId, String openid) {
+	public JsonElement getAllApplyUserByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String, Object> result = matchService.getAllApplyUserByMatchId(matchId, openid);
 			return JsonWrapper.newDataInstance(result);
@@ -433,7 +451,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getApplyUserByMatchId")
-    public JsonElement getApplyUserByMatchId(Long matchId, String keyword) {
+    public JsonElement getApplyUserByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("keyword") String keyword) {
         try {
 			Map<String, Object> result = matchService.getApplyUserByMatchId(matchId, keyword);
             return JsonWrapper.newDataInstance(result);
@@ -452,7 +470,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getWaitGroupUserList")
-	public JsonElement getWaitGroupUserList(Long matchId, String keyword) {
+	public JsonElement getWaitGroupUserList(@RequestAttribute("matchId") Long matchId, @RequestAttribute("keyword") String keyword) {
 		try {
             Map<String, Object> result = matchService.getWaitGroupUserList(matchId, keyword);
 			return JsonWrapper.newDataInstance(result);
@@ -475,7 +493,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyTeamUserList")
-	public JsonElement getMyTeamUserList(Long matchId, String keyword, String openid) {
+	public JsonElement getMyTeamUserList(@RequestAttribute("matchId") Long matchId, @RequestAttribute("keyword") String keyword,
+										 @RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = matchService.getMyTeamUserList(matchId, keyword,openid);
 			return JsonWrapper.newDataInstance(result);
@@ -493,7 +512,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("delUserByMatchIdGroupId")
-	public JsonElement delUserByMatchIdGroupId(String mappingIds) {
+	public JsonElement delUserByMatchIdGroupId(@RequestAttribute("mappingIds") String mappingIds) {
 		try {
 			matchService.delUserByMatchIdGroupId(mappingIds);
 			return JsonWrapper.newSuccessInstance();
@@ -511,7 +530,9 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("updateMatchGroupByUserId")
-    public JsonElement updateMatchGroupByUserId(Long matchId, Long groupId, String openid) {
+    public JsonElement updateMatchGroupByUserId(@RequestAttribute("matchId") Long matchId,
+												@RequestAttribute("groupId") Long groupId,
+												@RequestAttribute("openid") String openid) {
         try {
             matchService.updateMatchGroupByUserId(matchId, groupId, openid);
             return JsonWrapper.newSuccessInstance();
@@ -530,16 +551,15 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("checkChooseUserMutl")
-	public JsonElement checkChooseUserMutl(String checkIds, String mutlUserId) {
+	public JsonElement checkChooseUserMutl(@RequestAttribute("checkIds") JSONArray checkIds,
+										   @RequestAttribute("mutlUserId") JSONArray mutlUserId) {
 		try {
-			JSONArray allArray = JSON.parseArray(checkIds);
-			JSONArray mutlUserIdArray = JSON.parseArray(mutlUserId);
 			List<ChooseUserBean> list = new ArrayList<>();
-			for(Object mutlObject:mutlUserIdArray){
+			for(Object mutlObject:mutlUserId){
 				ChooseUserBean bean = new ChooseUserBean();
 				List<JSONObject> objectList = new ArrayList<>();
-				for(int j =0;j<allArray.size();j++){
-					JSONObject allObj = allArray.getJSONObject(j);
+				for(int j =0;j<checkIds.size();j++){
+					JSONObject allObj = checkIds.getJSONObject(j);
 					if(mutlObject.equals(allObj.get("userId"))){
 						bean.setUserName(allObj.get("userName").toString());
 						objectList.add(allObj);
@@ -594,9 +614,12 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateGroupUserByMatchIdGroupId")
-	public JsonElement updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, String openid) {
+	public JsonElement updateGroupUserByMatchIdGroupId(@RequestAttribute("matchId") Long matchId,
+													   @RequestAttribute("groupId") Long groupId,
+													   @RequestAttribute("checkIds") JSONArray checkIds,
+													   @RequestAttribute("openid") String openid) {
 		try {
-			matchService.updateGroupUserByMatchIdGroupId(matchId, groupId,checkIds,openid);
+			matchService.updateGroupUserByMatchIdGroupId(matchId, groupId, checkIds, openid);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "前台-比赛详情—更新用户分组时出错。";
@@ -612,7 +635,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchScoreByGroupId")
-	public JsonElement getMatchScoreByGroupId(Long groupId) {
+	public JsonElement getMatchScoreByGroupId(@RequestAttribute("groupId") Long groupId) {
 		try {
             Map<String, Object> matchInfo = matchService.getMatchInfoById(groupId);
 			return JsonWrapper.newDataInstance(matchInfo);
@@ -630,7 +653,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMatchScoreByMatchId")
-	public JsonElement getMatchScoreByMatchId(Long matchId) {
+	public JsonElement getMatchScoreByMatchId(@RequestAttribute("matchId") Long matchId) {
 		try {
             Map<String, Object> matchInfo = matchService.getMatchInfoById(matchId);
 			return JsonWrapper.newDataInstance(matchInfo);
@@ -656,7 +679,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMySinglePlay")
-	public JsonElement getMySinglePlay(String openid) {
+	public JsonElement getMySinglePlay(@RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = matchService.getMySinglePlay(openid);
 			return JsonWrapper.newDataInstance(result);
@@ -674,8 +697,11 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveSinglePlay")
-	public JsonElement saveSinglePlay(String matchTitle, Long parkId, String parkName, String playTime, Integer peopleNum,  Integer openType,String digest,
-									  String beforeZoneName, String afterZoneName, String openid) {
+	public JsonElement saveSinglePlay(@RequestAttribute("matchTitle") String matchTitle, @RequestAttribute("parkId") Long parkId,
+									  @RequestAttribute("parkName") String parkName, @RequestAttribute("playTime") String playTime,
+									  @RequestAttribute("peopleNum") Integer peopleNum, @RequestAttribute("openType") Integer openType,
+									  @RequestAttribute("digest") String digest, @RequestAttribute("beforeZoneName") String beforeZoneName,
+									  @RequestAttribute("afterZoneName") String afterZoneName, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = matchService.saveSinglePlay(matchTitle, parkId, parkName, playTime, peopleNum, openType, digest,
 										beforeZoneName, afterZoneName, openid);
@@ -694,12 +720,13 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMeCanScore")
-	public JsonElement getMeCanScore(Long matchId, Long groupId, String openid) {
+	public JsonElement getMeCanScore(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId,
+									 @RequestAttribute("openid") String openid) {
 		try {
 			boolean flag = matchService.getMeCanScore(matchId, groupId, openid);
 			return JsonWrapper.newDataInstance(flag);
 		} catch (Exception e) {
-			String errmsg = "前台-单练——开始记分——保存数据时出错。";
+			String errmsg = "前台-记分卡初始化时出错。";
 			e.printStackTrace();
 			logger.error(errmsg ,e);
 			return JsonWrapper.newErrorInstance(errmsg);
@@ -712,7 +739,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("invitationScore")
-	public JsonElement invitationScore(Long matchId, Long userId, String openid) {
+	public JsonElement invitationScore(@RequestAttribute("matchId") Long matchId, @RequestAttribute("userId") Long userId,
+									   @RequestAttribute("openid") String openid) {
 		try {
 			matchService.saveInvitationScore(matchId, userId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -735,7 +763,8 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getParkList")
-    public JsonElement getParkList(Integer page, String keyword, String city, String openid) {
+    public JsonElement getParkList(@RequestAttribute("page") Integer page, @RequestAttribute("keyword") String keyword,
+								   @RequestAttribute("city") String city, @RequestAttribute("openid") String openid) {
         if (page == null || page == 0) {
             page = 1;
         }
@@ -769,7 +798,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getParkCityList")
-	public JsonElement getParkCityList(String keyword) {
+	public JsonElement getParkCityList(@RequestAttribute("keyword") String keyword) {
 		try {
 			List<String> list = matchService.getParkCityList(keyword);
 			return JsonWrapper.newDataInstance(list);
@@ -788,7 +817,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getZoneByParkId")
-    public JsonElement getZoneByParkId(Long parkId) {
+    public JsonElement getZoneByParkId(@RequestAttribute("parkId") Long parkId) {
         try {
 			List<Object[]> parkPartitionList = matchService.getParkZoneAndHole(parkId);
             return JsonWrapper.newDataInstance(parkPartitionList);
@@ -861,7 +890,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getSingleRodScoreCard")
-	public JsonElement getSingleRodScoreCardInfoByGroupId(Long matchId, Long groupId) {
+	public JsonElement getSingleRodScoreCardInfoByGroupId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId) {
 		try {
 			Map<String,Object> groupInfoList = matchService.getSingleRodScoreCardInfoByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
@@ -880,7 +909,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("getRodScoreCard")
-    public JsonElement getRodScoreCard(Long matchId, Long groupId) {
+    public JsonElement getRodScoreCard(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId) {
         try {
             Map<String,Object> groupInfoList = matchRodService.updateOrGetRodScoreCardByGroupId(matchId,groupId);
             return JsonWrapper.newDataInstance(groupInfoList);
@@ -898,7 +927,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getHoleScoreCard")
-	public JsonElement getHoleScoreCard(Long matchId, Long groupId) {
+	public JsonElement getHoleScoreCard(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId) {
 		try {
 			Map<String,Object> groupInfoList = matchHoleService.updateOrGetHoleScoreCardByGroupId(matchId,groupId);
 			return JsonWrapper.newDataInstance(groupInfoList);
@@ -921,9 +950,12 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveOrUpdateScore")
-	public JsonElement saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long holeId,
-                                         String isUp, Integer rod, String rodCha,
-										 Integer pushRod, Integer beforeAfter, String openid, String userIds) {
+	public JsonElement saveOrUpdateScore(@RequestAttribute("userId") Long userId, @RequestAttribute("matchId") Long matchId,
+										 @RequestAttribute("groupId") Long groupId, @RequestAttribute("holeId") Long holeId,
+										 @RequestAttribute("isUp") String isUp, @RequestAttribute("rod") Integer rod,
+										 @RequestAttribute("rodCha") String rodCha, @RequestAttribute("pushRod") Integer pushRod,
+										 @RequestAttribute("beforeAfter") Integer beforeAfter, @RequestAttribute("openid") String openid,
+										 @RequestAttribute("userIds") String userIds) {
 		try {
 			//判断本组比赛是否结束
 			MatchGroup group = matchService.getMatchGroupById(groupId);
@@ -947,7 +979,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("checkBeforeUpdateMatchState")
-	public JsonElement checkBeforeUpdateMatchState(Long matchId, Integer state) {
+	public JsonElement checkBeforeUpdateMatchState(@RequestAttribute("matchId") Long matchId, @RequestAttribute("state") Integer state) {
 		try {
 			String msg = matchService.checkBeforeUpdateMatchState(matchId, state);
 			return JsonWrapper.newDataInstance(msg);
@@ -966,7 +998,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateMatchState")
-	public JsonElement updateMatchState(Long matchId, Integer state, String openid) {
+	public JsonElement updateMatchState(@RequestAttribute("matchId") Long matchId, @RequestAttribute("state") Integer state,
+										@RequestAttribute("openid") String openid) {
 		try {
             String msg = matchService.updateMatchState(matchId, state, openid);
 			return JsonWrapper.newDataInstance(msg);
@@ -996,8 +1029,12 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("submitScoreByTeamId")
-	public JsonElement submitScoreByTeamId(Long matchId, Long teamId,Long guestTeamId, Long reportteamId,Double baseScore,
-										   Integer rodScore, Integer winScore, Integer scoreType, Integer mingci,String openid) {
+	public JsonElement submitScoreByTeamId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("teamId") Long teamId,
+										   @RequestAttribute("guestTeamId") Long guestTeamId, @RequestAttribute("reportteamId") Long reportteamId,
+										   @RequestAttribute("baseScore") Double baseScore,
+										   @RequestAttribute("rodScore") Integer rodScore, @RequestAttribute("winScore") Integer winScore,
+										   @RequestAttribute("scoreType") Integer scoreType, @RequestAttribute("mingci") Integer mingci,
+										   @RequestAttribute("openid") String openid) {
 		try {
 			matchService.submitScoreByTeamId(matchId, teamId, guestTeamId,reportteamId,baseScore, rodScore, winScore, scoreType,mingci,openid);
 		} catch (Exception e) {
@@ -1017,7 +1054,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("cancelScoreByTeamId")
-	public JsonElement cancelScoreByTeamId(Long matchId, Long teamId,  Long guestTeamId,  Long reportteamId, Integer scoreType,String openid) {
+	public JsonElement cancelScoreByTeamId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("teamId") Long teamId,
+										   @RequestAttribute("guestTeamId") Long guestTeamId, @RequestAttribute("reportteamId") Long reportteamId,
+										   @RequestAttribute("scoreType") Integer scoreType, @RequestAttribute("openid") String openid) {
 		try {
 			boolean flag = matchService.cancelScoreByTeamId(matchId, teamId, guestTeamId,reportteamId,scoreType,openid);
 			if(flag){
@@ -1039,7 +1078,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("endSingleMatchById")
-	public JsonElement endSingleMatchById(Long matchId, String openid) {
+	public JsonElement endSingleMatchById(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			matchService.endSingleMatchById(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -1057,7 +1096,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateTemporaryUserNameById")
-	public JsonElement updateTemporaryUserNameById(Long userId, String userName, Long matchId, Long groupId) {
+	public JsonElement updateTemporaryUserNameById(@RequestAttribute("userId") Long userId, @RequestAttribute("userName") String userName,
+												   @RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId) {
 		try {
 			matchService.updateTemporaryUserNameById(userId, userName, matchId, groupId);
 			return JsonWrapper.newSuccessInstance();
@@ -1078,7 +1118,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTotalScoreByMatchId")
-	public JsonElement getTotalScoreByMatchId(Long matchId,Integer orderType) {
+	public JsonElement getTotalScoreByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("orderType") Integer orderType) {
 		try {
 			Map<String,Object> scoreList = null;
 			if(orderType == null || orderType == 0){
@@ -1103,7 +1143,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamScoreByMatchId")
-	public JsonElement getTeamScoreByMatchId(Long matchId, Long teamId, String openid) {
+	public JsonElement getTeamScoreByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("teamId") Long teamId,
+											 @RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> teamScore = matchService.getTeamScoreByMatchId(matchId, teamId, openid);
 			return JsonWrapper.newDataInstance(teamScore);
@@ -1121,7 +1162,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyTeamListByKeepScore")
-	public JsonElement getMyTeamListByKeepScore(Long matchId, Long teamId, String openid) {
+	public JsonElement getMyTeamListByKeepScore(@RequestAttribute("matchId") Long matchId, @RequestAttribute("teamId") Long teamId,
+												@RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> myTeamList = matchService.getMyTeamListByKeepScore(matchId, teamId, openid);
 			return JsonWrapper.newDataInstance(myTeamList);
@@ -1146,7 +1188,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamTotalScoreByMatchId")
-	public JsonElement getTeamTotalScoreByMatchId(Long matchId, Integer childId, Integer mingci,String openid) {
+	public JsonElement getTeamTotalScoreByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("childId") Integer childId,
+												  @RequestAttribute("mingci") Integer mingci, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String, Object> result = matchService.getTeamTotalScoreByMatchId(matchId, childId, mingci,openid);
 			return JsonWrapper.newDataInstance(result);
@@ -1167,7 +1210,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getMyJoinTeamList")
-	public JsonElement getMyJoinTeamList(Long matchId, String openid) {
+	public JsonElement getMyJoinTeamList(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			List<TeamInfo> list = matchService.getMyJoinTeamList(matchId,openid);
 			return JsonWrapper.newDataInstance(list);
@@ -1185,7 +1228,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("applyMatch")
-	public JsonElement applyMatch(Long matchId, Long groupId, String groupName, String chooseTeamId, String openid) {
+	public JsonElement applyMatch(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId,
+								  @RequestAttribute("groupName") String groupName, @RequestAttribute("chooseTeamId") String chooseTeamId,
+								  @RequestAttribute("openid") String openid) {
 		try {
 			boolean flag = matchService.applyMatch(matchId, groupId, groupName, chooseTeamId, openid);
 			return JsonWrapper.newDataInstance(flag);
@@ -1203,7 +1248,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("quitMatch")
-	public JsonElement quitMatch(Long matchId, String openid) {
+	public JsonElement quitMatch(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
 		try {
 			matchService.quitMatch(matchId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -1221,7 +1266,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("saveUserApplyWaitGroup")
-	public JsonElement saveUserApplyWaitGroup(Long matchId, String chooseTeamId, String openid) {
+	public JsonElement saveUserApplyWaitGroup(@RequestAttribute("matchId") Long matchId, @RequestAttribute("chooseTeamId") String chooseTeamId,
+											  @RequestAttribute("openid") String openid) {
 		try {
 			matchService.saveUserApplyWaitGroup(matchId, chooseTeamId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -1239,7 +1285,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("updateGroupNotice")
-    public JsonElement updateGroupNotice(Long groupId, String groupNotice) {
+    public JsonElement updateGroupNotice(@RequestAttribute("groupId") Long groupId, @RequestAttribute("groupNotice") String groupNotice) {
         try {
             matchService.updateGroupNotice(groupId, groupNotice);
             return JsonWrapper.newSuccessInstance();
@@ -1257,7 +1303,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("updateGroupIsGuest")
-    public JsonElement updateGroupIsGuest(Long groupId, Integer groupIsGuest) {
+    public JsonElement updateGroupIsGuest(@RequestAttribute("groupId") Long groupId, @RequestAttribute("groupIsGuest") Integer groupIsGuest) {
         try {
             matchService.updateGroupIsGuest(groupId, groupIsGuest);
             return JsonWrapper.newSuccessInstance();
@@ -1278,7 +1324,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("createQRCode")
-	public JsonElement createQRCode(Long matchId, Long groupId, String openid, Integer type) {
+	public JsonElement createQRCode(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId,
+									@RequestAttribute("openid") String openid, @RequestAttribute("type") Integer type) {
 		try {
 			Map<String,Object> result = matchService.createQRCode(matchId, groupId, openid, type);
 			return JsonWrapper.newDataInstance(result);
@@ -1304,7 +1351,8 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("joinOtherPractice")
-	public JsonElement joinOtherPractice(Long matchId, Long groupId, String openid) {
+	public JsonElement joinOtherPractice(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId,
+										 @RequestAttribute("openid") String openid) {
 		try {
 			matchService.joinOtherPractice(matchId, groupId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -1325,9 +1373,10 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateMyScanQRCode")
-	public JsonElement updateMyScanQRCode(Long matchId, Long groupId, Integer type, String openid) {
+	public JsonElement updateMyScanQRCode(@RequestAttribute("matchId") Long matchId, @RequestAttribute("groupId") Long groupId,
+										  @RequestAttribute("type") Integer type, @RequestAttribute("openid") String openid) {
 		try {
-			matchService.updateMyScanQRCode(matchId, groupId, openid,type);
+			matchService.updateMyScanQRCode(matchId, groupId, openid, type);
 			return JsonWrapper.newSuccessInstance();
 		} catch (Exception e) {
 			String errmsg = "比赛——更新我的扫码记录时出错。matchId="+matchId+" groupId="+groupId+" openid="+openid+" type="+type;
@@ -1346,7 +1395,7 @@ public class MatchController {
      */
     @ResponseBody
     @RequestMapping("delWatchMatch_notuse")
-    public JsonElement delWatchMatch(Long matchId, String openid) {
+    public JsonElement delWatchMatch(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
         try {
             matchService.delWatchMatch(matchId, openid);
             return JsonWrapper.newSuccessInstance();
@@ -1365,7 +1414,7 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getAllMatchCaptainList")
-	public JsonElement getAllMatchCaptainList(Long matchId) {
+	public JsonElement getAllMatchCaptainList(@RequestAttribute("matchId") Long matchId) {
 		try {
 			List<Map<String, Object>> watchList = matchService.getAllMatchCaptainList(matchId);
 			return JsonWrapper.newDataInstance(watchList);
@@ -1385,7 +1434,9 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateMatchGroupStateByGroupId")
-	public JsonElement updateMatchGroupStateByGroupId(Long matchId, Long groupId, String openid) {
+	public JsonElement updateMatchGroupStateByGroupId(@RequestAttribute("matchId") Long matchId,
+													  @RequestAttribute("matchId") Long groupId,
+													  @RequestAttribute("matchId") String openid) {
 		try {
 			//组员提交成绩，结束比赛
 			//boolean meIsCap = matchService.getIsCaptain(matchId,openid);

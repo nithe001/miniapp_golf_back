@@ -44,7 +44,7 @@
 	<li id="nav_park"><a href="admin/park/list"><i class="fa fa-bookmark"></i> <span>球场管理</span></a></li>
     <li id="nav_match"><a href="admin/match/list"><i class="fa fa-bookmark"></i> <span>比赛管理</span></a></li>
     <li id="nav_team"><a href="admin/team/list"><i class="fa fa-bookmark"></i> <span>球队管理</span></a></li>
-    <li id="nav_import"><a href="admin/import/init"><i class="fa fa-bookmark"></i> <span>导入成绩</span></a></li>
+    <li id="nav_import"><a href="admin/importMember/init"><i class="fa fa-bookmark"></i> <span>导入成绩</span></a></li>
 	<li id="nav_export"><a href="admin/export/list"><i class="fa fa-bookmark"></i> <span>导出成绩</span></a></li>
     <li id="nav_export_team"><a href="admin/export/exportTeam"><i class="fa fa-bookmark"></i> <span>导出球队</span></a></li>
 </ul>

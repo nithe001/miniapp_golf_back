@@ -15,7 +15,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +47,7 @@ public class TeamManageController {
 	@Autowired
 	private UserService userService;
 
+
 	/**
 	 * 获取球队列表
 	 * @param page 分页
@@ -55,12 +58,13 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTeamList")
-	public JsonElement getTeamList(Integer page, Integer type, String keyword, String joinTeamIds, String openid) {
-		Integer nowPage = 1;
-		if (page > 0) {
-			nowPage = page;
-		}
-		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+	public JsonElement getTeamList(@RequestAttribute("page") Integer page,
+								   @RequestAttribute("type") Integer type,
+								   @RequestAttribute("keyword") String keyword,
+								   @RequestAttribute("joinTeamIds") String joinTeamIds,
+								   @RequestAttribute("openid") String openid) {
+		page = page != null && page > 0 ? page : 1;
+		POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , page);
 		try {
 			SearchBean searchBean = new SearchBean();
 			if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword) && !"null".equals(keyword)){
@@ -94,7 +98,10 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping("getJoinTeamList")
-	public JsonElement getJoinTeamList(Integer page, String keyword, String joinTeamIds, String openid) {
+	public JsonElement getJoinTeamList(@RequestAttribute("page") Integer page,
+									   @RequestAttribute("keyword") String keyword,
+									   @RequestAttribute("joinTeamIds") String joinTeamIds,
+									   @RequestAttribute("openid") String openid) {
 		Integer nowPage = 1;
 		if (page > 0) {
 			nowPage = page;
@@ -133,8 +140,12 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping("getReportTeamListByMatchId")
-	public JsonElement getReportTeamListByMatchId(Integer page, String keyword, String joinTeamIds,String checkedReportTeamIds,
-												  Integer type, String openid) {
+	public JsonElement getReportTeamListByMatchId(@RequestAttribute("page") Integer page,
+												  @RequestAttribute("keyword") String keyword,
+												  @RequestAttribute("joinTeamIds") String joinTeamIds,
+												  @RequestAttribute("checkedReportTeamIds") String checkedReportTeamIds,
+												  @RequestAttribute("type") Integer type,
+												  @RequestAttribute("openid") String openid) {
 		Integer nowPage = 1;
 		if (page > 0) {
 			nowPage = page;
@@ -168,12 +179,20 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveTeamInfo")
-	public JsonElement saveTeamInfo(String teamInfo, String logoPath, String signature, String digest, String openid) {
+	public JsonElement saveTeamInfo(@RequestAttribute("teamInfo") String teamInfo,
+									@RequestAttribute("logoPath") String logoPath,
+									@RequestAttribute("signature") String signature,
+									@RequestAttribute("digest") String digest,
+									@RequestAttribute("openid") String openid) {
 		try {
 			if(StringUtils.isNotEmpty(teamInfo)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(teamInfo);
 				TeamInfo teamInfoBean = (TeamInfo) net.sf.json.JSONObject.toBean(jsonObject, TeamInfo.class);
-				teamInfoBean.setTiLogo(logoPath);
+				if(StringUtils.isNotEmpty(logoPath) && logoPath.contains(PropertyConst.DOMAIN)){
+					teamInfoBean.setTiLogo(logoPath.substring(logoPath.indexOf("up")));
+				}else{
+					teamInfoBean.setTiLogo(logoPath);
+				}
 				teamInfoBean.setTiSignature(signature);
 				teamInfoBean.setTiDigest(digest);
 				teamService.saveOrUpdateTeamInfo(teamInfoBean, openid);
@@ -183,6 +202,15 @@ public class TeamManageController {
 			e.printStackTrace();
 			logger.error("创建球队时出错。" ,e);
 			return JsonWrapper.newErrorInstance("创建球队时出错");
+		}
+	}
+
+	public static void main(String[] args) {
+		String url = "http://dev1-nmy.kydev.net/up/teamLogo/1607653254787.png";
+		String d = "http://dev1-nmy.kydev.net";
+		if(url.contains(d)){
+			System.out.println(url.substring(d.length()+1));
+			System.out.println(url.substring(url.indexOf("up")));
 		}
 	}
 
@@ -247,7 +275,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "delTeamById")
-	public JsonElement delTeamById(Long teamId, String openid) {
+	public JsonElement delTeamById(@RequestAttribute("teamId") Long teamId, @RequestAttribute("openid") String openid) {
 		try {
 			boolean flag = false;
 			if(teamId != null){
@@ -271,7 +299,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamDetailById")
-	public JsonElement getTeamDetailById(Long teamId, String openid) {
+	public JsonElement getTeamDetailById(@RequestAttribute("teamId") Long teamId, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String, Object> result = teamService.getTeamInfoById(teamId, openid);
 			return JsonWrapper.newDataInstance(result);
@@ -296,7 +324,11 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getTeamPointByYear")
-	public JsonElement getTeamPointByYear(Integer type, Integer scoreType,String date, Long teamId, Integer changci) {
+	public JsonElement getTeamPointByYear(@RequestAttribute("type") Integer type,
+										  @RequestAttribute("scoreType") Integer scoreType,
+										  @RequestAttribute("date") String date,
+										  @RequestAttribute("teamId") Long teamId,
+										  @RequestAttribute("changci") Integer changci) {
 		try {
 			Map<String, Object> result = teamService.getTeamPointByYear(type, scoreType,date, teamId, changci);
 			return JsonWrapper.newDataInstance(result);
@@ -315,7 +347,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getUserListByTeamId")
-	public JsonElement getUserListByTeamId(Long teamId, Integer type) {
+	public JsonElement getUserListByTeamId(@RequestAttribute("teamId") Long teamId, @RequestAttribute("type") Integer type) {
 		try {
 			List<Map<String, Object>> result = teamService.getUserListByTeamId(teamId, type);
 			return JsonWrapper.newDataInstance(result);
@@ -335,7 +367,10 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateTeamUserByTeamId")
-	public JsonElement updateTeamUserByTeamId(Long teamId, String userIds, Integer type, String openid) {
+	public JsonElement updateTeamUserByTeamId(@RequestAttribute("teamId") Long teamId,
+											  @RequestAttribute("userIds") String userIds,
+											  @RequestAttribute("type") Integer type,
+											  @RequestAttribute("openid") String openid) {
 		try {
 			teamService.updateTeamUserByTeamId(teamId, userIds, type, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -353,7 +388,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getAllUserListByTeamId")
-	public JsonElement getAllUserListByTeamId(Long teamId) {
+	public JsonElement getAllUserListByTeamId(@RequestAttribute("teamId") Long teamId) {
 		try {
 			List<Map<String, Object>> result = teamService.getAllUserListByTeamId(teamId);
 			return JsonWrapper.newDataInstance(result);
@@ -372,7 +407,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "joinOrQuitTeamById")
-	public JsonElement joinOrQuitTeamById(Long teamId, Integer type, String openid) {
+	public JsonElement joinOrQuitTeamById(@RequestAttribute("teamId") Long teamId,
+										  @RequestAttribute("type") Integer type,
+										  @RequestAttribute("openid") String openid) {
 		try {
 			Long result=teamService.joinOrQuitTeamById(teamId, type, openid);
 			return JsonWrapper.newDataInstance(result);
@@ -391,7 +428,9 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "setTeamCaptainByUserId")
-	public JsonElement setTeamCaptainByUserId(Long teamId, Long userId, String openid) {
+	public JsonElement setTeamCaptainByUserId(@RequestAttribute("teamId") Long teamId,
+											  @RequestAttribute("userId") Long userId,
+											  @RequestAttribute("openid") String openid) {
 		try {
 			teamService.setTeamCaptainByUserId(teamId, userId, openid);
 			return JsonWrapper.newSuccessInstance();
@@ -409,7 +448,7 @@ public class TeamManageController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "getHasDetail")
-	public JsonElement getHasDetail(String openid) {
+	public JsonElement getHasDetail(@RequestAttribute("openid") String openid) {
 		try {
 			boolean flag = teamService.getHasDetail(openid);
 			return JsonWrapper.newDataInstance(flag);

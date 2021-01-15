@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -40,7 +41,8 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "saveOrUpdateWechatUserInfo")
-	public JsonElement saveOrUpdateWechatUserInfo(String openid, String userDataStr) {
+	public JsonElement saveOrUpdateWechatUserInfo(@RequestAttribute("openid") String openid,
+												  @RequestAttribute("userDataStr") String userDataStr) {
 		try {
 			if(StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(userDataStr)){
 				userService.saveOrUpdateWechatUserInfo(openid, userDataStr);
@@ -61,7 +63,9 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateUserLocation")
-	public JsonElement updateUserLocation(String latitude, String longitude, String openid) {
+	public JsonElement updateUserLocation(@RequestAttribute("latitude") String latitude,
+										  @RequestAttribute("longitude") String longitude,
+										  @RequestAttribute("openid") String openid) {
 		try {
 			if(StringUtils.isNotEmpty(latitude) && StringUtils.isNotEmpty(longitude) && StringUtils.isNotEmpty(openid)){
 				userService.updateUserLocation(latitude, longitude, openid);
@@ -80,7 +84,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfoByOpenId")
-	public JsonElement getUserInfoByOpenId(String openid) {
+	public JsonElement getUserInfoByOpenId(@RequestAttribute("openid") String openid) {
 		try {
 			UserModel userModel = userService.getUserModelByOpenid(openid);
 			return JsonWrapper.newDataInstance(userModel);
@@ -97,7 +101,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfo")
-	public JsonElement getUserInfo(String openid) {
+	public JsonElement getUserInfo(@RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = userService.getMyDetail(openid);
 			return JsonWrapper.newDataInstance(result);
@@ -114,7 +118,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getOthersUserInfo")
-	public JsonElement getOthersUserInfo(Long userId) {
+	public JsonElement getOthersUserInfo(@RequestAttribute("userId") Long userId) {
 		try {
 			Map<String,Object> result = userService.getOtherDetail(userId);
 			return JsonWrapper.newDataInstance(result);
@@ -133,7 +137,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateUserInfo")
-	public JsonElement updateUserInfo(String userInfo, String openid) {
+	public JsonElement updateUserInfo(@RequestAttribute("userInfo") String userInfo, @RequestAttribute("openid") String openid) {
 		try {
 			if(StringUtils.isNotEmpty(userInfo) && StringUtils.isNotEmpty(openid)){
 				net.sf.json.JSONObject jsonObject = net.sf.json.JSONObject.fromObject(userInfo);
@@ -156,7 +160,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateUserSignature")
-	public JsonElement updateUserSignature(String signature, String openid) {
+	public JsonElement updateUserSignature(@RequestAttribute("signature") String signature, @RequestAttribute("openid") String openid) {
 		try {
 			if(StringUtils.isNotEmpty(signature) && StringUtils.isNotEmpty(openid)){
 				userService.updateUserSignature(signature, openid);
@@ -177,7 +181,10 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getUserInfoById")
-	public JsonElement getUserInfoById(String teamId, String matchId, Long userId, String openid) {
+	public JsonElement getUserInfoById(@RequestAttribute("teamId") String teamId,
+									   @RequestAttribute("matchId") String matchId,
+									   @RequestAttribute("userId") Long userId,
+									   @RequestAttribute("openid") String openid) {
 		try {
 			Map<String, Object> result = userService.getUserDetaliInfoById(teamId,matchId,userId,openid);
 			return JsonWrapper.newDataInstance(result);
@@ -195,7 +202,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyHistoryScoreByUserId")
-	public JsonElement getMyHistoryScoreByUserId(String openid) {
+	public JsonElement getMyHistoryScoreByUserId(@RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = userService.getMyHistoryScoreByUserId(openid);
 			return JsonWrapper.newDataInstance(result);
@@ -216,7 +223,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getMyHistoryScoreByYear")
-	public JsonElement getMyHistoryScoreByYear(String date, String openid) {
+	public JsonElement getMyHistoryScoreByYear(@RequestAttribute("date") String date, @RequestAttribute("openid") String openid) {
 		try {
 			Map<String,Object> result = userService.getMyHistoryScoreByYear(date, openid);
 			return JsonWrapper.newDataInstance(result);
@@ -250,7 +257,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("getHasScoreByClaim")
-	public JsonElement getHasScoreByClaim(String openid) {
+	public JsonElement getHasScoreByClaim(@RequestAttribute("openid") String openid) {
 		try {
 			List<Map<String, Object>> result = userService.getHasScoreByClaim(openid);
 			return JsonWrapper.newDataInstance(result);
@@ -267,7 +274,7 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("updateClaimUserScore")
-	public JsonElement updateClaimUserScore(String openid,String chooseIds) {
+	public JsonElement updateClaimUserScore(@RequestAttribute("openid") String openid, @RequestAttribute("chooseIds") String chooseIds) {
 		try {
 			userService.updateClaimUserScore(openid,chooseIds);
 			return JsonWrapper.newSuccessInstance();
@@ -284,7 +291,10 @@ public class UserController {
 	 */
 	@ResponseBody
 	@RequestMapping("claimUserScore")
-	public JsonElement claimUserScore(String openid,String importUserId,String importUserRealName,String matchId) {
+	public JsonElement claimUserScore(@RequestAttribute("openid") String openid,
+									  @RequestAttribute("importUserId") String importUserId,
+									  @RequestAttribute("importUserRealName") String importUserRealName,
+									  @RequestAttribute("matchId") String matchId) {
 		try {
 			String result = userService.claimUserScore(openid,importUserId,importUserRealName,matchId);
 			return JsonWrapper.newDataInstance(result);

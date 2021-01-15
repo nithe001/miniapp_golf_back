@@ -13,7 +13,7 @@
 	<!-- 扫描 Controller -->
 	<context:component-scan use-default-filters="false"
 		name-generator="com.golf.common.spring.mvc.ControllerBeanNameGenerator"
-		base-package="com.golf.golf.web,com.golf.cm.web">
+		base-package="com.golf.golf.web">
 		<context:include-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
@@ -111,12 +111,17 @@
             <bean class="com.golf.golf.common.security.AdminLoginInterceptor"/>
         </mvc:interceptor>
 
-        <!--<mvc:interceptor>-->
-            <!--<mvc:mapping path="/teamManage/**" />-->
-            <!--<mvc:mapping path="/matchManage/**" />-->
-            <!--&lt;!&ndash;<mvc:mapping path="/user/updateWui" />&ndash;&gt;-->
-            <!--<bean class="com.golf.golf.common.security.UserInfoInterceptor"/>-->
-        <!--</mvc:interceptor>-->
+		<!--服务拦截器-->
+		<mvc:interceptor>
+			<mvc:mapping path="/onLogin" />
+			<mvc:mapping path="/user/**" />
+			<mvc:mapping path="/match/**" />
+			<mvc:mapping path="/teamManage/**" />
+			<mvc:exclude-mapping path="/match/uploadMatchLogo" />
+			<mvc:exclude-mapping path="/teamManage/uploadTeamLogo" />
+			<mvc:exclude-mapping path="/upload/**" />
+			<bean class="com.golf.golf.common.security.WechatMiniInterceptor"/>
+		</mvc:interceptor>
 	</mvc:interceptors>
 
 </beans>

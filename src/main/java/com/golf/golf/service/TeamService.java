@@ -226,7 +226,7 @@ public class TeamService implements IBaseService {
 
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-            if (scoreType ==0) { //计算球员积分
+            if (scoreType == null || scoreType ==0) { //计算球员积分
                 List<TeamUserPointBean> list = new ArrayList<>();
                 //获取本球队所有的球友
                 List<TeamUserMapping> userList = teamDao.getTeamUserList(parp);

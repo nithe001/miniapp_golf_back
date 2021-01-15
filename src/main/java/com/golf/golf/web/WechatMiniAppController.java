@@ -2,7 +2,9 @@ package com.golf.golf.web;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
+import com.alibaba.fastjson.JSON;
 import com.golf.common.gson.JsonWrapper;
+import com.golf.common.util.AesUtil;
 import com.golf.golf.common.GenericController;
 import com.golf.golf.common.security.UserModel;
 import com.golf.golf.common.security.WechatUserUtil;
@@ -15,6 +17,7 @@ import me.chanjar.weixin.mp.api.WxMpService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -49,50 +52,25 @@ public class WechatMiniAppController extends GenericController {
      */
 	@ResponseBody
     @RequestMapping(value = "onLogin")
-    public JsonElement wechatCore(String code){
-        String errMsg = "";
+    public JsonElement wechatCore(@RequestAttribute("code") String code){
 		try{
-        	if(StringUtils.isNotEmpty(code)){
-				WxMaJscode2SessionResult jsCode2SessionInfo = this.wxMaService.jsCode2SessionInfo(code);
-				String sessionkey = jsCode2SessionInfo.getSessionKey();
-				String openid = jsCode2SessionInfo.getOpenid();
-				if (StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(sessionkey)) {
-					// 成功 自定义生成3rd_session与openid&session_key绑定并返回3rd_session
-					/*String loginSessionKey = RandomUtil.generateIntString(128);
-					HttpSession session = WebUtil.getOrCreateSession();
-					if (session.getAttribute(loginSessionKey) != null) {
-						session.removeAttribute(loginSessionKey);
-					}
-					//通过openid获取用户信息
-					UserModel userModel = new UserModel();
-					WechatUserInfo wechatUserInfo = userService.getWechatUserByOpenid(openid);
-					if(wechatUserInfo != null){
-						userModel.setWechatUser(wechatUserInfo);
-						if(wechatUserInfo.getWuiUId() != null){
-							UserInfo userInfo = userService.getUserById(wechatUserInfo.getWuiUId());
-							userModel.setUser(userInfo);
-						}
-						session.setAttribute(WechatUserUtil.USER_SESSION_NAME, userModel);
-					}
-
-					//以3rd_session为key,session_key+openid为value写入session存储
-					session.setAttribute(loginSessionKey, sessionkey+","+openid);*/
-					//回传loginSessionKey
-					Map<String, Object> result = new HashMap<String, Object>();
-					result.put("openid",openid);
-//					result.put("loginSessionKey",loginSessionKey);
-//					result.put("sessionId",session.getId());
-					return JsonWrapper.newDataInstance(result);
-				}
-			}else{
-				// 错误 未获取到用户凭证code
-				logger.error("用户凭证code为空。code="+code);
+			WxMaJscode2SessionResult jsCode2SessionInfo = this.wxMaService.jsCode2SessionInfo(code);
+			String sessionkey = jsCode2SessionInfo.getSessionKey();
+			String openid = jsCode2SessionInfo.getOpenid();
+			if (StringUtils.isNotEmpty(openid) && StringUtils.isNotEmpty(sessionkey)) {
+				Map<String, Object> result = new HashMap<>();
+				result.put("openid",openid);
+				//对返回数据进行AES加密
+				String jsonString = JSON.toJSONString(result);
+				jsonString = AesUtil.encrypt(jsonString, AesUtil.key);
+				logger.info("=== 用户登录 end 将openid={}加密并返回给小程序，加密结果：{} ============", openid, jsonString);
+				return JsonWrapper.newDataInstance(jsonString);
 			}
         }catch (Exception e) {
         	e.printStackTrace();
             logger.error("响应微信请求失败。code="+code, e);
         }
-		return JsonWrapper.newErrorInstance("获取用户openid失败-"+errMsg);
+		return JsonWrapper.newErrorInstance("获取用户openid失败");
     }
 
 	/**
@@ -101,7 +79,9 @@ public class WechatMiniAppController extends GenericController {
 	 */
 	@ResponseBody
 	@RequestMapping(value = "updateWui", method = RequestMethod.POST)
-	public JsonElement updateWui(String sessionId, String encryptedData, String iv){
+	public JsonElement updateWui(@RequestAttribute("sessionId") String sessionId,
+								 @RequestAttribute("encryptedData") String encryptedData,
+								 @RequestAttribute("iv") String iv){
 		try{
 			if(StringUtils.isNotEmpty(sessionId)){
 				String openId = WechatUserUtil.getOpenIdBySessionId(sessionId);

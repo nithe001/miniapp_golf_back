@@ -19,8 +19,8 @@ import com.golf.golf.service.admin.AdminImportService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.chanjar.weixin.common.error.WxErrorException;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -1113,13 +1113,13 @@ public class MatchService implements IBaseService {
 	 * @param checkIds:选中的id（mappingid或者用户id）
 	 * @return
 	 */
-	public void updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, String checkIds, String openid){
+	public void updateGroupUserByMatchIdGroupId(Long matchId, Long groupId, JSONArray checkIds, String openid){
 		UserInfo captainUserInfo = userService.getUserInfoByOpenId(openid);
         MatchGroup matchGroup = matchDao.get(MatchGroup.class,groupId);
-	    JSONArray checkIdsArray = JSONArray.fromObject(checkIds);
-        if(checkIdsArray != null && checkIdsArray.size() > 0){
-            for(int i=0;i<checkIdsArray.size();i++){
-                JSONObject jsonObject = (JSONObject)checkIdsArray.get(i);
+//	    JSONArray checkIdsArray = JSONArray.fromObject(checkIds);
+        if(checkIds != null && checkIds.size() > 0){
+            for(int i=0;i<checkIds.size();i++){
+                JSONObject jsonObject = (JSONObject)checkIds.get(i);
                 Long userId = null;
                 Long teamId = null;
                 if(jsonObject.get("userId") != null){
@@ -1354,7 +1354,7 @@ public class MatchService implements IBaseService {
 	 * 不给上报球队单独记分,所有球队公用一套记分 nhq)
 	 * @return
 	 */
-	public void saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long holeId,
+	synchronized public void saveOrUpdateScore(Long userId, Long matchId, Long groupId, Long holeId,
                                   String isUp, Integer rod, String rodCha,
 								  Integer pushRod, Integer beforeAfter, String openid, String userIds) {
         UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
@@ -3660,6 +3660,9 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 	}
 
 	public static void main(String[] args) throws UnsupportedEncodingException {
+//		[{"q_no":1,"has":"是","keep":"症状来了又走了"},{"q_no":2,"has":"否"},{"q_no":3,"has":"是","keep":"症状大部分时间都持续在那里"}]
+
+
 		String inputStr="8J+NlPCfjZ/wn42V";
 		String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
 		Boolean isLegal = inputStr.matches(base64Pattern);
