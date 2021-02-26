@@ -13,6 +13,14 @@ public class HoleMatchScoreResultBean {
     private Integer rodNum1;
     //两球或者四球比杆第二队的最好杆数
     private Integer rodNum2;
+    //是否开球洞
+    private Integer isStartHole;
+    //半场
+    private Integer beforeAfter;
+    //球洞名称
+    private String holeName;
+    //球洞序号
+    private Integer holeNum;
 
 	public Integer getNum() {
 		return num;
@@ -45,4 +53,36 @@ public class HoleMatchScoreResultBean {
 	public void setUpDnAs(String upDnAs) {
 		this.upDnAs = upDnAs;
 	}
+
+    public Integer getIsStartHole() {
+        return isStartHole;
+    }
+
+    public void setIsStartHole(Integer isStartHole) {
+        this.isStartHole = isStartHole;
+    }
+
+    public Integer getBeforeAfter() {
+        return beforeAfter;
+    }
+
+    public void setBeforeAfter(Integer beforeAfter) {
+        this.beforeAfter = beforeAfter;
+    }
+
+    public String getHoleName() {
+        return holeName;
+    }
+
+    public void setHoleName(String holeName) {
+        this.holeName = holeName;
+    }
+
+    public Integer getHoleNum() {
+        return holeNum;
+    }
+
+    public void setHoleNum(Integer holeNum) {
+        this.holeNum = holeNum;
+    }
 }

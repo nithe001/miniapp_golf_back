@@ -3,6 +3,7 @@ package com.golf.golf.dao;
 import com.golf.common.db.CommonDao;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchScoreNetHole;
+import com.golf.golf.db.MatchScoreStartHole;
 import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
@@ -77,5 +78,29 @@ public class MatchScoreDao extends CommonDao {
 			return obj.get(0) != null ? Long.parseLong(obj.get(0).toString()):0L;
 		}
 		return 0L;
+	}
+
+	/**
+	 * 查询是否有本组得分-为了设置开球洞
+	 */
+	public Long getStartHoleCountByGroupId(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select count(*) from MatchScoreStartHole as s ");
+		sql.append(" where s.shMatchId = "+matchId+" and s.shGroupId = "+groupId );
+		return dao.createCountQuery(sql.toString());
+	}
+
+	/**
+	 * 获取本组开球球洞
+	 */
+	public MatchScoreStartHole getStartHole(Long matchId, Long groupId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("from MatchScoreStartHole as s ");
+		sql.append("where s.shMatchId = "+matchId+" and s.shGroupId = "+groupId );
+		List<MatchScoreStartHole> list = dao.createQuery(sql.toString());
+		if(list != null && list.size()>0){
+			return list.get(0);
+		}
+		return null;
 	}
 }

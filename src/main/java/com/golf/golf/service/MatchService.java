@@ -11,6 +11,7 @@ import com.golf.common.util.PropertyConst;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.bean.*;
 import com.golf.golf.dao.MatchDao;
+import com.golf.golf.dao.MatchScoreDao;
 import com.golf.golf.dao.TeamDao;
 import com.golf.golf.dao.UserDao;
 import com.golf.golf.db.*;
@@ -42,6 +43,8 @@ public class MatchService implements IBaseService {
 
 	@Autowired
 	private MatchDao matchDao;
+	@Autowired
+	private MatchScoreDao matchScoreDao;
 	@Autowired
 	private TeamDao teamDao;
     @Autowired
@@ -1583,6 +1586,19 @@ public class MatchService implements IBaseService {
                                  Long userId, String userName, UserInfo myUserInfo,
                                  ParkPartition parkPartition,
                                  Integer beforeAfter, String isUp, Integer rod, String rodCha, Integer pushRod) {
+    	//查询是否有本组得分-为了设置开球洞
+    	Long count = matchScoreDao.getStartHoleCountByGroupId(matchInfo.getMiId(), groupId);
+		if(count == 0){
+			//设置本组开球球洞
+			MatchScoreStartHole scoreStartHole = new MatchScoreStartHole();
+			scoreStartHole.setShMatchId(matchInfo.getMiId());
+			scoreStartHole.setShGroupId(groupId);
+			scoreStartHole.setShBeforeAfter(beforeAfter);
+			scoreStartHole.setShHoleName(parkPartition.getppName());
+			scoreStartHole.setShHoleNum(parkPartition.getPpHoleNum());
+			scoreStartHole.setShCreateTime(System.currentTimeMillis());
+			matchScoreDao.save(scoreStartHole);
+		}
         MatchScore score = new MatchScore();
         //type=0 比赛球队记分
         score.setMsType(0);
@@ -3758,5 +3774,13 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 		group.setMgIsEnd(2);
 		matchDao.update(group);
 		*/
+	}
+
+
+	/**
+	 * 获取本组开球球洞
+	 */
+	public MatchScoreStartHole getStartHole(Long matchId, Long groupId) {
+		return matchScoreDao.getStartHole(matchId,groupId);
 	}
 }

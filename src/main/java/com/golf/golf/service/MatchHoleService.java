@@ -5,6 +5,7 @@ import com.golf.golf.bean.HoleMatchScoreResultBean;
 import com.golf.golf.dao.MatchDao;
 import com.golf.golf.db.MatchHoleResult;
 import com.golf.golf.db.MatchInfo;
+import com.golf.golf.db.MatchScoreStartHole;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.enums.MatchResultEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 比洞赛 记分卡 service
@@ -114,11 +116,12 @@ public class MatchHoleService implements IBaseService {
 		//获取每个用户得分，并计算成绩
 		List<HoleMatchScoreResultBean> chengjiList = new ArrayList<>();
 		HoleMatchScoreResultBean endTrChengji = new HoleMatchScoreResultBean();
+		Map<String, Object> mapResult = null;
 		if (userList != null && userList.size() > 0) {
-			getChengjiList(chengjiList,endTrChengji,userList0,userList1,groupId,matchInfo,result);
+            mapResult = getChengjiList(chengjiList,endTrChengji,userList0,userList1,groupId,matchInfo,result);
 		}
 		//成绩行
-		result.put("chengjiList", chengjiList);
+		result.put("chengjiList", mapResult.get("chengjiList"));
 
 		//固定的尾列：总标准杆数
 		Long totalStandardRod = matchDao.getTotalRod(matchInfo);
@@ -130,11 +133,10 @@ public class MatchHoleService implements IBaseService {
 
 		return result;
 	}
-   /** 把同组每个用户的比洞赛逐洞比分以及双方比洞赛的成绩结果放到result中
-
+   /**
+    * 把同组每个用户的比洞赛逐洞比分以及双方比洞赛的成绩结果放到result中
     */
-
-    public void getChengjiList(List<HoleMatchScoreResultBean> chengjiList,HoleMatchScoreResultBean endTrChengji,
+    public Map<String, Object> getChengjiList(List<HoleMatchScoreResultBean> chengjiList,HoleMatchScoreResultBean endTrChengji,
                                List<Map<String, Object>> userList0,List<Map<String, Object>> userList1,Long groupId, MatchInfo matchInfo, Map<String, Object> result) {
        // if (userList0 != null && userList0.size() > 0 && userList1 != null && userList1.size() > 0 ) {
             //第一对儿用户 得分
@@ -146,10 +148,12 @@ public class MatchHoleService implements IBaseService {
                 uscoreList00.get(i).put("userId",userId0);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
             }
             List<Map<String, Object>> uscoreList0 = new ArrayList<Map<String,Object>>();
+            List<Map<String, Object>> uscoreList1 = new ArrayList<Map<String, Object>>();
             result.put("uscoreList00", uscoreList00);
             String userName01 = null;
-        if(userList0.size() ==1 ){ uscoreList0 = uscoreList00;}
-            else{
+            if(userList0.size() ==1 ){
+                uscoreList0.addAll(uscoreList00);
+            }else{
                 userId0 = matchService.getLongValue(userList0.get(1), "uiId");
                 userName01 = matchService.getName(userList0.get(1), "uiRealName");
                 teamId0 = matchService.getLongValue(userList0.get(1),"team_id");
@@ -179,8 +183,11 @@ public class MatchHoleService implements IBaseService {
                     Integer holeNum0 = matchService.getIntegerValue(uscoreList00.get(i),"pp_hole_num");
                     //球洞名称
                     String holeName0 = matchService.getName(uscoreList00.get(i),"pp_name");
+                    //前后场
+                    String beforeAfter0 = matchService.getName(uscoreList00.get(i),"before_after");
                     map.put("pp_hole_num", holeNum0);
                     map.put("pp_name",holeName0);
+                    map.put("pp_before_after",beforeAfter0);
                     uscoreList0.add(map);
                     }
 
@@ -191,14 +198,13 @@ public class MatchHoleService implements IBaseService {
                 String userName10 = matchService.getName(userList1.get(0), "uiRealName");
                 Long teamId1 = matchService.getLongValue(userList1.get(0), "team_id");
                 List<Map<String, Object>> uscoreList10 = matchDao.getScoreByUserId(groupId, userId1, matchInfo, teamId1);
-                List<Map<String, Object>> uscoreList1 = new ArrayList<Map<String, Object>>();
                 for (int i = 0; i < 18; i++) {
                     uscoreList10.get(i).put("userId", userId1);//由于新记分卡在matchscore中没记录，查不到用户userId，在这里放进去
                 }
                 result.put("uscoreList10", uscoreList10);
                 String userName11 = null;
                 if (userList1.size() == 1) {
-                    uscoreList1 = uscoreList10;
+                    uscoreList1.addAll(uscoreList10);
                 } else {
                     userId1 = matchService.getLongValue(userList1.get(1), "uiId");
                     userName11 = matchService.getName(userList1.get(1), "uiRealName");
@@ -229,15 +235,44 @@ public class MatchHoleService implements IBaseService {
                         Integer holeNum1 = matchService.getIntegerValue(uscoreList10.get(i), "pp_hole_num");
                         //球洞名称
                         String holeName1 = matchService.getName(uscoreList10.get(i), "pp_name");
+                        //前后场
+                        String beforeAfter1 = matchService.getName(uscoreList10.get(i),"before_after");
                         map.put("pp_hole_num", holeNum1);
                         map.put("pp_name", holeName1);
+                        map.put("pp_before_after", beforeAfter1);
                         uscoreList1.add(map);
                     }
                 }
 
+                //开球球洞
+                MatchScoreStartHole scoreStartHole = matchService.getStartHole(matchInfo.getMiId(), groupId);
                 //最终成绩
                 Integer score = 0; //成绩
                 Integer holeLeft = 18; //剩余洞数
+                //从开球的洞开始算
+                int startIndex = 0;
+                if(scoreStartHole != null){
+                    if(scoreStartHole.getShBeforeAfter() == 0){
+                        //前9洞
+                        startIndex = scoreStartHole.getShHoleNum()-1;
+                    }else{
+                        //后9洞
+                        startIndex = 9 + scoreStartHole.getShHoleNum()-1;
+                    }
+                }
+                //截取列表 重新组合
+                List<Map<String, Object>> uscoreList0end = new ArrayList<>(uscoreList0.subList(0,startIndex));
+                List<Map<String, Object>> uscoreList0start = new ArrayList<>(uscoreList0.subList(startIndex,uscoreList0.size()));
+                uscoreList0start.addAll(uscoreList0end);
+                uscoreList0.clear();
+                uscoreList0.addAll(uscoreList0start);
+
+                //截取列表 重新组合
+                List<Map<String, Object>> uscoreList1end = new ArrayList<>(uscoreList1.subList(0,startIndex));
+                List<Map<String, Object>> uscoreList1start = new ArrayList<>(uscoreList1.subList(startIndex,uscoreList1.size()));
+                uscoreList1start.addAll(uscoreList1end);
+                uscoreList1.clear();
+                uscoreList1.addAll(uscoreList1start);
                 for (Map<String, Object> map0 : uscoreList0) {
                     //第一对儿用户 杆数
                     Integer rodNum0 = matchService.getIntegerValueWithNull(map0, "rod_num");
@@ -245,6 +280,12 @@ public class MatchHoleService implements IBaseService {
                     Integer holeNum0 = matchService.getIntegerValue(map0, "pp_hole_num");
                     //球洞名称
                     String holeName0 = matchService.getName(map0, "pp_name");
+                    //前后场
+                    Integer beforeAfter0 = matchService.getIntegerValue(map0, "before_after");
+                    HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
+                    bean.setBeforeAfter(beforeAfter0);
+                    bean.setHoleName(holeName0);
+                    bean.setHoleNum(holeNum0);
                     for (Map<String, Object> map1 : uscoreList1) {
                         //第二对儿用户 杆数
                         Integer rodNum1 = matchService.getIntegerValueWithNull(map1, "rod_num");
@@ -252,9 +293,18 @@ public class MatchHoleService implements IBaseService {
                         Integer holeNum1 = matchService.getIntegerValue(map1, "pp_hole_num");
                         //球洞名称
                         String holeName1 = matchService.getName(map1, "pp_name");
-                        if (holeNum0.equals(holeNum1) && holeName0.equals(holeName1)) {
-                            HoleMatchScoreResultBean bean = new HoleMatchScoreResultBean();
+                        //前后场
+                        Integer beforeAfter1 = matchService.getIntegerValue(map1, "before_after");
+                        if (holeNum0.equals(holeNum1) && holeName0.equals(holeName1) && beforeAfter0.equals(beforeAfter1)) {
                             if (rodNum0 != null && rodNum1 != null) {
+                                //设置开球球洞的颜色
+                                if(scoreStartHole != null && holeNum0.equals(scoreStartHole.getShHoleNum())
+                                        && holeName0.equals(scoreStartHole.getShHoleName())
+                                        && beforeAfter0.equals(scoreStartHole.getShBeforeAfter())){
+                                    bean.setIsStartHole(1);
+                                }else if(scoreStartHole == null){
+//                                bean.setIsStartHole(1);
+                                }
                                 holeLeft -=1;
 //                你设一个“得分”变量，初始值为0，
 //                A1洞，双方平，则得分=等分+0，
@@ -343,7 +393,71 @@ public class MatchHoleService implements IBaseService {
                     }
                 }
             }
+            //用户0 重新排序  场次-球洞号
+            /*uscoreList0 = uscoreList0.stream()
+                        .sorted(Comparator.comparing(MatchHoleService::comparingByBeforeAfter)
+                                .thenComparing(MatchHoleService::comparingByHoleName)
+                                .thenComparing(MatchHoleService::comparingByHoleNum)
+                        ).collect(Collectors.toList());
+            //用户1 重新排序  场次-球洞号
+            uscoreList1 = uscoreList1.stream()
+                    .sorted(Comparator.comparing(MatchHoleService::comparingByBeforeAfter)
+                            .thenComparing(MatchHoleService::comparingByHoleName)
+                            .thenComparing(MatchHoleService::comparingByHoleNum)
+                    ).collect(Collectors.toList());*/
+            if(chengjiList != null && chengjiList.size() > 0){
+                //成绩 重新排序  场次-球洞号
+                chengjiList = chengjiList.stream()
+                        .sorted(Comparator.comparing(HoleMatchScoreResultBean::getBeforeAfter)
+                                .thenComparing(HoleMatchScoreResultBean::getHoleName)
+                                .thenComparing(HoleMatchScoreResultBean::getHoleNum)
+                         ).collect(Collectors.toList());
+            }
+            result.put("uscoreList0", uscoreList0);
+            result.put("uscoreList1", uscoreList1);
+            result.put("chengjiList", chengjiList);
+            return result;
        // }
+    }
+
+    private static Integer comparingByBeforeAfter(Map<String, Object> map){
+        return ((Integer) map.get("before_after"));
+    }
+
+    private static String comparingByHoleName(Map<String, Object> map){
+        return (String) map.get("pp_name");
+    }
+
+    private static Integer comparingByHoleNum(Map<String, Object> map){
+        return (Integer) map.get("pp_hole_num");
+    }
+
+
+    public static void main(String[] args) {
+        List<HoleMatchScoreResultBean> chengjiList = new ArrayList<>();
+        HoleMatchScoreResultBean bean1 = new HoleMatchScoreResultBean();
+        bean1.setBeforeAfter(1);
+        bean1.setHoleNum(1);
+        HoleMatchScoreResultBean bean2 = new HoleMatchScoreResultBean();
+        bean2.setBeforeAfter(0);
+        bean2.setHoleNum(5);
+        HoleMatchScoreResultBean bean3 = new HoleMatchScoreResultBean();
+        bean3.setHoleNum(3);
+        chengjiList.add(bean1);
+        chengjiList.add(bean2);
+        chengjiList.add(bean3);
+        List<HoleMatchScoreResultBean> chengjiList1 = new ArrayList<>(chengjiList.subList(0,1));
+        List<HoleMatchScoreResultBean> chengjiList2 = new ArrayList<>(chengjiList.subList(1,chengjiList.size()));
+        chengjiList1.addAll(chengjiList2);
+        System.out.println(chengjiList1);
+
+
+        /*List<HoleMatchScoreResultBean> list = chengjiList.stream()
+                .sorted(Comparator.comparing(HoleMatchScoreResultBean::getBeforeAfter)
+                        .thenComparing(HoleMatchScoreResultBean::getHoleNum)).collect(Collectors.toList());
+        chengjiList.forEach(r -> System.out.println(r.getHoleNum()));
+        System.out.println("===================================");
+        list.forEach(r -> System.out.println(r.getHoleNum()));*/
     }
 
 
