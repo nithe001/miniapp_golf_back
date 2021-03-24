@@ -163,7 +163,7 @@ public class MatchService implements IBaseService {
                 int matchday = cTime2.get(Calendar.DAY_OF_YEAR);
 
                 Integer matchIsEnd = getIntegerValue(result, "mi_is_end");
-                if ((today-matchday)>4 && matchIsEnd ==1 ){
+                if ((today-matchday)>9 && matchIsEnd ==1 ){
                     matchIsEnd = 2;
                    matchDao.updateMatchIsEnd( matchInfo.getMiId());
                 }
@@ -1791,11 +1791,8 @@ public class MatchService implements IBaseService {
 	/**
 	 * 开始比赛
 	 * state   0：报名中  1进行中  2结束
-	 * 1、如果是多队双人比赛，不管比杆比洞，每组，每个队不超过两人，也可以是一人，每组最多两个队。生成记分卡时，只有一个队的两个人才能放入一行。
-	 * 2、对于单人比洞，每组只能两个人，如果又是队式的，则一组的两个人要是两个队的
-	 * 3、单人比杆赛分组不用有任何限制。
-	 * 4、一个队队内，及多个队之间没法进行比洞赛
-	 * 比洞赛的输赢组已经在获取比洞赛记分卡的时候进行了更新
+	 *  更改比赛状态时，如果把比赛从结束改为比赛中为了改成绩，也要改变每组的状态，这个没有实现，因为现在不允许按组结束比赛了。nhq20210319
+     * * 比洞赛的输赢组已经在获取比洞赛记分卡的时候进行了更新
 	 * @return
 	 */
 	public String updateMatchState(Long matchId, Integer state, String openid) {
