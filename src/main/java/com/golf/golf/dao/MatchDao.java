@@ -775,9 +775,9 @@ public class MatchDao extends CommonDao {
                 " u.ui_real_name AS uiRealName," +
                 " u.ui_headimg AS uiHeadimg,score.* from (" );
         //sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id," +
-        sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id,m.mugm_group_name AS groupName, " +
+        sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id,m.mugm_group_name AS groupName,m.mugm_match_id AS match_id, " +
                 "(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha, COUNT(s.ms_id) AS holeCount ");
-       // sql.append(",sum(s.ms_is_eagle) AS eagle,sum( s.ms_is_bird ) AS bird,sum( s.ms_is_par ) AS par ");
+       sql.append(",sum(s.ms_is_eagle) AS eagle,sum( s.ms_is_bird ) AS bird,sum( s.ms_is_par ) AS par ");
         if (matchType == 2) {
             sql.append("FROM match_user_group_mapping as m LEFT JOIN match_father_score AS s " +
                     //"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_team_id=s.ms_team_id and s.ms_type = 0) ");
@@ -796,12 +796,12 @@ public class MatchDao extends CommonDao {
             sql.append(" and m.mugm_team_id = :teamId  ");
         }
         sql.append(" and m.mugm_is_del != 1 ");
-        sql.append(" GROUP BY m.mugm_user_id " );
+        sql.append(" GROUP BY m.mugm_user_id,m.mugm_match_id " );
         sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
         sql.append(" )score1 LEFT JOIN team_info AS t ON score1.team_id = t.ti_id ");
         //sql.append("ORDER BY score1.sumRodNum !=0 and  score1.sumRodNum > 67 desc,score1.sumRodNum ");
-        sql.append("ORDER BY score1.holeCount desc, score1.sumRodNum !=0  desc,score1.sumRodNum ");
-        //sql.append(" score1.eagle desc,score1.bird desc,score1.par desc");
+        sql.append("ORDER BY score1.holeCount desc, score1.sumRodNum !=0  desc,score1.sumRodNum,  score1.eagle desc, score1.bird desc, score1.par desc ");
+
         return dao.createSQLQuery(sql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
@@ -1149,17 +1149,18 @@ public class MatchDao extends CommonDao {
 	 * 获取用户前后半场的得分情况
 	 * type:区分前后半场
 	 */
-	public List<Map<String, Object>> getBeforeAfterScoreByUserId(Long uiId, MatchInfo matchInfo,List<Long> childMatchIds,Integer type,Long teamId) {
-        Integer  matchType =matchInfo.getMiType();
-	    Map<String, Object> parp = new HashMap<>();
-		parp.put("matchId", matchInfo.getMiId());
-        parp.put("childMatchIds", childMatchIds);
+	public List<Map<String, Object>> getBeforeAfterScoreByUserId(Long uiId, Long matchId,Integer matchType,Integer type,Long teamId) {
+        MatchInfo matchInfo =get(MatchInfo.class, matchId);
+        Map<String, Object> parp = new HashMap<>();
+		parp.put("matchId", matchId);
+       if (type == 0) {
+            parp.put("holeName", matchInfo.getMiZoneBeforeNine());
+        } else {
+            parp.put("holeName", matchInfo.getMiZoneAfterNine());
+        }
+        parp.put("parkId", matchInfo.getMiParkId());
 
-		if(type == 0){
-			parp.put("holeName", matchInfo.getMiZoneBeforeNine());
-		}else{
-			parp.put("holeName", matchInfo.getMiZoneAfterNine());
-		}
+
 		parp.put("userId", uiId);
 		parp.put("parkId", matchInfo.getMiParkId());
 		parp.put("type", type);
@@ -1187,11 +1188,7 @@ public class MatchDao extends CommonDao {
 		}
 		sql.append(" and s.ms_user_id = :userId  ");
 		sql.append(" and s.ms_type = 0 ");
-        if (matchType ==2) {
-            sql.append(" and s.ms_match_id IN ( :childMatchIds) ");
-        } else {
-            sql.append(" and s.ms_match_id = :matchId ");
-        }
+        sql.append(" and s.ms_match_id = :matchId ");
         sql.append(" and s.ms_before_after = :type  ");
 		sql.append(" ) ");
 		sql.append(" where p.pp_name = :holeName and p.pp_p_id = :parkId  ");

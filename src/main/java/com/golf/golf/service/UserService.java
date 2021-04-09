@@ -460,25 +460,28 @@ public class UserService implements IBaseService {
 	 * @return
 	 */
 	private void createNewUserScoreList(Long userId, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
-        List<Long> childMatchIds = matchService.getLongIdListReplace(matchInfo.getMiChildMatchIds());
-	   	MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
-		//这场比赛我的代表球队
-		MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfo.getMiId(), null, userId);
-		bean.setUserId(userId);
-		//本用户的前后半场总得分情况
-		List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
-		//本用户前半场得分情况
-		List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,0,matchUserGroupMapping.getMugmTeamId());
-		createNewUserScore(userScoreList, uScoreBeforeList);
-		Integer beforeTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
-		//本用户后半场得分情况
-		List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,1,matchUserGroupMapping.getMugmTeamId());
-		createNewUserScore(userScoreList, uScoreAfterList);
-        Integer afterTotalScore = userScoreList.get(userScoreList.size()-1).getRodNum();
+        Integer matchType = matchInfo.getMiType();
+        //个人不展示关联比赛的数据
+        if ( matchType!=2) {
+            MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+            //这场比赛我的代表球队
+            MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchInfo.getMiId(), null, userId);
+            bean.setUserId(userId);
+            //本用户的前后半场总得分情况
+            List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
+            //本用户前半场得分情况
+            List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), matchType,0, matchUserGroupMapping.getMugmTeamId());
+            createNewUserScore(userScoreList, uScoreBeforeList);
+            Integer beforeTotalScore = userScoreList.get(userScoreList.size() - 1).getRodNum();
+            //本用户后半场得分情况
+            List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), matchType,1, matchUserGroupMapping.getMugmTeamId());
+            createNewUserScore(userScoreList, uScoreAfterList);
+            Integer afterTotalScore = userScoreList.get(userScoreList.size() - 1).getRodNum();
 
-		bean.setUserScoreTotalList(userScoreList);
-		bean.setTotalRodScore(beforeTotalScore + afterTotalScore);
-		list.add(bean);
+            bean.setUserScoreTotalList(userScoreList);
+            bean.setTotalRodScore(beforeTotalScore + afterTotalScore);
+            list.add(bean);
+        }
 	}
 
 

@@ -2802,23 +2802,25 @@ public class MatchService implements IBaseService {
 	 * 获取用户在每个球洞的得分情况
 	 */
 	public void createNewUserScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
-        List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
+	    Integer matchType = matchInfo.getMiType();
 	    if (userList != null && userList.size() > 0) {
 			for (Map<String, Object> user : userList) {
 				Long uiId = getLongValue(user, "uiId");
 				Long teamId = getLongValue(user, "team_id");
-				MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+                Long childMatchId = getLongValue(user, "match_id");
+                MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
 				bean.setUserId(uiId);
 				bean.setUserName(getName(user, "uiRealName"));
                 bean.setGroupName(getName(user, "groupName"));
                 bean.setTeamAbbrev(getName(user, "teamAbbrev"));
 				//本用户的前后半场总得分情况
+
 				List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 				//本用户前半场得分情况
-				List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,childMatchIds,0,teamId);
+				List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(uiId, childMatchId,matchType,0,teamId);
 				createNewUserScore(userScoreList, uScoreBeforeList);
 				//本用户后半场得分情况
-				List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(uiId, matchInfo,childMatchIds,1,teamId);
+				List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(uiId, childMatchId,matchType,1,teamId);
 				createNewUserScore(userScoreList, uScoreAfterList);
 				bean.setUserScoreTotalList(userScoreList);
 				list.add(bean);

@@ -79,12 +79,16 @@ public class MatchScoreService implements IBaseService {
     public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws Exception {
         Map<String, Object> result = new HashMap<>();
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
-        Integer matchType=matchInfo.getMiType();
+        Integer matchType =  matchInfo.getMiType();
         List<Long> childMatchIds = matchService.getLongIdListReplace(matchInfo.getMiChildMatchIds());
         result.put("matchInfo", matchInfo);
         //本比赛要去掉的随机洞
-        MatchScoreNetHole scoreNetHole = matchScoreDao.getMatchNetRodHole(matchId);
         List<MatchGroupUserScoreBean> list = new ArrayList<>();
+        List<Map<String, Object>> userList;
+        MatchScoreNetHole scoreNetHole;
+        /*
+        MatchScoreNetHole scoreNetHole = matchScoreDao.getMatchNetRodHole(matchId);
+
         //本比赛的所有用户和其去掉随机杆后的总杆数，为0的排后面(首列显示)
         List<Map<String, Object>> userList = null;
         if(scoreNetHole == null || (scoreNetHole != null
@@ -94,7 +98,7 @@ public class MatchScoreService implements IBaseService {
             result.put("userList", userList);
             return result;
         }
-
+*/
         //所有球洞
         List<MatchTotalUserScoreBean> parkHoleList = new ArrayList<>();
         //每洞杆数
@@ -120,7 +124,7 @@ public class MatchScoreService implements IBaseService {
         thBean2.setUserScoreTotalList(parkHoleList);
         list.add(thBean2);
 
-
+/*
         List<Integer> beforeHoleNum = new ArrayList<>();
         List<Integer> afterHoleNum = new ArrayList<>();
         if(scoreNetHole != null){
@@ -131,7 +135,8 @@ public class MatchScoreService implements IBaseService {
             afterHoleNum.add(scoreNetHole.getMsntHoleAfterNum2());
             afterHoleNum.add(scoreNetHole.getMsntHoleAfterNum3());
         }
-        userList = matchScoreDao.getUserListByMatchId(matchInfo);
+        */
+        userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds);
         //获取本场地18洞的总标准杆
         Long sum18 = matchScoreDao.getSumStandardRod(matchInfo);
 
@@ -140,18 +145,20 @@ public class MatchScoreService implements IBaseService {
 
                 MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
                 Long userId = matchService.getLongValue(user,"uiId");
+                Long childMatchId = matchService.getLongValue(user,"match_id");
 //				Long teamId = matchService.getLongValue(user, "team_id");
                 String userRealName = user.get("uiRealName") == null ? null:user.get("uiRealName").toString();
                 //本用户的前后半场总得分情况
                 List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 
                 //本用户前半场得分情况
-                List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,0,null);
+                List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId,matchType,0,null);
                 //防作弊计算前半场9洞的总杆数
+                scoreNetHole = matchScoreDao.getMatchNetRodHole(childMatchId);
                 Integer beforeTotalRodNum = createNewUserScore(userScoreList, uScoreBeforeList,scoreNetHole);
 
                 //本用户后半场得分情况
-                List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,1,null);
+                List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId,childMatchId,matchType,1,null);
                 //防作弊计算后半场9洞的总杆数
                 Integer afterTotalRodNum = createNewUserScore(userScoreList, uScoreAfterList,scoreNetHole);
                 bean.setUserScoreTotalList(userScoreList);
@@ -168,7 +175,7 @@ public class MatchScoreService implements IBaseService {
 
 
                 //不防作弊时用户的18洞总杆数
-                Long sumRod = matchScoreDao.getSumRod(userId,matchId);
+                Long sumRod = matchScoreDao.getSumRod(userId,childMatchId);
                 //防作弊18洞总杆数
                 Integer sumRodXxbly = beforeTotalRodNum+afterTotalRodNum;
                 if (sumRod <67) {
@@ -259,21 +266,6 @@ public class MatchScoreService implements IBaseService {
         Integer totalRodCha = 0;
         for(Map<String, Object> map:uScoreList){
             MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
-
-            /*
-            //当有人某洞没记分时，下面这段的各变量会为空，所以改进以下，用pp开头的变量代替
-             //本洞记录id
-            Long msId = matchService.getLongValue(map,"ms_id");
-
-            //本洞号码
-            Integer holeNum = matchService.getIntegerValue(map,"hole_num");
-
-            //本洞名字
-            String holeName = matchService.getName(map,"hole_name");
-
-            //本洞标准杆
-            Integer standardRodNum = matchService.getIntegerValue(map,"hole_standard_rod");
-            */
 
             //本洞号码
             Integer holeNum = matchService.getIntegerValue(map,"pp_hole_num");

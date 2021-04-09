@@ -29,10 +29,11 @@ public class MatchScoreDao extends CommonDao {
 	}
 
 	//本比赛的所有用户，为0的排后面(首列显示)
-	 public List<Map<String, Object>> getUserListByMatchId(MatchInfo matchInfo) {
+	 public List<Map<String, Object>> getUserListByMatchId(MatchInfo matchInfo,List<Long> childMatchIds) {
 	    Integer matchType =  matchInfo.getMiType();
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchInfo.getMiId());
+         parp.put("childMatchIds",childMatchIds);
 		StringBuilder sql = new StringBuilder();
 		 sql.append("select " +
 				 " u.ui_headimg AS uiHeadimg,"+
@@ -46,7 +47,7 @@ public class MatchScoreDao extends CommonDao {
              sql.append(" FROM" +
                      " match_father_score AS s left join user_info AS u ON s.ms_user_id = u.ui_id " +
                      " WHERE " +
-                     " s.ms_match_id = :matchId ");
+                     " s.ms_match_id IN ( :childMatchIds) ");
          }else {
              sql.append(" FROM" +
                      " match_score AS s left join user_info AS u ON s.ms_user_id = u.ui_id " +
@@ -55,7 +56,7 @@ public class MatchScoreDao extends CommonDao {
          }
 		 sql.append(" and s.ms_type = 0 ");
 //         sql.append(" and s.ms_user_id = 670 ");
-		 sql.append(" GROUP BY s.ms_user_id ");
+		 sql.append(" GROUP BY s.ms_user_id, s.ms_match_id ");
 		 return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	 }
 
