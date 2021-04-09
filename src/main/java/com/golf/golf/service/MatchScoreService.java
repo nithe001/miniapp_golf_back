@@ -79,6 +79,8 @@ public class MatchScoreService implements IBaseService {
     public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws Exception {
         Map<String, Object> result = new HashMap<>();
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+        Integer matchType=matchInfo.getMiType();
+        List<Long> childMatchIds = matchService.getLongIdListReplace(matchInfo.getMiChildMatchIds());
         result.put("matchInfo", matchInfo);
         //本比赛要去掉的随机洞
         MatchScoreNetHole scoreNetHole = matchScoreDao.getMatchNetRodHole(matchId);
@@ -144,12 +146,12 @@ public class MatchScoreService implements IBaseService {
                 List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 
                 //本用户前半场得分情况
-                List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,0,null);
+                List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,0,null);
                 //防作弊计算前半场9洞的总杆数
                 Integer beforeTotalRodNum = createNewUserScore(userScoreList, uScoreBeforeList,scoreNetHole);
 
                 //本用户后半场得分情况
-                List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,1,null);
+                List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, matchInfo,childMatchIds,1,null);
                 //防作弊计算后半场9洞的总杆数
                 Integer afterTotalRodNum = createNewUserScore(userScoreList, uScoreAfterList,scoreNetHole);
                 bean.setUserScoreTotalList(userScoreList);

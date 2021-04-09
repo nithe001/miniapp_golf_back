@@ -95,7 +95,39 @@ public class MatchController {
 		return JsonWrapper.newDataInstance(pageInfo);
 	}
 
-	/**
+    @ResponseBody
+    @RequestMapping("getChildMatchList")
+    public JsonElement getChildMatchList(@RequestAttribute("page") Integer page,
+                                    @RequestAttribute("type") Integer type,
+                                    @RequestAttribute("keyword") String keyword,
+                                    @RequestAttribute("childMatchIds") String childMatchIds,
+                                    @RequestAttribute("openid") String openid) {
+        Integer nowPage = 1;
+        if (page > 0) {
+            nowPage = page;
+        }
+        POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(Const.ROWSPERPAGE , nowPage);
+        try {
+            SearchBean searchBean = new SearchBean();
+            if(StringUtils.isNotEmpty(keyword) && !"undefined".equals(keyword)){
+                searchBean.addParpField("keyword", "%" + keyword.trim() + "%");
+            }
+            searchBean.addParpField("type", type);
+            //参赛队
+            List<Long> childMatchIdList = matchService.getLongIdListReplace(childMatchIds);
+            searchBean.addParpField("childMatchIds", childMatchIdList);
+            pageInfo = matchService.getChildMatchList(searchBean, pageInfo, openid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errmsg = "前台-获取已选球队列表出错。openid="+openid;
+            logger.error(errmsg,e );
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+        return JsonWrapper.newDataInstance(pageInfo);
+    }
+
+
+    /**
 	 * 创建比赛——获取赛长用户所在球队，是否同时是参赛球队的队长 如果是让用户选择一个做代表队
 	 * @param joinTeamIds:创建比赛时选择的参赛球队
 	 * 选了参赛球队，才会进此方法
@@ -129,6 +161,7 @@ public class MatchController {
 									 @RequestAttribute("beforeZoneName")String beforeZoneName,
 									 @RequestAttribute("afterZoneName")String afterZoneName,
 									 @RequestAttribute("reportTeamIds")String reportTeamIds,
+                                     @RequestAttribute("childMatchIds")String childMatchIds,
 									 @RequestAttribute("chooseTeamId")String chooseTeamId,
 									 @RequestAttribute("openid")String openid) {
 		try {
@@ -151,6 +184,9 @@ public class MatchController {
 				if(StringUtils.isNotEmpty(reportTeamIds) && !reportTeamIds.equals("undefined") && !reportTeamIds.equals("null")){
 					matchInfoBean.setMiReportScoreTeamId(reportTeamIds);
 				}
+                if(StringUtils.isNotEmpty(childMatchIds) && !childMatchIds.equals("undefined") && !childMatchIds.equals("null")){
+                    matchInfoBean.setMiChildMatchIds(childMatchIds);
+                }
 				if(matchInfoBean.getMiId() != null){
 					m = matchService.updateMatchInfo(matchInfoBean, parkName, chooseTeamId, openid);
 				}else{

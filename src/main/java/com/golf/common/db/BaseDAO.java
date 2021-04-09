@@ -491,7 +491,7 @@ public class BaseDAO {
 
 	public long createSQLCountQuery(final String query, final Map parp) {
 		SQLQuery q = getCurrentSession().createSQLQuery(query);
-		q = (SQLQuery) addParameter(q, parp);
+		q = addParameter(q, parp);
 		return DecimalUtil.objectTolong(q.uniqueResult());
 	}
 
@@ -701,7 +701,16 @@ public class BaseDAO {
 		q = addParameter(q, parp);
 		return q.executeUpdate();
 	}
-	
+
+    /**
+     * 执行Sql
+     *
+     * @param sql
+     */
+    public Integer executeSql(String sql) {
+        Query q = getCurrentSession().createSQLQuery(sql);
+        return q.executeUpdate();
+    }
 
 	// ---end
 	public SessionFactory getSessionFactory() {

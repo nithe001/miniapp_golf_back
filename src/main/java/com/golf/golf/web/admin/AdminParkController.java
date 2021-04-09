@@ -227,34 +227,62 @@ public class AdminParkController {
 		XSSFRow row;
 		ParkInfo parkInfo = null;
 //		sheet.getPhysicalNumberOfRows()
-		for (int i = 870; i < 920; i++) {
-			row = sheet.getRow(i);
+		//for (int i = 870; i < 920; i++) {
+        for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+            row = sheet.getRow(i);
 
-			String city = row.getCell(0).toString();
-			String parkName =  row.getCell(1).toString();
+            String city = row.getCell(0).toString();
+            String parkName = row.getCell(1).toString();
+            String zone = row.getCell(3).toString();
+            String address;
+            try{
+                 address = row.getCell(2).toString().trim();
+            } catch (Exception e){
+                 address ="";
+            }
+          //  Integer sumRol = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
 
-			Integer sumRol =  Integer.parseInt(row.getCell(13).toString().replace(".0",""));
 
-			parkInfo = new ParkInfo();
-			parkInfo.setPiCity(city);
-			parkInfo.setPiName(parkName);
-			ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
-			Long parkId = parkInfoDb.getPiId();
-			parkInfoDb.setPiSumRod(parkInfoDb.getPiSumRod()+sumRol);
-			adminParkService.updateParkInfo(parkInfoDb);
+            ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
+            Long parkId;
+            if (parkInfoDb == null) {
+                parkInfo = new ParkInfo();
+                parkInfo.setPiCity(city);
+                parkInfo.setPiName(parkName);
+                parkInfo.setPiAddress(address);
+                adminParkService.saveParkInfo(parkInfo);
+                parkId = parkInfo.getPiId();
+            } else {
+                parkInfoDb.setPiCity(city);
+                parkInfoDb.setPiName(parkName);
+                parkInfoDb.setPiAddress(address);
+                adminParkService.updateParkInfo(parkInfoDb);
+                parkId = parkInfoDb.getPiId();
+            }
 
-			String zone =  row.getCell(2).toString();
-			for(int j = 3;j<=11;j++){
-				Integer hole =  Integer.parseInt(row.getCell(j).toString().replace(".0",""));
-				ParkPartition parkPartition = new ParkPartition();
-				parkPartition.setPpPId(parkId);
-				parkPartition.setPpName(zone);
-				parkPartition.setPpHoleNum(j-2);
-				parkPartition.setPpHoleStandardRod(hole);
-				adminParkService.saveParkPartition(parkPartition);
-			}
+            ParkPartition  parkPartitionDb;
+            for (int j = 4; j <= 12; j++) {
+                parkPartitionDb = adminParkService.getParkHole(parkId,zone,j-3);
+                Integer hole = Integer.parseInt(row.getCell(j).toString().replace(".0", ""));
+                if (  parkPartitionDb == null) {
+                    ParkPartition parkPartition = new ParkPartition();
+                    parkPartition.setPpPId(parkId);
+                    parkPartition.setPpName(zone);
+                    parkPartition.setPpHoleNum(j - 3);
+                    parkPartition.setPpHoleStandardRod(hole);
+                    adminParkService.saveParkPartition(parkPartition);
+                } else {
+                     parkPartitionDb.setPpPId(parkId);
+                     parkPartitionDb.setPpName(zone);
+                     parkPartitionDb.setPpHoleNum(j - 3);
+                     parkPartitionDb.setPpHoleStandardRod(hole);
+                    adminParkService.updateParkPartition( parkPartitionDb);
+                }
+                    
+            }
 //			Integer totalHole =  Integer.parseInt(row.getCell(12).toString());
-		}
+
+        }
 		// 保存
 		return null;
 	}

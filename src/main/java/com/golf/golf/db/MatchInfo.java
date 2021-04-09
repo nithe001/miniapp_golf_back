@@ -31,6 +31,8 @@ public class MatchInfo implements java.io.Serializable {
     private Integer miMatchFormat3;
 	private String miJoinTeamIds;
 	private String miReportScoreTeamId;
+    private String miChildMatchIds;
+    private String miFatherMatchIds;
 	private Integer miHit;
 	private Long miApplyEndTime;
 	private Integer miIsEnd;
@@ -54,7 +56,7 @@ public class MatchInfo implements java.io.Serializable {
 					 String miZoneAfterNine, String miDigest, String miMatchTime,
 					 String miContent, Integer miMatchOpenType, Integer miJoinOpenType,
 					 Integer miMatchFormat1, Integer miMatchFormat2,Integer miMatchFormat3, String miJoinTeamIds,
-					 String miReportScoreTeamId, Integer miHit, Long miApplyEndTime, Integer miIsEnd, Integer miIsValid,
+					 String miReportScoreTeamId, String miChildMatchIds, String  miFatherMatchIds, Integer miHit, Long miApplyEndTime, Integer miIsEnd, Integer miIsValid,
 					 String miCreateUserName, Long miCreateUserId, Long miCreateTime,
 					 String miUpdateUserName, Long miUpdateUserId, Long miUpdateTime) {
 		this.miType = miType;
@@ -75,6 +77,8 @@ public class MatchInfo implements java.io.Serializable {
         this.miMatchFormat3 = miMatchFormat3;
 		this.miJoinTeamIds = miJoinTeamIds;
 		this.miReportScoreTeamId = miReportScoreTeamId;
+        this.miChildMatchIds = miChildMatchIds;
+        this.miFatherMatchIds = miFatherMatchIds;
 		this.miHit = miHit;
 		this.miApplyEndTime = miApplyEndTime;
 		this.miIsEnd = miIsEnd;
@@ -261,7 +265,25 @@ public class MatchInfo implements java.io.Serializable {
 		this.miReportScoreTeamId = miReportScoreTeamId;
 	}
 
-	@Column(name = "mi_hit")
+    @Column(name = "mi_child_match_ids")
+    public String getMiChildMatchIds() {
+        return this.miChildMatchIds;
+    }
+
+    public void setMiChildMatchIds(String miChildMatchIds) {
+        this.miChildMatchIds = miChildMatchIds;
+    }
+
+    @Column(name = "mi_father_match_ids")
+    public String getMiFatherMatchIds() {
+        return this.miFatherMatchIds;
+    }
+
+    public void setMiFatherMatchIds(String miFatherMatchIds) {
+        this.miFatherMatchIds = miFatherMatchIds;
+    }
+
+    @Column(name = "mi_hit")
 	public Integer getMiHit() {
 		return this.miHit;
 	}

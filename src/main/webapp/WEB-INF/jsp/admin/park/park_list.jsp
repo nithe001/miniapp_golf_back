@@ -169,9 +169,11 @@
                     if (json.success) {
                         $('#myFileModal').modal('hide');
                         // window.location.href="admin/sysuser/list";
-                        showMsg(ky.lang["upload.file.tip"]);
+                        //showMsg(ky.lang["upload.file.tip"]);
+                        $("#loadImg").hide();
+                        alert("导入成功");
                     } else {
-                        showMsg(json.msg);
+                        alert(json.msg);
                     }
                 }
             });

@@ -173,7 +173,9 @@ public class TeamDao extends CommonDao {
 			//已选球队
 			if(parp.get("reportTeamIdList") != null && list1.size()>0){
 				hql.append("and t.ti_id in(:reportTeamIdList) ");
-			}
+			} else {
+                hql.append("and false ");
+            }
 		}
 
 		Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);

@@ -89,7 +89,14 @@ public class AdminParkService implements IBaseService {
 	public  List<ParkPartition> getParkZoneById(Long id) {
 		return adminParkDao.getParkZoneById(id);
 	}
-
+    /**
+     * 根据id获取球场的球洞信息
+     * @param id
+     * @return
+     */
+    public  ParkPartition getParkHole(Long id,String zone ,Integer holeNum ) {
+        return adminParkDao.getParkHole(id,zone,holeNum );
+    }
 	/**
 	 * 更新球场信息
 	 *
@@ -180,6 +187,11 @@ public class AdminParkService implements IBaseService {
 	public void updateParkInfo(ParkInfo parkInfo) {
 		adminParkDao.update(parkInfo);
 	}
+
+    public void updateParkPartition(ParkPartition parkPartition){
+        adminParkDao.update(parkPartition);
+    }
+
 
 	/**
 	 * 获取球场地址

@@ -358,7 +358,7 @@ public class AdminImportService implements IBaseService {
             }
         }
 		//查询是否有用户比赛mapping
-		   MatchUserGroupMapping matchUserGroupMapping = adminImportDao.getMatchUserMapping(matchId, teamId, userId);
+		   MatchUserGroupMapping matchUserGroupMapping = adminImportDao.getMatchUserMapping(matchId, null, userId);
 
 	    if(matchUserGroupMapping == null){
 			matchUserGroupMapping = new MatchUserGroupMapping();
@@ -388,6 +388,7 @@ public class AdminImportService implements IBaseService {
 		} else {
             matchUserGroupMapping.setMugmUserName(userName);
             matchUserGroupMapping.setMugmUserType(userType);
+            matchUserGroupMapping.setMugmTeamId(teamId);
             if (userType ==0 ) {
                 matchUserGroupMapping.setMugmIsAutoCap(1);
             } else {

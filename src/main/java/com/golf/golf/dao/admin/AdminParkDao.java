@@ -61,12 +61,7 @@ public class AdminParkDao extends CommonDao {
 		StringBuilder hql = new StringBuilder();
 		hql.append(" SELECT COUNT(*) FROM ParkInfo AS p WHERE p.piName = :parkName and p.piCity = :city ");
 		Long count = dao.createCountQuery(hql.toString(), parp);
-		if(count == null || count.intValue() == 0){
-			return false;
-		}else{
-			//已存在
-			return true;
-		}
+        return count != null && count.intValue() != 0;
 	}
 
 	/**
@@ -92,4 +87,24 @@ public class AdminParkDao extends CommonDao {
 		hql.append(" FROM ParkPartition as p WHERE p.ppPId = "+id);
 		return dao.createQuery(hql.toString());
 	}
+
+    /**
+     * 根据球场球洞信息
+     * @param id
+     * @return
+     */
+    public  ParkPartition getParkHole(Long id,String zone,Integer holeNum ) {
+        Map<String, Object> parp = new HashMap<String,Object>();
+        parp.put("id", id);
+        parp.put("holeNum", holeNum);
+        if(StringUtils.isNotEmpty(zone)){
+            parp.put("zone","%"+zone.trim()+"%");
+        }
+
+        StringBuilder hql = new StringBuilder();
+        hql.append(" FROM ParkPartition as p WHERE p.ppPId = :id");
+        hql.append(" and p.ppName = :zone" );
+        hql.append(" and p.ppHoleNum = :holeNum");
+        return (ParkPartition)dao.findOne(hql.toString(), parp);
+    }
 }
