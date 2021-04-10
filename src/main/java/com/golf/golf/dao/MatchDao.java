@@ -1850,10 +1850,11 @@ public class MatchDao extends CommonDao {
      * 平均杆：前N的总杆数除以n
      * @return
      */
-    public List<Map<String, Object>> getMatchRodTotalScoreByMingci(Long matchId,Long teamId,  Integer mingci) {
+    public List<Map<String, Object>> getMatchRodTotalScoreByMingci(Long matchId,List<Long>childMatchIds,Long teamId,  Integer mingci) {
         Integer  matchType =get(MatchInfo.class, matchId).getMiType();
         Map<String,Object> parp = new HashMap<>();
         parp.put("matchId",matchId);
+        parp.put("childMatchIds",childMatchIds);
         parp.put("teamId",teamId);
         parp.put("mingci",mingci);
         StringBuilder hql = new StringBuilder();
@@ -1875,7 +1876,7 @@ public class MatchDao extends CommonDao {
                     "AND s.ms_group_id = mm.mugm_group_id " +
                     "AND s.ms_user_id = mm.mugm_user_id " +
                     ") " +
-                    "WHERE mm.mugm_match_id =:matchId ) ");
+                    "WHERE mm.mugm_match_id IN (:childMatchIds ) ");
         } else {
             hql.append("SELECT " +
                     "mm.mugm_match_id AS matchId, " +
@@ -1897,7 +1898,7 @@ public class MatchDao extends CommonDao {
         if(teamId != null){
             hql.append(" and mm.mugm_team_id = :teamId ");
         }
-        hql.append(" GROUP BY mm.mugm_user_id " +
+        hql.append(" GROUP BY mm.mugm_user_id , mm.mugm_match_id  " +
               "ORDER BY  holeCount desc, sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
               "LIMIT 0,:mingci");
        hql.append(") as t WHERE  t.sumRod != 0");

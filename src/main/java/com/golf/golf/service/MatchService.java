@@ -850,7 +850,7 @@ public class MatchService implements IBaseService {
 		}
 		//处理关联比赛信息和比赛类型
         List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
-		if (childMatchIds == null) {
+		if (childMatchIds == null || childMatchIds.size() ==0 ) {
             matchInfo.setMiType(1);
             //0：报名中  1进行中  2结束
             matchInfo.setMiIsEnd(0);
@@ -2510,11 +2510,17 @@ public class MatchService implements IBaseService {
 		List<MatchTotalUserScoreBean> parkHoleList = new ArrayList<>();
 		//每洞杆数
 		List<MatchTotalUserScoreBean> parkRodList = new ArrayList<>();
-		//获取前半场球洞
-		List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,0);
+		//获取球洞信息，如果是关联比赛的父比赛，就随便取第一个子比赛的场地
+        Long parkMatchId;
+        if ( matchInfo.getMiType() ==2 ){
+            parkMatchId=childMatchIds.get(0);
+        } else {
+            parkMatchId = matchId;
+        }
+		List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(parkMatchId,0);
 		getNewParkHoleList(parkHoleList,parkRodList,beforeParkHoleList);
 		//获取后半场球洞
-		List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,1);
+		List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(parkMatchId,1);
 		getNewParkHoleList(parkHoleList,parkRodList,afterParkHoleList);
 
 		//第一条记录（半场分区信息）
@@ -2681,10 +2687,16 @@ public class MatchService implements IBaseService {
 		//每洞杆数
 		List<MatchTotalUserScoreBean> parkRodList = new ArrayList<>();
 		//获取前半场球洞
-		List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,0);
+        Long parkMatchId;
+        if ( matchInfo.getMiType() ==2 ){
+            parkMatchId=childMatchIds.get(0);
+        } else {
+            parkMatchId = matchId;
+        }
+		List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(parkMatchId,0);
 		getNewParkHoleList(parkHoleList,parkRodList,beforeParkHoleList);
 		//获取后半场球洞
-		List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,1);
+		List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(parkMatchId,1);
 		getNewParkHoleList(parkHoleList,parkRodList,afterParkHoleList);
 
 		//第一条记录（半场分区信息）
@@ -2843,6 +2855,7 @@ public class MatchService implements IBaseService {
 	public Map<String, Object> getTeamTotalScoreByMatchId(Long matchId,Integer childId, Integer mingci,String openid) {
         Long  userId = userService.getUserIdByOpenid(openid);
 		Map<String, Object> result = new HashMap<>();
+
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		result.put("matchInfo",matchInfo);
 		List<Long> joinTeamIdList = null;
@@ -2854,7 +2867,7 @@ public class MatchService implements IBaseService {
 //		赛制(：多队排位赛（积分赛) 走rodMatch取数据，其他都走holeMatch
         Integer format3 = matchInfo.getMiMatchFormat3();
 		if ( format3 ==null){format3 = 0;}
-		if (matchInfo.getMiMatchFormat1() == 0 &&  format3 == 0 ) {
+		if (matchInfo.getMiMatchFormat1() == 0  ) {
 			//比杆赛
 			rodMatch(joinTeamIdList,mingci,matchId,matchInfo,result);
 		} else {
@@ -2869,6 +2882,7 @@ public class MatchService implements IBaseService {
             Long isReportTeamCaptain = teamService.getIsReportTeamCaptain(userId, reportTeamIdList);
             result.put("isReportTeamCaptain", isReportTeamCaptain);
         }
+
 		return result;
 	}
 
@@ -2883,6 +2897,7 @@ public class MatchService implements IBaseService {
 	private void rodMatch(List<Long> joinTeamIdList, Integer mingci, Long matchId,
 						  MatchInfo matchInfo, Map<String,Object> result) {
 		//取前n名
+        Integer matchType = matchInfo.getMiType();
         List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
 		List<Map<String,Object>> nList = new ArrayList<>();
 		Map<String,Object> nMap = new HashMap<>();
@@ -2903,15 +2918,8 @@ public class MatchService implements IBaseService {
 				//要显示的列表
                 List<Map<String, Object>> scoreList = new ArrayList<>();
                 List<Map<String, Object>> scoreList1;
-                if (matchInfo.getMiType() == 2 ) {
-                    for (int i = 0; i < childMatchIds.size(); i++) {
-                        scoreList1 = matchDao.getMatchRodTotalScoreByMingci(childMatchIds.get(i), joinTeamIdList.get(0), mingci);
-                        scoreList.addAll(scoreList1);
-                    }
-                }else {
-                    scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId, joinTeamIdList.get(0), mingci);
-                }
-				TeamInfo teamInfo = matchDao.get(TeamInfo.class,joinTeamIdList.get(0));
+                scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId, childMatchIds,joinTeamIdList.get(0), mingci);
+  				TeamInfo teamInfo = matchDao.get(TeamInfo.class,joinTeamIdList.get(0));
 				MatchTeamRankingBean matchTeamRankingBean = new MatchTeamRankingBean();
 				matchTeamRankingBean.setTeamName(teamInfo.getTiName());
 				matchTeamRankingBean.setTeamAbbrev(teamInfo.getTiAbbrev());//nhq
@@ -2965,13 +2973,13 @@ public class MatchService implements IBaseService {
                                 scoreList=matchDao.getMatchDoubleRodScoreByMingci(matchId,teamId,mingci);
                             } else {
                                 //个人比杆赛，结果从matchScore中取
-                                if (matchInfo.getMiType() == 2 ) {
-                                    for (int i = 0; i < childMatchIds.size(); i++) {
-                                        scoreList1 = matchDao.getMatchRodTotalScoreByMingci(childMatchIds.get(i), teamId, mingci);
-                                        scoreList.addAll(scoreList1);
-                                    }
-                                } else{
-                                    scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId, teamId, mingci);
+                                if ( matchInfo.getMiMatchFormat3() ==3) {
+                                    //球队均值排位，取各队前mingci*10 % 算平均值
+                                    Integer halfUserCount;
+                                    halfUserCount = (int)Math.ceil(userCount*mingci/10);
+                                    scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId, childMatchIds, teamId,  halfUserCount);
+                                } else {
+                                    scoreList = matchDao.getMatchRodTotalScoreByMingci(matchId, childMatchIds, teamId, mingci);
                                 }
                             }
 							if(scoreList != null && scoreList.size()>0){
@@ -2982,22 +2990,28 @@ public class MatchService implements IBaseService {
                                     sumRodNumByN = n.intValue()*110;
                                 }
 								Integer sumRodNum = getIntegerValue(scoreList.get(0),"sumRodNum");
-
-								if(sumRodNum != 0){
-									if(matchInfo.getMiMatchFormat2() == 0){
-										Integer sum = sumRodNum+sumRodNumByN;
-										BigDecimal b = new BigDecimal((float)(sum/mingci));
-										Double avg = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
-									    matchTeamRankingBean.setAvgRodNum(avg);
-										matchTeamRankingBean.setSumRodNum(sum);
-									}else{
-                                        Integer sum = sumRodNum;
-                                        Integer groupNum = getIntegerValue(scoreList.get(0),"groupNum");
-                                        BigDecimal b = new BigDecimal((float)(sum/groupNum));
-                                        Double avg = b.setScale(2,BigDecimal.ROUND_HALF_UP).doubleValue();
-										matchTeamRankingBean.setAvgRodNum(avg);
-										matchTeamRankingBean.setSumRodNum(sum);
-									}
+                                Double avgRodNum = getDoubleValue(scoreList.get(0),"avgRodNum");
+								if(sumRodNum != 0 ){
+								    if (matchInfo.getMiMatchFormat3() == 3 ) {
+								        //关联比赛，直接用查询出来的结果
+                                        matchTeamRankingBean.setAvgRodNum(avgRodNum);
+                                        matchTeamRankingBean.setSumRodNum(sumRodNum);
+                                    } else {
+                                        if (matchInfo.getMiMatchFormat2() == 0) {
+                                            Integer sum = sumRodNum + sumRodNumByN;
+                                            BigDecimal b = new BigDecimal((float) (sum / mingci));
+                                            Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                                            matchTeamRankingBean.setAvgRodNum(avg);
+                                            matchTeamRankingBean.setSumRodNum(sum);
+                                        } else {
+                                            Integer sum = sumRodNum;
+                                            Integer groupNum = getIntegerValue(scoreList.get(0), "groupNum");
+                                            BigDecimal b = new BigDecimal((float) (sum / groupNum));
+                                            Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                                            matchTeamRankingBean.setAvgRodNum(avg);
+                                            matchTeamRankingBean.setSumRodNum(sum);
+                                        }
+                                    }
 								}else{
 									matchTeamRankingBean.setAvgRodNum(199.0);
 									matchTeamRankingBean.setSumRodNum(9999);
@@ -3013,15 +3027,29 @@ public class MatchService implements IBaseService {
 						matchTeamRankingList.add(matchTeamRankingBean);
 					}
 					//排序
-					Collections.sort(matchTeamRankingList,new Comparator<MatchTeamRankingBean>(){
-						@Override
-						public int compare(MatchTeamRankingBean bean1,MatchTeamRankingBean bean2){
-							if(bean1.getSumRodNum() == 0){
-								return -1;
-							}
+                    if (matchInfo.getMiMatchFormat3() == 3) {
+                        Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
+                            @Override
+                            public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
+                                if (bean1.getAvgRodNum() == 0) {
+                                    return -1;
+                                }
 
-							return new Double(bean1.getSumRodNum()).compareTo(new Double(bean2.getSumRodNum()));}
-					});
+                                return new Double(bean1.getAvgRodNum()).compareTo(new Double(bean2.getAvgRodNum()));
+                            }
+                        });
+                    }  else {
+                        Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
+                            @Override
+                            public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
+                                if (bean1.getSumRodNum() == 0) {
+                                    return -1;
+                                }
+
+                                return new Double(bean1.getSumRodNum()).compareTo(new Double(bean2.getSumRodNum()));
+                            }
+                        });
+                    }
 				}
 			}
 		}

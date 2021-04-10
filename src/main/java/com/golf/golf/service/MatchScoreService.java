@@ -104,10 +104,16 @@ public class MatchScoreService implements IBaseService {
         //每洞杆数
         List<MatchTotalUserScoreBean> parkRodList = new ArrayList<>();
         //获取前半场球洞
-        List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,0);
+        Long parkMatchId;
+        if ( matchInfo.getMiType() ==2 ){
+            parkMatchId=childMatchIds.get(0);
+        } else {
+            parkMatchId = matchId;
+        }
+        List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList( parkMatchId,0);
         matchService.getNewParkHoleList(parkHoleList,parkRodList,beforeParkHoleList);
         //获取后半场球洞
-        List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchId,1);
+        List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList( parkMatchId,1);
         matchService.getNewParkHoleList(parkHoleList,parkRodList,afterParkHoleList);
 
         //第一条记录（半场分区信息）
