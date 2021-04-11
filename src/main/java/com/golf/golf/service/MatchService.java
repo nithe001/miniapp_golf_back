@@ -57,6 +57,8 @@ public class MatchService implements IBaseService {
 	protected UserService userService;
     @Autowired
     protected AdminImportService adminImportService;
+    @Autowired
+    protected MatchScoreService matchScoreService;
 
 	/**
 	 * 查询球场列表——区域
@@ -1925,13 +1927,23 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiUpdateUserName(userInfo.getUserName());
 		matchInfo.setMiUpdateTime(System.currentTimeMillis());
 		matchDao.update(matchInfo);
-		//如果本比赛是某个比赛的子比赛，则在结束比赛state=2时把子比赛的比赛成绩从matchscore中复制到matchfatherscore 中
+		//记分截止时提交数据
+
         if(state ==2) {
+            // 如果本比赛是某个比赛的子比赛，则在结束比赛时把本比赛的比赛成绩从matchscore中复制到matchfatherscore 中
             List<Long> fatherMatchIds = getLongIdListReplace(matchInfo.getMiFatherMatchIds());
-            if (fatherMatchIds !=null){
-                for(int i=0; i < fatherMatchIds.size(); i++ ){
-                   matchDao.scoreCopy(matchId);
-               }
+            List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
+            List<MatchGroupUserScoreBean> list = new ArrayList<>();
+            if (fatherMatchIds !=null && matchInfo.getMiType() !=2){
+                matchDao.scoreCopy(matchId);
+
+                // 如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
+                List<Map<String, Object>>  userScoreList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null);
+                updateScoreByRodSum(userInfo.getUiId(), matchId,  userScoreList);
+
+                //  如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人净杆都保存到teamuserpoint 中
+                matchScoreService.createNewUserNetScoreList(userScoreList,list,matchInfo);
+                updatePointByRodSum(userInfo.getUiId(), matchId,  list);
             }
         }
 		return "true";
@@ -2319,8 +2331,39 @@ public class MatchService implements IBaseService {
 		}
 	}
 
+    /**
+     * 比赛结束时，  把用户的总杆和净杆保存到积分表teamuserpoint中
+     *
+     */
+    private void updateScorePointByIds(Long matchId, Long teamId, Long userId, Long captainUserId,Double point, Integer score) {
+        UserInfo captainUserInfo = matchDao.get(UserInfo.class,captainUserId);
+        TeamUserPoint teamUserPoint = matchDao.getTeamUserPoint(matchId, teamId,0l, userId, captainUserId);
 
-	/**
+            //加积分 或者 修改积分
+            if(teamUserPoint == null){
+                teamUserPoint = new TeamUserPoint();
+                teamUserPoint.setTupMatchId(matchId);
+                teamUserPoint.setTupTeamId(teamId);
+                teamUserPoint.setTupUserId(userId);
+                teamUserPoint.setTupReportTeamId(0l);
+                if(point>=0){teamUserPoint.setTupMatchPoint(point);}
+                if(score>=0){teamUserPoint.setTupMatchScore(score);}
+                teamUserPoint.setTupCreateUserId(captainUserId);
+                teamUserPoint.setTupCreateUserName(captainUserInfo.getUserName());
+                teamUserPoint.setTupCreateTime(System.currentTimeMillis());
+                matchDao.save(teamUserPoint);
+            }else{
+                if(point>=0){teamUserPoint.setTupMatchPoint(point);}
+                if(score>=0){teamUserPoint.setTupMatchScore(score);}
+                teamUserPoint.setTupUpdateUserId(captainUserId);
+                teamUserPoint.setTupUpdateUserName(captainUserInfo.getUserName());
+                teamUserPoint.setTupUpdateTime(System.currentTimeMillis());
+                matchDao.update(teamUserPoint);
+            }
+     }
+
+
+    /**
 	 * 球员成绩上报 比洞赛
 	 * 积分只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
 	 * 计算公式为：球友积分=基础积分+赢球奖分
@@ -2425,6 +2468,50 @@ public class MatchService implements IBaseService {
         return false;
 	}
 
+	//把子比赛的球员总成绩存放到team_usr_point 中。这个在比赛点击“记分截止”时触发
+
+    private boolean updateScoreByRodSum(Long captainUserId, Long matchId,  List<Map<String, Object>>matchScoreList) {
+
+        //杆差倍数 球友积分=基础积分+（110-球友比分）*杆差倍数
+        //获取该队伍的得分情况
+        Integer score;
+
+        if (matchScoreList != null && matchScoreList.size() > 0) {
+            for (Map<String, Object> scoreMap : matchScoreList) {
+                Integer scoreHoleCount = getIntegerValue(scoreMap, "holeCount");
+                if (scoreHoleCount >= 18) { //只有18洞成绩完整的才上报积分
+                    //杆数
+                    Long userId = getLongValue(scoreMap, "uiId");
+                    Long teamId = getLongValue(scoreMap, "team_id");
+                    score = getIntegerValue(scoreMap, "sumRodNum");
+                    updateScorePointByIds(matchId, teamId, userId, captainUserId, -1d, score);
+
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean updatePointByRodSum(Long captainUserId, Long matchId,   List<MatchGroupUserScoreBean> list) {
+
+        //杆差倍数 球友积分=基础积分+（110-球友比分）*杆差倍数
+        //获取该队伍的得分情况
+
+        if (list != null && list.size() > 0) {
+            for ( int i=0;i< list.size(); i++ ) {
+
+                Long userId = list.get(i).getUserId();
+                Long teamId =  list.get(i).getTeamId();
+                Double point =  list.get(i).getTotalNetRodScore();
+
+
+                updateScorePointByIds(matchId, teamId,  userId, captainUserId, point, -1);
+
+
+            }
+        }
+        return true;
+    }
 	/**
 	 * 结束单练
 	 * @return
@@ -2567,15 +2654,24 @@ public class MatchService implements IBaseService {
             //参赛球队
             //String joinTeamIds = matchInfo.getMiJoinTeamIds();
 */
-        List<Map<String, Object>>  userList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null);//顺便按成绩排序,没记完整成绩排后面
-
+        List<Map<String, Object>> userList;
+        if (matchInfo.getMiType() ==2) {
+            userList =matchDao.getUserScoreByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds);
+            //用户昵称解码
+            decodeUserNickName(userList);
+            //用户名
+            setUserName(userList);
+        } else {
+            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, null);//顺便按成绩排序,没记完整成绩排后面
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
             setUserName(userList);
             //本比赛用户每个洞得分情况
             createNewUserScoreList(userList, list, matchInfo);
-      //  }
+
+        }
+
         result.put("userList", userList);
         result.put("list", list);
 		return result;
@@ -2758,15 +2854,23 @@ public class MatchService implements IBaseService {
             //参赛球队
             //String joinTeamIds = matchInfo.getMiJoinTeamIds();
 */
-        List<Map<String, Object>> userList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, teamId);//顺便按成绩排序,没记完整成绩排后面
-
+        List<Map<String, Object>> userList;
+        if (matchInfo.getMiType() ==2) {
+            userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds);
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
             setUserName(userList);
             //本比赛用户每个洞得分情况
+        } else {
+            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, teamId);//顺便按成绩排序,没记完整成绩排后面
+           //用户昵称解码
+            decodeUserNickName(userList);
+            //用户名
+            setUserName(userList);
+            //本比赛用户每个洞得分情况
             createNewUserScoreList(userList, list, matchInfo);
-      //  }
+       }
         result.put("userList", userList);
         result.put("list", list);
 /*

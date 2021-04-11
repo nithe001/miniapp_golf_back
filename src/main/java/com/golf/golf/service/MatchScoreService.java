@@ -130,135 +130,142 @@ public class MatchScoreService implements IBaseService {
         thBean2.setUserScoreTotalList(parkHoleList);
         list.add(thBean2);
 
-/*
-        List<Integer> beforeHoleNum = new ArrayList<>();
-        List<Integer> afterHoleNum = new ArrayList<>();
-        if(scoreNetHole != null){
-            beforeHoleNum.add(scoreNetHole.getMsntHoleBeforeNum1());
-            beforeHoleNum.add(scoreNetHole.getMsntHoleBeforeNum2());
-            beforeHoleNum.add(scoreNetHole.getMsntHoleBeforeNum3());
-            afterHoleNum.add(scoreNetHole.getMsntHoleAfterNum1());
-            afterHoleNum.add(scoreNetHole.getMsntHoleAfterNum2());
-            afterHoleNum.add(scoreNetHole.getMsntHoleAfterNum3());
-        }
-        */
-        userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds);
-        //获取本场地18洞的总标准杆
-        Long sum18 = matchScoreDao.getSumStandardRod(matchInfo);
+        //获取用户及成绩列表
 
-        if(userList != null && userList.size() >0){
-            for(Map<String, Object> user:userList){
-
-                MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
-                Long userId = matchService.getLongValue(user,"uiId");
-                Long childMatchId = matchService.getLongValue(user,"match_id");
-//				Long teamId = matchService.getLongValue(user, "team_id");
-                String userRealName = user.get("uiRealName") == null ? null:user.get("uiRealName").toString();
-                //本用户的前后半场总得分情况
-                List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
-
-                //本用户前半场得分情况
-                List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId,matchType,0,null);
-                //防作弊计算前半场9洞的总杆数
-                scoreNetHole = matchScoreDao.getMatchNetRodHole(childMatchId);
-                Integer beforeTotalRodNum = createNewUserScore(userScoreList, uScoreBeforeList,scoreNetHole);
-
-                //本用户后半场得分情况
-                List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId,childMatchId,matchType,1,null);
-                //防作弊计算后半场9洞的总杆数
-                Integer afterTotalRodNum = createNewUserScore(userScoreList, uScoreAfterList,scoreNetHole);
-                bean.setUserScoreTotalList(userScoreList);
-                bean.setUserId(userId);
-                bean.setUserName(userRealName);
-                list.add(bean);
-
-                //计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
-                //为防作弊，合计12洞杆数总和时采2.3.4制：
-                //先算出18洞的新新贝利亚总杆：Par3洞成绩超过5杆，此洞以5杆计算；Par4洞成绩超过7杆，此洞以7杆计算；Par5洞成绩超过9杆，此洞以9杆计算。
-                //12洞总杆 = 18洞的新新贝利亚防作弊总杆，减去6洞总杆
-                //是否par （0：否 1：是）比标准杆多一杆或者标准杆完成
-                //净杆=总杆-差点
-
-
-                //不防作弊时用户的18洞总杆数
-                Long sumRod = matchScoreDao.getSumRod(userId,childMatchId);
-                //防作弊18洞总杆数
-                Integer sumRodXxbly = beforeTotalRodNum+afterTotalRodNum;
-                if (sumRod <67) {
-                    //有球洞没记分，就不计算差点
-                    sumRod = 0L;
-                }
-                if(sumRod != null && sumRod != 0){
-                    //本用户随机抽取的6个洞总杆数
-                    //Long radomSumRod = matchScoreDao.getRandomSumRod(userId,matchInfo,beforeHoleNum,afterHoleNum);
-
-                    //差点 加个提示
-
-                    BigDecimal ch = new BigDecimal((sumRodXxbly*1.5 - sum18)*0.8).setScale(2, BigDecimal.ROUND_HALF_UP);
-                    double cha = ch.doubleValue();
-
-                    //净杆
-                    double netRod = sumRod.doubleValue() - cha;
-                    //保留两位小数
-                    netRod=(double) Math.round(netRod * 100) / 100;
-
-                    user.put("sumRodNum",netRod);
-                    bean.setTotalNetRodScore(netRod);
-                }else{
-                    user.put("sumRodNum",0);
-                    bean.setTotalNetRodScore(0);
-                }
-            }
-        }
-        if(userList != null && userList.size()>0){
-            //排序 差点越高名次越好
-            Collections.sort(userList,new Comparator<Map<String, Object>>(){
-                @Override
-                public int compare(Map<String, Object> bean1,Map<String, Object> bean2){
-                    Double d1 = Double.valueOf(bean1.get("sumRodNum").toString());
-                    Double d2 = Double.valueOf(bean2.get("sumRodNum").toString());
-                    if((d1 == null || d1 == 0) && (d2 == null || d2 == 0)){
-                        return 0;
-                    }
-                    if(d1 == null || d1 == 0){
-                        return 1;
-                    }
-                    if(d2 == null || d2 == 0){
-                        return -1;
-                    }
-                    return new Double(d1).compareTo(new Double(d2));}
-            });
+        if(matchType ==2){
+            userList =matchScoreDao.getUserScorePointByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds);
+        } else{
+            userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds);
+            createNewUserNetScoreList(userList, list, matchInfo);
         }
 
-        if(list != null && list.size()>0){
-            List<MatchGroupUserScoreBean> newList = new ArrayList<>();
-            newList.addAll(list.subList(2,list.size()));
-            list.removeAll(list.subList(2,list.size()));
-            //排序 差点越高名次越好
-            Collections.sort(newList,new Comparator<MatchGroupUserScoreBean>(){
-                @Override
-                public int compare(MatchGroupUserScoreBean bean1,MatchGroupUserScoreBean bean2){
-                    Double d1 = new Double(bean1.getTotalNetRodScore());
-                    Double d2 = new Double(bean2.getTotalNetRodScore());
-                    if((d1 == null || d1 == 0) && (d2 == null || d2 == 0)){
-                        return 0;
-                    }
-                    if(d1 == null || d1 == 0){
-                        return 1;
-                    }
-                    if(d2 == null || d2 == 0){
-                        return -1;
-                    }
-                    return new Double(d1).compareTo(new Double(d2));}
-            });
-            list.addAll(newList);
-        }
         result.put("userList", userList);
         result.put("list", list);
         return result;
     }
 
+  //计算净杆
+  public void createNewUserNetScoreList(List<Map<String, Object>> userList, List<MatchGroupUserScoreBean> list,MatchInfo matchInfo) {
+        Integer matchType =  matchInfo.getMiType();
+        MatchScoreNetHole scoreNetHole;
+        Long sum18 = matchScoreDao.getSumStandardRod(matchInfo);
 
+      if (userList != null && userList.size() > 0) {
+          for (Map<String, Object> user : userList) {
+
+              MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
+              Integer scoreHoleCount = matchService.getIntegerValue(user, "holeCount");
+              if (scoreHoleCount >= 18) { //只有18洞成绩记完整的才上报净杆
+                  Long userId = matchService.getLongValue(user, "uiId");
+                  Long childMatchId = matchService.getLongValue(user, "match_id");
+                  Long teamId = matchService.getLongValue(user, "team_id");
+                  String teamAbbrev = user.get("teamAbbrev").toString();
+                  String userRealName = user.get("uiRealName") == null ? null : user.get("uiRealName").toString();
+                  //本用户的前后半场总得分情况
+                  List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
+
+                  //本用户前半场得分情况
+                  List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId, matchType, 0, null);
+                  //防作弊计算前半场9洞的总杆数
+                  scoreNetHole = matchScoreDao.getMatchNetRodHole(childMatchId);
+                  Integer beforeTotalRodNum = createNewUserScore(userScoreList, uScoreBeforeList, scoreNetHole);
+
+                  //本用户后半场得分情况
+                  List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId, matchType, 1, null);
+                  //防作弊计算后半场9洞的总杆数
+                  Integer afterTotalRodNum = createNewUserScore(userScoreList, uScoreAfterList, scoreNetHole);
+                  bean.setUserScoreTotalList(userScoreList);
+                  bean.setUserId(userId);
+                  bean.setUserName(userRealName);
+                  bean.setTeamAbbrev(teamAbbrev);
+                  bean.setTeamId(teamId);
+                  list.add(bean);
+
+                  //计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
+                  //为防作弊，合计12洞杆数总和时采2.3.4制：
+                  //先算出18洞的新新贝利亚总杆：Par3洞成绩超过5杆，此洞以5杆计算；Par4洞成绩超过7杆，此洞以7杆计算；Par5洞成绩超过9杆，此洞以9杆计算。
+                  //12洞总杆 = 18洞的新新贝利亚防作弊总杆，减去6洞总杆
+                  //是否par （0：否 1：是）比标准杆多一杆或者标准杆完成
+                  //净杆=总杆-差点
+
+
+                  //不防作弊时用户的18洞总杆数
+                  Long sumRod = matchScoreDao.getSumRod(userId, childMatchId);
+                  //防作弊18洞总杆数
+                  Integer sumRodXxbly = beforeTotalRodNum + afterTotalRodNum;
+                  if (sumRod < 67) {
+                      //有球洞没记分，就不计算差点
+                      sumRod = 0L;
+                  }
+                  if (sumRod != null && sumRod != 0) {
+                      //本用户随机抽取的6个洞总杆数
+                      //Long radomSumRod = matchScoreDao.getRandomSumRod(userId,matchInfo,beforeHoleNum,afterHoleNum);
+
+                      //差点 加个提示
+
+                      BigDecimal ch = new BigDecimal((sumRodXxbly * 1.5 - sum18) * 0.8).setScale(2, BigDecimal.ROUND_HALF_UP);
+                      double cha = ch.doubleValue();
+
+                      //净杆
+                      double netRod = sumRod.doubleValue() - cha;
+                      //保留两位小数
+                      netRod = (double) Math.round(netRod * 100) / 100;
+
+                      user.put("sumRodNum", netRod);
+                      bean.setTotalNetRodScore(netRod);
+                  } else {
+                      user.put("sumRodNum", 0);
+                      bean.setTotalNetRodScore(0);
+                  }
+              }
+          }
+      }
+      if (userList != null && userList.size() > 0) {
+          //排序 差点越高名次越好
+          Collections.sort(userList, new Comparator<Map<String, Object>>() {
+              @Override
+              public int compare(Map<String, Object> bean1, Map<String, Object> bean2) {
+                  Double d1 = Double.valueOf(bean1.get("sumRodNum").toString());
+                  Double d2 = Double.valueOf(bean2.get("sumRodNum").toString());
+                  if ((d1 == null || d1 == 0) && (d2 == null || d2 == 0)) {
+                      return 0;
+                  }
+                  if (d1 == null || d1 == 0) {
+                      return 1;
+                  }
+                  if (d2 == null || d2 == 0) {
+                      return -1;
+                  }
+                  return new Double(d1).compareTo(new Double(d2));
+              }
+          });
+      }
+
+      if (list != null && list.size() > 0) {
+          List<MatchGroupUserScoreBean> newList = new ArrayList<>();
+          newList.addAll(list.subList(2, list.size()));
+          list.removeAll(list.subList(2, list.size()));
+          //排序 差点越高名次越好
+          Collections.sort(newList, new Comparator<MatchGroupUserScoreBean>() {
+              @Override
+              public int compare(MatchGroupUserScoreBean bean1, MatchGroupUserScoreBean bean2) {
+                  Double d1 = new Double(bean1.getTotalNetRodScore());
+                  Double d2 = new Double(bean2.getTotalNetRodScore());
+                  if ((d1 == null || d1 == 0) && (d2 == null || d2 == 0)) {
+                      return 0;
+                  }
+                  if (d1 == null || d1 == 0) {
+                      return 1;
+                  }
+                  if (d2 == null || d2 == 0) {
+                      return -1;
+                  }
+                  return new Double(d1).compareTo(new Double(d2));
+              }
+          });
+          list.addAll(newList);
+      }
+  }
 	//格式化用户半场得分
 	//计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
 	//为防作弊，合计12洞杆数总和时采2.3.4制：Par3洞成绩超过5杆，此洞以5杆计算；Par4洞成绩超过7杆，此洞以7杆计算；Par5洞成绩超过9杆，此洞以9杆计算。
