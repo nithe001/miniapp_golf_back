@@ -470,11 +470,11 @@ public class UserService implements IBaseService {
             //本用户的前后半场总得分情况
             List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
             //本用户前半场得分情况
-            List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), matchType,0, matchUserGroupMapping.getMugmTeamId());
+            List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), 0, matchUserGroupMapping.getMugmTeamId());
             createNewUserScore(userScoreList, uScoreBeforeList);
             Integer beforeTotalScore = userScoreList.get(userScoreList.size() - 1).getRodNum();
             //本用户后半场得分情况
-            List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), matchType,1, matchUserGroupMapping.getMugmTeamId());
+            List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId,  matchInfo.getMiId(), 1, matchUserGroupMapping.getMugmTeamId());
             createNewUserScore(userScoreList, uScoreAfterList);
             Integer afterTotalScore = userScoreList.get(userScoreList.size() - 1).getRodNum();
 

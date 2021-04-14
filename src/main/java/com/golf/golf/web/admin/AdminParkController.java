@@ -234,6 +234,7 @@ public class AdminParkController {
             String city = row.getCell(0).toString();
             String parkName = row.getCell(1).toString();
             String zone = row.getCell(3).toString();
+            Integer sumRod = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
             String address;
             try{
                  address = row.getCell(2).toString().trim();
@@ -250,12 +251,16 @@ public class AdminParkController {
                 parkInfo.setPiCity(city);
                 parkInfo.setPiName(parkName);
                 parkInfo.setPiAddress(address);
+                parkInfo.setPiIsValid(1);
+                parkInfo.setPiSumRod(sumRod);
                 adminParkService.saveParkInfo(parkInfo);
                 parkId = parkInfo.getPiId();
             } else {
                 parkInfoDb.setPiCity(city);
                 parkInfoDb.setPiName(parkName);
                 parkInfoDb.setPiAddress(address);
+                parkInfoDb.setPiIsValid(1);
+                parkInfoDb.setPiSumRod(sumRod);
                 adminParkService.updateParkInfo(parkInfoDb);
                 parkId = parkInfoDb.getPiId();
             }

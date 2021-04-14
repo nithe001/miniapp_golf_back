@@ -15,12 +15,17 @@ public class TeamUserPoint implements java.io.Serializable {
 
 	private Long tupId;
 	private Long tupTeamId;
+    private String tupTeamAbbrev;
     private Long tupReportTeamId;
 	private Long tupMatchId;
+    private String tupMatchName;
+    private Long tupGroupId;
 	private Double tupMatchPoint;
 	//增加如下字段nhq
 	private Integer tupMatchScore;
 	private Long tupUserId;
+    private String tupUserName;
+    private String tupUserHeadimg;
 	private Long tupCreateUserId;
 	private String tupCreateUserName;
 	private Long tupCreateTime;
@@ -35,17 +40,22 @@ public class TeamUserPoint implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public TeamUserPoint(Long tupTeamId, Long tupReportTeamId,Long tupMatchId,
-                         Double tupMatchPoint,Integer tupMatchScore, Long tupUserId, Long tupCreateUserId,
-						 String tupCreateUserName, Long tupCreateTime, Long tupUpdateUserId,
+	public TeamUserPoint(Long tupTeamId, String tupTeamAbbrev,Long tupReportTeamId,Long tupMatchId,String tupMatchName,
+                         Long tupGroupId,Double tupMatchPoint,Integer tupMatchScore, Long tupUserId,String tupUserName,
+                         String tupUserHeadimg,Long tupCreateUserId, String tupCreateUserName, Long tupCreateTime, Long tupUpdateUserId,
 						 String tupUpdateUserName, Long tupUpdateTime) {
 		this.tupTeamId = tupReportTeamId;
+		this.tupTeamAbbrev = tupTeamAbbrev;
         this.tupReportTeamId = tupTeamId;
 		this.tupMatchId = tupMatchId;
+		this.tupMatchName=tupMatchName;
+        this.tupGroupId = tupGroupId;
 		this.tupMatchPoint = tupMatchPoint;
 		//增加如下字段 nhq
 		this.tupMatchScore = tupMatchScore;
 		this.tupUserId = tupUserId;
+		this.tupUserName = tupUserName;
+        this.tupUserHeadimg = tupUserHeadimg;
 		this.tupCreateUserId = tupCreateUserId;
 		this.tupCreateUserName = tupCreateUserName;
 		this.tupCreateTime = tupCreateTime;
@@ -75,6 +85,17 @@ public class TeamUserPoint implements java.io.Serializable {
 		this.tupTeamId = tupTeamId;
 	}
 
+    @Column(name = "tup_team_Abbrev")
+    public String getTupTeamAbbrev() {
+        return this.tupTeamAbbrev;
+    }
+
+    public void setTupTeamAbbrev(String tupTeamAbbrev) {
+        this.tupTeamAbbrev = tupTeamAbbrev;
+    }
+
+
+
     @Column(name = "tup_report_team_id")
     public Long getTupReportTeamId() {
         return this.tupReportTeamId;
@@ -92,6 +113,24 @@ public class TeamUserPoint implements java.io.Serializable {
 	public void setTupMatchId(Long tupMatchId) {
 		this.tupMatchId = tupMatchId;
 	}
+
+    @Column(name = "tup_match_name")
+    public String getTupMatchName() {
+        return this.tupMatchName;
+    }
+
+    public void setTupMatchName(String tupMatchName) {
+        this.tupMatchName = tupMatchName;
+    }
+
+    @Column(name = "tup_group_id")
+    public Long getTupGroupId() {
+        return this.tupGroupId;
+    }
+
+    public void setTupGroupId(Long tupGroupId) {
+        this.tupGroupId = tupGroupId;
+    }
 
 	@Column(name = "tup_match_point")
 	public  Double getTupMatchPoint() {
@@ -121,6 +160,24 @@ public class TeamUserPoint implements java.io.Serializable {
 	public void setTupUserId(Long tupUserId) {
 		this.tupUserId = tupUserId;
 	}
+
+    @Column(name = "tup_user_name")
+    public String getTupUserName() {
+        return this.tupUserName;
+    }
+
+    public void setTupUserName(String tupUserName) {
+        this.tupUserName = tupUserName;
+    }
+
+    @Column(name = "tup_user_headimg")
+    public String getTupUserHeadimg() {
+        return this.tupUserHeadimg;
+    }
+
+    public void setTupUserHeadimg(String tupUserHeadimg) {
+        this.tupUserHeadimg = tupUserHeadimg;
+    }
 
 	@Column(name = "tup_create_user_id")
 	public Long getTupCreateUserId() {

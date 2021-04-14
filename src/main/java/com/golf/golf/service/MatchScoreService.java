@@ -159,26 +159,33 @@ public class MatchScoreService implements IBaseService {
                   Long userId = matchService.getLongValue(user, "uiId");
                   Long childMatchId = matchService.getLongValue(user, "match_id");
                   Long teamId = matchService.getLongValue(user, "team_id");
+                  Long groupId = matchService.getLongValue(user, "group_id");
                   String teamAbbrev = user.get("teamAbbrev").toString();
                   String userRealName = user.get("uiRealName") == null ? null : user.get("uiRealName").toString();
+                  String userHeadimg = user.get("uiHeadimg") == null ? null : user.get("uiHeadimg").toString();
+                  String matchName = user.get("matchName") == null ? null : user.get("matchName").toString();
                   //本用户的前后半场总得分情况
                   List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 
                   //本用户前半场得分情况
-                  List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId, matchType, 0, null);
+                  List<Map<String, Object>> uScoreBeforeList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId, 0, null);
                   //防作弊计算前半场9洞的总杆数
                   scoreNetHole = matchScoreDao.getMatchNetRodHole(childMatchId);
                   Integer beforeTotalRodNum = createNewUserScore(userScoreList, uScoreBeforeList, scoreNetHole);
 
                   //本用户后半场得分情况
-                  List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId, matchType, 1, null);
+                  List<Map<String, Object>> uScoreAfterList = matchDao.getBeforeAfterScoreByUserId(userId, childMatchId,  1, null);
                   //防作弊计算后半场9洞的总杆数
                   Integer afterTotalRodNum = createNewUserScore(userScoreList, uScoreAfterList, scoreNetHole);
                   bean.setUserScoreTotalList(userScoreList);
                   bean.setUserId(userId);
                   bean.setUserName(userRealName);
+                  bean.setUserHeadimg(userHeadimg);
                   bean.setTeamAbbrev(teamAbbrev);
                   bean.setTeamId(teamId);
+                  bean.setMatchId(childMatchId);
+                  bean.setMatchName(matchName);
+                  bean.setGroupId(groupId);
                   list.add(bean);
 
                   //计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
