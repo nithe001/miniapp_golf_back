@@ -2616,7 +2616,7 @@ public class MatchService implements IBaseService {
 	 * @param matchId 比赛id
 	 * @return
 	 */
-	public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws UnsupportedEncodingException {
+	public Map<String, Object> getTotalScoreByMatchId(Long matchId, Integer page) throws UnsupportedEncodingException {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
@@ -2681,7 +2681,13 @@ public class MatchService implements IBaseService {
 */
         List<Map<String, Object>> userList;
         if (matchInfo.getMiType() ==2) {
-            userList =matchDao.getUserScoreByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds);
+        	int rowsPerPage = 200;
+			if(page == 0){
+				rowsPerPage = 0;
+			}
+			page = page != null && page > 0 ? page : 1;
+			POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(rowsPerPage , page);
+            userList = matchDao.getUserScoreByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds, pageInfo);
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
@@ -2881,7 +2887,7 @@ public class MatchService implements IBaseService {
 */
         List<Map<String, Object>> userList;
         if (matchInfo.getMiType() ==2) {
-            userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds);
+            userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds, null);
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
