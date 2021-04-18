@@ -130,7 +130,7 @@ public class AdminMatchController {
 			MatchInfo matchInfo = adminMatchService.getMatchById(matchId);
 			List<TeamInfo> joinTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiJoinTeamIds());
 			List<TeamInfo> submitTeamInfoList = adminMatchService.getJoinTeamList(matchInfo.getMiReportScoreTeamId());
-			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId);
+			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId, 0);
 			List<Map<String,Object>> matchUserGroupMappingList = adminMatchService.getMatchUserGroupMappingList(matchInfo.getMiId());
 			mm.addAttribute("matchInfo",matchInfo);
 			mm.addAttribute("joinTeamInfoList",joinTeamInfoList);

@@ -200,96 +200,108 @@ public class AdminParkController {
 	@ResponseBody
 	@RequestMapping(value = {"importPark1"})
 	public JsonElement importPark1(MultipartFile file) throws IOException {
-		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
-		XSSFSheet sheet = xwb.getSheetAt(0);
-		XSSFRow row;
-//		sheet.getPhysicalNumberOfRows()
-		for (int i = 1201; i < 1379; i++) {
-			row = sheet.getRow(i);
+        try {
+            XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
+            XSSFSheet sheet = xwb.getSheetAt(0);
+            XSSFRow row;
+    //		sheet.getPhysicalNumberOfRows()
+            for (int i = 1201; i < 1379; i++) {
+                row = sheet.getRow(i);
 
-			String city = row.getCell(0).toString();
-			String parkName =  row.getCell(1).toString();
-			Integer sumRol =  Integer.parseInt(row.getCell(13).toString().replace(".0",""));
+                String city = row.getCell(0).toString();
+                String parkName =  row.getCell(1).toString();
+                Integer sumRol =  Integer.parseInt(row.getCell(13).toString().replace(".0",""));
 
-			ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
-			System.out.println(parkInfoDb.getPiId());
-			parkInfoDb.setPiSumRod(parkInfoDb.getPiSumRod()+sumRol);
-			adminParkService.updateParkInfo(parkInfoDb);
-		}
-		return null;
+                ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
+                System.out.println(parkInfoDb.getPiId());
+                parkInfoDb.setPiSumRod(parkInfoDb.getPiSumRod()+sumRol);
+                adminParkService.updateParkInfo(parkInfoDb);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("后台管理——通过excel批量导入球场数据时出错。"+ e );
+            return JsonWrapper.newErrorInstance("后台管理——通过excel批量导入球场数据时出错。");
+        }
+        return JsonWrapper.newSuccessInstance();
 	}
 
 	@ResponseBody
 	@RequestMapping(value = {"importPark"})
 	public JsonElement importPark(MultipartFile file) throws IOException {
-		XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
-		XSSFSheet sheet = xwb.getSheetAt(0);
-		XSSFRow row;
-		ParkInfo parkInfo = null;
-//		sheet.getPhysicalNumberOfRows()
-		//for (int i = 870; i < 920; i++) {
-        for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
-            row = sheet.getRow(i);
+	    try{
+            XSSFWorkbook xwb = new XSSFWorkbook(file.getInputStream());
+            XSSFSheet sheet = xwb.getSheetAt(0);
+            XSSFRow row;
+            ParkInfo parkInfo = null;
+    //		sheet.getPhysicalNumberOfRows()
+            //for (int i = 870; i < 920; i++) {
+            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+                row = sheet.getRow(i);
 
-            String city = row.getCell(0).toString();
-            String parkName = row.getCell(1).toString();
-            String zone = row.getCell(3).toString();
-            Integer sumRod = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
-            String address;
-            try{
-                 address = row.getCell(2).toString().trim();
-            } catch (Exception e){
-                 address ="";
-            }
-          //  Integer sumRol = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
-
-
-            ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
-            Long parkId;
-            if (parkInfoDb == null) {
-                parkInfo = new ParkInfo();
-                parkInfo.setPiCity(city);
-                parkInfo.setPiName(parkName);
-                parkInfo.setPiAddress(address);
-                parkInfo.setPiIsValid(1);
-                parkInfo.setPiSumRod(sumRod);
-                adminParkService.saveParkInfo(parkInfo);
-                parkId = parkInfo.getPiId();
-            } else {
-                parkInfoDb.setPiCity(city);
-                parkInfoDb.setPiName(parkName);
-                parkInfoDb.setPiAddress(address);
-                parkInfoDb.setPiIsValid(1);
-                parkInfoDb.setPiSumRod(sumRod);
-                adminParkService.updateParkInfo(parkInfoDb);
-                parkId = parkInfoDb.getPiId();
-            }
-
-            ParkPartition  parkPartitionDb;
-            for (int j = 4; j <= 12; j++) {
-                parkPartitionDb = adminParkService.getParkHole(parkId,zone,j-3);
-                Integer hole = Integer.parseInt(row.getCell(j).toString().replace(".0", ""));
-                if (  parkPartitionDb == null) {
-                    ParkPartition parkPartition = new ParkPartition();
-                    parkPartition.setPpPId(parkId);
-                    parkPartition.setPpName(zone);
-                    parkPartition.setPpHoleNum(j - 3);
-                    parkPartition.setPpHoleStandardRod(hole);
-                    adminParkService.saveParkPartition(parkPartition);
-                } else {
-                     parkPartitionDb.setPpPId(parkId);
-                     parkPartitionDb.setPpName(zone);
-                     parkPartitionDb.setPpHoleNum(j - 3);
-                     parkPartitionDb.setPpHoleStandardRod(hole);
-                    adminParkService.updateParkPartition( parkPartitionDb);
+                String city = row.getCell(0).toString();
+                String parkName = row.getCell(1).toString();
+                String zone = row.getCell(3).toString();
+                Integer sumRod = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
+                String address;
+                try{
+                     address = row.getCell(2).toString().trim();
+                } catch (Exception e){
+                     address ="";
                 }
-                    
-            }
-//			Integer totalHole =  Integer.parseInt(row.getCell(12).toString());
+              //  Integer sumRol = Integer.parseInt(row.getCell(13).toString().replace(".0", ""));
 
+
+                ParkInfo parkInfoDb = adminParkService.getByCityAndName(city, parkName);
+                Long parkId;
+                if (parkInfoDb == null) {
+                    parkInfo = new ParkInfo();
+                    parkInfo.setPiCity(city);
+                    parkInfo.setPiName(parkName);
+                    parkInfo.setPiAddress(address);
+                    parkInfo.setPiIsValid(1);
+                    parkInfo.setPiSumRod(sumRod);
+                    adminParkService.saveParkInfo(parkInfo);
+                    parkId = parkInfo.getPiId();
+                } else {
+                    parkInfoDb.setPiCity(city);
+                    parkInfoDb.setPiName(parkName);
+                    parkInfoDb.setPiAddress(address);
+                    parkInfoDb.setPiIsValid(1);
+                    parkInfoDb.setPiSumRod(sumRod);
+                    adminParkService.updateParkInfo(parkInfoDb);
+                    parkId = parkInfoDb.getPiId();
+                }
+
+                ParkPartition  parkPartitionDb;
+                for (int j = 4; j <= 12; j++) {
+                    parkPartitionDb = adminParkService.getParkHole(parkId,zone,j-3);
+                    Integer hole = Integer.parseInt(row.getCell(j).toString().replace(".0", ""));
+                    if (  parkPartitionDb == null) {
+                        ParkPartition parkPartition = new ParkPartition();
+                        parkPartition.setPpPId(parkId);
+                        parkPartition.setPpName(zone);
+                        parkPartition.setPpHoleNum(j - 3);
+                        parkPartition.setPpHoleStandardRod(hole);
+                        adminParkService.saveParkPartition(parkPartition);
+                    } else {
+                         parkPartitionDb.setPpPId(parkId);
+                         parkPartitionDb.setPpName(zone);
+                         parkPartitionDb.setPpHoleNum(j - 3);
+                         parkPartitionDb.setPpHoleStandardRod(hole);
+                        adminParkService.updateParkPartition( parkPartitionDb);
+                    }
+
+                }
+    //			Integer totalHole =  Integer.parseInt(row.getCell(12).toString());
+
+            }
+            // 保存
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("后台管理——通过excel批量导入球场数据时出错。"+ e );
+            return JsonWrapper.newErrorInstance("后台管理——通过excel批量导入球场数据时出错。");
         }
-		// 保存
-		return null;
+        return JsonWrapper.newSuccessInstance();
 	}
 
 	/**

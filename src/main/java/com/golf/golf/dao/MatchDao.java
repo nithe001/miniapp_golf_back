@@ -2561,7 +2561,8 @@ public class MatchDao extends CommonDao {
      * 由于总杆和净杆不管那个父比赛取，都是一样的，所以一个子比赛的数据在这个表里只存一份
      *
      **/
-    public List<Map<String, Object>> getUserScoreByMatchId(Long matchId,Long teamId,Integer matchType,List<Long> childMatchIds) {
+    public List<Map<String, Object>> getUserScoreByMatchId(Long matchId,Long teamId,Integer matchType,
+														   List<Long> childMatchIds,POJOPageInfo pageInfo) {
         Map<String, Object> parp = new HashMap<String, Object>();
         parp.put("matchId", matchId);
         parp.put("teamId", teamId);
@@ -2584,7 +2585,13 @@ public class MatchDao extends CommonDao {
 
         sql.append(" )score  LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
         sql.append( "ORDER BY score.sumRodNum ");
-        List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		List<Map<String, Object>> list = null;
+		if(pageInfo != null){
+			list = dao.createSQLQuery(sql.toString(), parp,
+					pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
+		}else{
+			list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+		}
         return list;
     }
     /**

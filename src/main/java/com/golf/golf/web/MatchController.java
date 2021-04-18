@@ -1154,11 +1154,13 @@ public class MatchController {
 	 */
 	@ResponseBody
 	@RequestMapping("getTotalScoreByMatchId")
-	public JsonElement getTotalScoreByMatchId(@RequestAttribute("matchId") Long matchId, @RequestAttribute("orderType") Integer orderType) {
+	public JsonElement getTotalScoreByMatchId(@RequestAttribute("page") Integer page,
+											  @RequestAttribute("matchId") Long matchId,
+											  @RequestAttribute("orderType") Integer orderType) {
 		try {
 			Map<String,Object> scoreList = null;
 			if(orderType == null || orderType == 0){
-				scoreList = matchService.getTotalScoreByMatchId(matchId);
+				scoreList = matchService.getTotalScoreByMatchId(matchId, page);
 			}else{
 				scoreList = matchScoreService.getTotalScoreByMatchId(matchId);
 			}
