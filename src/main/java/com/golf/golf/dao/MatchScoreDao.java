@@ -39,10 +39,11 @@ public class MatchScoreDao extends CommonDao {
 				 " u.ui_headimg AS uiHeadimg,"+
 				 " s.ms_team_id as team_id," +
 				 "s.ms_match_id as match_id," +
-				 "s.ms_match_title as match_title," +
+				 "s.ms_match_title as matchName," +
 				 "s.ms_group_id as group_id," +
 				 "s.ms_user_id as uiId," +
-				 "s.ms_user_name as uiRealName " );
+				 "s.ms_user_name as uiRealName," +
+                 "COUNT(s.ms_id) AS holeCount " );
 		 if (matchType ==2) {
              sql.append(" FROM" +
                      " match_score AS s left join user_info AS u ON s.ms_user_id = u.ui_id " +
@@ -54,7 +55,7 @@ public class MatchScoreDao extends CommonDao {
                      " WHERE " +
                      " s.ms_match_id = :matchId ");
          }
-		 sql.append(" and s.ms_type = 0 ");
+		 sql.append(" and s.ms_type = 0  ");
 //         sql.append(" and s.ms_user_id = 670 ");
 		 sql.append(" GROUP BY s.ms_user_id, s.ms_match_id ");
 		 return dao.createSQLQuery(sql.toString(),parp, Transformers.ALIAS_TO_ENTITY_MAP);

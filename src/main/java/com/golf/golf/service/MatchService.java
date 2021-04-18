@@ -650,6 +650,7 @@ public class MatchService implements IBaseService {
 		//更新比赛用户配置
 		String oldJoinTeamIds = matchInfoDb.getMiJoinTeamIds();
 		String newJoinTeamIds = matchInfo.getMiJoinTeamIds();
+
 		//更新赛制
 		Integer oldMatchFormat1 = matchInfoDb.getMiMatchFormat1();
 		Integer oldMatchFormat2 = matchInfoDb.getMiMatchFormat2();
@@ -657,13 +658,14 @@ public class MatchService implements IBaseService {
 		Integer newMatchFormat2 = matchInfo.getMiMatchFormat2();
 
 		//报名期间都可以改，但比赛开始后，就只能改 观战范围，成绩上报 和 比赛说明。
+        List<Long> oldChildMatchIds = getLongIdListReplace(matchInfoDb.getMiChildMatchIds());
         List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
 		matchInfoDb.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
 		matchInfoDb.setMiReportScoreTeamId(matchInfo.getMiReportScoreTeamId());
         matchInfoDb.setMiChildMatchIds(matchInfo.getMiChildMatchIds());
-        if (childMatchIds !=null) {
+        if (childMatchIds !=null && childMatchIds.size()!=0 ) {
             matchInfoDb.setMiType(2);
-            matchInfo.setMiIsEnd(1);
+            matchInfoDb.setMiIsEnd(1);
             MatchInfo childMatchInfo;
             List<Long> fatherMatchIds;
             for (int i=0;i<childMatchIds.size(); i++){
@@ -676,6 +678,9 @@ public class MatchService implements IBaseService {
             }
         } else {
             matchInfoDb.setMiType(1);
+            if (oldChildMatchIds !=null && oldChildMatchIds.size()!=0 ) {
+                matchInfoDb.setMiIsEnd(0);
+            }
         }
 		matchInfoDb.setMiContent(matchInfo.getMiContent());
 		matchInfoDb.setMiTitle(matchInfo.getMiTitle());
@@ -872,7 +877,7 @@ public class MatchService implements IBaseService {
 
 		//把本比赛ID保存到子比赛中
         Long matchId = matchInfo.getMiId();
-        if (childMatchIds != null &&  matchId !=null ) {
+        if (childMatchIds != null && childMatchIds.size() != 0 && matchId !=null ) {
             MatchInfo childMatchInfo;
             List<Long> fatherMatchIds;
             for (int i = 0; i < childMatchIds.size(); i++) {
@@ -1934,8 +1939,8 @@ public class MatchService implements IBaseService {
             List<Long> fatherMatchIds = getLongIdListReplace(matchInfo.getMiFatherMatchIds());
             List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
             List<MatchGroupUserScoreBean> list = new ArrayList<>();
-            if (fatherMatchIds !=null && matchInfo.getMiType() !=2){
-                matchDao.scoreCopy(matchId);
+            if (fatherMatchIds !=null && fatherMatchIds.size() !=0 && matchInfo.getMiType() !=2){
+               // matchDao.scoreCopy(matchId);
 
                 // 如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
                 List<Map<String, Object>>  userScoreList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null);
@@ -2335,7 +2340,7 @@ public class MatchService implements IBaseService {
      * 比赛结束时，  把用户的总杆和净杆保存到积分表teamuserpoint中
      *
      */
-    private void updateScorePointByIds(Long matchId, String matchName,Long teamId,String teamAbbrev, Long userId,String userName,String userHeadimg,Long groupId, Long captainUserId,Double point, Integer score) {
+    private void updateScorePointByIds(Long matchId, String matchName,Long teamId,String teamAbbrev, Long userId,String userName,String userHeadimg,Long groupId,Integer holeCount, Long captainUserId,Double point, Integer score) {
         UserInfo captainUserInfo = matchDao.get(UserInfo.class,captainUserId);
         TeamUserPoint teamUserPoint = matchDao.getTeamUserPoint(matchId, teamId,0l, userId, captainUserId);
 
@@ -2350,6 +2355,7 @@ public class MatchService implements IBaseService {
                 teamUserPoint.setTupUserName(userName);
                 teamUserPoint.setTupUserHeadimg(userHeadimg);
                 teamUserPoint.setTupGroupId(groupId);
+                teamUserPoint.setTupHoleCount(holeCount);
                 teamUserPoint.setTupReportTeamId(0l);
                 if(point>=0){teamUserPoint.setTupMatchPoint(point);}
                 if(score>=0){teamUserPoint.setTupMatchScore(score);}
@@ -2366,6 +2372,7 @@ public class MatchService implements IBaseService {
                 teamUserPoint.setTupUserName(userName);
                 teamUserPoint.setTupUserHeadimg(userHeadimg);
                 teamUserPoint.setTupGroupId(groupId);
+                teamUserPoint.setTupHoleCount(holeCount);
                 teamUserPoint.setTupReportTeamId(0l);
                 if(point>=0){teamUserPoint.setTupMatchPoint(point);}
                 if(score>=0){teamUserPoint.setTupMatchScore(score);}
@@ -2492,10 +2499,9 @@ public class MatchService implements IBaseService {
 
         if (matchScoreList != null && matchScoreList.size() > 0) {
             for (Map<String, Object> scoreMap : matchScoreList) {
-                Integer scoreHoleCount = getIntegerValue(scoreMap, "holeCount");
-                if (scoreHoleCount >= 18) { //只有18洞成绩完整的才上报积分
                     //杆数
                     Long userId = getLongValue(scoreMap, "uiId");
+                    Integer holeCount = getIntegerValue(scoreMap, "holeCount");
                     String userName = getName(scoreMap, "uiRealName");
                     String userHeadimg = getName(scoreMap, "uiHeadimg");
                     Long teamId = getLongValue(scoreMap, "team_id");
@@ -2503,11 +2509,10 @@ public class MatchService implements IBaseService {
                     String teamAbbrev =getName(scoreMap, "teamAbbrev");
                     String matchName =getName(scoreMap, "matchName");
                     score = getIntegerValue(scoreMap, "sumRodNum");
-                    updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,captainUserId, -1d, score);
+                    updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount,captainUserId, -1d, score);
 
                 }
-            }
-        }
+       }
         return true;
     }
 
@@ -2520,6 +2525,7 @@ public class MatchService implements IBaseService {
             for ( int i=0;i< list.size(); i++ ) {
 
                 Long userId = list.get(i).getUserId();
+                Integer holeCount = list.get(i).getHoleCount();
                 String userName = list.get(i).getUserName();
                 String userHeadimg = list.get(i).getUserHeadimg();
                 Long teamId =  list.get(i).getTeamId();
@@ -2530,7 +2536,7 @@ public class MatchService implements IBaseService {
                 Double point =  list.get(i).getTotalNetRodScore();
 
 
-                updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId, captainUserId, point, -1);
+                updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount, captainUserId, point, -1);
 
 
             }

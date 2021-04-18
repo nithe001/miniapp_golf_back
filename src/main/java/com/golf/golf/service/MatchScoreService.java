@@ -154,13 +154,12 @@ public class MatchScoreService implements IBaseService {
           for (Map<String, Object> user : userList) {
 
               MatchGroupUserScoreBean bean = new MatchGroupUserScoreBean();
-              Integer scoreHoleCount = matchService.getIntegerValue(user, "holeCount");
-              if (scoreHoleCount >= 18) { //只有18洞成绩记完整的才上报净杆
+                  Integer holeCount = matchService.getIntegerValue(user, "holeCount");
                   Long userId = matchService.getLongValue(user, "uiId");
                   Long childMatchId = matchService.getLongValue(user, "match_id");
                   Long teamId = matchService.getLongValue(user, "team_id");
                   Long groupId = matchService.getLongValue(user, "group_id");
-                  String teamAbbrev = user.get("teamAbbrev").toString();
+                  String teamAbbrev = user.get("teamAbbrev") == null ? null : user.get("teamAbbrev").toString();
                   String userRealName = user.get("uiRealName") == null ? null : user.get("uiRealName").toString();
                   String userHeadimg = user.get("uiHeadimg") == null ? null : user.get("uiHeadimg").toString();
                   String matchName = user.get("matchName") == null ? null : user.get("matchName").toString();
@@ -186,6 +185,7 @@ public class MatchScoreService implements IBaseService {
                   bean.setMatchId(childMatchId);
                   bean.setMatchName(matchName);
                   bean.setGroupId(groupId);
+                  bean.setHoleCount(holeCount);
                   list.add(bean);
 
                   //计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
@@ -200,7 +200,7 @@ public class MatchScoreService implements IBaseService {
                   Long sumRod = matchScoreDao.getSumRod(userId, childMatchId);
                   //防作弊18洞总杆数
                   Integer sumRodXxbly = beforeTotalRodNum + afterTotalRodNum;
-                  if (sumRod < 67) {
+                  if (holeCount < 18) {
                       //有球洞没记分，就不计算差点
                       sumRod = 0L;
                   }
@@ -224,9 +224,10 @@ public class MatchScoreService implements IBaseService {
                       user.put("sumRodNum", 0);
                       bean.setTotalNetRodScore(0);
                   }
-              }
+
           }
       }
+
       if (userList != null && userList.size() > 0) {
           //排序 差点越高名次越好
           Collections.sort(userList, new Comparator<Map<String, Object>>() {
@@ -272,6 +273,7 @@ public class MatchScoreService implements IBaseService {
           });
           list.addAll(newList);
       }
+
   }
 	//格式化用户半场得分
 	//计算净杆：公式:  差点=（其余12洞杆数总和×1.5—18洞标准杆数）×0.8。
