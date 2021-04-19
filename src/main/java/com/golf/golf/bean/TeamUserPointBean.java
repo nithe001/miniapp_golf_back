@@ -20,7 +20,7 @@ public class TeamUserPointBean implements Comparable<TeamUserPointBean> {
 	//总杆数
 	private Integer sumRodNum;
 	//积分
-	private Integer point;
+	private Double point;
 
 	public Long getUserId() {
 		return userId;
@@ -70,11 +70,11 @@ public class TeamUserPointBean implements Comparable<TeamUserPointBean> {
 		this.sumRodNum = sumRodNum;
 	}
 
-	public Integer getPoint() {
+	public Double getPoint() {
 		return point;
 	}
 
-	public void setPoint(Integer point) {
+	public void setPoint(Double point) {
 		this.point = point;
 	}
 
