@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -40,7 +41,8 @@ public class TeamService implements IBaseService {
 	private UserDao userDao;
     @Autowired
     private UserDao matchDao;
-	/**
+
+   	/**
 	 * 获取球队列表
 	 * type 0：所有球队 1：已加入球队 2：可加入球队  3：我创建的球队(显示待审核人数)
 	 * @return
@@ -273,7 +275,10 @@ public class TeamService implements IBaseService {
                         if (type == 1) {
                             //积分榜 获取本用户的前n场总积分 按照积分排名
                             List<Map<String, Object>> point = teamDao.getUserPointByChangci(parp);
-                            Integer sumpoint = matchService.getIntegerValue(point.get(0), "sumPoint");
+                            //Double sumpoint = matchService.getDoubleValue(point.get(0), "sumPoint");
+                            //很奇怪这个地方不能用上面那句取值。
+                            Double sumpoint = (Double)point.get(0).get("sumPoint");
+                            if (sumpoint == null ) {sumpoint =0.00;}
                             teamUserPointBean.setPoint(sumpoint);
 
                         }

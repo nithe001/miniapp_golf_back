@@ -1270,16 +1270,17 @@ public class MatchDao extends CommonDao {
 				"u.ui_real_name AS uiRealName, " +
 				"u.ui_nick_name AS uiNickName, " +
 				"u.ui_headimg AS uiHeadimg, " +
-				"g.mugm_team_id AS teamId " +
+				"g.mugm_team_id AS teamId, " +
+                "g.mugm_create_time AS time " +
 				"FROM " +
 				"match_user_group_mapping AS g, " +
 				"user_info AS u " +
 				"WHERE " +
 				"g.mugm_user_id = u.ui_id " +
-				"AND g.mugm_match_id = :matchId and g.mugm_team_id = :teamId ");
+				"AND g.mugm_match_id = :matchId and g.mugm_team_id = :teamId  ");
 		//sql.append(" and (g.mugm_is_auto_cap is null or g.mugm_is_auto_cap = 0) ");
-		sql.append(" ) AS t ");
-		sql.append("LEFT JOIN team_info AS team ON t.teamId = team.ti_id ");
+		sql.append(" ) AS t  ");
+		sql.append("LEFT JOIN team_info AS team ON t.teamId = team.ti_id  ORDER BY t.time DESC  ");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
@@ -1302,7 +1303,8 @@ public class MatchDao extends CommonDao {
 				"u.ui_real_name AS uiRealName, " +
 				"u.ui_nick_name AS uiNickName, " +
 				"u.ui_headimg AS uiHeadimg, " +
-				"g.mugm_team_id AS teamId " +
+				"g.mugm_team_id AS teamId, " +
+                "g.mugm_create_time AS time " +
 				"FROM " +
 				"match_user_group_mapping AS g, " +
 				"user_info AS u " +
@@ -1314,7 +1316,7 @@ public class MatchDao extends CommonDao {
 			sql.append(" and (u.ui_real_name like :keyword or u.ui_nick_name like :keyword) ");
 		}
 		sql.append(" ) AS t ");
-		sql.append("LEFT JOIN team_info AS team ON t.teamId = team.ti_id ");
+		sql.append("LEFT JOIN team_info AS team ON t.teamId = team.ti_id  ORDER BY t.time DESC");
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
 	}
