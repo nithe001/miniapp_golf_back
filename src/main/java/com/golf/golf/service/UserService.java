@@ -295,9 +295,10 @@ public class UserService implements IBaseService {
 		wechatUserInfo.setWuiNickName(nickName);
 		wechatUserInfo.setWuiOpenid(openid);
 		String gender = jsonObject.get("gender").toString();
+		//性别 0：未知、1：男、2：女
 		if("1".equals(gender)){
 			wechatUserInfo.setWuiSex("男");
-		}else if("0".equals(gender)){
+		}else if("2".equals(gender)){
 			wechatUserInfo.setWuiSex("女");
 		}else{
 			wechatUserInfo.setWuiSex("未知");
@@ -329,9 +330,10 @@ public class UserService implements IBaseService {
 		wechatUserInfo.setWuiOpenid(openid);
 		wechatUserInfo.setWuiNickName(nickName);
 		String gender = jsonObject.get("gender").toString();
+		//性别 0：未知、1：男、2：女
 		if("1".equals(gender)){
 			wechatUserInfo.setWuiSex("男");
-		}else if("0".equals(gender)){
+		}else if("2".equals(gender)){
 			wechatUserInfo.setWuiSex("女");
 		}else{
 			wechatUserInfo.setWuiSex("未知");
@@ -730,4 +732,35 @@ public class UserService implements IBaseService {
 			}
 		}
     }
+
+	/**
+	 * 个人中心-修改性别
+	 * @return
+	 */
+	public void updateUserSex(String openid, String sex) {
+		WechatUserInfo wechatUserInfo = dao.getWechatUserInfoByOpenId(openid);
+		wechatUserInfo.setWuiSex(sex);
+		//性别 0：未知、1：男、2：女
+		if("1".equals(sex)){
+			wechatUserInfo.setWuiSex("男");
+		}else if("2".equals(sex)){
+			wechatUserInfo.setWuiSex("女");
+		}else{
+			wechatUserInfo.setWuiSex("未知");
+		}
+		dao.update(wechatUserInfo);
+
+		if(wechatUserInfo.getWuiUId() != null){
+			UserInfo userInfo = dao.get(UserInfo.class, wechatUserInfo.getWuiUId());
+			//性别 0：未知、1：男、2：女
+			if("1".equals(sex)){
+				userInfo.setUiSex("男");
+			}else if("2".equals(sex)){
+				userInfo.setUiSex("女");
+			}else{
+				userInfo.setUiSex("未知");
+			}
+			dao.update(userInfo);
+		}
+	}
 }

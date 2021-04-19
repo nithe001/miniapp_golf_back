@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 用户
@@ -303,5 +304,26 @@ public class UserController {
 			logger.error("前台-用户认领成绩失败。openid="+openid ,e);
 			return JsonWrapper.newErrorInstance("前台-用户认领成绩失败。openid="+openid);
 		}
+	}
+
+	/**
+	 * 个人中心-修改性别
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("changeSex")
+	public JsonElement changeSex(@RequestAttribute("openid") String openid,
+									  @RequestAttribute("sex") String sex) {
+		try {
+			if(StringUtils.isNotEmpty(openid) && !Objects.equals("guest", openid) && StringUtils.isNotEmpty(sex)){
+				userService.updateUserSex(openid, sex);
+				return JsonWrapper.newSuccessInstance();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("前台-个人中心-修改性别失败。openid="+openid ,e);
+			return JsonWrapper.newErrorInstance("前台-个人中心-修改性别失败。openid="+openid);
+		}
+		return JsonWrapper.newErrorInstance("出错了。");
 	}
 }

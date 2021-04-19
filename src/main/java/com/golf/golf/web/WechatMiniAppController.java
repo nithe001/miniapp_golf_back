@@ -6,9 +6,6 @@ import com.alibaba.fastjson.JSON;
 import com.golf.common.gson.JsonWrapper;
 import com.golf.common.util.AesUtil;
 import com.golf.golf.common.GenericController;
-import com.golf.golf.common.security.UserModel;
-import com.golf.golf.common.security.WechatUserUtil;
-import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.service.UserService;
 import com.golf.golf.service.WechatService;
 import com.google.gson.JsonElement;
@@ -19,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
@@ -72,38 +68,4 @@ public class WechatMiniAppController extends GenericController {
         }
 		return JsonWrapper.newErrorInstance("获取用户openid失败");
     }
-
-	/**
-	 * 获取并更新用户信息(微信、个人信息)
-	 * @throws Exception
-	 */
-	@ResponseBody
-	@RequestMapping(value = "updateWui", method = RequestMethod.POST)
-	public JsonElement updateWui(@RequestAttribute("sessionId") String sessionId,
-								 @RequestAttribute("encryptedData") String encryptedData,
-								 @RequestAttribute("iv") String iv){
-		try{
-			if(StringUtils.isNotEmpty(sessionId)){
-				String openId = WechatUserUtil.getOpenIdBySessionId(sessionId);
-				WechatUserInfo userInfo = userService.getWechatUserByOpenid(openId);
-				if(userInfo != null){
-//					userService.updateWUser(userInfo, nickName, avatarUrl, gender, province, city, country);
-				}
-				UserModel model = WechatUserUtil.getLoginUserBySessionId(sessionId);
-				model.setWechatUser(userInfo);
-
-
-				//更新session
-				WechatUserUtil.saveUserInfoBySessionId(model, sessionId);
-				return JsonWrapper.newDataInstance(model);
-			}else{
-				return JsonWrapper.newErrorInstance("操作失败，未获取到用户的openid");
-			}
-		}catch (Exception e) {
-			e.printStackTrace();
-			logger.error("保存用户信息失败", e);
-		}
-		return JsonWrapper.newErrorInstance("保存用户信息失败");
-	}
-
 }
