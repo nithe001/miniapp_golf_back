@@ -1861,7 +1861,9 @@ public class MatchDao extends CommonDao {
                     "mm.mugm_match_id AS matchId, " +
                     "mm.mugm_group_id AS groupId, " +
                     "mm.mugm_user_id AS userId, " +
-                    "sum(s.ms_rod_num) AS sumRod, " +
+                    //"sum(s.ms_rod_num) AS sumRod, " +
+                    //改为计算杆差
+                    "sum(s.ms_rod_cha) AS sumRod, " +
 
                     "COUNT(s.ms_id) AS holeCount " +
 
@@ -2557,7 +2559,7 @@ public class MatchDao extends CommonDao {
     }
 
     /**
-     *从teamuserpoint 表中取一场父比赛的所有球员的总杆,这类记录和球队积分的区别时reportteamid = 0
+     *从teamuserpoint 表中取一场父比赛的所有球员的总杆,这类记录和球队积分的区别是reportteamid = 0
      * 由于总杆和净杆不管那个父比赛取，都是一样的，所以一个子比赛的数据在这个表里只存一份
      *
      **/
@@ -2571,7 +2573,8 @@ public class MatchDao extends CommonDao {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT  m.mi_title AS matchName, score.* from ( ");
         sql.append(" SELECT tup.tup_user_id AS uiId,tup.tup_user_name AS uiRealName,tup.tup_user_headimg AS uiHeadimg,tup.tup_team_id AS team_id," +
-                "tup.tup_team_abbrev AS teamAbbrev, tup.tup_match_id AS match_id,tup.tup_group_id AS group_id,tup.tup_match_score AS sumRodNum ");
+                "tup.tup_team_abbrev AS teamAbbrev, tup.tup_match_id AS match_id,tup.tup_group_id AS group_id,tup.tup_match_score AS sumRodNum, " +
+                "tup.tup_hole_count AS holeCount");
         sql.append(" FROM team_user_point AS tup " );
         if  (matchType  ==2) {
             sql.append(" WHERE tup.tup_match_id IN (:childMatchIds ) ");
@@ -2584,7 +2587,7 @@ public class MatchDao extends CommonDao {
         sql.append(" AND tup.tup_report_team_id = 0 ");
 
         sql.append(" )score  LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
-        sql.append( "ORDER BY score.sumRodNum ");
+        sql.append( "ORDER BY score.holeCount=18 DESC,score.sumRodNum ");
 		List<Map<String, Object>> list = null;
 		if(pageInfo != null){
 			list = dao.createSQLQuery(sql.toString(), parp,

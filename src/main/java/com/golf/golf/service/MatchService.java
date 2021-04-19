@@ -2495,7 +2495,6 @@ public class MatchService implements IBaseService {
 
         //杆差倍数 球友积分=基础积分+（110-球友比分）*杆差倍数
         //获取该队伍的得分情况
-        Integer score;
 
         if (matchScoreList != null && matchScoreList.size() > 0) {
             for (Map<String, Object> scoreMap : matchScoreList) {
@@ -2508,7 +2507,7 @@ public class MatchService implements IBaseService {
                     Long groupId = getLongValue(scoreMap, "group_id");
                     String teamAbbrev =getName(scoreMap, "teamAbbrev");
                     String matchName =getName(scoreMap, "matchName");
-                    score = getIntegerValue(scoreMap, "sumRodNum");
+                    Integer score = getIntegerValue(scoreMap, "sumRodCha");
                     updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount,captainUserId, -1d, score);
 
                 }
@@ -2687,7 +2686,7 @@ public class MatchService implements IBaseService {
 */
         List<Map<String, Object>> userList;
         if (matchInfo.getMiType() ==2) {
-        	int rowsPerPage = 200;
+        	int rowsPerPage = 50;
 			if(page == 0){
 				rowsPerPage = 0;
 			}
