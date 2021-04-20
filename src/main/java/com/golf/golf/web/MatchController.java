@@ -1159,10 +1159,10 @@ public class MatchController {
 											  @RequestAttribute("orderType") Integer orderType) {
 		try {
 			Map<String,Object> scoreList = null;
-			if(orderType == null || orderType == 0){
-				scoreList = matchService.getTotalScoreByMatchId(matchId, page);
+			if(orderType == null || orderType == 0  || orderType == 2){
+				scoreList = matchService.getTotalScoreByMatchId(matchId, page,orderType);
 			}else{
-				scoreList = matchScoreService.getTotalScoreByMatchId(matchId);
+				scoreList = matchScoreService.getTotalScoreByMatchId(matchId,orderType);
 			}
 			return JsonWrapper.newDataInstance(scoreList);
 		} catch (Exception e) {

@@ -1943,7 +1943,7 @@ public class MatchService implements IBaseService {
                // matchDao.scoreCopy(matchId);
 
                 // 如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
-                List<Map<String, Object>>  userScoreList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null);
+                List<Map<String, Object>>  userScoreList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null,0);
                 updateScoreByRodSum(userInfo.getUiId(), matchId,  userScoreList);
 
                 //  如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人净杆都保存到teamuserpoint 中
@@ -2621,7 +2621,7 @@ public class MatchService implements IBaseService {
 	 * @param matchId 比赛id
 	 * @return
 	 */
-	public Map<String, Object> getTotalScoreByMatchId(Long matchId, Integer page) throws UnsupportedEncodingException {
+	public Map<String, Object> getTotalScoreByMatchId(Long matchId, Integer page,Integer orderType) throws UnsupportedEncodingException {
 		Map<String, Object> result = new HashMap<>();
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
 		List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
@@ -2692,13 +2692,13 @@ public class MatchService implements IBaseService {
 			}
 			page = page != null && page > 0 ? page : 1;
 			POJOPageInfo pageInfo = new POJOPageInfo<Map<String, Object>>(rowsPerPage , page);
-            userList = matchDao.getUserScoreByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds, pageInfo);
+            userList = matchDao.getUserScoreByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds, pageInfo,orderType);
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
             setUserName(userList);
         } else {
-            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, null);//顺便按成绩排序,没记完整成绩排后面
+            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, null,orderType);//顺便按成绩排序,没记完整成绩排后面
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
@@ -2892,14 +2892,14 @@ public class MatchService implements IBaseService {
 */
         List<Map<String, Object>> userList;
         if (matchInfo.getMiType() ==2) {
-            userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds, null);
+            userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds, null,0);
             //用户昵称解码
             decodeUserNickName(userList);
             //用户名
             setUserName(userList);
             //本比赛用户每个洞得分情况
         } else {
-            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, teamId);//顺便按成绩排序,没记完整成绩排后面
+            userList = matchDao.getUserListById(matchId, matchInfo.getMiType(), childMatchIds, null, teamId,0);//顺便按成绩排序,没记完整成绩排后面
            //用户昵称解码
             decodeUserNickName(userList);
             //用户名

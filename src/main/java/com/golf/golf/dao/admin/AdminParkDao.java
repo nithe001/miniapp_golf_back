@@ -97,9 +97,12 @@ public class AdminParkDao extends CommonDao {
         Map<String, Object> parp = new HashMap<String,Object>();
         parp.put("id", id);
         parp.put("holeNum", holeNum);
+        /*
         if(StringUtils.isNotEmpty(zone)){
             parp.put("zone","%"+zone.trim()+"%");
         }
+       */
+        parp.put("zone",zone);
 
         StringBuilder hql = new StringBuilder();
         hql.append(" FROM ParkPartition as p WHERE p.ppPId = :id");

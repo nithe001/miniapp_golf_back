@@ -29,7 +29,7 @@ public class MatchScoreDao extends CommonDao {
 	}
 
 	//本比赛的所有用户，为0的排后面(首列显示)
-	 public List<Map<String, Object>> getUserListByMatchId(MatchInfo matchInfo,List<Long> childMatchIds) {
+	 public List<Map<String, Object>> getUserListByMatchId(MatchInfo matchInfo,List<Long> childMatchIds,Integer orderType) {
 	    Integer matchType =  matchInfo.getMiType();
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchInfo.getMiId());
@@ -44,16 +44,15 @@ public class MatchScoreDao extends CommonDao {
 				 "s.ms_user_id as uiId," +
 				 "s.ms_user_name as uiRealName," +
                  "COUNT(s.ms_id) AS holeCount " );
-		 if (matchType ==2) {
-             sql.append(" FROM" +
-                     " match_score AS s left join user_info AS u ON s.ms_user_id = u.ui_id " +
-                     " WHERE " +
-                     " s.ms_match_id IN ( :childMatchIds) ");
+		 if (orderType ==3 ) {
+             sql.append(" FROM  match_score AS s INNER JOIN user_info AS u ON s.ms_user_id = u.ui_id   and u.ui_sex='女'  ");
+         } else {
+             sql.append(" FROM  match_score AS s LEFT JOIN user_info AS u ON s.ms_user_id = u.ui_id ");
+         }
+         if (matchType ==2) {
+             sql.append(" WHERE s.ms_match_id IN ( :childMatchIds) ");
          }else {
-             sql.append(" FROM" +
-                     " match_score AS s left join user_info AS u ON s.ms_user_id = u.ui_id " +
-                     " WHERE " +
-                     " s.ms_match_id = :matchId ");
+             sql.append(" WHERE s.ms_match_id = :matchId ");
          }
 		 sql.append(" and s.ms_type = 0  ");
 //         sql.append(" and s.ms_user_id = 670 ");
@@ -119,19 +118,21 @@ public class MatchScoreDao extends CommonDao {
      * 由于总杆和净杆不管那个父比赛取，都是一样的，所以一个子比赛的数据在这个表里只存一份
      *scoreType: 0:总杆，1，净杆
      **/
-    public List<Map<String, Object>> getUserScorePointByMatchId(Long matchId,Long teamId,Integer matchType,List<Long> childMatchIds) {
+    public List<Map<String, Object>> getUserScorePointByMatchId(Long matchId,Long teamId,Integer matchType,List<Long> childMatchIds,Integer orderType) {
         Map<String, Object> parp = new HashMap<String, Object>();
         parp.put("matchId", matchId);
         parp.put("teamId", teamId);
         parp.put("childMatchIds", childMatchIds);
 
         StringBuilder sql = new StringBuilder();
-
+        if (orderType == 3) {
+            sql.append("SELECT score1.* from ( ");
+        }
         sql.append("SELECT " +
                 " m.mi_title AS matchName, score.* from ( ");
         sql.append(" SELECT tup.tup_user_id AS uiId,tup.tup_user_name AS uiRealName,tup.tup_user_headimg AS uiHeadimg," +
                 "tup.tup_team_id AS team_id, tup.tup_team_abbrev AS teamAbbrev, tup.tup_group_id AS group_id," +
-                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNum ");
+                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNet ");
         sql.append(" FROM team_user_point AS tup " );
         if  (matchType  ==2) {
             sql.append(" WHERE tup.tup_match_id IN (:childMatchIds ) ");
@@ -143,7 +144,13 @@ public class MatchScoreDao extends CommonDao {
         }
         sql.append(" AND tup.tup_report_team_id = 0 ");
         sql.append(" )score LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
-        sql.append( "ORDER BY score.sumRodNum ");
+        if (orderType == 3) {
+            sql.append(" )score1 INNER JOIN user_info AS u ON score1.match_id =u.ui_id  and u.ui_sex='女'  ");
+            sql.append("ORDER BY score1.sumRodNum ");
+        } else {
+            sql.append("ORDER BY score.sumRodNum ");
+        }
+
         List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
         return list;
     }

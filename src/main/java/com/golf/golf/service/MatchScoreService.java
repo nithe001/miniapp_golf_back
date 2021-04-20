@@ -76,7 +76,7 @@ public class MatchScoreService implements IBaseService {
 	 */
 
 
-    public Map<String, Object> getTotalScoreByMatchId(Long matchId) throws Exception {
+    public Map<String, Object> getTotalScoreByMatchId(Long matchId,Integer orderType) throws Exception {
         Map<String, Object> result = new HashMap<>();
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         Integer matchType =  matchInfo.getMiType();
@@ -133,9 +133,9 @@ public class MatchScoreService implements IBaseService {
         //获取用户及成绩列表
 
         if(matchType ==2){
-            userList =matchScoreDao.getUserScorePointByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds);
+            userList =matchScoreDao.getUserScorePointByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds,orderType);
         } else{
-            userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds);
+            userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds,orderType);
             createNewUserNetScoreList(userList, list, matchInfo);
         }
 
@@ -218,10 +218,10 @@ public class MatchScoreService implements IBaseService {
                       //保留两位小数
                       netRod = (double) Math.round(netRod * 100) / 100;
 
-                      user.put("sumRodNum", netRod);
+                      user.put("sumRodNet", netRod);
                       bean.setTotalNetRodScore(netRod);
                   } else {
-                      user.put("sumRodNum", 0);
+                      user.put("sumRodNet", 0);
                       bean.setTotalNetRodScore(0);
                   }
 
@@ -233,8 +233,8 @@ public class MatchScoreService implements IBaseService {
           Collections.sort(userList, new Comparator<Map<String, Object>>() {
               @Override
               public int compare(Map<String, Object> bean1, Map<String, Object> bean2) {
-                  Double d1 = Double.valueOf(bean1.get("sumRodNum").toString());
-                  Double d2 = Double.valueOf(bean2.get("sumRodNum").toString());
+                  Double d1 = Double.valueOf(bean1.get("sumRodNet").toString());
+                  Double d2 = Double.valueOf(bean2.get("sumRodNet").toString());
                   if ((d1 == null || d1 == 0) && (d2 == null || d2 == 0)) {
                       return 0;
                   }

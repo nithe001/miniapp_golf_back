@@ -720,46 +720,11 @@ public class MatchDao extends CommonDao {
 		return list;
 	}
 
-	/**
-	 * 获取本组用户 和 用户的总杆差
-	 * 按照球队分组并按照参赛范围的球队顺序来排序
-
-	public List<Map<String, Object>> getUserListById(Long matchId, Long groupId, Long teamId) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("select " +
-                " t.ti_abbrev AS teamAbbrev, score1.* from (" +
-                "select " +
-				" u.ui_nick_name AS uiNickName," +
-				" u.ui_real_name AS uiRealName," +
-				" u.ui_headimg AS uiHeadimg,score.* from (" );
-		//sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id," +
-        sql.append("select m.mugm_user_id AS uiId,m.mugm_team_id AS team_id,m.mugm_group_id AS group_id,m.mugm_group_name AS groupName, " +
-					"(IFNULL(sum(s.ms_rod_num),0)) AS sumRodNum,sum(s.ms_rod_cha) AS sumRodCha, COUNT(s.ms_id) AS holeCount ");
-		sql.append("FROM match_user_group_mapping as m LEFT JOIN match_score AS s " +
-      				//"on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_team_id=s.ms_team_id and s.ms_type = 0) ");
-                "on (m.mugm_match_id = s.ms_match_id and m.mugm_user_id = s.ms_user_id and m.mugm_group_id=s.ms_group_id and s.ms_type = 0) ");
-		sql.append("where m.mugm_match_id = "+matchId );
-      	if(groupId != null){
-			sql.append(" and m.mugm_group_id = "+groupId);
-		}
-		if(teamId != null){
-			sql.append(" and m.mugm_team_id = "+teamId);
-		}
-		sql.append(" and m.mugm_is_del != 1 ");
-		sql.append(" GROUP BY m.mugm_user_id " );
-		sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
-        sql.append(" )score1 LEFT JOIN team_info AS t ON score1.team_id = t.ti_id ");
-		//sql.append("ORDER BY score1.sumRodNum !=0 and  score1.sumRodNum > 67 desc,score1.sumRodNum ");
-        sql.append("ORDER BY score1.holeCount desc, score1.sumRodNum !=0  desc,score1.sumRodNum");
-		return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
-	}
-*/
-
     /**
      * 获取本组用户 和 用户的总杆差
      * 按照球队分组并按照参赛范围的球队顺序来排序
      */
-    public List<Map<String, Object>> getUserListById(Long matchId,  Integer  matchType,List<Long> childMatchIds, Long groupId, Long teamId) {
+    public List<Map<String, Object>> getUserListById(Long matchId,  Integer  matchType,List<Long> childMatchIds, Long groupId, Long teamId,Integer orderType) {
 
         Map<String,Object> parp = new HashMap<>();
         parp.put("matchId",matchId);
@@ -797,7 +762,11 @@ public class MatchDao extends CommonDao {
         }
         sql.append(" and m.mugm_is_del != 1 ");
         sql.append(" GROUP BY m.mugm_user_id,m.mugm_match_id " );
-        sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
+        if (orderType == 2 ) {
+            sql.append(" )score INNER JOIN user_info AS u ON score.uiId = u.ui_id  and u.ui_sex = '女' ");
+        } else {
+            sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
+        }
         sql.append(" )score1 LEFT JOIN team_info AS t ON score1.team_id = t.ti_id ");
         //sql.append("ORDER BY score1.sumRodNum !=0 and  score1.sumRodNum > 67 desc,score1.sumRodNum ");
         sql.append("ORDER BY score1.holeCount desc, score1.sumRodNum !=0  desc,score1.sumRodNum,  score1.eagle desc, score1.bird desc, score1.par desc ");
@@ -2564,13 +2533,16 @@ public class MatchDao extends CommonDao {
      *
      **/
     public List<Map<String, Object>> getUserScoreByMatchId(Long matchId,Long teamId,Integer matchType,
-														   List<Long> childMatchIds,POJOPageInfo pageInfo) {
+														   List<Long> childMatchIds,POJOPageInfo pageInfo,Integer orderType) {
         Map<String, Object> parp = new HashMap<String, Object>();
         parp.put("matchId", matchId);
         parp.put("teamId", teamId);
         parp.put("childMatchIds", childMatchIds);
 
         StringBuilder sql = new StringBuilder();
+        if (orderType == 2) {
+            sql.append("SELECT score1.* from ( ");
+        }
         sql.append("SELECT  m.mi_title AS matchName, score.* from ( ");
         sql.append(" SELECT tup.tup_user_id AS uiId,tup.tup_user_name AS uiRealName,tup.tup_user_headimg AS uiHeadimg,tup.tup_team_id AS team_id," +
                 "tup.tup_team_abbrev AS teamAbbrev, tup.tup_match_id AS match_id,tup.tup_group_id AS group_id,tup.tup_match_score AS sumRodNum, " +
@@ -2587,7 +2559,12 @@ public class MatchDao extends CommonDao {
         sql.append(" AND tup.tup_report_team_id = 0 ");
 
         sql.append(" )score  LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
-        sql.append( "ORDER BY score.holeCount=18 DESC,score.sumRodNum ");
+        if (orderType == 2) {
+            sql.append(" )score1 INNER JOIN user_info AS u ON score1.uiId = u.ui_id  and u.ui_sex='女'  ");
+            sql.append("ORDER BY score1.holeCount=18 DESC,score1.sumRodNum ");
+        } else {
+            sql.append("ORDER BY score.holeCount=18 DESC,score.sumRodNum ");
+        }
 		List<Map<String, Object>> list = null;
 		if(pageInfo != null){
 			list = dao.createSQLQuery(sql.toString(), parp,
