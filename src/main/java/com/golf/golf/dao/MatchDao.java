@@ -41,7 +41,7 @@ public class MatchDao extends CommonDao {
                 "j.mjwi_type AS type," +
 //				"count(DISTINCT(j.mjwi_user_id)) AS userWatchCount," +
                 "sum(j.mjwi_watch_num) AS userWatchCount," +
-                "mugm.userCount,"+
+                "m.mi_people_num AS userCount,"+
                 "m.mi_match_format_1 as mi_match_format_1," +
                 "m.mi_match_format_2 as mi_match_format_2 ");
         if(parp.get("myLat") != null && parp.get("myLng") != null ){
@@ -58,6 +58,7 @@ public class MatchDao extends CommonDao {
         hql.append(" FROM match_info AS m ");
         hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id AND j.mjwi_type = 0) ");
         hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
+        /*
         hql.append(" LEFT JOIN " +
                 " (SELECT DISTINCT " +
                 " mg.mugm_match_id," +
@@ -69,6 +70,7 @@ public class MatchDao extends CommonDao {
                 " OR mg.mugm_is_auto_cap = 0 " +
                 " GROUP BY mg.mugm_match_id) AS mugm " +
                 "ON mugm.mugm_match_id = m.mi_id ");
+                */
         hql.append(" WHERE m.mi_is_valid = 1 ");
 
         //0：全部比赛（除了不可用的比赛） 1：我参加的比赛（包括我参加的正在报名的比赛）
@@ -268,13 +270,14 @@ public class MatchDao extends CommonDao {
                 "j.mjwi_type AS type," +
 //				"count(DISTINCT(j.mjwi_user_id)) AS userWatchCount," +
                 "sum(j.mjwi_watch_num) AS userWatchCount," +
-                "mugm.userCount,"+
+                "m.mi_people_num AS userCount,"+
                 "m.mi_match_format_1 as mi_match_format_1," +
                 "m.mi_match_format_2 as mi_match_format_2 ");
 
         hql.append(" FROM match_info AS m ");
         hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id AND j.mjwi_type = 0) ");
         hql.append(" LEFT JOIN park_info as p on m.mi_park_id = p.pi_id ");
+        /*
         hql.append(" LEFT JOIN " +
                 " (SELECT DISTINCT " +
                 " mg.mugm_match_id," +
@@ -286,6 +289,7 @@ public class MatchDao extends CommonDao {
                 " OR mg.mugm_is_auto_cap = 0 " +
                 " GROUP BY mg.mugm_match_id) AS mugm " +
                 "ON mugm.mugm_match_id = m.mi_id ");
+                */
         hql.append(" WHERE m.mi_is_valid = 1 ");
         hql.append(" and  m.mi_type = 1 ");
 
@@ -1797,7 +1801,7 @@ public class MatchDao extends CommonDao {
         return list;
 	}
 
-    /**
+     /**
      * 比赛详情——赛长获取待分组人员不进行任何筛选，直接取所有待分组的
      * @return
      */
@@ -1964,10 +1968,9 @@ public class MatchDao extends CommonDao {
 	/**
 	 * 获取本比赛的报名（参赛）用户人数
 	 */
-	public Long getAllMatchApplyUserCount(Long matchId,Long userId) {
+	public Long getAllMatchApplyUserCount(Long matchId) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
-		parp.put("userId",userId);
 		StringBuilder sql = new StringBuilder();
 		sql.append("SELECT count(t.mugmUserId) FROM MatchUserGroupMapping as t ");
 		sql.append("where t.mugmMatchId = :matchId ");
