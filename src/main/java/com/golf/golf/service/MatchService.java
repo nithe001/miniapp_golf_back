@@ -181,6 +181,7 @@ public class MatchService implements IBaseService {
                 }
 
                matchInfo.setMiTitle(getName(result, "mi_title"));
+                matchInfo.setMiPriority(getIntegerValue(result, "mi_priority"));
 				matchInfo.setMiParkName(getName(result, "mi_park_name"));
 				matchInfo.setMiMatchTime(getName(result, "mi_match_time"));
 				matchInfo.setMiMatchFormat1(getIntegerValue(result, "mi_match_format_1"));
@@ -1927,13 +1928,17 @@ public class MatchService implements IBaseService {
 	public String updateMatchState(Long matchId, Integer state, String openid) {
 		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
 		MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+		Long userCount = matchDao.getMatchUserCountAlreadyGroup(matchId);
+        matchInfo.setMiPeopleNum(userCount.intValue());
 		matchInfo.setMiIsEnd(state);
 		matchInfo.setMiUpdateUserId(userInfo.getUiId());
 		matchInfo.setMiUpdateUserName(userInfo.getUserName());
 		matchInfo.setMiUpdateTime(System.currentTimeMillis());
 		matchDao.update(matchInfo);
-		//记分截止时提交数据
 
+
+
+		//记分截止时提交数据
         if(state ==2) {
             // 如果本比赛是某个比赛的子比赛，则在结束比赛时把本比赛的比赛成绩从matchscore中复制到matchfatherscore 中
             List<Long> fatherMatchIds = getLongIdListReplace(matchInfo.getMiFatherMatchIds());
@@ -3124,7 +3129,7 @@ public class MatchService implements IBaseService {
 
                                     Long userCount1 = matchDao.getUserCountByChildMatchIds(teamId, childMatchIds);
                                     matchTeamRankingBean.setUserCount(userCount1.intValue());
-                                    if ( matchInfo.getMiMatchFormat3() ==3) {
+                                    if (matchInfo.getMiMatchFormat3()!=null && matchInfo.getMiMatchFormat3() ==3) {
                                         //球队均值排位，取各队前mingci*10 % 算平均值
                                        Double  mingci2 =  Math.ceil(userCount1.doubleValue() * mingci.doubleValue() / 10);
                                        mingci1 = mingci2.intValue();
@@ -3134,7 +3139,7 @@ public class MatchService implements IBaseService {
                                     }
                                     scoreList = matchDao.getFatherMatchRodTotalScoreByMingci(matchId, childMatchIds,teamId, mingci1);
                                 }else {
-                                   if ( matchInfo.getMiMatchFormat3() ==3) {
+                                   if ( matchInfo.getMiMatchFormat3()!= null && matchInfo.getMiMatchFormat3() ==3) {
                                         //球队均值排位，取各队前mingci*10 % 算平均值
                                         mingci1 = (int) Math.ceil(userCount * mingci / 10);
                                     }
@@ -3154,7 +3159,7 @@ public class MatchService implements IBaseService {
 								Integer sumRodNum = getIntegerValue(scoreList.get(0),"sumRodNum");
                                 Double avgRodNum = getDoubleValue(scoreList.get(0),"avgRodNum");
 								if(sumRodNum != 0 ){
-								    if (matchInfo.getMiMatchFormat3() == 3 ) {
+								    if (matchInfo.getMiMatchFormat3()!=null && matchInfo.getMiMatchFormat3() == 3 ) {
 								        //均杆按比例模式，直接用查询出来的结果
                                         matchTeamRankingBean.setAvgRodNum(avgRodNum);
                                         matchTeamRankingBean.setSumRodNum(sumRodNum);
@@ -3189,7 +3194,7 @@ public class MatchService implements IBaseService {
 						matchTeamRankingList.add(matchTeamRankingBean);
 					}
 					//排序
-                    if (matchInfo.getMiMatchFormat3() == 3) {
+                    if (matchInfo.getMiMatchFormat3()!=null && matchInfo.getMiMatchFormat3() == 3) {
                         Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
                             @Override
                             public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
@@ -3912,7 +3917,7 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 
 
 	/**
-	 * 比赛详情——保存——将用户从该分组删除
+	 * 比赛报名——将用户从该分组删除
 	 *
 	 * @return
 	 */
@@ -3931,6 +3936,32 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 			}
 		}
 	}
+
+    /**
+     * 比赛报名——将用户从比赛中删除
+     *
+     * @return
+     */
+    public void delUserByMatchIdUserId(Long matchId,JSONArray checkIds, String openid) {
+        Long myUserId = userService.getUserIdByOpenid(openid);
+        if (checkIds != null && checkIds.size() > 0) {
+            for (int i = 0; i < checkIds.size(); i++) {
+                JSONObject jsonObject = (JSONObject) checkIds.get(i);
+                Long userId = null;
+                Long teamId = null;
+                if (jsonObject.get("userId") != null) {
+                    userId = Long.parseLong(jsonObject.get("userId").toString());
+                }
+                if (jsonObject.get("teamId") != null) {
+                    teamId = Long.parseLong(jsonObject.get("teamId").toString());
+                }
+                //从比赛中删除用户
+                if (userId != myUserId) {
+                    matchDao.delMatchUserMappingByUserId(matchId, teamId, userId);
+                }
+                }
+            }
+        }
 
 
 	/**

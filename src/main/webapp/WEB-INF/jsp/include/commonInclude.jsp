@@ -12,6 +12,7 @@
     }*/
 %>
 <base href="<%=basePath%>">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="UTF-8">
 <meta name="renderer" content="webkit">

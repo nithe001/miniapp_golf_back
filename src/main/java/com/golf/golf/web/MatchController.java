@@ -560,6 +560,22 @@ public class MatchController {
 		}
 	}
 
+    @ResponseBody
+    @RequestMapping("delUserByMatchIdUserId")
+    public JsonElement delUserByMatchIdUserId(@RequestAttribute("matchId") Long matchId,
+                                              @RequestAttribute("checkIds") JSONArray checkIds,
+                                              @RequestAttribute("openid") String openid) {
+        try {
+            matchService.delUserByMatchIdUserId(matchId, checkIds,openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "前台-比赛详情—将用户删除该分组时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
     /**
      * 普通球友 换组 这个方法似乎没用，而是有另一个方法applyMatch 完成的
      * @return

@@ -14,6 +14,7 @@ public class MatchInfo implements java.io.Serializable {
 
 	private Long miId;
 	private Integer miType;
+    private Integer miPriority;
 	private Integer miPeopleNum;
 	private String miTitle;
 	private String miLogo;
@@ -51,7 +52,7 @@ public class MatchInfo implements java.io.Serializable {
 	}
 
 	/** full constructor */
-	public MatchInfo(Integer miType, Integer miPeopleNum, String miTitle, String miLogo,
+	public MatchInfo(Integer miType, Integer miPriority, Integer miPeopleNum, String miTitle, String miLogo,
 					 Long miParkId, String miParkName, String miZoneBeforeNine,
 					 String miZoneAfterNine, String miDigest, String miMatchTime,
 					 String miContent, Integer miMatchOpenType, Integer miJoinOpenType,
@@ -60,6 +61,7 @@ public class MatchInfo implements java.io.Serializable {
 					 String miCreateUserName, Long miCreateUserId, Long miCreateTime,
 					 String miUpdateUserName, Long miUpdateUserId, Long miUpdateTime) {
 		this.miType = miType;
+        this.miPriority = miPriority;
 		this.miPeopleNum = miPeopleNum;
 		this.miTitle = miTitle;
 		this.miLogo = miLogo;
@@ -111,6 +113,15 @@ public class MatchInfo implements java.io.Serializable {
 	public void setMiType(Integer miType) {
 		this.miType = miType;
 	}
+
+    @Column(name = "mi_priority")
+    public Integer getMiPriority() {
+        return this.miPriority;
+    }
+
+    public void setMiPriority(Integer miPriority) {
+        this.miPriority = miPriority;
+    }
 
 	@Column(name = "mi_people_num")
 	public Integer getMiPeopleNum() {

@@ -33,6 +33,7 @@ public class MatchDao extends CommonDao {
         hql.append("SELECT m.mi_type as mi_type,m.mi_id AS mi_id," +
                 "m.mi_logo as mi_logo," +
                 "m.mi_title AS mi_title," +
+                "m.mi_priority AS mi_priority," +
                 "m.mi_park_name AS mi_park_name," +
                 "m.mi_match_time AS mi_match_time," +
                 "m.mi_apply_end_time AS mi_apply_end_time," +
@@ -88,7 +89,7 @@ public class MatchDao extends CommonDao {
             pageInfo.setCount(0);
             return pageInfo;
         }
-        hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
+        hql.append(" order by m.mi_priority DESC, abs(DATEDIFF(m.mi_match_time,now())) ");
 		/*if(parp.get("type") != null && (Integer)parp.get("type") == 1){
 			//比分下 我的比赛按时间排序，距离今天越近的排前面
 		}else{
@@ -210,12 +211,13 @@ public class MatchDao extends CommonDao {
 				"j.mjwi_type AS type," +
 				"sum(j.mjwi_watch_num) AS userWatchCount," +
                 //"count(j.mjwi_user_id) AS userWatchCount,"
-				"count(mugm.mugm_user_id) AS userCount,"+
+				//"count(mugm.mugm_user_id) AS userCount,"+
+                "m.mi_people_num AS userCount," +
 				"m.mi_match_format_1 as mi_match_format_1," +
 				"m.mi_match_format_2 as mi_match_format_2 ");
 		hql.append(" FROM match_info AS m ");
 		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
-		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
+		//hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
 /* 下面这段代码是为了用新的方法计算访问数量，在getMatchList哪里可以，这里不行，先不管了 nhq
         hql.append(" LEFT JOIN " +
                 " (SELECT DISTINCT " +
@@ -241,7 +243,7 @@ public class MatchDao extends CommonDao {
 			pageInfo.setCount(0);
 			return pageInfo;
 		}
-		hql.append(" order by m.mi_is_end, abs(DATEDIFF(m.mi_match_time,now())) ");
+		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		List<Map<String,Object>> list = dao.createSQLQuery(hql.toString(), parp,
 				pageInfo.getStart(), pageInfo.getRowsPerPage(),Transformers.ALIAS_TO_ENTITY_MAP);
 		pageInfo.setCount(count.intValue());
@@ -1722,6 +1724,27 @@ public class MatchDao extends CommonDao {
 		dao.executeHql(sql.toString(),parp);
         System.out.println();
 	}
+
+    /**
+     * 从比赛中删除人
+     * @return
+     */
+    public void delMatchUserMappingByUserId(Long matchId,Long teamId, Long userId) {
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("teamId",teamId);
+        parp.put("userId",userId);
+        StringBuilder sql = new StringBuilder();
+        sql.append("DELETE FROM MatchUserGroupMapping as t ");
+        sql.append("WHERE t.mugmMatchId = :matchId   AND  t.mugmUserId = :userId ");
+
+        if (teamId != null  ) {
+            sql.append(" AND t.mugmTeamId = :teamId ");
+        }
+
+        dao.executeHql(sql.toString(),parp);
+        System.out.println();
+    }
 
 	/**
 	 * 获取我加入的球队id

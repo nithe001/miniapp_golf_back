@@ -381,6 +381,26 @@ public class TeamManageController {
 		}
 	}
 
+    /**
+     * 比赛详情——添加分组 添加组
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("addUserToTeam")
+    public JsonElement addUserToTeam(@RequestAttribute("teamId") Long teamId,
+                                      @RequestAttribute("userName") String userName,
+                                      @RequestAttribute("openid") String openid) {
+        try {
+            teamService.addUserToTeam(teamId, userName,openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "前台-添加用户到报名表时出错。";
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
 	/**
 	 * 获取本球队所有用户
 	 * @param teamId:球队id

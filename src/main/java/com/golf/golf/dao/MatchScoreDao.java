@@ -132,7 +132,7 @@ public class MatchScoreDao extends CommonDao {
                 " m.mi_title AS matchName, score.* from ( ");
         sql.append(" SELECT tup.tup_user_id AS uiId,tup.tup_user_name AS uiRealName,tup.tup_user_headimg AS uiHeadimg," +
                 "tup.tup_team_id AS team_id, tup.tup_team_abbrev AS teamAbbrev, tup.tup_group_id AS group_id," +
-                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNet ");
+                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNet,tup.tup_hole_count AS holeCount ");
         sql.append(" FROM team_user_point AS tup " );
         if  (matchType  ==2) {
             sql.append(" WHERE tup.tup_match_id IN (:childMatchIds ) ");
@@ -145,10 +145,10 @@ public class MatchScoreDao extends CommonDao {
         sql.append(" AND tup.tup_report_team_id = 0 ");
         sql.append(" )score LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
         if (orderType == 3) {
-            sql.append(" )score1 INNER JOIN user_info AS u ON score1.match_id =u.ui_id  and u.ui_sex='女'  ");
-            sql.append("ORDER BY score1.sumRodNum ");
+            sql.append(" )score1 INNER JOIN user_info AS u ON score1.uiId =u.ui_id  and u.ui_sex='女'  ");
+            sql.append("ORDER BY score1.holeCount=18 DESC, score1.sumRodNet ");
         } else {
-            sql.append("ORDER BY score.sumRodNum ");
+            sql.append("ORDER BY   score.holeCount=18 DESC, score.sumRodNet ");
         }
 
         List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
