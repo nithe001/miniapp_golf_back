@@ -60,12 +60,14 @@ public class AdminMatchService implements IBaseService {
 	public void editMatch(MatchInfo matchInfo) {
 		MatchInfo db = adminMatchDao.get(MatchInfo.class,matchInfo.getMiId());
 		db.setMiMatchTime(matchInfo.getMiMatchTime());
+        db.setMiPriority(matchInfo.getMiPriority());
 		db.setMiDigest(matchInfo.getMiDigest());
 		db.setMiContent(matchInfo.getMiContent());
 		db.setMiJoinOpenType(matchInfo.getMiJoinOpenType());
 		db.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
 		db.setMiMatchFormat1(matchInfo.getMiMatchFormat1());
 		db.setMiMatchFormat2(matchInfo.getMiMatchFormat2());
+        db.setMiMatchFormat3(matchInfo.getMiMatchFormat3());
 		db.setMiUpdateTime(System.currentTimeMillis());
 		db.setMiUpdateUserId(AdminUserUtil.getUserId());
 		db.setMiUpdateUserName(AdminUserUtil.getShowName());
@@ -112,7 +114,7 @@ public class AdminMatchService implements IBaseService {
 	public List<TeamInfo> getJoinTeamList(String teamIds) {
 		if(StringUtils.isNotEmpty(teamIds)){
 			List<Long> teamIdList = new ArrayList<>();
-			String ids[] = teamIds.split(",");
+            String[] ids = teamIds.split(",");
 			for(String id : ids){
 				if(StringUtils.isNotEmpty(id)){
 					teamIdList.add(Long.parseLong(id));

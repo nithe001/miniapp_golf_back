@@ -1314,6 +1314,24 @@ public class MatchController {
 		}
 	}
 
+    /**
+     * 比赛——普通用户从一个组退出比赛
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("cancelApply")
+    public JsonElement cancelApply(@RequestAttribute("matchId") Long matchId, @RequestAttribute("openid") String openid) {
+        try {
+            matchService.cancelApply(matchId, openid);
+            return JsonWrapper.newSuccessInstance();
+        } catch (Exception e) {
+            String errmsg = "比赛——退出比赛时出错。matchId="+matchId;
+            e.printStackTrace();
+            logger.error(errmsg ,e);
+            return JsonWrapper.newErrorInstance(errmsg);
+        }
+    }
+
 	/**
 	 * 比赛——报名页面——底部按钮——报名待分组
 	 * @return

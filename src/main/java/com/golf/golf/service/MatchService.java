@@ -3589,7 +3589,30 @@ public class MatchService implements IBaseService {
         }
 	}
 
-	/**
+    /**
+     * 比赛——普通用户从报名名单退出比赛  nhq
+     *退出比赛，删除比赛成绩 nhq
+     * @return
+     */
+    public void cancelApply(Long matchId, String openid) {
+        UserInfo userInfo = userService.getUserInfoByOpenId(openid);
+        Long userId = userInfo.getUiId();
+
+		//删除比赛成绩
+		List<MatchScore> scorelist = matchDao.getIsInMatchByUserId(matchId,userId);
+		if(scorelist != null && scorelist.size()>0){
+			for(MatchScore bean :scorelist){
+				matchDao.del(bean);
+			}
+		}
+		//退出比赛
+        matchDao.delMatchUserMappingByUserId(matchId, null, userId);
+
+    }
+
+
+
+    /**
 	 * 比赛——报名页面——底部按钮——报名待分组
 	 * @return
 	 */

@@ -3,6 +3,16 @@
 <input type="hidden" name="miId" id="miId" value="${matchInfo.miId }"/>
 <div class="box-body">
     <div class="form-group">
+        <label for="miPriority" class="col-sm-2 control-label">置顶</label>
+        <%--1：置顶  0 不置顶--%>
+        <div class="col-sm-5">
+            <input type="radio" name="miPriority" value="0" id=miPriority"
+                   <c:if test="${matchInfo.miPriority == 0 || matchInfo.miPriority == null }">checked</c:if> />不置顶
+            <input type="radio" name="miPriority" value="1"
+                   <c:if test="${matchInfo.miPriority == 1}">checked</c:if> />置顶
+        </div>
+    </div>
+    <div class="form-group">
         <label for="miLogo" class="col-sm-2 control-label">比赛Logo</label>
         <div class="col-sm-5">
             <image src="${matchInfo.miLogo}" id="miLogo" style="width:20%;height:17%;border-radius: 50%;"/>
@@ -22,7 +32,7 @@
         <label for="" class="col-sm-2 control-label">参赛球队</label>
         <div class="col-sm-5">
             <c:forEach items="${joinTeamInfoList}" var="joinTeam" varStatus="s">
-                <image src="${joinTeam.tiLogo}" style="width:10%;height:20%;border-radius: 50%;"/> ${joinTeam.tiName}&nbsp;&nbsp;&nbsp;
+                <image src="${joinTeam.tiLogo}" style="width:10%;height:20%;border-radius: 50%;"/> ${joinTeam.tiName}
             </c:forEach>
         </div>
     </div>
@@ -50,11 +60,11 @@
         <%--观战范围：（1、公开 球友均可见；2、队内公开：参赛者的队友可见；3、封闭：参赛队员可见）--%>
         <div class="col-sm-5">
             <input type="radio" name="miMatchOpenType" value="1" id="miMatchOpenType"
-                   <c:if test="${matchInfo.miMatchOpenType == 1}">checked</c:if> />公开 球友均可见 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchOpenType == 1}">checked</c:if> />公开 球友均可见
             <input type="radio" name="miMatchOpenType" value="2"
-                   <c:if test="${matchInfo.miMatchOpenType == 2}">checked</c:if> />队内公开 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchOpenType == 2}">checked</c:if> />队内公开
             <input type="radio" name="miMatchOpenType" value="3"
-                   <c:if test="${matchInfo.miMatchOpenType == 3}">checked</c:if> />封闭 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchOpenType == 3}">checked</c:if> />封闭
         </div>
     </div>
 
@@ -62,7 +72,7 @@
         <label for="wcTitle" class="col-sm-2 control-label">成绩上报</label>
         <div class="col-sm-5">
             <c:forEach items="${submitTeamInfoList}" var="joinTeam" varStatus="s">
-                <image src="${joinTeam.tiLogo}" style="width:20%;border-radius: 50%;"/> ${joinTeam.tiName}&nbsp;&nbsp;&nbsp;
+                <image src="${joinTeam.tiLogo}" style="width:20%;border-radius: 50%;"/> ${joinTeam.tiName}
             </c:forEach>
         </div>
     </div>
@@ -71,13 +81,23 @@
         <label for="miMatchFormat1" class="col-sm-2 control-label">赛制</label>
         <div class="col-sm-5">
             <input type="radio" name="miMatchFormat1" value="0" id="miMatchFormat1"
-                   <c:if test="${matchInfo.miMatchFormat1 == 0}">checked</c:if> />比杆 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchFormat1 == 0}">checked</c:if> />比杆
             <input type="radio" name="miMatchFormat1" value="1"
                    <c:if test="${matchInfo.miMatchFormat1 == 1}">checked</c:if> />比洞 <br/>
             <input type="radio" name="miMatchFormat2" value="0"
-                   <c:if test="${matchInfo.miMatchFormat2 == 0}">checked</c:if> />个人 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchFormat2 == 0}">checked</c:if> />个人
             <input type="radio" name="miMatchFormat2" value="1"
-                   <c:if test="${matchInfo.miMatchFormat2 == 1}">checked</c:if> />双人 &nbsp;&nbsp;&nbsp;
+                   <c:if test="${matchInfo.miMatchFormat2 == 1}">checked</c:if> />两球
+            <input type="radio" name="miMatchFormat2" value="2"
+                   <c:if test="${matchInfo.miMatchFormat2 == 2}">checked</c:if> />四球 <br/>
+            <input type="radio" name="miMatchFormat3" value="0"
+                   <c:if test="${matchInfo.miMatchFormat3 == 0}">checked</c:if> />总杆排位
+            <input type="radio" name="miMatchFormat3" value="3"
+                   <c:if test="${matchInfo.miMatchFormat3 == 3}">checked</c:if> />均杆排位
+            <input type="radio" name="miMatchFormat3" value="1"
+                   <c:if test="${matchInfo.miMatchFormat3 == 1}">checked</c:if> />按组比洞
+            <input type="radio" name="miMatchFormat3" value="2"
+                   <c:if test="${matchInfo.miMatchFormat3 == 2}">checked</c:if> />总洞比洞 &nbsp;&nbsp;&nbsp;
         </div>
     </div>
 
