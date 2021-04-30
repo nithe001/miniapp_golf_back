@@ -586,10 +586,10 @@ public class UserService implements IBaseService {
 			if(meIsMatchWatch <= 0){
 				//我不是围观人 再判断我是否是参赛者
 				meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
-				if(meIsJoinMatchUser>0){
-					//我是否是本比赛的赛长
-					meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
-				}
+
+                //我是否是本比赛的赛长
+                meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
+
 			}
 			result.put("meIsMatchWatch", meIsMatchWatch > 0);
 			result.put("meIsJoinMatchUser", meIsJoinMatchUser > 0);
@@ -599,10 +599,12 @@ public class UserService implements IBaseService {
 			Long otherIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,userId);
 			Long otherIsMatchCaptain = 0l;
 			Long otherIsMatchWatch = 0l;
-			if(otherIsJoinMatchUser>0){
-				//被查看用户是否是本比赛的赛长
-				otherIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
-			}else{
+
+            //被查看用户是否是本比赛的赛长
+            otherIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,userId);
+
+            //如果被查看人不是比赛人员
+            if(otherIsJoinMatchUser<=0){
 				//被查看用户是否是本比赛的围观人员
 				otherIsMatchWatch = matchDao.getIsWatch(userId,matchId);
 				//被查看用户是围观人员，我是参赛者
@@ -672,7 +674,7 @@ public class UserService implements IBaseService {
 		Long myUserId = userInfo.getUiId();
 		userInfo.setUiRealName(importUserRealName);
 		//删除自己的作为观赛者的记录
-		dao.deleteImportMatchWatchUserId(openid, matchId);
+		//dao.deleteImportMatchWatchUserId(openid, matchId);
 		//把被认领用户的ID替换为自己的，并把认领用户删除
 		updateClaimUserScore(openid, importUserId);
 		return String.valueOf(myUserId);

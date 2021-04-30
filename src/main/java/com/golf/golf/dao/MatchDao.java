@@ -197,7 +197,7 @@ public class MatchDao extends CommonDao {
 	}
 
 	/**
-	 * 获取比赛列表 我创建的比赛
+	 * 获取比赛列表 我是队长的比赛
 	 * @return
 	 */
 	public POJOPageInfo getMyMatchList(SearchBean searchBean, POJOPageInfo pageInfo) {
@@ -210,16 +210,18 @@ public class MatchDao extends CommonDao {
 				"m.mi_match_time AS mi_match_time," +
 				"m.mi_apply_end_time AS mi_apply_end_time," +
 				"m.mi_is_end AS mi_is_end," +
-				"j.mjwi_type AS type," +
-				"sum(j.mjwi_watch_num) AS userWatchCount," +
-                //"count(j.mjwi_user_id) AS userWatchCount,"
-				//"count(mugm.mugm_user_id) AS userCount,"+
+				//"j.mjwi_type AS type," +
+				//"sum(j.mjwi_watch_num) AS userWatchCount," +
+                ////"count(j.mjwi_user_id) AS userWatchCount,"
+				////"count(mugm.mugm_user_id) AS userCount,"+
                 "m.mi_people_num AS userCount," +
+                "m.mi_people_num AS userWatchCount," + //观战人数用这个冒充一下
 				"m.mi_match_format_1 as mi_match_format_1," +
 				"m.mi_match_format_2 as mi_match_format_2 ");
 		hql.append(" FROM match_info AS m ");
-		hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
-		//hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON mugm.mugm_match_id = m.mi_id ");
+		//hql.append(" LEFT JOIN match_join_watch_info AS j ON (m.mi_id = j.mjwi_match_id and m.mi_is_valid = 1 AND j.mjwi_type = 0) ");
+        //只要我是队长的比赛，我都可以修改比赛信息
+		hql.append(" LEFT JOIN match_user_group_mapping AS mugm ON ( mugm.mugm_match_id = m.mi_id   ) ");
 /* 下面这段代码是为了用新的方法计算访问数量，在getMatchList哪里可以，这里不行，先不管了 nhq
         hql.append(" LEFT JOIN " +
                 " (SELECT DISTINCT " +
@@ -233,8 +235,8 @@ public class MatchDao extends CommonDao {
                 " GROUP BY mg.mugm_match_id) AS mugm " +
                 "ON mugm.mugm_match_id = m.mi_id ");
                 */
-		hql.append(" WHERE m.mi_is_valid = 1 ");
-		hql.append(" AND m.mi_create_user_id = :userId ");
+		hql.append(" WHERE m.mi_is_valid = 1  AND  mugm.mugm_user_id = :userId AND mugm.mugm_user_type = 0 ");
+		//hql.append(" AND m.mi_create_user_id = :userId ");
 		if(parp.get("keyword") != null){
 			hql.append(" AND m.mi_title LIKE :keyword ");
 		}
@@ -769,7 +771,7 @@ public class MatchDao extends CommonDao {
         sql.append(" and m.mugm_is_del != 1 ");
         sql.append(" GROUP BY m.mugm_user_id,m.mugm_match_id " );
         if (orderType == 2 ) {
-            sql.append(" )score INNER JOIN user_info AS u ON score.uiId = u.ui_id  and u.ui_sex = '女' ");
+            sql.append(" )score LEFT JOIN user_info AS u ON (score.uiId = u.ui_id ) WHERE u.ui_sex = '女' ");
         } else {
             sql.append(" )score LEFT JOIN user_info AS u ON score.uiId = u.ui_id ");
         }
@@ -2387,11 +2389,13 @@ public class MatchDao extends CommonDao {
 
 	}
 	//撤销成绩上报 删除球队用户积分及成绩 nhq
-	public void delTeamUserPoint(Long matchId, Long teamId, Long captainUserId) {
+	public void delTeamUserPoint(Long matchId, Long teamId, Long reportteamId) {
 		StringBuilder sql = new StringBuilder();
 		sql.append("delete FROM TeamUserPoint as t where t.tupMatchId = "+matchId);
-		sql.append(" and t.tupTeamId = "+teamId);
-		//sql.append(" and t.tupCreateUserId = "+captainUserId); 不用判断队长信息
+		if (teamId !=null ) {
+            sql.append(" and t.tupTeamId = " + teamId);
+        }
+		sql.append(" and t.tupReportTeamId = "+reportteamId);
 		dao.executeHql(sql.toString());
 	}
     //我是否是本组参赛人员(显示邀请记分按钮)
@@ -2586,7 +2590,7 @@ public class MatchDao extends CommonDao {
 
         sql.append(" )score  LEFT JOIN match_info AS m ON score.match_id = m.mi_id ");
         if (orderType == 2) {
-            sql.append(" )score1 INNER JOIN user_info AS u ON score1.uiId = u.ui_id  and u.ui_sex='女'  ");
+            sql.append(" )score1 LEFT JOIN user_info AS u ON (score1.uiId = u.ui_id ) WHERE  u.ui_sex='女'  ");
             sql.append("ORDER BY score1.holeCount=18 DESC,score1.sumRodNum ");
         } else {
             sql.append("ORDER BY score.holeCount=18 DESC,score.sumRodNum ");

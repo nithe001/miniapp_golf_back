@@ -664,6 +664,7 @@ public class MatchService implements IBaseService {
 		matchInfoDb.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
 		matchInfoDb.setMiReportScoreTeamId(matchInfo.getMiReportScoreTeamId());
         matchInfoDb.setMiChildMatchIds(matchInfo.getMiChildMatchIds());
+        //把新的父比赛ID更新到子比赛中
         if (childMatchIds !=null && childMatchIds.size()!=0 ) {
             matchInfoDb.setMiType(2);
             matchInfoDb.setMiIsEnd(1);
@@ -683,6 +684,25 @@ public class MatchService implements IBaseService {
                 matchInfoDb.setMiIsEnd(0);
             }
         }
+        //对于被本比赛删掉的子比赛，把父比赛ID从这些子比赛删除
+        oldChildMatchIds.remove( childMatchIds);
+        if (oldChildMatchIds !=null &&oldChildMatchIds.size()!=0 ) {
+            MatchInfo childMatchInfo;
+            List<Long> fatherMatchIds;
+            for (int i=0;i<oldChildMatchIds.size(); i++){
+                childMatchInfo = getMatchById(oldChildMatchIds.get(i));
+                fatherMatchIds = getLongIdListReplace(childMatchInfo.getMiFatherMatchIds());
+                fatherMatchIds.remove(matchId);
+                childMatchInfo.setMiFatherMatchIds(org.apache.commons.lang.StringUtils.join( fatherMatchIds.toArray(),","));
+                matchDao.save(childMatchInfo);
+
+                //没父比赛了，就把Teammatchpoint 表中该比赛的记录删除
+                if ( fatherMatchIds !=null && fatherMatchIds.size()!=0 ) {
+                    matchDao.delTeamUserPoint(oldChildMatchIds.get(i),null,0l);
+                }
+            }
+        }
+
 		matchInfoDb.setMiContent(matchInfo.getMiContent());
 		matchInfoDb.setMiTitle(matchInfo.getMiTitle());
     	if (!matchInfo.getMiLogo().equals(matchInfoDb.getMiLogo())) {
@@ -2290,7 +2310,7 @@ public class MatchService implements IBaseService {
                matchDao.del(config);
 
                //球员积分，删除球队队员的积分
-               matchDao.delTeamUserPoint(matchInfo.getMiId(),teamId, captainUserId);
+               matchDao.delTeamUserPoint(matchInfo.getMiId(),teamId, reportteamId);
 
            } else {
 	          //球队排位赛积分
@@ -3806,7 +3826,8 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 	 * @return
 	 */
 	public boolean setMatchCaptainByUserId(Long matchId, Long userId, String openid) {
-		UserInfo userInfo = userService.getUserInfoByOpenId(openid);
+		UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
+        UserInfo userInfo =  matchDao.get(UserInfo.class, userId);
 		//该用户是否参加了比赛，不管是否报名待分组
 		MatchUserGroupMapping matchUserGroupMapping = matchDao.getIsInMatch(matchId,userId);
 		if(matchUserGroupMapping != null){
@@ -3815,12 +3836,26 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 			matchUserGroupMapping.setMugmIsAutoCap(0);
 			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
-			matchUserGroupMapping.setMugmUpdateUserId(userInfo.getUiId());
-			matchUserGroupMapping.setMugmUpdateUserName(userInfo.getUserName());
+			matchUserGroupMapping.setMugmUpdateUserId(myUserInfo.getUiId());
+			matchUserGroupMapping.setMugmUpdateUserName(myUserInfo.getUserName());
 			matchDao.update(matchUserGroupMapping);
-			return true;
-		}
-		return false;
+
+		} else {
+            matchUserGroupMapping = new MatchUserGroupMapping();
+            matchUserGroupMapping.setMugmMatchId(matchId);
+            matchUserGroupMapping.setMugmUserId(userId);
+            matchUserGroupMapping.setMugmUserName( userInfo.getUserName());
+            matchUserGroupMapping.setMugmUserType(0);
+            matchUserGroupMapping.setMugmIsAutoCap(0);
+            matchUserGroupMapping.setMugmIsDel(1);
+            matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+            matchUserGroupMapping.setMugmCreateUserId(myUserInfo.getUiId());
+            matchUserGroupMapping.setMugmCreateUserName(myUserInfo.getUserName());
+            matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
+            matchDao.save(matchUserGroupMapping);
+
+        }
+		return true;
 	}
 
 	/**
