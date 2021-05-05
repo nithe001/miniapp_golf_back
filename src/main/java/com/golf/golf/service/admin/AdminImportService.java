@@ -362,29 +362,29 @@ public class AdminImportService implements IBaseService {
 
 	    if(matchUserGroupMapping == null){
 			matchUserGroupMapping = new MatchUserGroupMapping();
-			matchUserGroupMapping.setMugmMatchId(matchId);
-			matchUserGroupMapping.setMugmTeamId(teamId);
-			matchUserGroupMapping.setMugmUserId(userId);
-			matchUserGroupMapping.setMugmUserName(userName);
-			matchUserGroupMapping.setMugmUserType(userType);
-			if (userType ==0 ) {
-			    matchUserGroupMapping.setMugmIsAutoCap(1);
+            matchUserGroupMapping.setMugmMatchId(matchId);
+            matchUserGroupMapping.setMugmTeamId(teamId);
+            matchUserGroupMapping.setMugmUserId(userId);
+            matchUserGroupMapping.setMugmUserName(userName);
+            matchUserGroupMapping.setMugmUserType(userType);
+            if (userType ==0 ) {
+                matchUserGroupMapping.setMugmIsAutoCap(1);
             } else {
                 matchUserGroupMapping.setMugmIsAutoCap(0);
             }
 
-			if ( matchGroup != null) {
+            if ( matchGroup != null) {
                 matchUserGroupMapping.setMugmGroupId(matchGroup.getMgId());
                 matchUserGroupMapping.setMugmGroupName(groupName);
                 matchUserGroupMapping.setMugmIsDel(0);
             } else {
                 matchUserGroupMapping.setMugmIsDel(1);
             }
-			matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
-			matchUserGroupMapping.setMugmCreateUserId(cUserId);
-			matchUserGroupMapping.setMugmCreateUserName(cUserName);
+            matchUserGroupMapping.setMugmCreateTime(System.currentTimeMillis());
+            matchUserGroupMapping.setMugmCreateUserId(cUserId);
+            matchUserGroupMapping.setMugmCreateUserName(cUserName);
             matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
-			adminImportDao.save(matchUserGroupMapping);
+            adminImportDao.save(matchUserGroupMapping);
 		} else {
             matchUserGroupMapping.setMugmUserName(userName);
             matchUserGroupMapping.setMugmUserType(userType);
