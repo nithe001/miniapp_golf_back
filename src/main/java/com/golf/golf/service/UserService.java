@@ -709,17 +709,18 @@ public class UserService implements IBaseService {
 
 				//如果存在我和导入的人存在同一个球队，则先删掉自己在该球队的信息
 				Long teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
-				while (teamId !=null){
+				if (teamId !=null){
 					teamDao.deleteFromTeamUserMapping(teamId,myUserId);
-					teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
+					//teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
 				}
 
 				//如果存在我和导入的人存在同一个比赛，则先删掉自己在该比赛中的信息
+
 				Long matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
-				while (matchId !=null){
+				if  (matchId !=null){
 					matchService.quitMatch(matchId, openid);
-					matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
-				}
+					// matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
+              	}
 
 
 				//更新这个导入用户的 比赛分组mapping 为真实用户的id

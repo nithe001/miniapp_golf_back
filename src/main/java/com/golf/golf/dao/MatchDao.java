@@ -1092,9 +1092,10 @@ public class MatchDao extends CommonDao {
 	 * 成绩提交 球队确认  获取本队球友的总得分
 	 * @param teamType 0：参赛队，1：上报队
 	 */
-	public List<Map<String, Object>> getSumScoreListByMatchIdTeamId(Long matchId, Long teamId, List<Long> userIdList, Integer teamType) {
+	public List<Map<String, Object>> getSumScoreListByMatchIdTeamId(Integer matchType,Long matchId, List<Long> childMatchIds, Long teamId, List<Long> userIdList, Integer teamType) {
 		Map<String,Object> parp = new HashMap<>();
 		parp.put("matchId",matchId);
+        parp.put("childMatchIds",childMatchIds);
 		parp.put("teamId",teamId);
 		parp.put("userIdList",userIdList);
 		parp.put("teamType",teamType);
@@ -1107,7 +1108,11 @@ public class MatchDao extends CommonDao {
 				"SUM(s.ms_rod_num) as sumRodNum, " +
 				"SUM(s.ms_push_rod_num) as sumPushNum ");
 		sql.append("FROM match_score AS s ");
-		sql.append("WHERE s.ms_match_id = :matchId AND s.ms_team_id = :teamId ");
+		if (matchType ==2 ) {
+            sql.append("WHERE s.ms_match_id IN ( :childMatchIds)  AND s.ms_team_id = :teamId ");
+        } else {
+            sql.append("WHERE s.ms_match_id = :matchId AND s.ms_team_id = :teamId ");
+        }
 		if(userIdList != null && userIdList.size()>0){
 			sql.append(" and s.ms_user_id in (:userIdList) ");
 		}
@@ -2132,14 +2137,22 @@ public class MatchDao extends CommonDao {
 
 
 	//获取给定球队参与比赛的的球友
-	public List<Long> getScoreUserList(Long matchId, Long teamId) {
+	public List<Long> getScoreUserList(Integer matchType,Long matchId, List<Long> childMatchIds,Long teamId) {
+        Map<String,Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("teamId",teamId);
+        parp.put("childMatchIds",childMatchIds);
 		StringBuilder sql = new StringBuilder();
 		sql.append("select s.msUserId ");
 		sql.append("FROM MatchScore AS s ");
-		sql.append("where s.msMatchId = "+matchId);
-		sql.append(" and s.msTeamId = "+teamId);
+		if(matchType==2 ) {
+            sql.append("where s.msMatchId in ( :childMatchIds )");
+        } else {
+            sql.append("where s.msMatchId = :matchId ");
+        }
+		sql.append(" and s.msTeamId = :teamId ");
 		sql.append(" GROUP BY s.msUserId " );
-		return dao.createQuery(sql.toString());
+		return dao.createQuery(sql.toString(),parp);
 	}
 
 	/**

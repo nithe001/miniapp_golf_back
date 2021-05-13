@@ -398,6 +398,7 @@ public class TeamDao extends CommonDao {
 	 * @return
 	 */
 	public List<Map<String, Object>> getTeamMatchByYear(Map<String, Object> parp) {
+	    Integer type =(Integer)parp.get("scoreType");
 		StringBuilder hql = new StringBuilder();
 		hql.append("SELECT m.mi_id as matchId,m.mi_title as matchTitle,m.mi_match_time as applyTime," +
 					"t.ti_abbrev as teamAbbrev,gt.ti_abbrev as guestTeamAbbrev,c.ic_base_score as baseScore," +
@@ -405,8 +406,13 @@ public class TeamDao extends CommonDao {
 				  	"FROM integral_config AS c,match_info as m,team_info as t ,team_info as gt " +
 					"WHERE c.ic_match_id = m.mi_id and c.ic_report_team_id = :teamId and c.ic_team_id = t.ti_id " +
 					"and c.ic_guest_team_id = gt.ti_id and m.mi_is_valid = 1 and m.mi_is_end = 2 " +
-                    "and c.ic_score_type = :scoreType "+
 					"and m.mi_match_time >= :startYear and m.mi_match_time <= :endYear ");
+		if (type==0) {
+            hql.append("and c.ic_score_type = 0 ");
+        } else {
+            hql.append("and c.ic_score_type > 0  ");
+        }
+
 		//排序 按照离今天近的排序
 		hql.append(" order by abs(DATEDIFF(m.mi_match_time,now())) ");
 		List<Map<String, Object>> list = dao.createSQLQuery(hql.toString(), parp,Transformers.ALIAS_TO_ENTITY_MAP);

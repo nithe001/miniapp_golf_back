@@ -2060,7 +2060,7 @@ public class MatchService implements IBaseService {
                     //是参赛队向其他上报球队给球员积分
                     //筛选参赛队员中即属于该参赛球队又属于该上报球队的队员 nhq
                     //List<Long> userIdList = matchDao.getScoreUserList(matchId,teamId);
-                    List<Long> userIdList = matchDao.getScoreUserList(matchId, teamId);
+                    List<Long> userIdList = matchDao.getScoreUserList(matchInfo.getMiType(), matchId, childMatchIds,teamId);
                     List<Long> reportuserIdList = matchDao.getTeamUserIdList(reportteamId);
 
                     //以前的上报逻辑是只有已经加入过上报球队的人才能上报成绩，现改为如果未加入上报球队，自动加入上报球队。
@@ -2184,10 +2184,10 @@ public class MatchService implements IBaseService {
 			//比洞赛
 			// 比洞赛积分，只计算“基础积分”和“赢球奖分”两项，其中输球的组赢球奖分为0，打平的为一半。
 			// 计算公式为：球友积分=基础积分+赢球奖分
-			flag = updatePointByHoleScore(captainUserId, matchInfo.getMiId(), teamId, reportteamId,userIdList,baseScore, winScore, teamType);
+			flag = updatePointByHoleScore(captainUserId, matchInfo, teamId, reportteamId,userIdList,baseScore, winScore, teamType);
 		}
 		*/
-        flag = updatePointByRodScore(captainUserId, matchInfo.getMiId(), teamId, reportteamId,userIdList,  baseScore, rodScore, winScore, teamType);
+        flag = updatePointByRodScore(captainUserId, matchInfo, teamId, reportteamId,userIdList,  baseScore, rodScore, winScore, teamType);
 
 		if(flag){
 			//将该组的得分成绩标为已确认 nhq
@@ -2244,12 +2244,15 @@ public class MatchService implements IBaseService {
 	 * 赢球奖分 ：球友积分=基础积分+赢球奖分/比赛排名
 	 * 增加参数 上报球队ID:Long reportteamId,   nhq
 	 */
-	private boolean updatePointByRodScore(Long captainUserId, Long matchId, Long teamId, Long reportteamId,List<Long> userIdList, Double baseScore,
+	private boolean updatePointByRodScore(Long captainUserId,MatchInfo matchInfo, Long teamId, Long reportteamId,List<Long> userIdList, Double baseScore,
 									   Integer rodScore, Integer winScore, Integer teamType) {
+	    Long matchId = matchInfo.getMiId();
+        List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
+        Integer matchType = matchInfo.getMiType();
 		if (rodScore > 0) {
 			//杆差倍数 球友积分=基础积分+（110-球友比分）*杆差倍数
 			//获取该队伍的得分情况
-			List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchId, teamId,userIdList, teamType);
+			List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchType,matchId, childMatchIds,teamId,userIdList, teamType);
 			if (matchScoreList != null && matchScoreList.size() > 0) {
 				for (Map<String, Object> scoreMap : matchScoreList) {
                     Integer scoreHoleCount = getIntegerValue(scoreMap, "holeCount");
@@ -2407,8 +2410,8 @@ public class MatchService implements IBaseService {
                 teamUserPoint.setTupGroupId(groupId);
                 teamUserPoint.setTupHoleCount(holeCount);
                 teamUserPoint.setTupReportTeamId(0l);
-                if(point>=0){teamUserPoint.setTupMatchPoint(point);}
-                if(score>=0){teamUserPoint.setTupMatchScore(score);}
+                if(point>-100){teamUserPoint.setTupMatchPoint(point);}
+                if(score>-100){teamUserPoint.setTupMatchScore(score);}
                 teamUserPoint.setTupCreateUserId(captainUserId);
                 teamUserPoint.setTupCreateUserName(captainUserInfo.getUserName());
                 teamUserPoint.setTupCreateTime(System.currentTimeMillis());
@@ -2424,8 +2427,8 @@ public class MatchService implements IBaseService {
                 teamUserPoint.setTupGroupId(groupId);
                 teamUserPoint.setTupHoleCount(holeCount);
                 teamUserPoint.setTupReportTeamId(0l);
-                if(point>=0){teamUserPoint.setTupMatchPoint(point);}
-                if(score>=0){teamUserPoint.setTupMatchScore(score);}
+                if(point>-100){teamUserPoint.setTupMatchPoint(point);}
+                if(score>-100){teamUserPoint.setTupMatchScore(score);}
                 teamUserPoint.setTupUpdateUserId(captainUserId);
                 teamUserPoint.setTupUpdateUserName(captainUserInfo.getUserName());
                 teamUserPoint.setTupUpdateTime(System.currentTimeMillis());
@@ -2442,10 +2445,13 @@ public class MatchService implements IBaseService {
 	 *  增加参数   reportteamId     nhq
      *   需要考虑多队比洞赛的情况，这个还没有改，参照holematch 的改法，增加了个matchchildid   nhq
 	 */
-	private boolean updatePointByHoleScore(Long captainUserId, Long matchId, Long teamId,Long reportteamId, List<Long> userIdList, Double baseScore,
+	private boolean updatePointByHoleScore(Long captainUserId,MatchInfo matchInfo, Long teamId,Long reportteamId, List<Long> userIdList, Double baseScore,
 										   Integer winScore, Integer teamType) {
 		//上报球友比赛成绩 nhq
-		List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchId, teamId,userIdList, teamType);
+        Long matchId = matchInfo.getMiId();
+        List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
+        Integer matchType = matchInfo.getMiType();
+		List<Map<String, Object>> matchScoreList = matchDao.getSumScoreListByMatchIdTeamId(matchType,matchId, childMatchIds,teamId,userIdList, teamType);
 		if (matchScoreList != null && matchScoreList.size() > 0) {
 			for (Map<String, Object> scoreMap : matchScoreList) {
 				//杆数
@@ -2558,7 +2564,7 @@ public class MatchService implements IBaseService {
                     String teamAbbrev =getName(scoreMap, "teamAbbrev");
                     String matchName =getName(scoreMap, "matchName");
                     Integer score = getIntegerValue(scoreMap, "sumRodCha");
-                    updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount,captainUserId, -1d, score);
+                    updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount,captainUserId, -100d, score);
                     Map<String, Object> userIdTeamId = new HashMap<>();
                     userIdTeamId.put("userId",userId);
                     userIdTeamId.put("teamId",teamId);
@@ -2597,7 +2603,7 @@ public class MatchService implements IBaseService {
                 Double point =  list.get(i).getTotalNetRodScore();
 
 
-                updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount, captainUserId, point, -1);
+                updateScorePointByIds(matchId, matchName,teamId,teamAbbrev, userId, userName,userHeadimg,groupId,holeCount, captainUserId, point, -100);
 
 
             }

@@ -6,8 +6,10 @@ import com.golf.golf.bean.MatchGroupUserScoreBean;
 import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchScore;
+import com.golf.golf.service.MatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,6 +25,11 @@ import java.util.Map;
  */
 @Service
 public class AdminExportService implements IBaseService {
+    @Autowired
+    private MatchService matchService;
+
+
+
 	private final static Logger logger = LoggerFactory.getLogger(AdminExportService.class);
 
 	/**
@@ -57,24 +64,48 @@ public class AdminExportService implements IBaseService {
 		}
 		data.setTitles(nTitle);
 		List<List<Object>> rows = new ArrayList<>();
+        if (matchInfo.getMiType() ==2) { //汇总比赛
+            String userName;
+            String teamName;
+            Integer rodNum;
+            List<Map<String, Object>> userList =  (List<Map<String, Object>> )scoreMap.get("userList");
+            if (userList != null && userList.size() > 0) {
+                for (Map<String, Object> user : userList) {
+                    //一个循环显示的是一行的数据
+                    userName = matchService.getName(user,"uiRealName");
+                    teamName = matchService.getName(user,"teamAbbrev");
+                    rodNum = matchService.getIntegerValue(user,"sumRodNum");
+                    List<Object> row = new ArrayList<>();
 
-		List<MatchGroupUserScoreBean> userList = (List<MatchGroupUserScoreBean>) scoreMap.get("list");
-		if (userList != null && userList.size() > 0) {
-			for (MatchGroupUserScoreBean user : userList) {
-				//一个循环显示的是一行的数据
-				if(user.getUserId() != 0){
-					List<Object> row = new ArrayList<>();
-					//用户名
-					row.add(user.getUserName());
-					//用户得分
-					List<MatchTotalUserScoreBean> userScoreList = user.getUserScoreTotalList();
-					for(MatchTotalUserScoreBean score:userScoreList){
-						row.add(score.getRodNum().toString());
-					}
-					rows.add(row);
-				}
-			}
-		}
+                    row.add(userName);
+                    row.add(teamName);
+                    row.add( rodNum);
+
+                    rows.add(row);
+
+                }
+            }
+
+        } else {
+            List<MatchGroupUserScoreBean> userList = (List<MatchGroupUserScoreBean>) scoreMap.get("list");
+            if (userList != null && userList.size() > 0) {
+                for (MatchGroupUserScoreBean user : userList) {
+                    //一个循环显示的是一行的数据
+                    if (user.getUserId() != 0) {
+                        List<Object> row = new ArrayList<>();
+                        //用户名
+                        row.add(user.getUserName());
+                        row.add(user.getTeamAbbrev());
+                        //用户得分
+                        List<MatchTotalUserScoreBean> userScoreList = user.getUserScoreTotalList();
+                        for (MatchTotalUserScoreBean score : userScoreList) {
+                            row.add(score.getRodNum().toString());
+                        }
+                        rows.add(row);
+                    }
+                }
+            }
+        }
 		data.setRows(rows);
 		return data;
 	}
