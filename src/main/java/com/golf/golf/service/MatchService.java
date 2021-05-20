@@ -1458,6 +1458,7 @@ public class MatchService implements IBaseService {
 
         /**
          * 获取单人比杆赛记分卡
+         *  为了触发删除比赛中的重复记分记录，把本方法的开头get改为了pull
          * @return
          */
 	public Map<String, Object> getSingleRodScoreCardInfoByGroupId(Long matchId, Long groupId) throws UnsupportedEncodingException {
@@ -4334,4 +4335,14 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 	public MatchScoreStartHole getStartHole(Long matchId, Long groupId) {
 		return matchScoreDao.getStartHole(matchId,groupId);
 	}
+    /**
+     * 删除比赛的重复记分记录
+     */
+    public void delDupMatchScore(Long matchId) {
+        //删除比赛用户的重复记分记录
+        List<Long> dupMatchScoreIds = matchDao.getDupMatchScore(matchId);
+        if (dupMatchScoreIds.size() > 0) {
+            matchDao.delDupMatchScore(dupMatchScoreIds);
+        }
+    }
 }

@@ -105,31 +105,31 @@ public class UserService implements IBaseService {
 
     /**
      * 保存用户信息
-	 * 判断是否存在和我同一个球队的人有相同的真实姓名，如果有且是真实用户就拒绝改真名，有但是导入用户，就认领 nhq
+	 * 判断是否存在和我同一个球队的人有相同的真实姓名，如果有且是真实用户就拒绝改真名，有但是虚拟用户，就认领 nhq
      * @param user
      */
     public String updateUser(UserInfo user, String openid) {
     	UserInfo db = dao.getUserInfoByOpenid(openid);
     	//判断是否有同队队友重名
     	Long userId = db.getUiId();
-    	Long teamId= null;
+    	List<Long> teamIds= null;
     	if (user.getUiRealName()!= null) {
 			List<UserInfo> chooseuserList = dao.getUserIdByRealName(user.getUiRealName());
 			for (UserInfo chooseuser : chooseuserList) {
 				Long otherUserId = chooseuser.getUiId();
-				teamId = dao.getIsMyTeammate(userId,otherUserId);
-				if (teamId !=null ){
+				teamIds = dao.getIsMyTeammate(userId,otherUserId);
+				if (teamIds !=null &&  teamIds.size() >0 ){
 					if(chooseuser.getUiOpenId() !=null){
 						break; //有同名真实用户，不让改
 					}else {
 						//同一队中有同名导入用户，认领他
 						updateClaimUserScore(openid, String.valueOf(otherUserId));
-						teamId = null;
+						teamIds = null;
 					}
 				}
 			}
 		}
-    	if (teamId == null ) {
+    	if (teamIds == null ) {
 			db.setUiRealName(user.getUiRealName());
 		}
     	db.setUiAge(user.getUiAge());
@@ -150,7 +150,7 @@ public class UserService implements IBaseService {
         dao.update(db);
         //更新其他表有用到真实姓名的地方
 		//比赛积分计算配置表
-		if (teamId == null) {
+		if (teamIds == null) {
 			dao.updateMatchIntegralConfigInfo(db.getUiId(), user.getUiRealName());
 			//比赛分组表
 			dao.updateMatchGroupInfo(db.getUiId(), user.getUiRealName());
@@ -168,8 +168,8 @@ public class UserService implements IBaseService {
 			dao.updateTeamUserPointInfo(db.getUiId(), user.getUiRealName());
 		}
 		String teamName = null;
-		if (teamId !=null){
-		TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
+		if (teamIds !=null){
+		TeamInfo teamInfo = dao.get(TeamInfo.class, teamIds.get(0));
 		if(teamInfo != null ){
 			teamName = teamInfo.getTiName();
 		}
@@ -252,9 +252,9 @@ public class UserService implements IBaseService {
      */
     public boolean userInfoIsOpen(Long userId, String openid) {
         //是否是我的队友（入队审核通过的）
-        Long teamId = dao.getIsMyTeammate(getUserIdByOpenid(openid),userId);
-        if(teamId != null){
-            TeamInfo teamInfo = dao.get(TeamInfo.class, teamId);
+        List<Long> teamIds = dao.getIsMyTeammate(getUserIdByOpenid(openid),userId);
+        if(teamIds != null && teamIds.size()>0 ){
+            TeamInfo teamInfo = dao.get(TeamInfo.class, teamIds.get(0));
             return teamInfo != null && teamInfo.getTiUserInfoType() == 1;
         }
         return false;
@@ -708,18 +708,21 @@ public class UserService implements IBaseService {
 				//chooseMatchId = Long.parseLong(chooseIdStr[2]);
 
 				//如果存在我和导入的人存在同一个球队，则先删掉自己在该球队的信息
-				Long teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
-				if (teamId !=null){
-					teamDao.deleteFromTeamUserMapping(teamId,myUserId);
-					//teamId = dao.getIsMyTeammate(myUserId,chooseUserId);
+				List<Long> teamIds = dao.getIsMyTeammate(myUserId,chooseUserId);
+				if (teamIds !=null && teamIds.size()>0  ){
+				    for (int j=0;j<teamIds.size(); j++ ) {
+                        teamDao.deleteFromTeamUserMapping(teamIds.get(j), myUserId);
+                    }
+
 				}
 
 				//如果存在我和导入的人存在同一个比赛，则先删掉自己在该比赛中的信息
 
-				Long matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
-				if  (matchId !=null){
-					matchService.quitMatch(matchId, openid);
-					// matchId = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
+				List<Long> matchIds = matchDao.getIsMyMatchmate(myUserId,chooseUserId);
+				if  (matchIds !=null && matchIds.size()>0 ){
+                    for (int j=0;j<matchIds.size(); j++ ) {
+                        matchService.quitMatch(matchIds.get(j), openid);
+                    }
               	}
 
 

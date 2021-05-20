@@ -148,7 +148,7 @@ public class UserDao extends CommonDao {
      * 是否是我的队友（入队审核通过的）
      * @return
      */
-    public Long getIsMyTeammate(Long myUserId, Long otherUserId) {
+    public List<Long> getIsMyTeammate(Long myUserId, Long otherUserId) {
         Map<String, Object> parp = new HashMap<String, Object>();
         parp.put("myUserId", myUserId);
         parp.put("otherUserId", otherUserId);
@@ -159,10 +159,7 @@ public class UserDao extends CommonDao {
         hql.append("select m1.tumTeamId from TeamUserMapping as m1 where m1.tumUserId = :myUserId ");
         hql.append(") ");
         List<Long> list = dao.createQuery(hql.toString(), parp);
-        if(list != null && list.size()>0){
-			return list.get(0);
-		}
-		return null;
+       	return list;
     }
 
     /**

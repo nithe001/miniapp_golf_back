@@ -79,7 +79,8 @@ public class MatchDao extends CommonDao {
             hql.append(" AND m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId) ");
         }else{
             //比分——全部比赛（除了不可用的比赛,包括选择公开的单练）
-            hql.append(" AND ( m.mi_type > 0 OR (m.mi_type = 0 AND m.mi_match_open_type = 1 ))");
+            hql.append(" AND ( m.mi_type > 0 OR (m.mi_type = 0 AND (m.mi_match_open_type = 1 OR " +
+                    "m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId)) ))");
         }
         if(parp.get("keyword") != null){
             hql.append(" AND m.mi_title LIKE :keyword ");
@@ -856,8 +857,8 @@ public class MatchDao extends CommonDao {
 		if(teamId != null){
 			sql.append(" and s.ms_team_id = :teamId ");
 		}
-		sql.append(" and s.ms_user_id = :userId and s.ms_before_after = 0 ) ");
-		sql.append("where p.pp_name = :beforeHole and p.pp_p_id = :parkId ORDER BY p.pp_name, p.pp_hole_num LIMIT 99999999) as t");
+		sql.append(" and s.ms_user_id = :userId and s.ms_before_after = 0  and s.ms_type = 0 ) ");
+		sql.append("where p.pp_name = :beforeHole and p.pp_p_id = :parkId GROUP BY p.pp_hole_num ORDER BY p.pp_name, p.pp_hole_num LIMIT 99999999) as t");
 
 		sql.append(" union all ");
 
@@ -878,9 +879,9 @@ public class MatchDao extends CommonDao {
 		if(teamId != null){
 			sql.append(" and s.ms_team_id = :teamId ");
 		}
-		sql.append(" and s.ms_user_id = :userId and s.ms_before_after = 1) ");
+		sql.append(" and s.ms_user_id = :userId and s.ms_before_after = 1 and s.ms_type = 0 ) ");
 		sql.append("where p.pp_name = :afterHole and p.pp_p_id = :parkId " +
-				" ORDER BY p.pp_name ,p.pp_hole_num LIMIT 99999999) as p1");
+				"  GROUP BY p.pp_hole_num ORDER BY p.pp_name ,p.pp_hole_num LIMIT 99999999) as p1");
 
 		List<Map<String, Object>> list = dao.createSQLQuery(sql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 		return list;
@@ -924,16 +925,82 @@ public class MatchDao extends CommonDao {
 
 
 	/** 获取用户总计 nhq
+     * 为了防止有些洞重复记成绩，先按球洞的名字和号筛选一遍，再求和
 	 */
     public List<Map<String, Object>> getTotalScoreWithUser(Long matchId, Long userId) {
-        MatchInfo matchInfo = get(MatchInfo.class,matchId);
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT s.ms_user_id AS user_id,s.ms_team_id AS team_id,sum(s.ms_rod_num) AS sum_rod_num, sum(s.ms_push_rod_num) AS sum_push_num, sum(s.ms_rod_cha) AS sum_rod_cha ");
+        sql.append("SELECT ms.user_id AS user_id,ms.team_id AS team_id,sum(ms.rod_num) AS sum_rod_num, sum(ms.push_num) AS sum_push_num, sum(ms.rod_cha) AS sum_rod_cha ");
+        sql.append(" FROM ( SELECT s.ms_user_id AS user_id,s.ms_team_id AS team_id,s.ms_rod_num AS rod_num, s.ms_push_rod_num AS push_num, s.ms_rod_cha AS rod_cha ");
         sql.append("FROM match_score AS s ");
-        sql.append(" where s.ms_match_id = "+matchId+" AND s.ms_user_id = "+userId);
-
+        sql.append(" where s.ms_match_id = "+matchId+" AND s.ms_user_id = "+userId + " AND s.ms_type = 0 ");
+        sql.append(" GROUP BY s.ms_hole_name,  s.ms_hole_num ");
+        sql.append(" ) AS ms ");
         return dao.createSQLQuery(sql.toString(), Transformers.ALIAS_TO_ENTITY_MAP);
     }
+
+    /** 按组删除重复的记分记录
+     *
+
+    public void  delDupMatchScore(Long matchId, Long groupId) {
+        StringBuilder sql = new StringBuilder();
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("matchId",matchId);
+        parp.put("groupId",groupId);
+
+        // sql.append("UPDATE match_score AS ms  SET ms.ms_type = 1 WHERE ms.ms_id IN  ( ");
+
+        //重复记录
+        sql.append(" SELECT m.ms_id   FROM match_score  AS m ");
+        sql.append(" WHERE m.ms_match_id = :matchId  AND m.ms_group_id = :groupId " );
+        sql.append(" AND (m.ms_user_id, m.ms_hole_name,  m.ms_hole_num) IN ( ");
+        //重复记录的最小ID
+
+        sql.append(" SELECT s.ms_user_id , s.ms_hole_name ,  s.ms_hole_num   FROM match_score AS s ");
+        sql.append(" WHERE s.ms_match_id =  :matchId  AND m.ms_group_id = :groupId " );
+        sql.append(" GROUP BY s.ms_user_id, s.ms_hole_name,  s.ms_hole_num  HAVING count(s.ms_hole_num)>1 ");
+        sql.append(" ) ");
+        sql.append(" AND m.ms_id not IN ( ");
+        sql.append(" SELECT min(a.ms_id)   FROM match_score AS a ");
+        sql.append(" WHERE a.ms_match_id =  :matchId  AND m.ms_group_id = :groupId " );
+        sql.append(" GROUP BY a.ms_user_id, a.ms_hole_name,  a.ms_hole_num  HAVING count(a.ms_hole_num)>1 ");
+        sql.append(" ) ");
+        // sql.append(" ) ");
+        dao.executeHql(sql.toString(),parp);
+    }
+    */
+    /** 按组删除重复的记分记录
+     *
+     */
+    public List<Long>  getDupMatchScore(Long matchId) {
+        StringBuilder sql = new StringBuilder();
+        //重复记录
+        sql.append(" SELECT m.msId AS msId  FROM MatchScore  AS m ");
+        sql.append(" WHERE m.msMatchId = "+ matchId  );
+        sql.append(" AND (m.msUserId, m.msHoleName,  m.msHoleNum) IN ( ");
+        //重复记录的最小ID
+
+        sql.append(" SELECT s.msUserId , s.msHoleName ,  s.msHoleNum   FROM MatchScore AS s ");
+        sql.append(" WHERE s.msMatchId = "+ matchId  );
+        sql.append(" GROUP BY s.msUserId, s.msHoleName,  s.msHoleNum  HAVING count(s.msHoleNum)>1 ");
+        sql.append(" ) ");
+        sql.append(" AND m.msId not IN ( ");
+
+        sql.append(" SELECT min(a.msId)   FROM MatchScore AS a ");
+        sql.append(" WHERE a.msMatchId = "+ matchId  );
+        sql.append(" GROUP BY a.msUserId, a.msHoleName,  a.msHoleNum  HAVING count(a.msHoleNum)>1 ");
+        sql.append(" ) ");
+
+        return dao.createQuery(sql.toString());
+    }
+
+    public void delDupMatchScore(List<Long> dupIds) {
+        StringBuilder sql = new StringBuilder();
+        Map<String, Object> parp = new HashMap<>();
+        parp.put("dupIds",dupIds);
+        sql.append(" UPDATE MatchScore AS ms  SET ms.msType = 1 WHERE ms.msId IN (:dupIds) ");
+        dao.executeHql(sql.toString(),parp);
+    }
+
 	/**
 	 * 本场地总杆数
 	 * @return
@@ -2557,7 +2624,7 @@ public class MatchDao extends CommonDao {
 		return null;
 	}
 	//判断是不是赛友，参考判断队友那个设计
-	public Long getIsMyMatchmate(Long myUserId, Long otherUserId) {
+	public List<Long> getIsMyMatchmate(Long myUserId, Long otherUserId) {
 		Map<String, Object> parp = new HashMap<String, Object>();
 		parp.put("myUserId", myUserId);
 		parp.put("otherUserId", otherUserId);
@@ -2568,10 +2635,8 @@ public class MatchDao extends CommonDao {
 		hql.append("select m1.mugmMatchId from MatchUserGroupMapping as m1 where m1.mugmUserId = :myUserId ");
 		hql.append(") ");
 		List<Long> list = dao.createQuery(hql.toString(), parp);
-		if (list != null && list.size() > 0) {
-			return list.get(0);
-		}
-		return null;
+
+		return list;
 	}
 
 	//双人比杆赛记分卡——总计

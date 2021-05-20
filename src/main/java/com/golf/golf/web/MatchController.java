@@ -298,6 +298,7 @@ public class MatchController {
 
 	/**
 	 * 获取比赛详情
+     * 这个方法只在score_card 和keep_score 中使用
 	 * @return
 	 */
 	@ResponseBody
@@ -305,6 +306,9 @@ public class MatchController {
 	public JsonElement getMatchInfoById(@RequestAttribute("matchId")Long matchId,@RequestAttribute("groupId")Long groupId,
 										@RequestAttribute("openid")String openid) {
 		try {
+            //删除本比赛用户的重复记分记录
+            matchService.delDupMatchScore(matchId);
+
 			//比赛详情
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
 			//我是否是本组参赛人员(显示邀请记分按钮)
