@@ -45,6 +45,7 @@
 		                  	<th>序号</th>
 							<th>用户名</th>
 							<th>真实姓名</th>
+							<th>角色</th>
 							<th>创建时间</th>
 							<th>创建人</th>
 							<th>更新时间</th>
@@ -59,6 +60,14 @@
      						<td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
 							<td>${u.auUserName }</td>
 							<td>${u.auShowName }</td>
+							<td>
+								<c:if test="${u.auRole == 0 }">
+									<span style="color:red;">超级</span>管理员
+								</c:if>
+								<c:if test="${u.auRole == 1 }">
+									普通管理员
+								</c:if>
+							</td>
 							<td>${u.createTimeStr }</td>
 							<td>${u.auCreateUserName }</td>
 							<td>${u.updateTimeStr }</td>

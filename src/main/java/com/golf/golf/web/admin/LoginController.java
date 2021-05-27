@@ -50,6 +50,7 @@ public class LoginController {
 					um.setId(db.getAuId());
 					um.setName(db.getAuUserName());
 					um.setShowName(db.getAuShowName());
+					um.setRole(db.getAuRole());
 
 					HttpSession session = request.getSession(true);
 					if(session.getAttribute(AdminUserUtil.USER_SESSION_NAME) != null){

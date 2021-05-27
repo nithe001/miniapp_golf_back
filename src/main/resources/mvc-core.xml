@@ -111,6 +111,14 @@
             <bean class="com.golf.golf.common.security.AdminLoginInterceptor"/>
         </mvc:interceptor>
 
+		<!--后台管理员拦截器-->
+		<mvc:interceptor>
+			<mvc:mapping path="/admin/user/adminUserList" />
+			<mvc:mapping path="/admin/park/list" />
+			<mvc:mapping path="/admin/export/exportTeam" />
+			<bean class="com.golf.golf.common.security.AdminRoleInterceptor"/>
+		</mvc:interceptor>
+
 		<!--服务拦截器-->
 		<mvc:interceptor>
 			<mvc:mapping path="/onLogin" />

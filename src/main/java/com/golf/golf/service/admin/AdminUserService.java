@@ -103,6 +103,7 @@ public class AdminUserService implements IBaseService {
         db.setAuEmail(user.getAuEmail());
         db.setAuUpdateUserId(AdminUserUtil.getUserId());
         db.setAuUpdateUserName(AdminUserUtil.getShowName());
+		db.setAuRole(user.getAuRole());
         db.setAuUpdateDate(System.currentTimeMillis());
         dao.update(db);
     }
