@@ -22,18 +22,10 @@
 	      <div class="navbar-custom-menu" style="border:0px solid red;">
 	        <ul class="nav navbar-nav">
 	        	<li class="dropdown user user-menu">
-					<c:if test="<%= user.getRole()==0 %>">
-						<a href="/admin/user/userEditUI?id=<%= user.getId() %>" style="color:#CFCFCF;">
+					<a href="javascript:void(0);" style="color:#CFCFCF;">
 						<span class="glyphicon glyphicon-user"></span>
 						<%= user.getShowName() %>，你好
-						</a>
-					</c:if>
-					<c:if test="<%= user.getRole()==1%>">
-						<a href="javascript:void(0);" style="color:#CFCFCF;">
-							<span class="glyphicon glyphicon-user"></span>
-							<%= user.getShowName() %>，你好
-						</a>
-					</c:if>
+					</a>
 	          	</li>
 	          <li class="dropdown user user-menu">
 	            <a href="admin/logout" >
@@ -47,19 +39,19 @@
 <aside class="main-sidebar">
 <section class="sidebar">
 <ul class="sidebar-menu">
-	<c:if test="<%= user.getRole()==0 %>">
+	<c:if test="<%= user.getRole() == null || user.getRole()==0 %>">
     	<li id="nav_adminUser"><a href="admin/user/adminUserList"><i class="fa fa-bookmark"></i> <span>后台用户</span></a></li>
 	</c:if>
     <li id="nav_wechatUser"><a href="admin/wechatUser/wechatUserList"><i class="fa fa-bookmark"></i> <span>小程序用户</span></a></li>
     <li id="nav_rule"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>高球规则</span></a></li>
-	<c:if test="<%= user.getRole()==0 %>">
+	<c:if test="<%= user.getRole() == null ||  user.getRole()==0 %>">
 		<li id="nav_park"><a href="admin/park/list"><i class="fa fa-bookmark"></i> <span>球场管理</span></a></li>
 	</c:if>
     <li id="nav_match"><a href="admin/match/list"><i class="fa fa-bookmark"></i> <span>比赛管理</span></a></li>
     <li id="nav_team"><a href="admin/team/list"><i class="fa fa-bookmark"></i> <span>球队管理</span></a></li>
     <li id="nav_import"><a href="admin/importScore/init"><i class="fa fa-bookmark"></i> <span>导入成绩</span></a></li>
 	<li id="nav_export"><a href="admin/export/list"><i class="fa fa-bookmark"></i> <span>导出成绩</span></a></li>
-	<c:if test="<%= user.getRole()==0 %>">
+	<c:if test="<%= user.getRole() == null ||  user.getRole()==0 %>">
 		<li id="nav_export_team"><a href="admin/export/exportTeam"><i class="fa fa-bookmark"></i> <span>导出球队</span></a></li>
 	</c:if>
 </ul>
