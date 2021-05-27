@@ -52,7 +52,11 @@ public class AdminUserUtil {
 		return getLoginUser().getId();
 	}
 	
-	public static long getRole(){
+	public static Long getRole(){
+		AdminUserModel adminUserModel = getLoginUser();
+		if(adminUserModel.getRole() == null){
+			return null;
+		}
 		return getLoginUser().getRole();
 	}
 

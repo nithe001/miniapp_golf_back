@@ -19,7 +19,7 @@ public class AdminRoleInterceptor extends HandlerInterceptorAdapter {
 			response.sendRedirect(request.getContextPath() + "/admin/login");
 			return false;
 		}
-		if (AdminUserUtil.getRole() != 0) {
+		if (AdminUserUtil.getRole() != null && AdminUserUtil.getRole() != 0) {
 			response.sendRedirect(request.getContextPath() + "/403");
 			return false;
 		}
