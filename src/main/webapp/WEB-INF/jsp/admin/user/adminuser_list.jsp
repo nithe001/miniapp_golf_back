@@ -67,6 +67,9 @@
 								<c:if test="${u.auRole == 1 }">
 									普通管理员
 								</c:if>
+                                <c:if test="${u.auRole == 2 }">
+                                    临时管理员
+                                </c:if>
 							</td>
 							<td>${u.createTimeStr }</td>
 							<td>${u.auCreateUserName }</td>

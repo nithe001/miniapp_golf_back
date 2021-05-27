@@ -34,6 +34,9 @@
 		<label for="auShowName" class="col-sm-2 control-label">用户类型</label>
 		<div class="col-sm-5">
 			<select class="form-control" name="auRole">
+                <option value="2" <c:if test='${user.auRole == 2}'>selected="selected"</c:if>>
+                    临时管理员
+                </option>
 				<option value="1" <c:if test='${user.auRole == 1}'>selected="selected"</c:if>>
 					普通管理员
 				</option>
