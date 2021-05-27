@@ -105,8 +105,8 @@
     <div class="form-group">
         <label for="uiPost" class="col-sm-2 control-label">职务</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="uiPost" name="uiPost"
-                   value="${userInfo.uiPost}" placeholder="职务"/>
+            <input type="text" class="form-control" id="uiOccupation" name="uiOccupation"
+                   value="${userInfo.uiOccupation}" placeholder="职务"/>
         </div>
     </div>
     <div class="form-group">
@@ -119,8 +119,8 @@
     <div class="form-group">
         <label for="uiHomeCourt" class="col-sm-2 control-label">主场</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" id="uiHomeCourt" name="uiHomeCourt"
-                   value="${userInfo.uiHomeCourt}" placeholder="主场"/>
+            <input type="text" class="form-control" id="uiHomeCourse" name="uiHomeCourse"
+                   value="${userInfo.uiHomeCourse}" placeholder="主场"/>
         </div>
     </div>
 

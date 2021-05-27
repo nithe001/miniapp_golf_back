@@ -7,6 +7,7 @@ import com.golf.golf.bean.MatchTotalUserScoreBean;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.db.MatchScore;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.dao.MatchDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,8 @@ import java.util.Map;
 public class AdminExportService implements IBaseService {
     @Autowired
     private MatchService matchService;
-
+    @Autowired
+    private MatchDao matchDao;
 
 
 	private final static Logger logger = LoggerFactory.getLogger(AdminExportService.class);
@@ -51,19 +53,47 @@ public class AdminExportService implements IBaseService {
 		ExcelData data = new ExcelData();
 		data.setName("比赛成绩");
 		//表头
-		List<String> titles = Arrays.asList("用户姓名");
+		List<String> titles = Arrays.asList("");
 		List<String> nTitle = new ArrayList<>(titles);
-		//表头中的半场球洞
+        nTitle.add("");
+		//表头中的球洞号
 		for(int i = 0;i<2;i++){
 			for(int j = 1;j<10;j++){
 				nTitle.add(j+"");
-				if(j==9){
+				if(i==0 && j==9){
 					nTitle.add(matchInfo.getMiZoneBeforeNine()+"场");
-				}
+				} if(i==1 && j==9) {
+                    nTitle.add(matchInfo.getMiZoneAfterNine()+"场");
+                }
 			}
 		}
 		data.setTitles(nTitle);
-		List<List<Object>> rows = new ArrayList<>();
+
+        List<List<Object>> rows = new ArrayList<>();
+        //各球洞标准杆
+        List<Object> row = new ArrayList<>();
+        row.add("用户姓名");
+        row.add("球队");
+        Integer totalNum=0;
+        List<Map<String, Object>> beforeParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchInfo.getMiId(),0);
+        for (Map<String, Object> hole: beforeParkHoleList){
+            Integer rodNum = matchService.getIntegerValue(hole,"holeStandardRod");
+            row.add(rodNum.toString()) ;
+            totalNum +=rodNum;
+        }
+        row.add(totalNum.toString());
+        totalNum=0;
+        List<Map<String, Object>> afterParkHoleList = matchDao.getBeforeAfterParkPartitionList(matchInfo.getMiId(),1);
+        for (Map<String, Object> hole: afterParkHoleList){
+            Integer rodNum = matchService.getIntegerValue(hole,"holeStandardRod");
+            row.add(rodNum.toString()) ;
+            totalNum +=rodNum;
+        }
+        row.add(totalNum.toString());
+        row.add("合计");
+        rows.add(row);
+
+		//添加比赛成绩
         if (matchInfo.getMiType() ==2) { //汇总比赛
             String userName;
             String teamName;
@@ -75,7 +105,7 @@ public class AdminExportService implements IBaseService {
                     userName = matchService.getName(user,"uiRealName");
                     teamName = matchService.getName(user,"teamAbbrev");
                     rodNum = matchService.getIntegerValue(user,"sumRodNum");
-                    List<Object> row = new ArrayList<>();
+                    row = new ArrayList<>();
 
                     row.add(userName);
                     row.add(teamName);
@@ -89,18 +119,22 @@ public class AdminExportService implements IBaseService {
         } else {
             List<MatchGroupUserScoreBean> userList = (List<MatchGroupUserScoreBean>) scoreMap.get("list");
             if (userList != null && userList.size() > 0) {
+
                 for (MatchGroupUserScoreBean user : userList) {
                     //一个循环显示的是一行的数据
                     if (user.getUserId() != 0) {
-                        List<Object> row = new ArrayList<>();
+                        row = new ArrayList<>();
                         //用户名
                         row.add(user.getUserName());
                         row.add(user.getTeamAbbrev());
                         //用户得分
                         List<MatchTotalUserScoreBean> userScoreList = user.getUserScoreTotalList();
+                        totalNum=0;
                         for (MatchTotalUserScoreBean score : userScoreList) {
+                            totalNum += score.getRodNum();
                             row.add(score.getRodNum().toString());
                         }
+                        row.add(totalNum/2);
                         rows.add(row);
                     }
                 }

@@ -197,16 +197,16 @@ public class AdminImportService implements IBaseService {
 		for(int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
 			//从第3行开始
 			row = sheet.getRow(i);
-			//第4列 球友
-			String userName = row.getCell(3).toString().trim();
+			//第3列 球友
+			String userName = row.getCell(2).toString().trim();
             //如果用户名为空，不导入不导入
             if (userName == null || userName == "") {
                 continue;
             }
             String teamAbbrev;
 			try {
-                //第二列 球队
-                teamAbbrev = row.getCell(1).toString().trim();
+                //第4列 球队
+                teamAbbrev = row.getCell(3).toString().trim();
 
             } catch (Exception e){
                 teamAbbrev ="";
@@ -214,8 +214,8 @@ public class AdminImportService implements IBaseService {
 
             String groupName;
             try {
-                //第三列 分组
-                groupName = row.getCell(2).toString().trim();
+                //第2列 分组
+                groupName = row.getCell(1).toString().trim();
 
             } catch (Exception e){
                 groupName = "";

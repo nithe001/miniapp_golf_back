@@ -1458,7 +1458,7 @@ public class MatchService implements IBaseService {
 
         /**
          * 获取单人比杆赛记分卡
-         *  为了触发删除比赛中的重复记分记录，把本方法的开头get改为了pull
+         *
          * @return
          */
 	public Map<String, Object> getSingleRodScoreCardInfoByGroupId(Long matchId, Long groupId) throws UnsupportedEncodingException {

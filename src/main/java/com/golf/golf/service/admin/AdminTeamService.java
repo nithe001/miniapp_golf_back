@@ -127,6 +127,7 @@ public class AdminTeamService implements IBaseService {
 	 */
 	public void teamEdit(TeamInfo teamInfo) {
 		TeamInfo db = adminTeamDao.get(TeamInfo.class,teamInfo.getTiId());
+        db.setTiAbbrev(teamInfo.getTiAbbrev());
 		db.setTiAddress(teamInfo.getTiAddress());
 		db.setTiSignature(teamInfo.getTiSignature());
 		db.setTiDigest(teamInfo.getTiDigest());

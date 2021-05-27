@@ -14,6 +14,13 @@
         </div>
     </div>
     <div class="form-group">
+        <label for="wcTitle" class="col-sm-2 control-label">球队简称</label>
+        <div class="col-sm-5">
+            <input type="text" class="form-control" id="tiAbbrev" name="tiAbbrev"
+                   value="${teamInfo.teamInfo.tiAbbrev}" placeholder="球队简称"/>
+        </div>
+    </div>
+    <div class="form-group">
         <label for="wcTitle" class="col-sm-2 control-label">所属地区</label>
         <div class="col-sm-5">
             <input type="text" class="form-control" id="tiAddress" name="tiAddress"
@@ -84,6 +91,17 @@
         <label for="wcTitle" class="col-sm-2 control-label">队员列表</label>
     </div>
 
+<div class="box-footer">
+    <div class="col-xs-push-2 col-xs-2">
+        <a class="btn btn-default" href="admin/consult/list" role="button">取消</a>
+    </div>
+    <div class="col-xs-push-4 col-xs-2">
+        <button type="submit" class="btn btn-info pull-right">保存</button>
+    </div>
+</div>
+<br/>
+<br/>
+
     <c:if test="${teamInfo.userList != null && teamInfo.userList.size() > 0 }">
         <div style="width: 60%;margin-left:10%;">
             <table id="example2" class="table table-bordered table-hover">
@@ -143,14 +161,7 @@
 
 </div>
 
-<div class="box-footer">
-    <div class="col-xs-push-2 col-xs-2">
-        <a class="btn btn-default" href="admin/consult/list" role="button">取消</a>
-    </div>
-    <div class="col-xs-push-4 col-xs-2">
-        <button type="submit" class="btn btn-info pull-right">保存</button>
-    </div>
-</div>
+
 
 
 

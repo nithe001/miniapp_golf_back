@@ -173,7 +173,7 @@ public class AdminUserService implements IBaseService {
 			db.setUiMajor(user.getUiMajor());
 			db.setUiStudentId(user.getUiStudentId());
 			db.setUiWorkUnit(user.getUiWorkUnit());
-			db.setUiAddress(user.getUiAddress());
+			db.setUiOccupation(user.getUiOccupation());
 			db.setUiAddress(user.getUiAddress());
 			db.setUiHomeCourse(user.getUiHomeCourse());
 			db.setUiType(user.getUiType());

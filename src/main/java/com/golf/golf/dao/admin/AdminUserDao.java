@@ -65,7 +65,7 @@ public class AdminUserDao extends CommonDao {
 		hql.append(" from wechat_user_info as wu left join user_info as u on wu.wui_u_id = u.ui_id ");
 		hql.append(" where 1=1 ");
 		if(parp.get("keyword") != null){
-			hql.append("and (wu.wui_nick_name like :keyword or wu.wui_nick_name like :keyword) ");
+			hql.append("and (wu.wui_nick_name like :keyword or u.ui_real_name like :keyword) ");
 		}
 		if(parp.get("startDate") != null){
 			hql.append(" and wu.create_time >=:startDate ");

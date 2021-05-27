@@ -29,7 +29,7 @@
 			            </div>
 			            <!-- /.box-header -->
 		            <!-- form start -->
-		            <form class="form-horizontal" role="form" id="wechatUserForm" name="wechatUserForm" action="admin/user/wechatUserUpdateOrAdd" method="post" onsubmit="return beforeSubmit();">
+		            <form class="form-horizontal" role="form" id="wechatUserForm" name="wechatUserForm" action="admin/wechatUser/wechatUserUpdate" method="post" onsubmit="return beforeSubmit();">
 		            	<jsp:include page="wechatuser_form.jsp"></jsp:include>
 		            </form>
           			</div>
