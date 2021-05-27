@@ -108,7 +108,7 @@
                                 暂无数据！
                             </c:if>
                             <jsp:include page="../include/pojoPageInfo.jsp">
-                                <jsp:param value="admin/user/wechatUserList" name="act"/>
+                                <jsp:param value="admin/wechatUser/wechatUserList" name="act"/>
                                 <jsp:param value="searchForm" name="formName"/>
                             </jsp:include>
                         </div>
