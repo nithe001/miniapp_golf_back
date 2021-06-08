@@ -1337,10 +1337,11 @@ public class MatchService implements IBaseService {
 
     /**
      * 报名——赛长 添加用户至报名表
+     * 假设全系统无重名
      * @param
      * @return
      */
-    public void addUserToApply(Long matchId,Long teamId,  String userName,  String openid){
+    public void addUserToApply1(Long matchId,Long teamId,  String userName,  String openid){
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         List<UserInfo> userInfo = userDao.getUserIdByRealName(userName);
         UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
@@ -1361,7 +1362,7 @@ public class MatchService implements IBaseService {
             userInfo.add(user);
             userId = user.getUiId();
         } else {
-            userId = userInfo.get(0).getUiId();//如果没有球队信息，就找授权用户或第一个叫这个名字的人
+            userId = userInfo.get(0).getUiId();//如果这个人名存在，就找授权用户或第一个叫这个名字的人
             for (int i=0;i< userInfo.size(); i++) {
                 if (userInfo.get(i).getUiOpenId() != null) {
                     userId = userInfo.get(i).getUiId();
@@ -1411,9 +1412,87 @@ public class MatchService implements IBaseService {
         }
         adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName,userType,myUserInfo.getUiId(),myUserInfo.getUserName());
 
-        //如果已有比赛成绩，跟新成绩信息
+        //如果已有比赛成绩，更新成绩信息
         matchDao.updateMatchScoreTeamId(matchId,userId,teamId);
        //修改比赛信息中的比赛人数
+        Long userCount = matchDao.getAllMatchApplyUserCount(matchId);
+        matchInfo.setMiPeopleNum(userCount.intValue());
+        matchDao.update(matchInfo);
+
+    }
+
+    /**
+     * 报名——赛长 添加用户至报名表
+     * 允许不同球队内同名
+     * @param
+     * @return
+     */
+    public void addUserToApply(Long matchId,Long teamId,  String userName,  String openid){
+        MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
+        List<UserInfo> userInfo = userDao.getUserIdByRealName(userName);
+        UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
+        TeamUserMapping teamUserMapping = null;
+        UserInfo user=null;
+        Long userId = null;
+
+        //找这个球队有无叫这个名字的人
+        if (userInfo.size() > 0) {
+            for (int i = 0; i < userInfo.size(); i++) {
+                teamUserMapping = teamDao.getTeamUserMapping(teamId, userInfo.get(i).getUiId());
+                if (teamUserMapping != null) {
+                    userId = userInfo.get(i).getUiId();
+                    break;
+                }
+            }
+        }
+        //如果该球队没有这个名字的用户，先建一个虚拟的
+        if (teamUserMapping == null){
+            user = new UserInfo();
+            user.setUiType(2);
+            user.setUiIsValid(1);
+            user.setUiRealName(userName);
+            user.setUiCreateTime(System.currentTimeMillis());
+            user.setUiCreateUserId(myUserInfo.getUiId());
+            user.setUiCreateUserName(myUserInfo.getUserName());
+            userDao.save(user);
+            userInfo.add(user);
+            userId = user.getUiId();
+
+            //发送一条入队申请
+            TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
+            teamUserMapping = new TeamUserMapping();
+            teamUserMapping.setTumTeamId(teamId);
+            teamUserMapping.setTumUserId(userId);
+            //是否有加入审核(1、是（队长审批）  0、否)
+            if (teamInfo.getTiJoinOpenType() == 1) {
+                teamUserMapping.setTumUserType(2);
+            } else {
+                teamUserMapping.setTumUserType(1);
+            }
+            teamUserMapping.setTumCreateUserId(myUserInfo.getUiId());
+            teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+            teamUserMapping.setTumCreateUserName(myUserInfo.getUserName());
+            matchDao.save(teamUserMapping);
+        }
+        //让该用户加入比赛
+        //如果是队长，设为设为赛长
+        Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userId);
+        Integer userType;
+        if (isCaptain >0) {
+            userType = 0;
+        } else {
+            userType = 1;
+        }
+
+        //如果是“我”,仍然保留是赛长
+        if (userId == myUserInfo.getUiId()){
+            userType = 0;
+        }
+        adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName,userType,myUserInfo.getUiId(),myUserInfo.getUserName());
+
+        //如果已有比赛成绩，更新成绩信息
+        matchDao.updateMatchScoreTeamId(matchId,userId,teamId);
+        //修改比赛信息中的比赛人数
         Long userCount = matchDao.getAllMatchApplyUserCount(matchId);
         matchInfo.setMiPeopleNum(userCount.intValue());
         matchDao.update(matchInfo);

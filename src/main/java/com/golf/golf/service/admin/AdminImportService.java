@@ -153,6 +153,11 @@ public class AdminImportService implements IBaseService {
 			    i = 2;
             } else { i=0;}
 			matchInfo.setMiMatchFormat2(i);
+			if(i>0){
+                matchInfo.setMiMatchFormat3(1);
+            } else {
+                matchInfo.setMiMatchFormat3(0);
+            }
 			matchInfo.setMiMatchFormat1(matchTypeSplit[1].equals("比杆")?0:1);
 			matchInfo.setMiJoinTeamIds(joinTeamIds);
 			if (isEnd== null || isEnd =="" || isEnd.equals("比分")) {
@@ -261,11 +266,12 @@ public class AdminImportService implements IBaseService {
                     TeamInfo teamInfo = null;
                     Integer userType = 1;
                     Long userId = null;
-                    //下面这个判断改变了用实名和球队名一起判断的逻辑，改由人的实名判断
+                    //用实名和球队名一起判断,球队里没有的就加个虚拟的
                     if (userTeamMapping==null){
+                        /* 下面代码，假定全系统不重名，即不同球队也不允许重名
                         Map<String, Object> user = adminImportDao.getUserByRealName(userName);
                         userId = matchService.getLongValue(user, "userId");
-
+*/
                        if ( userId == null) {
                            userInfo = new UserInfo();
                            userInfo.setUiType(2);
@@ -456,57 +462,59 @@ public class AdminImportService implements IBaseService {
 			Double d = Double.parseDouble(scoreEveHole);
 			score = d.intValue();
 		}
-		//获取本球场第j洞的详情
-		String holeName = "";
-		if(beforeAfter == 0){
-			holeName = matchInfo.getMiZoneBeforeNine();
-		}else{
-			holeName = matchInfo.getMiZoneAfterNine();
-		}
-		ParkPartition parkPartition = adminImportDao.getParkPartition(matchInfo.getMiParkId(),holeNum,holeName);
-		MatchScore matchScore = null;
-		if (isnewMatch == 0 ) {
-			matchScore = adminImportDao.getMatchScoreByUser(
-					teamInfo.getTiId(), matchInfo.getMiId(), matchGroup.getMgGroupName(), userInfo.getUiId(), holeNum, holeName, beforeAfter);
-		}
-		if(matchScore == null) {
-			matchScore = new MatchScore();
-			matchScore.setMsTeamId(teamInfo.getTiId());
-			matchScore.setMsMatchId(matchInfo.getMiId());
-			matchScore.setMsMatchTitle(matchInfo.getMiTitle());
-			matchScore.setMsMatchType(matchInfo.getMiType());
-			matchScore.setMsGroupId(matchGroup.getMgId());
-			matchScore.setMsGroupName(matchGroup.getMgGroupName());
-			matchScore.setMsUserId(userInfo.getUiId());
-			matchScore.setMsUserName(userInfo.getUiRealName());
-			matchScore.setMsType(0);
-			matchScore.setMsRodNum(score);
-			matchScore.setMsBeforeAfter(beforeAfter);
-			matchScore.setMsHoleName(parkPartition.getppName());
-			matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
-			matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
-			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
-			Integer rodCha = score - parkPartition.getPpHoleStandardRod();
-			matchScore.setMsRodCha(rodCha<0?0:rodCha);
-			matchScore.setMsCreateTime(System.currentTimeMillis());
-			matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
-			matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
-			matchScore.setMsIsClaim(0);
-			adminImportDao.save(matchScore);
-		} else{
-			//覆盖，更新
-			matchScore.setMsGroupId(matchGroup.getMgId());
-			matchScore.setMsGroupName(matchGroup.getMgGroupName());
-			matchScore.setMsIsClaim(0);
-			matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
-			Integer rodCha = score - parkPartition.getPpHoleStandardRod();
-			matchScore.setMsRodCha(rodCha<0?0:rodCha);
-			matchScore.setMsUpdateTime(System.currentTimeMillis());
-			matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
-			matchScore.setMsUpdateUserName(AdminUserUtil.getShowName());
-			adminImportDao.update(matchScore);
-		}
+		if(score > 0 ) {   //只有有成绩的才创建成绩记录
 
+            //获取本球场第j洞的详情
+            String holeName = "";
+            if (beforeAfter == 0) {
+                holeName = matchInfo.getMiZoneBeforeNine();
+            } else {
+                holeName = matchInfo.getMiZoneAfterNine();
+            }
+            ParkPartition parkPartition = adminImportDao.getParkPartition(matchInfo.getMiParkId(), holeNum, holeName);
+            MatchScore matchScore = null;
+            if (isnewMatch == 0) {
+                matchScore = adminImportDao.getMatchScoreByUser(
+                        teamInfo.getTiId(), matchInfo.getMiId(), matchGroup.getMgGroupName(), userInfo.getUiId(), holeNum, holeName, beforeAfter);
+            }
+            if (matchScore == null) {
+                matchScore = new MatchScore();
+                matchScore.setMsTeamId(teamInfo.getTiId());
+                matchScore.setMsMatchId(matchInfo.getMiId());
+                matchScore.setMsMatchTitle(matchInfo.getMiTitle());
+                matchScore.setMsMatchType(matchInfo.getMiType());
+                matchScore.setMsGroupId(matchGroup.getMgId());
+                matchScore.setMsGroupName(matchGroup.getMgGroupName());
+                matchScore.setMsUserId(userInfo.getUiId());
+                matchScore.setMsUserName(userInfo.getUiRealName());
+                matchScore.setMsType(0);
+                matchScore.setMsRodNum(score);
+                matchScore.setMsBeforeAfter(beforeAfter);
+                matchScore.setMsHoleName(parkPartition.getppName());
+                matchScore.setMsHoleNum(parkPartition.getPpHoleNum());
+                matchScore.setMsHoleStandardRod(parkPartition.getPpHoleStandardRod());
+                matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
+                Integer rodCha = score - parkPartition.getPpHoleStandardRod();
+                matchScore.setMsRodCha(rodCha);
+                matchScore.setMsCreateTime(System.currentTimeMillis());
+                matchScore.setMsCreateUserId(AdminUserUtil.getUserId());
+                matchScore.setMsCreateUserName(AdminUserUtil.getShowName());
+                matchScore.setMsIsClaim(0);
+                adminImportDao.save(matchScore);
+            } else {
+                //覆盖，更新
+                matchScore.setMsGroupId(matchGroup.getMgId());
+                matchScore.setMsGroupName(matchGroup.getMgGroupName());
+                matchScore.setMsIsClaim(0);
+                matchService.getScore(matchScore, parkPartition.getPpHoleStandardRod());
+                Integer rodCha = score - parkPartition.getPpHoleStandardRod();
+                matchScore.setMsRodCha(rodCha);
+                matchScore.setMsUpdateTime(System.currentTimeMillis());
+                matchScore.setMsUpdateUserId(AdminUserUtil.getUserId());
+                matchScore.setMsUpdateUserName(AdminUserUtil.getShowName());
+                adminImportDao.update(matchScore);
+            }
+        }
 	}
 
 	/**

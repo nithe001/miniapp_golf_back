@@ -96,7 +96,7 @@
         <a class="btn btn-default" href="admin/consult/list" role="button">取消</a>
     </div>
     <div class="col-xs-push-4 col-xs-2">
-        <button type="submit" class="btn btn-info pull-right">保存</button>
+        <button type="submit" class="btn btn-info pull-left">保存</button>
     </div>
 </div>
 <br/>

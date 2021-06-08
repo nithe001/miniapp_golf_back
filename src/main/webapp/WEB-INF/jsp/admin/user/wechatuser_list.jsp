@@ -44,7 +44,6 @@
                                         <th>序号</th>
                                         <th>头像</th>
                                         <th>昵称</th>
-                                        <th>openid</th>
                                         <th>真实姓名</th>
                                         <th>性别</th>
                                         <th>省份</th>
@@ -64,7 +63,6 @@
                                             <td>${(pageInfo.rowsPerPage  * (pageInfo.nowPage -1)) + (s.index +1)  }</td>
                                             <td><img src="${user.wui_headimg}" style="width:65px;height:65px;"></td>
                                             <td>${user.wui_nick_name}</td>
-                                            <td>${user.wui_openid}</td>
                                             <td>${user.ui_real_name}</td>
                                             <td>${user.wui_sex}</td>
                                             <td>${user.wui_province}</td>
