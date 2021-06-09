@@ -5,6 +5,8 @@ import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
 import com.golf.golf.dao.admin.AdminImportDao;
 import com.golf.golf.dao.admin.AdminUserDao;
+import com.golf.golf.dao.UserDao;
+import com.golf.golf.dao.TeamDao;
 import com.golf.golf.db.*;
 import com.golf.golf.service.MatchService;
 import com.golf.golf.service.MatchScoreService;
@@ -39,6 +41,10 @@ public class AdminImportService implements IBaseService {
 	private MatchService matchService;
     @Autowired
     private MatchScoreService matchScoreService;
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private TeamDao teamDao;
 
 
 	/**
@@ -67,11 +73,11 @@ public class AdminImportService implements IBaseService {
 			String teamNameAbbrev = row.getCell(1).toString();
 			//查询是否有该球队
 			//加上队长信息来判断 nhq
-			String teamCaps = row.getCell(2).toString();
-			String[] teamCapsSplit = teamCaps.split(",");
+			String teamCaptain = row.getCell(2).toString();
+
 
 			TeamInfo teamInfo = adminImportDao.getTeamInfoByName(teamName,teamNameAbbrev);
-
+            Long teamId = null;
 
 			if(teamInfo == null){
 				teamInfo = new TeamInfo();
@@ -95,7 +101,51 @@ public class AdminImportService implements IBaseService {
                 teamInfo.setTiCreateUserName("牛合庆");
 				adminImportDao.save(teamInfo);
 			}
+            teamId = teamInfo.getTiId();
 			joinTeamIds += teamInfo.getTiId().toString()+",";
+            List<UserInfo> userInfo = userDao.getUserIdByRealName(teamCaptain);
+            TeamUserMapping teamUserMapping = null;
+            UserInfo user=null;
+            Long userId = null;
+
+            if (userInfo.size() <1){
+                user = new UserInfo();
+                user.setUiType(2);
+                user.setUiIsValid(1);
+                user.setUiRealName(teamCaptain);
+                user.setUiCreateTime(System.currentTimeMillis());
+                user.setUiCreateUserId(3l);
+                user.setUiCreateUserName("牛合庆");
+                userDao.save(user);
+                userInfo.add(user);
+                userId = user.getUiId();
+            } else {
+                //找到这个参赛队的这个人
+                for (int j = 0; j < userInfo.size(); j++) {
+                    teamUserMapping = teamDao.getTeamUserMapping(teamId, userInfo.get(j).getUiId());
+                    if (teamUserMapping != null) {
+                        userId = userInfo.get(j).getUiId();
+                        break;
+                    }
+                }
+            }
+            if (teamUserMapping == null && teamId !=null ) {
+                if (userId == null ) {
+                    userId = userInfo.get(0).getUiId();
+                }
+                teamUserMapping = new TeamUserMapping();
+                teamUserMapping.setTumTeamId(teamId);
+                teamUserMapping.setTumUserId(userId);
+                teamUserMapping. setTumUserType(0); //设为队长
+                //是否有加入审核(1、是（队长审批）  0、否)
+                if (teamInfo.getTiJoinOpenType() == 1) {
+                    teamUserMapping.setTumUserType(2);
+                } else {
+                    teamUserMapping.setTumUserType(1);
+                }
+
+                teamDao.save(teamUserMapping);
+            }
 		}
 		return joinTeamIds;
 	}

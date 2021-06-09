@@ -570,10 +570,16 @@ public class UserService implements IBaseService {
 			result.put("teamInfo",teamInfo);
 			//被查看用户是否是本队队长
 			Long elseIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,userId);
-			//我是否是本队队长
+			//被查看用户是否是本队成员
+            Long elseIsJoinTeamUser = matchDao.getIsJoinTeamUser(teamId,userId);
+            //我是否是本队队长
 			Long meIsTeamCaptain = matchDao.getIsTeamCaptain(teamId,myUserId);
+            //被查看用户是否是本队成员
+            Long meIsJoinTeamUser = matchDao.getIsJoinTeamUser(teamId,myUserId);
 			result.put("elseIsTeamCaptain", elseIsTeamCaptain > 0);
 			result.put("meIsTeamCaptain", meIsTeamCaptain > 0);
+            result.put("elseIsJoinTeamUser", elseIsJoinTeamUser > 0);
+            result.put("meIsJoinTeamUser", meIsJoinTeamUser > 0);
 		}else if(StringUtils.isNotEmpty(matchIdStr)){
 			Long matchId = Long.parseLong(matchIdStr);
 			MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
@@ -583,14 +589,12 @@ public class UserService implements IBaseService {
 			Long meIsMatchWatch = matchDao.getIsWatch(myUserId,matchId);
 			Long meIsJoinMatchUser = 0L;
 			Long meIsMatchCaptain = 0L;
-			if(meIsMatchWatch <= 0){
-				//我不是围观人 再判断我是否是参赛者
-				meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
+            //我是否是参赛者
+            meIsJoinMatchUser = matchDao.getIsJoinMatchUser(matchId,myUserId);
 
-                //我是否是本比赛的赛长
-                meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
+            //我是否是本比赛的赛长
+            meIsMatchCaptain = matchDao.getIsMatchCaptain(matchId,myUserId);
 
-			}
 			result.put("meIsMatchWatch", meIsMatchWatch > 0);
 			result.put("meIsJoinMatchUser", meIsJoinMatchUser > 0);
 			result.put("meIsMatchCaptain", meIsMatchCaptain > 0);
@@ -668,7 +672,7 @@ public class UserService implements IBaseService {
 	 * 比赛哪里点击用户头像来认领该用户 nhq
 	 * @return
 	 */
-	public String  claimUserScore(String openid,String importUserId,String importUserRealName,String matchId) {
+	public String  claimUserScore(String openid,String importUserId,String importUserRealName) {
 		//把自己的真实姓名改为被认领用户的真实姓名
 		UserInfo userInfo = getUserInfoByOpenId(openid);
 		Long myUserId = userInfo.getUiId();

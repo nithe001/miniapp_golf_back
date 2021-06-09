@@ -294,10 +294,9 @@ public class UserController {
 	@RequestMapping("claimUserScore")
 	public JsonElement claimUserScore(@RequestAttribute("openid") String openid,
 									  @RequestAttribute("importUserId") String importUserId,
-									  @RequestAttribute("importUserRealName") String importUserRealName,
-									  @RequestAttribute("matchId") String matchId) {
+									  @RequestAttribute("importUserRealName") String importUserRealName) {
 		try {
-			String result = userService.claimUserScore(openid,importUserId,importUserRealName,matchId);
+			String result = userService.claimUserScore(openid,importUserId,importUserRealName);
 			return JsonWrapper.newDataInstance(result);
 		} catch (Exception e) {
 			e.printStackTrace();

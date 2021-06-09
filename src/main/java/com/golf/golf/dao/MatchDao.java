@@ -2409,11 +2409,20 @@ public class MatchDao extends CommonDao {
         StringBuilder sql = new StringBuilder();
         sql.append("from MatchUserGroupMapping as g " +
                 "where g.mugmMatchId = " +matchId+
-                " and g.mugmUserId = "+userId+
-				" and g.mugmIsDel = 0");
+                " and g.mugmUserId = "+userId );
+              //  " and g.mugmUserId = "+userId+
+				//" and g.mugmIsDel = 0");
         return dao.createCountQuery("select count(*) "+sql.toString());
     }
 
+    //我是否是球队人员(显示认领按钮)
+    public Long getIsJoinTeamUser(Long teamId, Long userId) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("from TeamUserMapping as t " +
+                "where t.tumTeamId = " +teamId+
+                " and t.tumUserId = "+userId );
+        return dao.createCountQuery("select count(*) "+sql.toString());
+    }
 	/**
 	 * 进一步筛选用是否在这些上报球队中，查询球队的id
 	 */
