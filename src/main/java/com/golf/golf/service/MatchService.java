@@ -3944,7 +3944,6 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 			matchUserGroupMapping.setMugmUserType(0);
 			//不是自动设置的赛长
 			matchUserGroupMapping.setMugmIsAutoCap(0);
-			matchUserGroupMapping.setMugmIsDel(0);
 			matchUserGroupMapping.setMugmUpdateTime(System.currentTimeMillis());
 			matchUserGroupMapping.setMugmUpdateUserId(myUserInfo.getUiId());
 			matchUserGroupMapping.setMugmUpdateUserName(myUserInfo.getUserName());
