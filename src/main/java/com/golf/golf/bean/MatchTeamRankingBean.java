@@ -15,8 +15,10 @@ public class MatchTeamRankingBean {
 	private Integer userCount;
 	//平均杆数
 	private Double avgRodNum;
-	//总杆数
+	//总杆数，可能是总杆，可能是净杆
 	private Integer sumRodNum;
+    //总杆数
+    private Integer totalRodNum;
 	//获胜组
 	private String winGroupName;
 	//打平组
@@ -77,6 +79,17 @@ public class MatchTeamRankingBean {
 	public void setSumRodNum(Integer sumRodNum) {
 		this.sumRodNum = sumRodNum;
 	}
+
+    public Integer getTotalRodNum() {
+        if(this.totalRodNum == null){
+            return 0;
+        }
+        return totalRodNum;
+    }
+
+    public void setTotalRodNum(Integer totalRodNum) {
+        this.totalRodNum = totalRodNum;
+    }
 
 	public String getWinGroupName() {
 		return winGroupName;

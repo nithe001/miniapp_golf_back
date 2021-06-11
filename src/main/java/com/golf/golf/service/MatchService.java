@@ -3204,7 +3204,12 @@ public class MatchService implements IBaseService {
 				if(mingci == null || mingci == 0){
 					//N的list
 					getNList(nList,matchInfo,joinTeamIdList,nMap);
-					mingci = getIntegerValue(nMap,"minCount");
+					 mingci = getIntegerValue(nMap,"minCount");
+                     if( matchInfo.getMiMatchFormat3() ==3 ){
+                        if( mingci>5) {mingci = 5 ;} //取平均杆时缺省值为5
+                     } else {
+                         if( mingci>10) {mingci = 10 ;} //取总杆时缺省值为10
+                     }
 				}else{
 					getNList(nList,matchInfo,joinTeamIdList,nMap);
 				}
@@ -3230,6 +3235,11 @@ public class MatchService implements IBaseService {
 					//N的list
 					getNList(nList,matchInfo,joinTeamIdList,nMap);
 					mingci = getIntegerValue(nMap,"minCount");
+                    if( matchInfo.getMiMatchFormat3() ==3 ){
+                        if( mingci>5) {mingci = 5 ;} //取平均杆时缺省值为5
+                    } else {
+                        if( mingci>10) {mingci = 10 ;} //取总杆时缺省值为10
+                    }
 				}else{
 					getNList(nList,matchInfo,joinTeamIdList,nMap);
 				}
@@ -3300,12 +3310,14 @@ public class MatchService implements IBaseService {
                                     sumRodNumByN = n.intValue()*110;
                                 }
 								Integer sumRodNum = getIntegerValue(scoreList.get(0),"sumRodNum");
+                                Integer totalRodNum = getIntegerValue(scoreList.get(0),"totalRodNum");
                                 Double avgRodNum = getDoubleValue(scoreList.get(0),"avgRodNum");
-								if(sumRodNum != 0 ){
+								if(totalRodNum != 0 ){
 								    if (matchInfo.getMiMatchFormat3()!=null && matchInfo.getMiMatchFormat3() == 3 ) {
 								        //均杆按比例模式，直接用查询出来的结果
                                         matchTeamRankingBean.setAvgRodNum(avgRodNum);
                                         matchTeamRankingBean.setSumRodNum(sumRodNum);
+                                        matchTeamRankingBean.setTotalRodNum(totalRodNum);
                                     } else {
                                         if (matchInfo.getMiMatchFormat2() == 0) {
                                             Integer sum = sumRodNum + sumRodNumByN;
@@ -3313,6 +3325,7 @@ public class MatchService implements IBaseService {
                                             Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                                             matchTeamRankingBean.setAvgRodNum(avg);
                                             matchTeamRankingBean.setSumRodNum(sum);
+                                            matchTeamRankingBean.setTotalRodNum(totalRodNum);
                                         } else {
                                             Integer sum = sumRodNum;
                                             Integer groupNum = getIntegerValue(scoreList.get(0), "groupNum");
@@ -3320,19 +3333,23 @@ public class MatchService implements IBaseService {
                                             Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                                             matchTeamRankingBean.setAvgRodNum(avg);
                                             matchTeamRankingBean.setSumRodNum(sum);
+                                            matchTeamRankingBean.setTotalRodNum(totalRodNum);
                                         }
                                     }
 								}else{
-									matchTeamRankingBean.setAvgRodNum(199.0);
-									matchTeamRankingBean.setSumRodNum(9999);
+									matchTeamRankingBean.setAvgRodNum(0.0);
+									matchTeamRankingBean.setSumRodNum(0);
+									matchTeamRankingBean.setTotalRodNum(9999);
 								}
 							}else{
-								matchTeamRankingBean.setAvgRodNum(199.0);
-								matchTeamRankingBean.setSumRodNum(9999);
+								matchTeamRankingBean.setAvgRodNum(0.0);
+								matchTeamRankingBean.setSumRodNum(0);
+								matchTeamRankingBean.setTotalRodNum(9999);
 							}
 						}else{
-							matchTeamRankingBean.setAvgRodNum(199.0);
-							matchTeamRankingBean.setSumRodNum(9999);
+							matchTeamRankingBean.setAvgRodNum(0.0);
+							matchTeamRankingBean.setSumRodNum(0);
+							matchTeamRankingBean.setTotalRodNum(9999);
 						}
 						matchTeamRankingList.add(matchTeamRankingBean);
 					}
@@ -3341,22 +3358,22 @@ public class MatchService implements IBaseService {
                         Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
                             @Override
                             public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
-                                if (bean1.getAvgRodNum() == 0) {
+                                if (bean1.getTotalRodNum() == 0) {
                                     return -1;
                                 }
 
-                                return new Double(bean1.getAvgRodNum()).compareTo(new Double(bean2.getAvgRodNum()));
+                                return new Double(bean1.getTotalRodNum()).compareTo(new Double(bean2.getTotalRodNum()));
                             }
                         });
                     }  else {
                         Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
                             @Override
                             public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
-                                if (bean1.getSumRodNum() == 0) {
+                                if (bean1.getTotalRodNum() == 0) {
                                     return -1;
                                 }
 
-                                return new Double(bean1.getSumRodNum()).compareTo(new Double(bean2.getSumRodNum()));
+                                return new Double(bean1.getTotalRodNum()).compareTo(new Double(bean2.getTotalRodNum()));
                             }
                         });
                     }
@@ -3365,6 +3382,7 @@ public class MatchService implements IBaseService {
 		}
 		result.put("scoreList",matchTeamRankingList);
 		result.put("mingciArray",nList);
+        result.put("mingci",mingci);
 	}
 
 	/**

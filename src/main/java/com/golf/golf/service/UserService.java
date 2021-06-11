@@ -616,7 +616,10 @@ public class UserService implements IBaseService {
 					//查询我所在的比赛分组
 					MatchUserGroupMapping matchUserGroupMapping = matchDao.getMatchGroupMappingByUserId(matchId,null,myUserId);
 					//被查看用户是否已经被邀请记分
-					MatchScoreUserMapping matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, matchUserGroupMapping.getMugmGroupId(), userId);
+                    MatchScoreUserMapping matchScoreUserMapping = null;
+                    if(matchUserGroupMapping !=null) {
+                       matchScoreUserMapping = matchDao.getMatchScoreUserMapping(matchId, matchUserGroupMapping.getMugmGroupId(), userId);
+                    }
 					if(matchScoreUserMapping == null){
 						result.put("otherIsInvitate",false);
 					}else{

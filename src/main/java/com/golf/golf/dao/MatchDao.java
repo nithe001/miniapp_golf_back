@@ -1976,14 +1976,14 @@ public class MatchDao extends CommonDao {
         parp.put("teamId",teamId);
         parp.put("mingci",mingci);
         StringBuilder hql = new StringBuilder();
-        hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum, COUNT(userId) AS userCount ");
+        hql.append("SELECT round(SUM(t.sumRod)/:mingci, 2) AS avgRodNum,SUM(t.sumRod) AS sumRodNum, SUM(t.totalRod) AS totalRodNum,COUNT(userId) AS userCount ");
         hql.append("FROM ( ");
 
             hql.append("SELECT " +
                     "mm.mugm_match_id AS matchId, " +
                     "mm.mugm_group_id AS groupId, " +
                     "mm.mugm_user_id AS userId, " +
-                    //"sum(s.ms_rod_num) AS sumRod, " +
+                    "sum(s.ms_rod_num) AS totalRod, " +
                     //改为计算杆差
                     "sum(s.ms_rod_cha) AS sumRod, " +
 
@@ -2002,10 +2002,10 @@ public class MatchDao extends CommonDao {
             hql.append(" and mm.mugm_team_id = :teamId ");
         }
         hql.append(" GROUP BY mm.mugm_user_id , mm.mugm_match_id  " +
-              "ORDER BY  holeCount desc, sum(s.ms_rod_num) != 0 desc,sum(s.ms_rod_num) " +
+              "ORDER BY  holeCount desc, totalRod " +
               "LIMIT 0,:mingci");
-       hql.append(") as t WHERE  t.sumRod != 0");
-       // hql.append(") as t ");
+       // hql.append(") as t WHERE  t.totalRod != 0");
+       hql.append(") as t ");
         return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
     }
 
