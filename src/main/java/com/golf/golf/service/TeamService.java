@@ -228,14 +228,20 @@ public class TeamService implements IBaseService {
 
 		if(type <= 1){
 			//比分榜 or 积分榜 场次
-            if (scoreType == null || scoreType ==0) { //计算球员积分
+            if (scoreType == null || scoreType ==0 || scoreType ==3) { //计算球员积分
                 List<TeamUserPointBean> list = new ArrayList<>();
                 //获取本球队所有的球友
-                List<TeamUserMapping> userList = teamDao.getTeamUserList(parp);
+                List<Map<String, Object>>  userList = null;
+
+                if ( scoreType ==3) { //只取女同学
+                    userList=teamDao.getTeamFemaleUserList(parp);
+                } else {
+                    userList=teamDao.getTeamUserList(parp);
+                }
                 if (userList != null && userList.size() > 0) {
-                    for (TeamUserMapping user : userList) {
+                    for (Map<String, Object> user : userList) {
                         TeamUserPointBean teamUserPointBean = new TeamUserPointBean();
-                        Long userId = user.getTumUserId();
+                        Long userId = matchService.getLongValue(user,"tum_user_id");
                         UserInfo userInfo = teamDao.get(UserInfo.class, userId);
                         teamUserPointBean.setUserId(userId);
                         teamUserPointBean.setRealName(userInfo.getUiRealName());
@@ -289,6 +295,7 @@ public class TeamService implements IBaseService {
 
                         if (teamUserPointBean.getTotalMatchNum() > 0 && sumrodnum > 0) {
                             Integer avgrodnum = Math.round(sumrodnum / teamUserPointBean.getTotalMatchNum());
+                            //Double avgrodnum = sumrodnum.doubleValue()/ teamUserPointBean.getTotalMatchNum();
                             teamUserPointBean.setAvgRodInteger(avgrodnum);
                         } else teamUserPointBean.setAvgRodInteger(99999);
 

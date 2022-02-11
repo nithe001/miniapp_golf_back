@@ -162,7 +162,9 @@ public class MatchScoreService implements IBaseService {
                   String teamAbbrev = user.get("teamAbbrev") == null ? null : user.get("teamAbbrev").toString();
                   String userRealName = user.get("uiRealName") == null ? null : user.get("uiRealName").toString();
                   String userHeadimg = user.get("uiHeadimg") == null ? null : user.get("uiHeadimg").toString();
+                  String userSex = user.get("uiSex") == null ? null : user.get("uiSex").toString();
                   String matchName = user.get("matchName") == null ? null : user.get("matchName").toString();
+                  String groupName = user.get("groupName") == null ? null : user.get("groupName").toString();
                   //本用户的前后半场总得分情况
                   List<MatchTotalUserScoreBean> userScoreList = new ArrayList<>();
 
@@ -180,10 +182,12 @@ public class MatchScoreService implements IBaseService {
                   bean.setUserId(userId);
                   bean.setUserName(userRealName);
                   bean.setUserHeadimg(userHeadimg);
+                  bean.setUserSex(userSex);
                   bean.setTeamAbbrev(teamAbbrev);
                   bean.setTeamId(teamId);
                   bean.setMatchId(childMatchId);
                   bean.setMatchName(matchName);
+                  bean.setGroupName(groupName);
                   bean.setGroupId(groupId);
                   bean.setHoleCount(holeCount);
                   list.add(bean);
@@ -198,6 +202,9 @@ public class MatchScoreService implements IBaseService {
 
                   //不防作弊时用户的18洞总杆数
                   Long sumRod = matchScoreDao.getSumRod(userId, childMatchId);
+                  user.put("sumRod", sumRod);
+                  bean.setTotalRodScore(sumRod.intValue());
+
                   //防作弊18洞总杆数
                   Integer sumRodXxbly = beforeTotalRodNum + afterTotalRodNum;
                   if (holeCount < 18) {
@@ -209,10 +216,13 @@ public class MatchScoreService implements IBaseService {
                       //Long radomSumRod = matchScoreDao.getRandomSumRod(userId,matchInfo,beforeHoleNum,afterHoleNum);
 
                       //差点 加个提示
-
-                      BigDecimal ch = new BigDecimal((sumRodXxbly * 1.5 - sum18) * 0.8).setScale(2, BigDecimal.ROUND_HALF_UP);
-                      double cha = ch.doubleValue();
-
+                      double cha;
+                      if(matchInfo.getMiMatchFormat3() == 3 ){
+                          cha = matchService.getUserChaPoint(userId);
+                      } else {
+                          BigDecimal ch = new BigDecimal((sumRodXxbly * 1.5 - sum18) * 0.8).setScale(2, BigDecimal.ROUND_HALF_UP);
+                          cha = ch.doubleValue();
+                      }
                       //净杆
                       double netRod = sumRod.doubleValue() - cha;
                       //保留两位小数
@@ -283,9 +293,11 @@ public class MatchScoreService implements IBaseService {
 
     public Integer createNewUserScore(List<MatchTotalUserScoreBean> userScoreList, List<Map<String, Object>> uScoreList,
                                       MatchScoreNetHole scoreNetHole) {
+        //半场实际总杆数
         Integer totalRod = 0;
-        //杆差
-        Integer totalRodCha = 0;
+
+        //半场经过净杆处理的总杆数
+        Integer totalNetRod = 0;
         for(Map<String, Object> map:uScoreList){
             MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
 
@@ -300,32 +312,46 @@ public class MatchScoreService implements IBaseService {
 
             //本洞打出的杆数
             Integer rodNum = matchService.getIntegerValue(map,"rod_num");
-            //如果某洞没记分，则这洞按double par-1 处理
-            if (rodNum ==0) {
-                rodNum= 2*standardRodNum-1;
-            }
-            //下面算法的原理是对所有的洞做去顶的处理求和 然后减去抽去六洞的不去顶的和。
-            if ((holeName.equals(scoreNetHole.getMsntHoleBeforeName()) && holeNum !=scoreNetHole.getMsntHoleBeforeNum1() && holeNum !=scoreNetHole.getMsntHoleBeforeNum2()
-                 && holeNum !=scoreNetHole.getMsntHoleBeforeNum3()) ||(holeName.equals(scoreNetHole.getMsntHoleAfterName()) && holeNum !=scoreNetHole.getMsntHoleAfterNum1()
-                    && holeNum !=scoreNetHole.getMsntHoleAfterNum2()
-                    && holeNum !=scoreNetHole.getMsntHoleAfterNum3())){
-                if(rodNum>=2*standardRodNum) { rodNum = 2*standardRodNum-1;}
-                totalRod += rodNum;
-            }else {
-                if(rodNum>=2*standardRodNum) {
-                    totalRod -= rodNum-2*standardRodNum+1;
-                    }
-            }
+            totalRod += rodNum;
             //杆数
             bean.setRodNum(rodNum);
             //本洞标准杆
             bean.setHoleStandardRod(standardRodNum);
             userScoreList.add(bean);
+
+            //如果某洞没记分，则这洞按double par-1 处理
+            if (rodNum ==0) {
+                rodNum= 2*standardRodNum-1;
+            }
+            Integer rodNum1 = rodNum;
+            //下面算法的原理是对所有的洞做去顶的处理求和 然后减去抽去六洞的不去顶的和。
+            if ((holeName.equals(scoreNetHole.getMsntHoleBeforeName()) && holeNum !=scoreNetHole.getMsntHoleBeforeNum1() && holeNum !=scoreNetHole.getMsntHoleBeforeNum2()
+                 && holeNum !=scoreNetHole.getMsntHoleBeforeNum3()) ||(holeName.equals(scoreNetHole.getMsntHoleAfterName()) && holeNum !=scoreNetHole.getMsntHoleAfterNum1()
+                    && holeNum !=scoreNetHole.getMsntHoleAfterNum2()
+                    && holeNum !=scoreNetHole.getMsntHoleAfterNum3())){
+                if(rodNum>=2*standardRodNum) { rodNum1 = 2*standardRodNum-1;}
+                totalNetRod += rodNum1;
+            }else {
+                if(rodNum>=2*standardRodNum) {
+                    totalNetRod -= rodNum-2*standardRodNum+1;
+                    }
+            }
+
+            //下面这段代码很丑陋，主要为了解决本来是随机抽6洞，但原来的实现方案是前九后九各抽三洞，为了解决这个问题，如果前九抽了4个洞，则把第四个洞记在后九，
+            //洞号比如6，在后九记为9+6=15号，所以，上面那段代码中碰到这种情况，这一洞的杆数肯定肯定是去顶求和了，下面这段代码就是减去这样的洞的不去顶的杆数。
+            if ((holeName.equals(scoreNetHole.getMsntHoleBeforeName()) && (holeNum ==(scoreNetHole.getMsntHoleAfterNum1()-9)|| holeNum ==(scoreNetHole.getMsntHoleAfterNum2()-9)
+                    || holeNum ==(scoreNetHole.getMsntHoleAfterNum3()-9))) || (holeName.equals(scoreNetHole.getMsntHoleAfterName()) && (holeNum ==(scoreNetHole.getMsntHoleBeforeNum1()-9)
+                    || holeNum ==(scoreNetHole.getMsntHoleBeforeNum2()-9)
+                    || holeNum ==(scoreNetHole.getMsntHoleBeforeNum3()-9)))){
+
+                totalNetRod -= rodNum;
+            }
+
         }
-        //每个半场的总杆数
+        //每个半场的实际总杆数
         MatchTotalUserScoreBean bean = new MatchTotalUserScoreBean();
         bean.setRodNum(totalRod);
         userScoreList.add(bean);
-        return totalRod;
+        return totalNetRod;
     }
 }

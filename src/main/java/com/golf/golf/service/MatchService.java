@@ -453,7 +453,7 @@ public class MatchService implements IBaseService {
 		}
 	}
 
-	/**
+	/** 这个方法不好使
 	 * Double
 	 *
 	 * @param map
@@ -907,6 +907,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiCreateUserId(myUserInfo.getUiId());
 		matchInfo.setMiCreateUserName(myUserInfo.getUserName());
 		matchInfo.setMiIsValid(1);
+        matchInfo.setMiPriority(0);
 
 		matchDao.save(matchInfo);
 
@@ -1434,64 +1435,90 @@ public class MatchService implements IBaseService {
         TeamUserMapping teamUserMapping = null;
         UserInfo user=null;
         Long userId = null;
+        Integer userType;
 
-        //找这个球队有无叫这个名字的人
-        if (userInfo.size() > 0) {
-            for (int i = 0; i < userInfo.size(); i++) {
-                teamUserMapping = teamDao.getTeamUserMapping(teamId, userInfo.get(i).getUiId());
-                if (teamUserMapping != null) {
-                    userId = userInfo.get(i).getUiId();
-                    break;
+        if(teamId != null ) {
+            //找这个球队有无叫这个名字的人
+            if (userInfo.size() > 0) {
+                for (int i = 0; i < userInfo.size(); i++) {
+                    teamUserMapping = teamDao.getTeamUserMapping(teamId, userInfo.get(i).getUiId());
+                    if (teamUserMapping != null) {
+                        userId = userInfo.get(i).getUiId();
+                        break;
+                    }
                 }
             }
-        }
-        //如果该球队没有这个名字的用户，先建一个虚拟的
-        if (teamUserMapping == null){
-            user = new UserInfo();
-            user.setUiType(2);
-            user.setUiIsValid(1);
-            user.setUiRealName(userName);
-            user.setUiCreateTime(System.currentTimeMillis());
-            user.setUiCreateUserId(myUserInfo.getUiId());
-            user.setUiCreateUserName(myUserInfo.getUserName());
-            userDao.save(user);
-            userInfo.add(user);
-            userId = user.getUiId();
+            //如果该球队没有这个名字的用户，先建一个虚拟的
+            if (teamUserMapping == null) {
+                user = new UserInfo();
+                user.setUiType(2);
+                user.setUiIsValid(1);
+                user.setUiRealName(userName);
+                user.setUiCreateTime(System.currentTimeMillis());
+                user.setUiCreateUserId(myUserInfo.getUiId());
+                user.setUiCreateUserName(myUserInfo.getUserName());
+                userDao.save(user);
+                userInfo.add(user);
+                userId = user.getUiId();
 
-            //发送一条入队申请
-            TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
-            teamUserMapping = new TeamUserMapping();
-            teamUserMapping.setTumTeamId(teamId);
-            teamUserMapping.setTumUserId(userId);
-            //是否有加入审核(1、是（队长审批）  0、否)
-            if (teamInfo.getTiJoinOpenType() == 1) {
-                teamUserMapping.setTumUserType(2);
-            } else {
-                teamUserMapping.setTumUserType(1);
+                //发送一条入队申请
+                TeamInfo teamInfo = teamDao.get(TeamInfo.class, teamId);
+                teamUserMapping = new TeamUserMapping();
+                teamUserMapping.setTumTeamId(teamId);
+                teamUserMapping.setTumUserId(userId);
+                //是否有加入审核(1、是（队长审批）  0、否)
+                if (teamInfo.getTiJoinOpenType() == 1) {
+                    teamUserMapping.setTumUserType(2);
+                } else {
+                    teamUserMapping.setTumUserType(1);
+                }
+                teamUserMapping.setTumCreateUserId(myUserInfo.getUiId());
+                teamUserMapping.setTumCreateTime(System.currentTimeMillis());
+                teamUserMapping.setTumCreateUserName(myUserInfo.getUserName());
+                matchDao.save(teamUserMapping);
             }
-            teamUserMapping.setTumCreateUserId(myUserInfo.getUiId());
-            teamUserMapping.setTumCreateTime(System.currentTimeMillis());
-            teamUserMapping.setTumCreateUserName(myUserInfo.getUserName());
-            matchDao.save(teamUserMapping);
-        }
-        //让该用户加入比赛
-        //如果是队长，设为设为赛长
-        Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userId);
-        Integer userType;
-        if (isCaptain >0) {
-            userType = 0;
+            //让该用户加入比赛
+            //如果是队长，设为设为赛长
+            Long isCaptain = teamDao.isCaptainIdByTeamId(teamId, userId);
+
+            if (isCaptain > 0) {
+                userType = 0;
+            } else {
+                userType = 1;
+            }
+
+            //如果是“我”,仍然保留是赛长
+            if (userId == myUserInfo.getUiId()) {
+                userType = 0;
+            }
+            adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName, userType, myUserInfo.getUiId(), myUserInfo.getUserName());
+
+            //如果已有比赛成绩，更新成绩信息
+            matchDao.updateMatchScoreTeamId(matchId, userId, teamId);
         } else {
-            userType = 1;
+
+            if (userInfo.size() < 1 ) {
+                //如果没有此人就建个虚拟的
+                user = new UserInfo();
+                user.setUiType(2);
+                user.setUiIsValid(1);
+                user.setUiRealName(userName);
+                user.setUiCreateTime(System.currentTimeMillis());
+                user.setUiCreateUserId(myUserInfo.getUiId());
+                user.setUiCreateUserName(myUserInfo.getUserName());
+                userDao.save(user);
+                userInfo.add(user);
+                userId = user.getUiId();
+            } else {
+                userId = userInfo.get(0).getUiId();
+            }
+
+            adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName, 1, myUserInfo.getUiId(), myUserInfo.getUserName());
+
+            //如果已有比赛成绩，更新球队信息
+            matchDao.updateMatchScoreTeamId(matchId, userId, teamId);
         }
 
-        //如果是“我”,仍然保留是赛长
-        if (userId == myUserInfo.getUiId()){
-            userType = 0;
-        }
-        adminImportService.importMatchUserMap(matchId, teamId, "", userId, userName,userType,myUserInfo.getUiId(),myUserInfo.getUserName());
-
-        //如果已有比赛成绩，更新成绩信息
-        matchDao.updateMatchScoreTeamId(matchId,userId,teamId);
         //修改比赛信息中的比赛人数
         Long userCount = matchDao.getAllMatchApplyUserCount(matchId);
         matchInfo.setMiPeopleNum(userCount.intValue());
@@ -3307,25 +3334,23 @@ public class MatchService implements IBaseService {
                                 if(userCount1 < mingci && userCount1 < maxCount){
                                     // 如果有球队的参赛人数小于n,少的那几个人，每人杆数按110(Const.DEFAULT_ROD_NUM)计算
                                     Long n = mingci.longValue() - userCount1;
-                                    sumRodNumByN = n.intValue()*110;
+                                    sumRodNumByN = n.intValue()*38;
                                 }
 								Integer sumRodNum = getIntegerValue(scoreList.get(0),"sumRodNum");
                                 Integer totalRodNum = getIntegerValue(scoreList.get(0),"totalRodNum");
                                 Double avgRodNum = getDoubleValue(scoreList.get(0),"avgRodNum");
-								if(totalRodNum != 0 ){
+								if(sumRodNum!=0|| totalRodNum != 0 ){
 								    if (matchInfo.getMiMatchFormat3()!=null && matchInfo.getMiMatchFormat3() == 3 ) {
 								        //均杆按比例模式，直接用查询出来的结果
                                         matchTeamRankingBean.setAvgRodNum(avgRodNum);
                                         matchTeamRankingBean.setSumRodNum(sumRodNum);
-                                        matchTeamRankingBean.setTotalRodNum(totalRodNum);
-                                    } else {
+								    } else {
                                         if (matchInfo.getMiMatchFormat2() == 0) {
                                             Integer sum = sumRodNum + sumRodNumByN;
                                             BigDecimal b = BigDecimal.valueOf(sum.doubleValue() / mingci);
                                             Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                                             matchTeamRankingBean.setAvgRodNum(avg);
                                             matchTeamRankingBean.setSumRodNum(sum);
-                                            matchTeamRankingBean.setTotalRodNum(totalRodNum);
                                         } else {
                                             Integer sum = sumRodNum;
                                             Integer groupNum = getIntegerValue(scoreList.get(0), "groupNum");
@@ -3333,23 +3358,19 @@ public class MatchService implements IBaseService {
                                             Double avg = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                                             matchTeamRankingBean.setAvgRodNum(avg);
                                             matchTeamRankingBean.setSumRodNum(sum);
-                                            matchTeamRankingBean.setTotalRodNum(totalRodNum);
                                         }
                                     }
 								}else{
-									matchTeamRankingBean.setAvgRodNum(0.0);
-									matchTeamRankingBean.setSumRodNum(0);
-									matchTeamRankingBean.setTotalRodNum(9999);
+									matchTeamRankingBean.setAvgRodNum(199.0);
+									matchTeamRankingBean.setSumRodNum(9999);
 								}
 							}else{
-								matchTeamRankingBean.setAvgRodNum(0.0);
-								matchTeamRankingBean.setSumRodNum(0);
-								matchTeamRankingBean.setTotalRodNum(9999);
+								matchTeamRankingBean.setAvgRodNum(199.0);
+								matchTeamRankingBean.setSumRodNum(9999);
 							}
 						}else{
-							matchTeamRankingBean.setAvgRodNum(0.0);
-							matchTeamRankingBean.setSumRodNum(0);
-							matchTeamRankingBean.setTotalRodNum(9999);
+							matchTeamRankingBean.setAvgRodNum(199.0);
+							matchTeamRankingBean.setSumRodNum(9999);
 						}
 						matchTeamRankingList.add(matchTeamRankingBean);
 					}
@@ -3358,28 +3379,29 @@ public class MatchService implements IBaseService {
                         Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
                             @Override
                             public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
-                                if (bean1.getTotalRodNum() == 0) {
-                                    return -1;
-                                }
 
-                                return new Double(bean1.getTotalRodNum()).compareTo(new Double(bean2.getTotalRodNum()));
+                                return new Double(bean1.getAvgRodNum()).compareTo(new Double(bean2.getAvgRodNum()));
                             }
                         });
                     }  else {
                         Collections.sort(matchTeamRankingList, new Comparator<MatchTeamRankingBean>() {
                             @Override
                             public int compare(MatchTeamRankingBean bean1, MatchTeamRankingBean bean2) {
-                                if (bean1.getTotalRodNum() == 0) {
-                                    return -1;
-                                }
 
-                                return new Double(bean1.getTotalRodNum()).compareTo(new Double(bean2.getTotalRodNum()));
+                                return new Double(bean1.getSumRodNum()).compareTo(new Double(bean2.getSumRodNum()));
                             }
                         });
                     }
 				}
 			}
 		}
+		for(MatchTeamRankingBean matchBean: matchTeamRankingList ){
+            Integer sumRodNum = matchBean.getSumRodNum();
+            if (sumRodNum == 9999 ) {
+                matchBean.setAvgRodNum(0D);
+                matchBean.setSumRodNum(0);
+            }
+        }
 		result.put("scoreList",matchTeamRankingList);
 		result.put("mingciArray",nList);
         result.put("mingci",mingci);
@@ -3940,7 +3962,7 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 		if(list != null && list.size()>0){
 			BigDecimal avg = (BigDecimal)list.get(0);
 			if(avg != null){
-				BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.8).setScale(1, BigDecimal.ROUND_HALF_UP);
+				BigDecimal processClll = new BigDecimal((avg.floatValue() - 72) * 0.85).setScale(1, BigDecimal.ROUND_HALF_UP);
 				return processClll.doubleValue();
 			}
 		}

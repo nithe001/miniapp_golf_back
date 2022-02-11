@@ -65,6 +65,7 @@ public class AdminMatchService implements IBaseService {
 		db.setMiContent(matchInfo.getMiContent());
 		db.setMiJoinOpenType(matchInfo.getMiJoinOpenType());
 		db.setMiMatchOpenType(matchInfo.getMiMatchOpenType());
+        db.setMiIsEnd(matchInfo.getMiIsEnd());
 		db.setMiMatchFormat1(matchInfo.getMiMatchFormat1());
 		db.setMiMatchFormat2(matchInfo.getMiMatchFormat2());
         db.setMiMatchFormat3(matchInfo.getMiMatchFormat3());

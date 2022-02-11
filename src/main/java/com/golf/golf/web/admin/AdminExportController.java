@@ -9,6 +9,7 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.db.MatchInfo;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.MatchScoreService;
 import com.golf.golf.service.admin.AdminExportService;
 import com.golf.golf.service.admin.AdminMatchService;
 import com.golf.golf.service.admin.AdminTeamService;
@@ -40,6 +41,8 @@ public class AdminExportController {
 	private AdminExportService adminExportService;
 	@Autowired
 	private MatchService matchService;
+    @Autowired
+    private MatchScoreService matchScoreService;
 	@Autowired
 	private AdminMatchService adminMatchService;
     @Autowired
@@ -101,7 +104,7 @@ public class AdminExportController {
 	public JsonElement exportScore(HttpServletResponse response, Long matchId){
 		try {
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
-			Map<String,Object> score = matchService.getTotalScoreByMatchId(matchId, 0,0);
+			Map<String,Object> score = matchScoreService.getTotalScoreByMatchId(matchId, 0);
 			ExcelData excelData = adminExportService.exportExcel(score,matchInfo);
 			String fileName = matchInfo.getMiTitle()+"-比赛成绩导出-" + TimeUtil.longToString(System.currentTimeMillis(), "yyyy-MM-dd") + ".xlsx";
 			ExcelUtils.exportExcel(response, fileName, excelData);

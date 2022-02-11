@@ -37,22 +37,26 @@ public class MatchScoreDao extends CommonDao {
 		StringBuilder sql = new StringBuilder();
 		 sql.append("select " +
 				 " u.ui_headimg AS uiHeadimg,"+
+                 " u.ui_sex AS uiSex,"+
 				 " s.ms_team_id as team_id," +
+                 " t.ti_abbrev as teamAbbrev," +
 				 "s.ms_match_id as match_id," +
 				 "s.ms_match_title as matchName," +
 				 "s.ms_group_id as group_id," +
+                 "s.ms_group_name as groupName," +
 				 "s.ms_user_id as uiId," +
 				 "s.ms_user_name as uiRealName," +
                  "COUNT(s.ms_id) AS holeCount " );
-		 if (orderType ==3 ) {
-             sql.append(" FROM  match_score AS s INNER JOIN user_info AS u ON s.ms_user_id = u.ui_id   and u.ui_sex='女'  ");
-         } else {
-             sql.append(" FROM  match_score AS s LEFT JOIN user_info AS u ON s.ms_user_id = u.ui_id ");
-         }
+
+		 sql.append(" FROM  match_score AS s LEFT JOIN user_info AS u ON s.ms_user_id = u.ui_id  LEFT JOIN team_info AS t ON s.ms_team_id = t.ti_id");
+
          if (matchType ==2) {
              sql.append(" WHERE s.ms_match_id IN ( :childMatchIds) ");
          }else {
              sql.append(" WHERE s.ms_match_id = :matchId ");
+         }
+         if (orderType ==3 ) {
+             sql.append(" and u.ui_sex = '女'  ");
          }
 		 sql.append(" and s.ms_type = 0  ");
 //         sql.append(" and s.ms_user_id = 670 ");
@@ -132,7 +136,7 @@ public class MatchScoreDao extends CommonDao {
                 " m.mi_title AS matchName, score.* from ( ");
         sql.append(" SELECT tup.tup_user_id AS uiId,tup.tup_user_name AS uiRealName,tup.tup_user_headimg AS uiHeadimg," +
                 "tup.tup_team_id AS team_id, tup.tup_team_abbrev AS teamAbbrev, tup.tup_group_id AS group_id," +
-                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNet,tup.tup_hole_count AS holeCount ");
+                " tup.tup_match_id AS match_id,tup.tup_match_point AS sumRodNet,tup.tup_match_score AS sumRod,tup.tup_hole_count AS holeCount ");
         sql.append(" FROM team_user_point AS tup " );
         if  (matchType  ==2) {
             sql.append(" WHERE tup.tup_match_id IN (:childMatchIds ) ");

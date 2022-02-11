@@ -294,11 +294,19 @@ public class TeamDao extends CommonDao {
 	 * 获取本球队所有的球友
 	 * @return
 	 */
-	public List<TeamUserMapping> getTeamUserList(Map<String, Object> parp) {
+	public List<Map<String, Object>> getTeamUserList(Map<String, Object> parp) {
 		StringBuilder hql = new StringBuilder();
-		hql.append(" from TeamUserMapping as t where t.tumTeamId = :teamId and t.tumUserType != 2 ");
-		return dao.createQuery(hql.toString(), parp);
+		hql.append("SELECT team_user_mapping.* from team_user_mapping   WHERE tum_team_id = :teamId AND tum_user_type != 2 ");
+        return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
 	}
+
+    public List<Map<String, Object>> getTeamFemaleUserList(Map<String, Object> parp) {
+        StringBuilder hql = new StringBuilder();
+        hql.append("  SELECT team_user_mapping.* FROM team_user_mapping " +
+                "    LEFT JOIN user_info ON ui_id = tum_user_id  " +
+                "    WHERE tum_team_id = :teamId AND tum_user_type != 2 and ui_sex = '女'  ");
+        return dao.createSQLQuery(hql.toString(), parp, Transformers.ALIAS_TO_ENTITY_MAP);
+    }
 
 
 	/**

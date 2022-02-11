@@ -12,6 +12,7 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
     private Long userId;
     private String userName;
     private String userHeadimg;
+    private String userSex;
     private Long groupId;
     private Integer holeCount;
     private String groupName;
@@ -50,6 +51,13 @@ public class MatchGroupUserScoreBean implements Comparable<MatchGroupUserScoreBe
         this.userHeadimg = userHeadimg;
     }
 
+    public String getUserSex() {
+        return userSex;
+    }
+
+    public void setUserSex(String userSex) {
+        this.userSex = userSex;
+    }
 
     public Long getGroupId() {
         return groupId;

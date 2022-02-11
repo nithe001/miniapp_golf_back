@@ -102,6 +102,19 @@
     </div>
 
     <div class="form-group">
+        <label for="miIsEnd" class="col-sm-2 control-label">比赛状态</label>
+        <%--观战范围：（1、公开 球友均可见；2、队内公开：参赛者的队友可见；3、封闭：参赛队员可见）--%>
+        <div class="col-sm-5">
+            <input type="radio" name="miIsEnd" value="0" id="miIsEnd"
+                   <c:if test="${matchInfo.miIsEnd == 0}">checked</c:if> />报名中
+            <input type="radio" name="miIsEnd" value="1"
+                   <c:if test="${matchInfo.miIsEnd == 1}">checked</c:if> />比赛中
+            <input type="radio" name="miIsEnd" value="2"
+                   <c:if test="${matchInfo.miIsEnd == 2}">checked</c:if> />比赛结束
+        </div>
+    </div>
+
+    <div class="form-group">
         <label for="miContent" class="col-sm-2 control-label">比赛说明</label>
         <div class="col-sm-5">
             <textarea style="width: 100%;" class="form-control" id="miContent" name="miContent" placeholder="比赛说明">${matchInfo.miContent}</textarea>

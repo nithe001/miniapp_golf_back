@@ -187,6 +187,7 @@ public class AdminImportService implements IBaseService {
 		if(matchInfo == null){
 			matchInfo = new MatchInfo();
 			matchInfo.setMiType(1);
+            matchInfo.setMiPriority(0);
 			matchInfo.setMiTitle(matchTitle);
 			matchInfo.setMiLogo("");
 			matchInfo.setMiParkId(parkInfo.getPiId());
@@ -208,7 +209,13 @@ public class AdminImportService implements IBaseService {
             } else {
                 matchInfo.setMiMatchFormat3(0);
             }
-			matchInfo.setMiMatchFormat1(matchTypeSplit[1].equals("比杆")?0:1);
+			if(matchTypeSplit.length>1) {
+                matchInfo.setMiMatchFormat1(matchTypeSplit[1].equals("比杆") ? 0 : 1);
+            }else if(matchTypeSplit.length == 1) {
+                matchInfo.setMiMatchFormat1(matchTypeSplit[0].equals("比杆") ? 0 : 1);
+            } else {
+                matchInfo.setMiMatchFormat1(0);
+            }
 			matchInfo.setMiJoinTeamIds(joinTeamIds);
 			if (isEnd== null || isEnd =="" || isEnd.equals("比分")) {
                 matchInfo.setMiIsEnd(1);
