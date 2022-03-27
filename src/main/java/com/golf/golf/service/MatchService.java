@@ -1063,6 +1063,7 @@ public class MatchService implements IBaseService {
 		matchInfo.setMiParkName(parkName);
 		matchInfo.setMiZoneBeforeNine(beforeZoneName);
 		matchInfo.setMiZoneAfterNine(afterZoneName);
+		matchInfo.setMiPriority(0);
 		matchInfo.setMiType(0);
 		matchInfo.setMiMatchTime(playTime);
 		matchInfo.setMiPeopleNum(peopleNum);
@@ -2096,7 +2097,7 @@ public class MatchService implements IBaseService {
             List<Long> fatherMatchIds = getLongIdListReplace(matchInfo.getMiFatherMatchIds());
             List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
             List<MatchGroupUserScoreBean> list = new ArrayList<>();
-            if (fatherMatchIds !=null && fatherMatchIds.size() !=0 && matchInfo.getMiType() !=2){
+           // if (fatherMatchIds !=null && fatherMatchIds.size() !=0 && matchInfo.getMiType() !=2){
                // matchDao.scoreCopy(matchId);
 
                 // 如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
@@ -2106,7 +2107,7 @@ public class MatchService implements IBaseService {
                 //  如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人净杆都保存到teamuserpoint 中
                 matchScoreService.createNewUserNetScoreList(userScoreList,list,matchInfo);
                 updatePointByRodSum(userInfo.getUiId(), matchId,  list);
-            }
+           // }
         }
 		return "true";
 	}
@@ -2367,7 +2368,13 @@ public class MatchService implements IBaseService {
                         //杆数
                         Integer score = getIntegerValue(scoreMap, "sumRodNum");
                         Long userId = getLongValue(scoreMap, "userId");
-                        Double point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodScore;
+                        Double point = 0d;
+                        if( rodScore <10 ) {
+                            point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodScore;
+                        } else {
+                            //为了解决杆差倍数有小数的问题，比如1.5倍，输入15即可
+                            point = baseScore + (Const.DEFAULT_ROD_NUM - score) * rodScore/10;
+                        }
                         //更新该球友原先的积分情况  （一场比赛对应一次积分）
                         //updatePointByIds(matchId, teamId, userId, captainUserId, point, 0);
                         //根据teamType的值，是0 向本队积分，是1 向上报球队积分   nhq
@@ -2860,7 +2867,8 @@ public class MatchService implements IBaseService {
             //String joinTeamIds = matchInfo.getMiJoinTeamIds();
 */
         List<Map<String, Object>> userList;
-        if (matchInfo.getMiType() ==2) {
+        if (matchInfo.getMiType() ==2 || matchInfo.getMiIsEnd() == 2 ) {
+            //已经结束的比赛或者父比赛都从teamuserpoint 表中取数据
         	int rowsPerPage = 50;
 			if(page == 0){
 				rowsPerPage = 0;
@@ -3066,7 +3074,7 @@ public class MatchService implements IBaseService {
             //String joinTeamIds = matchInfo.getMiJoinTeamIds();
 */
         List<Map<String, Object>> userList;
-        if (matchInfo.getMiType() ==2) {
+        if (matchInfo.getMiType() ==2 || matchInfo.getMiIsEnd() == 2 ) {
             userList =matchDao.getUserScoreByMatchId(matchId,teamId,matchInfo.getMiType(), childMatchIds, null,0);
             //用户昵称解码
             decodeUserNickName(userList);
@@ -3953,7 +3961,7 @@ public void updateGroupNotice( Long groupId, String groupNotice) {
 
 	/**
 	 * 根据用户id获取用户差点 不包括单练
-	 * 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.8
+	 * 取最近十场比赛的成绩平均（不够十场按实际场数），减去72然后再乘0.85
 	 * @return
 	 */
 	public Double getUserChaPoint(Long userId) {
