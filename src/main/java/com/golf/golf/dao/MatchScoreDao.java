@@ -118,7 +118,7 @@ public class MatchScoreDao extends CommonDao {
 	}
 
 	/**
-     *从teamuserpoint 表中取一场父比赛的所有球员的净杆,这类记录和球队积分的区别时reportteamid = 0
+     *从teamuserpoint 表中取一场父比赛的所有球员的净杆,这类记录和球队积分的区别是reportteamid = 0
      * 由于总杆和净杆不管那个父比赛取，都是一样的，所以一个子比赛的数据在这个表里只存一份
      *scoreType: 0:总杆，1，净杆
      **/

@@ -30,6 +30,7 @@ public class MatchInfo implements java.io.Serializable {
 	private Integer miMatchFormat1;
 	private Integer miMatchFormat2;
     private Integer miMatchFormat3;
+    private Integer miMatchFormat4;
 	private String miJoinTeamIds;
 	private String miReportScoreTeamId;
     private String miChildMatchIds;
@@ -56,7 +57,7 @@ public class MatchInfo implements java.io.Serializable {
 					 Long miParkId, String miParkName, String miZoneBeforeNine,
 					 String miZoneAfterNine, String miDigest, String miMatchTime,
 					 String miContent, Integer miMatchOpenType, Integer miJoinOpenType,
-					 Integer miMatchFormat1, Integer miMatchFormat2,Integer miMatchFormat3, String miJoinTeamIds,
+					 Integer miMatchFormat1, Integer miMatchFormat2,Integer miMatchFormat3, Integer miMatchFormat4,String miJoinTeamIds,
 					 String miReportScoreTeamId, String miChildMatchIds, String  miFatherMatchIds, Integer miHit, Long miApplyEndTime, Integer miIsEnd, Integer miIsValid,
 					 String miCreateUserName, Long miCreateUserId, Long miCreateTime,
 					 String miUpdateUserName, Long miUpdateUserId, Long miUpdateTime) {
@@ -77,6 +78,7 @@ public class MatchInfo implements java.io.Serializable {
 		this.miMatchFormat1 = miMatchFormat1;
 		this.miMatchFormat2 = miMatchFormat2;
         this.miMatchFormat3 = miMatchFormat3;
+        this.miMatchFormat4 = miMatchFormat4;
 		this.miJoinTeamIds = miJoinTeamIds;
 		this.miReportScoreTeamId = miReportScoreTeamId;
         this.miChildMatchIds = miChildMatchIds;
@@ -258,7 +260,16 @@ public class MatchInfo implements java.io.Serializable {
         this.miMatchFormat3 = miMatchFormat3;
     }
 
-	@Column(name = "mi_join_team_ids", length = 255)
+    @Column(name = "mi_match_format_4")
+    public Integer getMiMatchFormat4() {
+        return miMatchFormat4;
+    }
+
+    public void setMiMatchFormat4(Integer miMatchFormat4) {
+        this.miMatchFormat4 = miMatchFormat4;
+    }
+
+    @Column(name = "mi_join_team_ids", length = 255)
 	public String getMiJoinTeamIds() {
 		return miJoinTeamIds;
 	}

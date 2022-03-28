@@ -132,8 +132,10 @@ public class MatchScoreService implements IBaseService {
 
         //获取用户及成绩列表
 
-        if(matchType ==2){
+        if(matchType ==2 || matchInfo.getMiIsEnd() == 2 ){ //父比赛
+            //已经结束的比赛或者父比赛都从teamuserpoint 表中取数据
             userList =matchScoreDao.getUserScorePointByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds,orderType);
+
         } else{
             userList = matchScoreDao.getUserListByMatchId(matchInfo,childMatchIds,orderType);
             createNewUserNetScoreList(userList, list, matchInfo);
@@ -217,7 +219,7 @@ public class MatchScoreService implements IBaseService {
 
                       //差点 加个提示
                       double cha;
-                      if(matchInfo.getMiMatchFormat3() == 3 ){
+                      if(matchInfo.getMiMatchFormat4()!=null && matchInfo.getMiMatchFormat4() == 1  ){ //按累计差点计算净杆
                           cha = matchService.getUserChaPoint(userId);
                       } else {
                           BigDecimal ch = new BigDecimal((sumRodXxbly * 1.5 - sum18) * 0.8).setScale(2, BigDecimal.ROUND_HALF_UP);

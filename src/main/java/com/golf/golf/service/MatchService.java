@@ -2097,17 +2097,17 @@ public class MatchService implements IBaseService {
             List<Long> fatherMatchIds = getLongIdListReplace(matchInfo.getMiFatherMatchIds());
             List<Long> childMatchIds = getLongIdListReplace(matchInfo.getMiChildMatchIds());
             List<MatchGroupUserScoreBean> list = new ArrayList<>();
-           // if (fatherMatchIds !=null && fatherMatchIds.size() !=0 && matchInfo.getMiType() !=2){
+          if ( matchInfo.getMiType() !=2){
                // matchDao.scoreCopy(matchId);
 
-                // 如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
+                // 如果本比赛不是父比赛 ，则在结束比赛把本比赛的个人总杆都保存到teamuserpoint 中
                 List<Map<String, Object>>  userScoreList = matchDao.getUserListById(matchId,matchInfo.getMiType(),childMatchIds,null, null,0);
                 updateScoreByRodSum(userInfo.getUiId(), matchId,  userScoreList);
 
-                //  如果本比赛是某个比赛的子比赛 ，则在结束比赛把本比赛的个人净杆都保存到teamuserpoint 中
+                // 如果本比赛不是父比赛 ，则在结束比赛把本比赛的个人净杆都保存到teamuserpoint 中
                 matchScoreService.createNewUserNetScoreList(userScoreList,list,matchInfo);
                 updatePointByRodSum(userInfo.getUiId(), matchId,  list);
-           // }
+           }
         }
 		return "true";
 	}

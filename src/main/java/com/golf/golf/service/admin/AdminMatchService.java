@@ -69,6 +69,7 @@ public class AdminMatchService implements IBaseService {
 		db.setMiMatchFormat1(matchInfo.getMiMatchFormat1());
 		db.setMiMatchFormat2(matchInfo.getMiMatchFormat2());
         db.setMiMatchFormat3(matchInfo.getMiMatchFormat3());
+        db.setMiMatchFormat4(matchInfo.getMiMatchFormat4());
 		db.setMiUpdateTime(System.currentTimeMillis());
 		db.setMiUpdateUserId(AdminUserUtil.getUserId());
 		db.setMiUpdateUserName(AdminUserUtil.getShowName());

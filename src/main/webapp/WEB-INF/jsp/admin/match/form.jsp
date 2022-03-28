@@ -94,6 +94,10 @@
                    <c:if test="${matchInfo.miMatchFormat3 == 0}">checked</c:if> />总杆排位
             <input type="radio" name="miMatchFormat3" value="3"
                    <c:if test="${matchInfo.miMatchFormat3 == 3}">checked</c:if> />均杆排位
+            <input type="radio" name="miMatchFormat4" value="0"
+                   <c:if test="${matchInfo.miMatchFormat4 == 0}">checked</c:if> />标准净杆
+            <input type="radio" name="miMatchFormat4" value="1"
+                   <c:if test="${matchInfo.miMatchFormat4 == 1}">checked</c:if> />差点净杆
             <input type="radio" name="miMatchFormat3" value="1"
                    <c:if test="${matchInfo.miMatchFormat3 == 1}">checked</c:if> />按组比洞
             <input type="radio" name="miMatchFormat3" value="2"

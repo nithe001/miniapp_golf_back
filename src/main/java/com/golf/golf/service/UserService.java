@@ -117,7 +117,9 @@ public class UserService implements IBaseService {
 			List<UserInfo> chooseuserList = dao.getUserIdByRealName(user.getUiRealName());
 			for (UserInfo chooseuser : chooseuserList) {
 				Long otherUserId = chooseuser.getUiId();
-				teamIds = dao.getIsMyTeammate(userId,otherUserId);
+				if(userId !=  otherUserId ) { //有不是自己但重名的
+                    teamIds = dao.getIsMyTeammate(userId, otherUserId);
+                }
 				if (teamIds !=null &&  teamIds.size() >0 ){
 					if(chooseuser.getUiOpenId() !=null){
 						break; //有同名真实用户，不让改
@@ -141,6 +143,7 @@ public class UserService implements IBaseService {
 		db.setUiGraduateTime(user.getUiGraduateTime());
 		db.setUiStudentId(user.getUiStudentId());
 		db.setUiWorkUnit(user.getUiWorkUnit());
+        db.setUiOccupation(user.getUiOccupation());
 		db.setUiAddress(user.getUiAddress());
 		db.setUiAddress(user.getUiAddress());
 		db.setUiHomeCourse(user.getUiHomeCourse());

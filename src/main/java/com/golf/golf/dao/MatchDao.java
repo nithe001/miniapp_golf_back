@@ -80,7 +80,7 @@ public class MatchDao extends CommonDao {
         }else{
             //比分——全部比赛（除了不可用的比赛,包括选择公开的单练）
             hql.append(" AND ( m.mi_type > 0 OR (m.mi_type = 0 AND (m.mi_match_open_type = 1 OR " +
-                    "m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId)) ))");
+                  "m.mi_id IN (SELECT g.mugm_match_id FROM match_user_group_mapping AS g WHERE g.mugm_user_id = :userId)) ))");
         }
         if(parp.get("keyword") != null){
             hql.append(" AND m.mi_title LIKE :keyword ");
