@@ -54,7 +54,7 @@ public class AdminUserDao extends CommonDao {
 	}
 
 	/**
-	 * 前台用户列表
+	 * 前台微信用户列表
 	 * @param searchBean
 	 * @param pageInfo
 	 * @return
@@ -90,7 +90,45 @@ public class AdminUserDao extends CommonDao {
 		return pageInfo;
 	}
 
-	/**
+    /**
+     * 前台用户列表
+     * @param searchBean
+     * @param pageInfo
+     * @return
+     */
+    public POJOPageInfo getMiniappUserList(SearchBean searchBean, POJOPageInfo pageInfo) {
+        Map<String, Object> parp = searchBean.getParps();
+        StringBuffer hql = new StringBuffer();
+        hql.append(" from user_info as u  ");
+        hql.append(" where 1=1 ");
+        if(parp.get("keyword") != null){
+            hql.append("and  u.ui_real_name like :keyword  ");
+        }
+        if(parp.get("startDate") != null){
+            hql.append(" and u.create_time >=:startDate ");
+        }
+        if(parp.get("endDate") != null){
+            hql.append(" and u.create_time <=:endDate ");
+        }
+        Long count = dao.createSQLCountQuery("SELECT COUNT(*) "+hql.toString(), parp);
+        if (count == null || count.intValue() == 0) {
+            pageInfo.setItems(new ArrayList<Map<String, Object>>());
+            pageInfo.setCount(0);
+            return pageInfo;
+        }
+        String select ="select u.ui_id as ui_id,u.ui_headimg  as ui_headimg,u.ui_nick_name as ui_nick_name,u.ui_open_id as ui_openid, " +
+                "u.ui_real_name as ui_real_name,u.ui_sex as ui_sex,  " +
+                "u.ui_create_time as ui_create_time, u.ui_type as ui_type,u.ui_is_valid as ui_is_valid ";
+        hql.append("group by u.ui_id order by u.ui_create_time , u.ui_open_id ");
+        List<Map<String, Object>> list = dao.createSQLQuery(select+hql.toString(),parp, pageInfo.getStart(),
+                pageInfo.getRowsPerPage(), Transformers.ALIAS_TO_ENTITY_MAP);
+        pageInfo.setCount(count.intValue());
+        pageInfo.setItems(list);
+        return pageInfo;
+    }
+
+
+    /**
 	 * 查看用户名是否已经存在
 	 * @param name
 	 * @return

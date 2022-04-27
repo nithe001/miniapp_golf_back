@@ -132,8 +132,9 @@ public class MatchScoreService implements IBaseService {
 
         //获取用户及成绩列表
 
-        if(matchType ==2 || matchInfo.getMiIsEnd() == 2 ){ //父比赛
+        if((matchType ==2 || matchInfo.getMiIsEnd() == 2 ) &&  orderType != 10){ //父比赛
             //已经结束的比赛或者父比赛都从teamuserpoint 表中取数据
+            //orderType = 10 是为了从后台到处成绩专用，此时必须用到明细成绩，不能从teamuserpoint 表中取数据
             userList =matchScoreDao.getUserScorePointByMatchId(matchId,null,matchInfo.getMiType(), childMatchIds,orderType);
 
         } else{

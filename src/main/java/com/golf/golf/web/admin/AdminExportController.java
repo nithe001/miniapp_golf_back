@@ -104,7 +104,7 @@ public class AdminExportController {
 	public JsonElement exportScore(HttpServletResponse response, Long matchId){
 		try {
 			MatchInfo matchInfo = matchService.getMatchById(matchId);
-			Map<String,Object> score = matchScoreService.getTotalScoreByMatchId(matchId, 0);
+			Map<String,Object> score = matchScoreService.getTotalScoreByMatchId(matchId, 10);//orderType =10 指定导出明细成绩
 			ExcelData excelData = adminExportService.exportExcel(score,matchInfo);
 			String fileName = matchInfo.getMiTitle()+"-比赛成绩导出-" + TimeUtil.longToString(System.currentTimeMillis(), "yyyy-MM-dd") + ".xlsx";
 			ExcelUtils.exportExcel(response, fileName, excelData);

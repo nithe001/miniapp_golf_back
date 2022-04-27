@@ -43,7 +43,8 @@
     	<li id="nav_adminUser"><a href="admin/user/adminUserList"><i class="fa fa-bookmark"></i> <span>后台用户</span></a></li>
 	</c:if>
     <c:if test="<%= user.getRole() == null || user.getRole()==0 || user.getRole()==1 %>">
-        <li id="nav_wechatUser"><a href="admin/wechatUser/wechatUserList"><i class="fa fa-bookmark"></i> <span>小程序用户</span></a></li>
+        <li id="nav_wechatUser"><a href="admin/wechatUser/wechatUserList"><i class="fa fa-bookmark"></i> <span>微信用户</span></a></li>
+        <li id="nav_miniappUser"><a href="admin/miniappUser/miniappUserList"><i class="fa fa-bookmark"></i> <span>小程序用户</span></a></li>
         <li id="nav_rule"><a href="admin/match/ruleList"><i class="fa fa-bookmark"></i> <span>高球规则</span></a></li>
     </c:if>
 	<c:if test="<%= user.getRole() == null || user.getRole()==0 %>">

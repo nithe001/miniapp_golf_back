@@ -113,7 +113,8 @@ public class AdminExportService implements IBaseService {
         rows.add(row);
 
 		//添加比赛成绩
-        if (matchInfo.getMiType() ==2) { //汇总比赛
+        /*
+        if (matchInfo.getMiType() ==5 ) { //汇总比赛
             String userName;
             String teamName;
 
@@ -145,6 +146,8 @@ public class AdminExportService implements IBaseService {
             }
 
         } else {
+        */
+
             List<MatchGroupUserScoreBean> userList = (List<MatchGroupUserScoreBean>) scoreMap.get("list");
             if (userList != null && userList.size() > 0) {
 
@@ -185,7 +188,7 @@ public class AdminExportService implements IBaseService {
                     }
                 }
             }
-        }
+      //  }
 		data.setRows(rows);
 		return data;
 	}

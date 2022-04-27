@@ -1343,7 +1343,7 @@ public class MatchService implements IBaseService {
      * @param
      * @return
      */
-    public void addUserToApply1(Long matchId,Long teamId,  String userName,  String openid){
+    public void addUserToApply(Long matchId,Long teamId,  String userName,  String openid){
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         List<UserInfo> userInfo = userDao.getUserIdByRealName(userName);
         UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);
@@ -1429,7 +1429,7 @@ public class MatchService implements IBaseService {
      * @param
      * @return
      */
-    public void addUserToApply(Long matchId,Long teamId,  String userName,  String openid){
+    public void addUserToApply1(Long matchId,Long teamId,  String userName,  String openid){
         MatchInfo matchInfo = matchDao.get(MatchInfo.class, matchId);
         List<UserInfo> userInfo = userDao.getUserIdByRealName(userName);
         UserInfo myUserInfo = userService.getUserInfoByOpenId(openid);

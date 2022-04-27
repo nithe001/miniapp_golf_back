@@ -6,11 +6,13 @@ import com.golf.common.model.SearchBean;
 import com.golf.common.util.EncryptUtil;
 import com.golf.common.util.TimeUtil;
 import com.golf.golf.common.security.AdminUserUtil;
+import com.golf.golf.dao.UserDao;
 import com.golf.golf.dao.admin.AdminUserDao;
 import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
 import com.golf.golf.service.MatchService;
+import com.golf.golf.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,12 +28,16 @@ import java.util.Map;
  * 2016年10月31日
  */
 @Service
-public class AdminUserService implements IBaseService {
+public class AdminMiniappUserService implements IBaseService {
 	
     @Autowired
     private AdminUserDao dao;
     @Autowired
+    private UserDao userDao;
+    @Autowired
 	private MatchService matchService;
+    @Autowired
+    private UserService userService;
 
 
     /**
@@ -45,13 +51,13 @@ public class AdminUserService implements IBaseService {
     }
 
 	/**
-	 * 微信用户列表
+	 * 小程序用户列表
 	 * @param searchBean
 	 * @param pageInfo
 	 * @return
 	 */
-	public POJOPageInfo getWechatUserList(SearchBean searchBean, POJOPageInfo pageInfo){
-		pageInfo = dao.getWechatUserList(searchBean,pageInfo);
+	public POJOPageInfo getMiniappUserList(SearchBean searchBean, POJOPageInfo pageInfo){
+		pageInfo = dao.getMiniappUserList(searchBean,pageInfo);
 		if(pageInfo.getCount() >0){
 			updatePageInfo(pageInfo);
 		}
@@ -127,14 +133,10 @@ public class AdminUserService implements IBaseService {
 
 
 	//获取前台用户微信信息 + 个人信息
-	public Map<String, Object> getWechatUserById(Long wechatId) {
+	public Map<String, Object> getMiniappUserById(Long userId) {
 		Map<String, Object> parp = new HashMap<String,Object>();
-		WechatUserInfo wechatUser = dao.get(WechatUserInfo.class,wechatId);
-		if(wechatUser.getWuiUId() != null){
-			UserInfo UserInfo = dao.get(UserInfo.class, wechatUser.getWuiUId());
-			parp.put("userInfo",UserInfo);
-		}
-		parp.put("wechatUser",wechatUser);
+		UserInfo  user = dao.get(UserInfo.class,userId);
+		parp.put("userInfo",user);
 		return parp;
 	}
 
@@ -147,11 +149,11 @@ public class AdminUserService implements IBaseService {
 	}
 
 	/**
-	 * 获取微信用户信息
+	 * 获取用户信息
 	 * @return
 	 */
-	public WechatUserInfo getWechatUser(Long wechatUserId) {
-		return dao.get(WechatUserInfo.class, wechatUserId);
+	public UserInfo getMiniappUser(Long userId) {
+		return dao.get(UserInfo.class,userId);
 	}
 
 	/**
@@ -159,11 +161,11 @@ public class AdminUserService implements IBaseService {
 	 * @param user
 	 * @return
 	 */
-	public void updateUserInfo(WechatUserInfo wechatUserInfo, UserInfo user) {
+	public void updateUserInfo(UserInfo user) {
 		if(user.getUiId() != null){
 			UserInfo db = dao.get(UserInfo.class,user.getUiId());
 			db.setUiRealName(user.getUiRealName());
-			db.setUiOpenId(wechatUserInfo.getWuiOpenid());
+			db.setUiOpenId(user.getUiOpenId());
 			db.setUiType(user.getUiType());
 			db.setUiSex(user.getUiSex());
 			db.setUiTelNo(user.getUiTelNo());
@@ -189,5 +191,21 @@ public class AdminUserService implements IBaseService {
 			dao.save(user);
 		}
 	}
+
+    /**
+     * 认领虚拟用户
+     * @param
+     * @return
+     */
+    public void claimUser(String ownerUserName,Long userId ){
+        List<UserInfo> userInfo = userDao.getOpenIdByRealName(ownerUserName);
+        if (userInfo.size() ==1 ) {
+            //只有一个叫这个名字的真实用户
+            String  openid = userInfo.get(0).getUiOpenId();
+            userService.updateClaimUserScore(openid,userId.toString() );
+        }
+
+    }
+
 
 }

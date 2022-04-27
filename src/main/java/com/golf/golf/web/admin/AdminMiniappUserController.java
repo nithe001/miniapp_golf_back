@@ -5,10 +5,9 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.common.util.TimeUtil;
-import com.golf.golf.db.AdminUser;
 import com.golf.golf.db.UserInfo;
 import com.golf.golf.db.WechatUserInfo;
-import com.golf.golf.service.admin.AdminWechatUserService;
+import com.golf.golf.service.admin.AdminMiniappUserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Map;
@@ -29,13 +27,13 @@ import java.util.Map;
  * 2016年10月31日
  */
 @Controller
-@RequestMapping(value = "/admin/wechatUser")
-public class AdminWechatUserController {
+@RequestMapping(value = "/admin/miniappUser")
+public class AdminMiniappUserController {
 	private final static Logger logger = LoggerFactory
-			.getLogger(AdminWechatUserController.class);
+			.getLogger(AdminMiniappUserController.class);
 
     @Autowired
-    private AdminWechatUserService logic;
+    private AdminMiniappUserService logic;
 
 	/**
 	 * 微信用户列表
@@ -45,8 +43,8 @@ public class AdminWechatUserController {
 	 * @param rowsPerPage
 	 * @return
 	 */
-	@RequestMapping("wechatUserList")
-	public String wechatUserList(ModelMap mm, String keyword, String startDate, String endDate, Integer state, Integer page, Integer rowsPerPage){
+	@RequestMapping("miniappUserList")
+	public String miniappUserList(ModelMap mm, String keyword, String startDate, String endDate, Integer state, Integer page, Integer rowsPerPage){
 		if (page == null || page.intValue() == 0) {
 			page = 1;
 		}
@@ -62,7 +60,7 @@ public class AdminWechatUserController {
 			searchBean.addParpField("startDate", TimeUtil.stringToLong(startDate, TimeUtil.FORMAT_DATE));
 			searchBean.addParpField("endDate", TimeUtil.stringToLong(endDate, TimeUtil.FORMAT_DATE));
 			searchBean.addParpField("state", state);
-			pageInfo = logic.getWechatUserList(searchBean, pageInfo);
+			pageInfo = logic.getMiniappUserList(searchBean, pageInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.error("后台管理-获取微信用户列表信息出错。"+ e );
@@ -75,7 +73,7 @@ public class AdminWechatUserController {
 		mm.addAttribute("page",page);
 		mm.addAttribute("state", state);
 		mm.addAttribute("rowsPerPage",rowsPerPage);
-		return "admin/user/wechatuser_list";
+		return "admin/user/miniappuser_list";
 	}
 
 	/**
@@ -83,36 +81,35 @@ public class AdminWechatUserController {
 	 * @param user
 	 * @return
 	 */
-	@RequestMapping("wechatUserUpdate")
-	public String wechatUserUpdate(WechatUserInfo wechatUserInfo, UserInfo user){
+	@RequestMapping("miniappUserUpdate")
+	public String miniappUserUpdate(UserInfo user){
 		try{
-			logic.updateUserInfo(wechatUserInfo, user);
+			logic.updateUserInfo(user);
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("后台管理——编辑——更新微信用户详细信息时出错。"+ e );
 			return "error";
 		}
-		return "redirect:wechatUserList";
+		return "redirect:miniappUserList";
 	}
 
 	/**
 	 * 编辑前台用户init
 	 * @param mm
-	 * @param wechatId
+	 * @param userid
 	 * @return
 	 */
-	@RequestMapping("wechatUserEditUI")
-	public String wechatUserEditUI(ModelMap mm, Long wechatId){
+	@RequestMapping("miniappUserEditUI")
+	public String miniappUserEditUI(ModelMap mm, Long userId){
 		try{
-			Map<String, Object> parp = logic.getWechatUserById(wechatId);
-			mm.addAttribute("wechatUser",parp.get("wechatUser"));
+			Map<String, Object> parp = logic.getMiniappUserById(userId);
 			mm.addAttribute("userInfo",parp.get("userInfo"));
 		}catch(Exception e){
 			e.printStackTrace();
 			logger.error("后台管理——获取微信用户信息时出错。"+ e );
 			return "admin/error";
 		}
-		return "admin/user/wechatuser_edit";
+		return "admin/user/miniappuser_edit";
 	}
 
 	/**
@@ -120,13 +117,13 @@ public class AdminWechatUserController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = { "setWechatUserToAdmin" })
-	public JsonElement setWechatUserToAdmin(Long wechatUserId){
+	@RequestMapping(value = { "setMiniappUserToAdmin" })
+	public JsonElement setMiniappUserToAdmin(Long userId){
 		try {
-			logic.setAdmin(wechatUserId);
+			logic.setAdmin(userId);
 		} catch (Exception e) {
 			e.printStackTrace();
-			String errMsg = "后台管理——设置微信用户为赛事管理员时出错。wechatUserId=" + wechatUserId;
+			String errMsg = "后台管理——设置微信用户为赛事管理员时出错。miniappUserId=" + userId;
 			logger.error(errMsg+ e );
 			return JsonWrapper.newErrorInstance(errMsg);
 		}
@@ -134,26 +131,44 @@ public class AdminWechatUserController {
 	}
 
 	/**
-	 * 注销微信用户
-	 * @param wechatUserId
+	 * 注销用户
+	 * @param userId
 	 * @return
 	 */
-	@RequestMapping("updateWechatUserState")
-	public String updateWechatUserState(Long wechatUserId){
+	@RequestMapping("updateMiniappUserState")
+	public String updateMiniappUserState(Long userId){
 		try{
-			WechatUserInfo wechatUser = logic.getWechatUser(wechatUserId);
-			if(wechatUser.getWuiIsValid() == 0){
-				wechatUser.setWuiIsValid(1);
+			UserInfo user = logic.getMiniappUser(userId);
+			if(user.getUiIsValid() == 0){
+				user.setUiIsValid(1);
 			}else{
-				wechatUser.setWuiIsValid(0);
+				user.setUiIsValid(0);
 			}
-			logic.update(wechatUser);
+			logic.update(user);
 		}catch(Exception e){
 			e.printStackTrace();
-			logger.error("后台管理——注销/恢复微信用户时出错。"+ e );
+			logger.error("后台管理——认领用户时出错。"+ e );
 			return "admin/error";
 		}
-		return "redirect:wechatUserList";
+		return "redirect:miniappUserList";
 	}
+
+    /**
+     * 认领用户
+     * @param userId
+     * @return
+     */
+    @RequestMapping("claimUser")
+    public String claimUser(String ownerUserName,Long userId){
+        try{
+            logic.claimUser(ownerUserName,userId);
+
+        }catch(Exception e){
+            e.printStackTrace();
+            logger.error("后台管理——注销/恢复微信用户时出错。"+ e );
+            return "admin/error";
+        }
+        return "redirect:miniappUserList";
+    }
 
 }

@@ -323,12 +323,12 @@ public class AdminImportService implements IBaseService {
                     TeamInfo teamInfo = null;
                     Integer userType = 1;
                     Long userId = null;
-                    //用实名和球队名一起判断,球队里没有的就加个虚拟的
+                    //用实名和球队名一起判断,球队里没有的就增加一个
                     if (userTeamMapping==null){
-                        /* 下面代码，假定全系统不重名，即不同球队也不允许重名
+                        //下面两行代码，假定全系统不重名，从系统里找到叫这个名字的既把他加入球队
                         Map<String, Object> user = adminImportDao.getUserByRealName(userName);
                         userId = matchService.getLongValue(user, "userId");
-*/
+
                        if ( userId == null) {
                            userInfo = new UserInfo();
                            userInfo.setUiType(2);

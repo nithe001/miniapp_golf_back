@@ -379,6 +379,16 @@ public class UserDao extends CommonDao {
 		hql.append(" ORDER BY u.uiOpenId DESC");
 		return dao.createQuery(hql.toString());
 	}
+    /**
+     * 用真名查询叫这个名字的真实用户的信息, nhq
+     * @return
+     */
+    public List<UserInfo> getOpenIdByRealName(String realName) {
+        StringBuilder hql = new StringBuilder();
+        hql.append(" FROM UserInfo as u WHERE u.uiRealName = '"+realName+"'");
+        hql.append(" and u.uiOpenId !=null and 1=1");
+        return dao.createQuery(hql.toString());
+    }
 		/**
          * 用我的真名查询除了我之外，叫此名的导入用户及所在球队，
          * @return

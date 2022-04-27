@@ -5,7 +5,7 @@ import com.golf.common.gson.JsonWrapper;
 import com.golf.common.model.POJOPageInfo;
 import com.golf.common.model.SearchBean;
 import com.golf.golf.db.AdminUser;
-import com.golf.golf.service.admin.AdminUserService;
+import com.golf.golf.service.admin.AdminWechatUserService;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ public class AdminUserController {
 			.getLogger(AdminUserController.class);
 
     @Autowired
-    private AdminUserService logic;
+    private AdminWechatUserService logic;
 
     /**
      * 管理员用户列表
