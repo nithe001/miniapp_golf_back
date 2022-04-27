@@ -75,25 +75,22 @@
                                                 <c:if test="${user.ui_is_valid == 1}">有效</c:if>
                                             </td>
                                             <td>
-                                                <form class="form-inline" name="claimForm" id="claimForm"
-                                                      style="margin-bottom: 15px;">
-                                                        <input type="hidden" id="userId" name="userId" value="${user.ui_id }"/>
-                                                        <div class="form-group">
-                                                            <input type="text" class="form-control" id="ownerUserName" name="ownerUserName"
-                                                                   placeholder="认领人姓名" value="${ownerUserName }"/>
-                                                        </div>
-                                                        <button type="button" class="btn btn-success"  id="claimBtn">认领</button>
+                                                <div class="form-inline" style="margin-bottom: 15px;">
+                                                    <input type="hidden" value="${user.ui_id}"/>
+                                                    <div class="form-group">
+                                                        <input type="text" class="form-control" placeholder="认领人姓名" value=""/>
+                                                    </div>
+                                                    <button type="button" class="btn btn-success claimBtn">认领</button>
 
-                                                        <a class="btn btn-success"
-                                                           href="admin/miniappUser/miniappUserEditUI?userId=${user.ui_id}">
-                                                            <span class="glyphicon glyphicon-pencil"></span>查看
-                                                        </a>
-                                                        <a class="btn btn-danger" href="javascript:void(0);" onclick="updateUserState(${user.ui_id})">
-                                                            <c:if test="${user.ui_is_valid == null || user.ui_is_valid == 1}">注销</c:if>
-                                                            <c:if test="${user.ui_is_valid == 0 }">恢复</c:if>
-                                                        </a>
-                                                </form>
-
+                                                    <a class="btn btn-success"
+                                                       href="admin/miniappUser/miniappUserEditUI?userId=${user.ui_id}">
+                                                        <span class="glyphicon glyphicon-pencil"></span>查看
+                                                    </a>
+                                                    <a class="btn btn-danger" href="javascript:void(0);" onclick="updateUserState(${user.ui_id})">
+                                                        <c:if test="${user.ui_is_valid == null || user.ui_is_valid == 1}">注销</c:if>
+                                                        <c:if test="${user.ui_is_valid == 0 }">恢复</c:if>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -159,11 +156,10 @@
 
     $(document).ready(function () {
         //认领
-        $("#claimBtn").bind("click", function () {
-            var form = document.forms[1];
-            form.action = "admin/miniappUser/claimUser ";
-
-            form.submit();
+        $(".claimBtn").bind("click", function () {
+            var userId = $(this).parent().find("input").eq(0).val();
+            var ownerUserName = $(this).prev().children("input").val();
+            window.location.href = "admin/miniappUser/claimUser?ownerUserName="+ownerUserName+"&userId="+userId;
         });
     });
 
